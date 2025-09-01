@@ -37,8 +37,13 @@ export const Contacto = () =>{
                 </div>
 
                 <div className="w-1/2 h-screen bg-gradient-to-r from-pink-300 to-red-400">
-                <img src="src/img/casal.JPEG" alt="foto"
-                className="h-120 items-center" />
+                <img src="src/img/casal.JPEG" alt="Foto" 
+                className="border border-black rounded-md transition-all duration-1000 
+                ease-in-out m-5 hover:border-purple-800 w-auto h-96 ml-50 " />
+                    <h3 className="text-xl font-semibold mt-2 mb-4 text-center">Informações de Contato</h3>
+                    <p className="mb-2 text-center"><strong>Telefone:</strong> +258 83 374 2053</p>
+                    <p className="mb-2 text-center"><strong>Email:</strong> dicksontembe42@gmail.com</p>
+                    <p className="mb-2 text-center"><strong>Endereço:</strong> Malhapsene</p>
                     
                 </div>`
             </div>

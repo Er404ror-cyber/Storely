@@ -24,7 +24,10 @@ const Rosas = () => {
             rosas de caixa rosas de caixa rosas de caixa rosas de caixa rosas de caixa rosas de caixa
             rosas de caixa rosas de caixa v rosas de caixa
           </p>
-
+        <div className='flex justify-between'>
+          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-200'
+          type='submit'>encomendar</button>
+        </div>
         </div>
         
       </div>
@@ -47,7 +50,10 @@ const Rosas = () => {
             rosas de caixa rosas de caixa rosas de caixa rosas de caixa rosas de caixa rosas de caixa
             rosas de caixa rosas de caixa v rosas de caixa
           </p>
-
+        <div className='flex justify-between'>
+          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-200'
+          type='submit'>encomendar</button>
+        </div>
         </div>
         
       </div>
@@ -70,7 +76,10 @@ const Rosas = () => {
             rosas de caixa rosas de caixa rosas de caixa rosas de caixa rosas de caixa rosas de caixa
             rosas de caixa rosas de caixa v rosas de caixa
           </p>
-
+        <div className='flex justify-between'>
+          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-200'
+          type='submit'>encomendar</button>
+        </div>
         </div>
         
       </div>
@@ -97,7 +106,10 @@ const Rosas = () => {
                     rosas de caixa rosas de caixa rosas de caixa rosas de caixa rosas de caixa rosas de caixa
                     rosas de caixa rosas de caixa v rosas de caixa
                 </p>
-
+                <div className='flex justify-between'>
+          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-200'
+          type='submit'>encomendar</button>
+        </div>
                 </div>                            
             </div>
 
@@ -119,7 +131,10 @@ const Rosas = () => {
                     rosas de caixa rosas de caixa rosas de caixa rosas de caixa rosas de caixa rosas de caixa
                     rosas de caixa rosas de caixa v rosas de caixa
                 </p>
-
+                <div className='flex justify-between'>
+          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-200'
+          type='submit'>encomendar</button>
+        </div>
                 </div>                            
             </div>
 
@@ -141,7 +156,10 @@ const Rosas = () => {
                     rosas de caixa rosas de caixa rosas de caixa rosas de caixa rosas de caixa rosas de caixa
                     rosas de caixa rosas de caixa v rosas de caixa
                 </p>
-
+                  <div className='flex justify-between'>
+          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-200'
+          type='submit'>encomendar</button>
+        </div>
                 </div>                            
             </div>
      </div>
