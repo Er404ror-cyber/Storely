@@ -1,23 +1,10 @@
-  <div className="bg-gradient-to-r from-pink-300 to-red-400  ">
-            
-        <div > 
-            <Header/>
+PAGINA CONTACTO
+apenas o botaoparasubmeter a um pedido persnalizado do cliente, a sua msg deve ir para meu e-mail e whatsapp
+e as logos dos meus perfies socicais levem dieretamente para cada um deles
 
-          <div className="w-1/2">
-      <h1 className="flex justify-center text-4xl mt-80 animate-bounce">Bem vindo a petal rose🌹</h1>
-        <div className="text-justify p-6 font-serif text-2xl ">
-                   
-                <p>Nosso espaço foi criado com muito carinho para que você encontre as rosas mais belas 🌸, frescas 🌿 e cheias de significado ✨.</p>
-                <p>Cada pétala carrega um toque especial de amor, cuidado e elegância 💐.</p>
-                <p>Sinta-se em casa, explore nossas coleções e deixe-se envolver pelo perfume e encanto das rosas 🌹💕.</p>
-                
-        </div>
-</div> 
+PAGINA ROSAS 
+para cada item listado tem um bota de encomenda, esse botao deve ter a funca de mandar uma msg no meu whatsap 
+a dizer que o produto o cliente escolheu com uma msg ja programada e o preco
 
-       <div className="w-1/2">
-outro lade
-       </div>
-        
-        
-        </div>
-</div>
+PAGINA INICIAL
+nao tem nenhum botao que requer back and
