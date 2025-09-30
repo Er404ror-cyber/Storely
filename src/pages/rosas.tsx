@@ -7,7 +7,7 @@ const Rosas = () => {
     <Header/>
     
     <div className=''>
-     <div className="max-w-md mx-auto bg-white shadow-md rounded-lg p-6 my-8">
+     <div className="transition-transform duration-300 hover:scale-110 max-w-md mx-auto bg-white shadow-md rounded-lg p-6 my-8">
         <h1 className="text-3xl font-bold text-center mb-4">Pedido Personalizado</h1>
         <p className="text-center text-gray-700 mb-6">
           Venha para esse campo para fazer um pedido personalizado que não tenha no nosso catálogo.
@@ -26,7 +26,8 @@ const Rosas = () => {
 
 
 
-      <div className="flex max-w-2xl w-full rounded-lg shadow-lg bg-white  m-2">
+      <div className="flex max-w-2xl w-full rounded-lg shadow-lg bg-white  m-2
+      transition-transform duration-300 hover:scale-110">
        
         <div className="w-2/6 p-2 bg-sky-50">
           <img 
@@ -38,7 +39,7 @@ const Rosas = () => {
         </div>
 
         
-        <div className="w-4/6 p-6">
+        <div className="w-4/6 p-6 ">
           <h3 className="text-xl font-semibold mb-2">Flower box</h3>
           <p className="text-gray-600 mb-3 text-sm">
             rosas de caixa rosas de caixa rosas de caixa rosas de caixa rosas de caixa rosas de caixa
@@ -54,7 +55,8 @@ const Rosas = () => {
         
       </div>
 
-        <div className="flex max-w-2xl w-full rounded-lg shadow-lg bg-white  m-2">
+        <div className="transition-transform duration-300 hover:scale-110
+        flex max-w-2xl w-full rounded-lg shadow-lg bg-white  m-2">
        
         <div className="w-2/6 p-2 bg-sky-50">
           <img 
@@ -81,7 +83,8 @@ const Rosas = () => {
         
       </div>
 
-      <div className="flex max-w-2xl w-full rounded-lg shadow-lg bg-white ">
+      <div className="transition-transform duration-300 hover:scale-110
+      flex max-w-2xl w-full rounded-lg shadow-lg bg-white ">
        
         <div className="w-2/6 p-2 bg-sky-50">
           <img 
@@ -112,7 +115,8 @@ const Rosas = () => {
     </div>
 
     <div className="flex items-center justify-center  p-6 ">
-            <div className="flex max-w-2xl w-full rounded-lg shadow-lg bg-white m-2">
+            <div className="transition-transform duration-300 hover:scale-110
+            flex max-w-2xl w-full rounded-lg shadow-lg bg-white m-2">
             
                 <div className="w-2/6 p-2 bg-sky-50">
                 <img 
@@ -138,7 +142,8 @@ const Rosas = () => {
                 </div>                            
             </div>
 
-            <div className="flex max-w-2xl w-full rounded-lg shadow-lg bg-white m-2">
+            <div className="transition-transform duration-300 hover:scale-110
+            flex max-w-2xl w-full rounded-lg shadow-lg bg-white m-2">
             
                 <div className="w-2/6 p-2 bg-sky-50">
                 <img 
@@ -164,7 +169,8 @@ const Rosas = () => {
                 </div>                            
             </div>
 
-            <div className="flex max-w-2xl w-full rounded-lg shadow-lg bg-white m-2">
+            <div className="transition-transform duration-300 hover:scale-110
+            flex max-w-2xl w-full rounded-lg shadow-lg bg-white m-2">
             
                 <div className="w-2/6 p-2 bg-sky-50">
                 <img 
