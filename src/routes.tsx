@@ -16,5 +16,5 @@ export const route = createBrowserRouter ([
         path:"/contacto",
         element:<Contacto/>,
       },
-  
+      
 ])

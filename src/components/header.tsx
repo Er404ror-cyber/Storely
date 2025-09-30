@@ -8,11 +8,9 @@ export const Header = () =>{
                     <div>
             
                         <div className="flex justify-end ">
-                            <Link to={"/"}
-                            className="text-white font-medium text-2xl ml-8 hover:text-red-200 
-                            ease-in-out transition-colors duration-300">
-                            pagina inicial
-                            </Link>
+                            <img src="src/img/OIP.webp" alt="Logo Rosa" 
+                            className="w-10 h-10 mr-auto" />
+  
                             
                             <Link to={"Rosas"}
                             className="text-white font-medium text-2xl ml-8 hover:text-red-200 

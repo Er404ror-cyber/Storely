@@ -6,7 +6,7 @@ export const Contacto = () =>{
         <div>
             <Header/>
 
-            <div className="flex justify-between">    
+            <div className="flex justify-between ">    
                 <div className="w-1/2 flex justify-center mt-32 ">
 
                 <form action="">

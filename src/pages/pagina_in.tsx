@@ -1,31 +1,51 @@
 
+import { Link } from "react-router-dom"
 import { Header } from "../components/header"
+import Rosas from "./rosas"
 
 
 
 export const Home = () =>{
     return(
     
-        <div>
+    <div>
             <Header/>
-            <div className="flex justify-between bg-gradient-to-r from-pink-300 to-red-400 h-screen">
-                <div className="w-1/2 ">
-                <h1 className="flex justify-center text-4xl mt-40 animate-bounce">Bem vindo a petal rose🌹</h1>
-                <div className="text-justify p-8 font-serif text-2xl ">
-                    
-                    <p>Nosso espaço foi criado com muito carinho para que você encontre as rosas mais belas 🌸, frescas 🌿 e cheias de significado ✨.</p>
-                    <p>Cada pétala carrega um toque especial de amor, cuidado e elegância 💐.</p>
-                    <p>Sinta-se em casa, explore nossas coleções e deixe-se envolver pelo perfume e encanto das rosas 🌹💕.</p>
-                </div>
-                </div>
-                
-             <div className="w-1/2 flex justify-center mt-32">
-                    <img src="src/img/intro.JPEG" className="border border-black rounded-2xl m-5  h-96 " alt="" />
-             </div> 
-             
+            <div className="bg-gradient-to-r from-white to-pink-300 h-screen">
+              
+          
+        <h1 className="text-center font-serif text-2xl pt-32 ">Bem vindo a Petal Rose 🌸</h1>
+        <h1 className="text-center font-mono pt-10">Os produtos mais amados💮</h1>
+      <div className="flex justify-center mt-16">
 
-             </div>
-        </div>
+        <Link to={Rosas}>
+        <img src="src/img/2_caixs.JPEG" alt="Rosa 1" 
+        className="m-2 w-50 h-auto border-2 border-purple-400 rounded-lg 
+        transition-transform duration-300 hover:scale-110"
+         />
+        
+        <h1 className="text-center font-mono hover:text-purple-400 
+        duration-300 transition-colors ease-in-out">caixa de rosas</h1>
+      </Link>
+
+        <Link to={Rosas}>
+        <img src="src/img/cetim.JPEG" alt="Rosa 2" 
+        className="m-2 w-50 h-auto border-2 border-purple-400 rounded-lg
+        transition-transform duration-300 hover:scale-110"  />
+        <h1 className="text-center font-mono hover:text-purple-400 
+        duration-300 transition-colors ease-in-out">rosas de setim</h1>
+        </Link>
+
+        <Link to={Rosas}>
+        <img src="src/img/mix.JPEG" alt="Rosa 3" 
+        className="m-2 w-50 h-auto border-2 border-purple-400 rounded-lg
+        transition-transform duration-300 hover:scale-110" />
+        <h1 className="text-center font-mono hover:text-purple-400 
+        duration-300 transition-colors ease-in-out">boque de rosas</h1>
+        </Link>
+
+      </div>
+  </div>
+     </div>
     )
 }
 export default Home

@@ -5,7 +5,27 @@ const Rosas = () => {
 
   <div className='h-screen bg-gray-200'> 
     <Header/>
+    
+    <div className=''>
+     <div className="max-w-md mx-auto bg-white shadow-md rounded-lg p-6 my-8">
+        <h1 className="text-3xl font-bold text-center mb-4">Pedido Personalizado</h1>
+        <p className="text-center text-gray-700 mb-6">
+          Venha para esse campo para fazer um pedido personalizado que não tenha no nosso catálogo.
+        </p>
+        <button
+          type="submit"
+          className="block mx-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg px-6 py-3 transition"
+        >
+          Personalizar
+        </button>
+      </div>
+
     <div className="flex items-center justify-center  p-6 ">
+
+     
+
+
+
       <div className="flex max-w-2xl w-full rounded-lg shadow-lg bg-white  m-2">
        
         <div className="w-2/6 p-2 bg-sky-50">
@@ -25,7 +45,9 @@ const Rosas = () => {
             rosas de caixa rosas de caixa v rosas de caixa
           </p>
         <div className='flex justify-between'>
-          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-200'
+          <p className='border rounded p-1'>preco: 2000</p> 
+          <button className='border rounded p-1 bg-blue-700
+          text-white'
           type='submit'>encomendar</button>
         </div>
         </div>
@@ -51,7 +73,8 @@ const Rosas = () => {
             rosas de caixa rosas de caixa v rosas de caixa
           </p>
         <div className='flex justify-between'>
-          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-200'
+          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-700
+          text-white'
           type='submit'>encomendar</button>
         </div>
         </div>
@@ -77,7 +100,8 @@ const Rosas = () => {
             rosas de caixa rosas de caixa v rosas de caixa
           </p>
         <div className='flex justify-between'>
-          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-200'
+          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-700
+          text-white'
           type='submit'>encomendar</button>
         </div>
         </div>
@@ -107,7 +131,8 @@ const Rosas = () => {
                     rosas de caixa rosas de caixa v rosas de caixa
                 </p>
                 <div className='flex justify-between'>
-          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-200'
+          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-700
+          text-white'
           type='submit'>encomendar</button>
         </div>
                 </div>                            
@@ -132,7 +157,8 @@ const Rosas = () => {
                     rosas de caixa rosas de caixa v rosas de caixa
                 </p>
                 <div className='flex justify-between'>
-          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-200'
+          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-700
+          text-white'
           type='submit'>encomendar</button>
         </div>
                 </div>                            
@@ -157,11 +183,13 @@ const Rosas = () => {
                     rosas de caixa rosas de caixa v rosas de caixa
                 </p>
                   <div className='flex justify-between'>
-          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-200'
+          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-700
+          text-white'
           type='submit'>encomendar</button>
         </div>
                 </div>                            
             </div>
+     </div>
      </div>
 </div> 
   )
