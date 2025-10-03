@@ -1,51 +1,78 @@
+import { Link } from "react-router-dom";
+import { Header } from "../components/header";
+import Rosas from "./rosas";
 
-import { Link } from "react-router-dom"
-import { Header } from "../components/header"
-import Rosas from "./rosas"
-
-
-
-export const Home = () =>{
-    return(
-    
+export const Home = () => {
+  return (
     <div>
-            <Header/>
-            <div className="bg-gradient-to-r from-white to-pink-300 h-screen">
-              
-          
-        <h1 className="text-center font-serif text-2xl pt-32 ">Bem vindo a Petal Rose 🌸</h1>
-        <h1 className="text-center font-mono pt-10">Os produtos mais amados💮</h1>
-      <div className="flex justify-center mt-16">
+      <Header/>
 
-        <Link to={Rosas}>
-        <img src="src/img/2_caixs.JPEG" alt="Rosa 1" 
-        className="m-2 w-50 h-auto border-2 border-purple-400 rounded-lg 
-        transition-transform duration-300 hover:scale-110"
-         />
-        
-        <h1 className="text-center font-mono hover:text-purple-400 
-        duration-300 transition-colors ease-in-out">caixa de rosas</h1>
-      </Link>
+      {/* Seção da imagem + texto central */}
+      <div className="relative h-[80vh]">
+        {/* Imagem de fundo */}
+        <img 
+          src="src/img/campo_rosas.webp" 
+          alt="Campo de rosas"
+          className="w-full h-full object-cover"
+        />
 
-        <Link to={Rosas}>
-        <img src="src/img/cetim.JPEG" alt="Rosa 2" 
-        className="m-2 w-50 h-auto border-2 border-purple-400 rounded-lg
-        transition-transform duration-300 hover:scale-110"  />
-        <h1 className="text-center font-mono hover:text-purple-400 
-        duration-300 transition-colors ease-in-out">rosas de setim</h1>
-        </Link>
-
-        <Link to={Rosas}>
-        <img src="src/img/mix.JPEG" alt="Rosa 3" 
-        className="m-2 w-50 h-auto border-2 border-purple-400 rounded-lg
-        transition-transform duration-300 hover:scale-110" />
-        <h1 className="text-center font-mono hover:text-purple-400 
-        duration-300 transition-colors ease-in-out">boque de rosas</h1>
-        </Link>
-
+        {/* Texto sobre a imagem */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white bg-black/30">
+          <h1 className="text-5xl font-bold mb-4">
+            🌹 Bem-vindo ao Campo das Rosas 🌹
+          </h1>
+          <p className="text-lg max-w-2xl">
+            Descubra a beleza das rosas com nossos arranjos exclusivos e especiais para você.
+          </p>
+          <button className="bg-fuchsia-300 p-3 border border-white rounded-lg m-8">ver mais</button>
+        </div>
       </div>
-  </div>
-     </div>
-    )
+
+      {/* Seção dos quadros de exibição com fundo gradiente */}
+      <div className="bg-gradient-to-r from-white to-pink-300 py-16">
+        <div className="flex justify-center flex-wrap">
+
+          <Link to={Rosas} className="m-4 text-center">
+            <img 
+              src="src/img/2_caixs.JPEG" 
+              alt="Rosa 1" 
+              className="w-60 h-auto border-2 border-purple-400 rounded-lg 
+              transition-transform duration-300 hover:scale-110"
+            />                                          
+            <h1 className="mt-2 font-mono hover:text-purple-400 
+            duration-300 transition-colors ease-in-out">Caixa de Rosas</h1>
+          </Link>
+
+          <Link to={Rosas} className="m-4 text-center">
+            <img 
+              src="src/img/cetim.JPEG" 
+              alt="Rosa 2" 
+              className="w-60 h-auto border-2 border-purple-400 rounded-lg 
+              transition-transform duration-300 hover:scale-110"
+            />
+            <h1 className="mt-2 font-mono hover:text-purple-400 
+            duration-300 transition-colors ease-in-out">Rosas de Setim</h1>
+          </Link>
+
+          <Link to={Rosas} className="m-4 text-center">
+            <img 
+              src="src/img/mix.JPEG" 
+              alt="Rosa 3" 
+              className="w-60 h-auto border-2 border-purple-400 rounded-lg 
+              transition-transform duration-300 hover:scale-110"
+            />
+            <h1 className="mt-2 font-mono hover:text-purple-400 
+            duration-300 transition-colors ease-in-out">Bouquet de Rosas</h1>
+          </Link>
+
+        </div>
+      </div>
+
+      {/* Motivo de escolher nossa loja*/}
+       
+    </div>
+  )
 }
-export default Home
+
+export default Home;
+
