@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Header } from '../components/header';
 
 const Rosas = () => {
@@ -46,10 +47,10 @@ const Rosas = () => {
             rosas de caixa rosas de caixa v rosas de caixa
           </p>
         <div className='flex justify-between'>
-          <p className='border rounded p-1'>preco: 2000</p> 
-          <button className='border rounded p-1 bg-blue-700
+         
+          <Link to={"/Box"}className='border rounded p-1 bg-blue-700
           text-white'
-          type='submit'>encomendar</button>
+          type='submit'>detalhes</Link>
         </div>
         </div>
         
@@ -75,9 +76,9 @@ const Rosas = () => {
             rosas de caixa rosas de caixa v rosas de caixa
           </p>
         <div className='flex justify-between'>
-          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-700
+         <Link to={"/Buque"}className='border rounded p-2  bg-blue-700
           text-white'
-          type='submit'>encomendar</button>
+          type='submit'>detalhes</Link>
         </div>
         </div>
         
@@ -103,9 +104,9 @@ const Rosas = () => {
             rosas de caixa rosas de caixa v rosas de caixa
           </p>
         <div className='flex justify-between'>
-          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-700
+         <Link to={"/Cetim"}className='border rounded p-2  bg-blue-700
           text-white'
-          type='submit'>encomendar</button>
+          type='submit'>detalhes</Link>
         </div>
         </div>
         
@@ -135,9 +136,9 @@ const Rosas = () => {
                     rosas de caixa rosas de caixa v rosas de caixa
                 </p>
                 <div className='flex justify-between'>
-          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-700
+         <Link to={"/Bu10"} className='border rounded p-2  bg-blue-700
           text-white'
-          type='submit'>encomendar</button>
+          type='submit'>detalhes</Link>
         </div>
                 </div>                            
             </div>
@@ -162,9 +163,9 @@ const Rosas = () => {
                     rosas de caixa rosas de caixa v rosas de caixa
                 </p>
                 <div className='flex justify-between'>
-          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-700
+         <Link to={"/ca10"} className='border rounded p-2  bg-blue-700
           text-white'
-          type='submit'>encomendar</button>
+          type='submit'>detalhes</Link>
         </div>
                 </div>                            
             </div>
@@ -189,9 +190,9 @@ const Rosas = () => {
                     rosas de caixa rosas de caixa v rosas de caixa
                 </p>
                   <div className='flex justify-between'>
-          <p className='border rounded p-1'>preco: 2000</p> <button className='border rounded p-1 bg-blue-700
+         <Link to={"/Mix"} className='border rounded p-2  bg-blue-700
           text-white'
-          type='submit'>encomendar</button>
+          type='submit'>detalhes</Link>
         </div>
                 </div>                            
             </div>

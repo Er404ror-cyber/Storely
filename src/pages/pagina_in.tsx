@@ -1,13 +1,13 @@
 import { Link } from "react-router-dom";
 import { Header } from "../components/header";
-import Rosas from "./rosas";
+
 
 export const Home = () => {
   return (
     <div>
       <Header/>
 
-      {/* Seção da imagem + texto central */}
+      
       <div className="relative h-[80vh]">
         {/* Imagem de fundo */}
         <img 
@@ -28,11 +28,11 @@ export const Home = () => {
         </div>
       </div>
 
-      {/* Seção dos quadros de exibição com fundo gradiente */}
+      {/* Seção das mixi exibicao*/}
       <div className="bg-gradient-to-r from-white to-pink-300 py-16">
         <div className="flex justify-center flex-wrap">
 
-          <Link to={Rosas} className="m-4 text-center">
+          <Link to={"/Rosas"} className="m-4 text-center">
             <img 
               src="src/img/2_caixs.JPEG" 
               alt="Rosa 1" 
@@ -43,7 +43,7 @@ export const Home = () => {
             duration-300 transition-colors ease-in-out">Caixa de Rosas</h1>
           </Link>
 
-          <Link to={Rosas} className="m-4 text-center">
+          <Link to={"/Rosas"} className="m-4 text-center">
             <img 
               src="src/img/cetim.JPEG" 
               alt="Rosa 2" 
@@ -54,7 +54,7 @@ export const Home = () => {
             duration-300 transition-colors ease-in-out">Rosas de Setim</h1>
           </Link>
 
-          <Link to={Rosas} className="m-4 text-center">
+          <Link to={"/Rosas"} className="m-4 text-center">
             <img 
               src="src/img/mix.JPEG" 
               alt="Rosa 3" 
@@ -69,8 +69,55 @@ export const Home = () => {
       </div>
 
       {/* Motivo de escolher nossa loja*/}
-       
-    </div>
+       <div className="flex justify-between  bg-gradient-to-r from-white to-pink-300 ">
+        <div className="w-1/2 flex flex-col 
+        items-center ">
+        <div className="w-90 h-60 bg-gray-100 rounded-2xl shadow-md flex flex-col 
+        items-center justify-center  ">
+          <img 
+            src="src/img/entregador_mota.webp" 
+            alt="Entregador" 
+            className="w-20 h-20 mb-2 "
+          />
+          <p className="text-sm font-bold">Delivery</p>
+          <p className="text-center">
+            Serviço de entrega rápido e seguro       Serviço de entrega rápido e seguro 
+            Serviço de entrega rápido e seguro 
+            Serviço de entrega rápido e seguro 
+
+          </p>
+        </div>
+        </div>
+        
+        
+
+        
+        <div className="w-1/2 flex flex-col 
+        items-center ">
+        <div className="w-90 h-60 bg-gray-100 rounded-2xl shadow-md flex flex-col 
+        items-center justify-center  ">
+          <img 
+            src="src/img/entregador_mota.webp" 
+            alt="Entregador" 
+            className="w-20 h-20 mb-2 "
+          />
+          <p className="text-sm font-bold">Delivery</p>
+          <p className="text-center">
+            Serviço de entrega rápido e seguro       Serviço de entrega rápido e seguro 
+            Serviço de entrega rápido e seguro 
+            Serviço de entrega rápido e seguro 
+
+          </p>
+        </div>
+        </div>
+
+        </div>
+        
+
+        </div>
+
+     
+    
   )
 }
 
