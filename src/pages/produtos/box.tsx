@@ -5,7 +5,8 @@ export  const Box = () => {
         <div>
             <Header/>
             <div className="flex justify-between">
-
+            
+            {/*parte direita*/}
 
             <div className="w-1/2 ">
             <p className="text-center p-2 mt-50 ">
@@ -18,22 +19,39 @@ export  const Box = () => {
                 detalhes da flor detalhes da flor detalhes da flor   
             </p>
             
-            <div className="m-4 flex justify-between">
-                <p className="border-2 rounded-lg p-2 w-25 ml-50">preco:2000</p>
-                <button className="border-2 bg-blue-500 text-white rounded-lg p-2 mr-40">encomendar</button>
-            </div>
-          
+            <div className="m-4 flex justify-center">
+                <p className="border-2 rounded-lg p-2 w-25 ">preco:2000</p>
+                
             </div>
 
-            <div className="w-1/2 flex justify-center " >
+              <div className="flex justify-center ">
+                    <form action="">
+                        <h2>Deixe-nos sua mensagem:</h2>
+                            <label htmlFor="mensagem" className="text-gray-700 font-semibold"></label>
+                            <input type="text"  required placeholder="Deixe seu pedido" 
+                            className="border-gray-300 border hover:bg-black/5 transition-all duration-300 ease-in-out p-2 
+                            rounded mt-1 " />
+                    </form>
+                    </div>
+
+                    <div className="flex justify-center m-2">
+                    <button className="p-2 text-white bg-blue-500 rounded-lg w-30">encomendar</button>
+                    </div>
+
+            </div>
+
+
+            {/*esquerda*/}
+
+            <div className="w-1/2  " >
+            <div className="flex justify-center">
             <img src="src/img/caixa_de_20.JPEG" alt="caixa de rosas"
-            className="w-60 h-90 shadow-2xl rounded-2xl mt-20 " />
+            className="w-90 h-96 shadow-2xl rounded-2xl mt-20 " />
             </div>
-            
-            </div>
-              <div className="flex justify-end mr-65 m-5">
 
-                {/*aqui nesse botao e para ser um link para meu whatsap no icone*/}
+{/*aqui nesse botao e para ser um link para meu whatsap no icone*/}
+            <div className="flex justify-end mr-65 ">
+
             <button type="submit">
                 <img src="src/img/whatsapp.jpg" alt="" 
                 className="h-8 "/>
@@ -42,8 +60,17 @@ export  const Box = () => {
                 <img src="src/img/ig.webp" alt="" 
                 className="h-15 "/>
             </button>
+      
+            </div>
 
             </div>
+            
+            </div>
+              
+
+            
+
+
         </div>
     )
 
