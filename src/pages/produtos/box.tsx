@@ -9,16 +9,23 @@ export  const Box = () => {
             {/*parte direita*/}
 
             <div className="w-1/2 ">
-            <p className="text-center p-2 mt-50 ">
-                detalhes da flor detalhes da flor detalhes da flor 
-                detalhes da flor detalhes da flor detalhes da flor 
-                detalhes da flor detalhes da flor detalhes da flor 
-                detalhes da flor detalhes da flor detalhes da flor 
-                detalhes da flor detalhes da flor detalhes da flor 
-                detalhes da flor detalhes da flor detalhes da flor 
-                detalhes da flor detalhes da flor detalhes da flor   
+            <div className=" text-justify   p-4 mt-20">
+            <p className=" ">
+           Encante com elegância e romantismo! 💖
+            Nossa Caixa Luxo com 20 Rosas Vermelhas é o 
+            presente perfeito para expressar amor, paixão e admiração. 
+            Cada rosa é cuidadosamente selecionada e disposta em uma charmosa 
+            caixa vermelha, criando uma combinação sofisticada e inesquecível.
             </p>
             
+            <p className="mt-2 ">Detalhes:</p>
+            <div className="ml-4">
+                <li>20 rosas vermelhas frescas e selecionadas</li>
+                <li>Caixa redonda de design elegante</li>
+                <li>Embalagem de luxo pronta para presente</li>
+                <li>Mensagem personalizada opcional</li>
+            </div>
+            </div>
             <div className="m-4 flex justify-center">
                 <p className="border-2 rounded-lg p-2 w-25 ">preco:2000</p>
                 

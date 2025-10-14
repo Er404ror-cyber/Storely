@@ -8,16 +8,22 @@ export  const Buque = () => {
             {/*parte direita*/}
 
             <div className="w-1/2 ">
-            <p className="text-center p-2 mt-50 ">
-                detalhes da flor detalhes da flor detalhes da flor 
-                detalhes da flor detalhes da flor detalhes da flor 
-                detalhes da flor detalhes da flor detalhes da flor 
-                detalhes da flor detalhes da flor detalhes da flor 
-                detalhes da flor detalhes da flor detalhes da flor 
-                detalhes da flor detalhes da flor detalhes da flor 
-                detalhes da flor detalhes da flor detalhes da flor   
+            <div className="text-justify p-4 mt-20">
+            <p className="">
+            Temos um bouque clássico formado por dezenas de rosas vermelhas, 
+            cuidadosamente envoltas em papel branco estilizado, trazendo o charme 
+            das flores frescas e a atmosfera refinada dos arranjos artesanais feitos 
+            para ocasiões especiais.
             </p>
+
+            <p className="mt-2">Detalhes:</p>
+            <div className="ml-4">
+            <li>Buque de 20 rosas (personalizavel)</li>
+            <li>Papel de embrulho branco</li>
+            <li>Mensagem personalizada opcional</li>
             
+            </div>
+            </div>
             <div className="m-4 flex justify-center">
                 <p className="border-2 rounded-lg p-2 w-25 ">preco:2000</p>
                 

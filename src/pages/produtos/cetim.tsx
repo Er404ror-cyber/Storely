@@ -8,16 +8,23 @@ export  const Cetim = () => {
             {/*parte direita*/}
 
             <div className="w-1/2 ">
-            <p className="text-center p-2 mt-50 ">
-                detalhes da flor detalhes da flor detalhes da flor 
-                detalhes da flor detalhes da flor detalhes da flor 
-                detalhes da flor detalhes da flor detalhes da flor 
-                detalhes da flor detalhes da flor detalhes da flor 
-                detalhes da flor detalhes da flor detalhes da flor 
-                detalhes da flor detalhes da flor detalhes da flor 
-                detalhes da flor detalhes da flor detalhes da flor   
+
+            <div className="text-justify p-4 mt-20 ">
+            <p className="">
+               rosa confeccionada em cetim, com acabamento 
+               impecável e aparência delicada. Este tipo de flor artificial 
+               une estética e durabilidade, sendo perfeita para decorações 
+               sofisticadas, lembrancinhas ou ambientes onde se deseja beleza 
+               permanente sem perder o encanto das rosas naturais.
             </p>
-            
+
+            <p className="mt-2 ">Detalhes:</p>
+            <div className="ml-4">
+                <li>Rosas de cetim variaveis de tamanho e tipo</li>
+                <li>Embruldas no papel </li>
+                <li>Mensagem personalizavel opcional</li>
+            </div>
+            </div>
             <div className="m-4 flex justify-center">
                 <p className="border-2 rounded-lg p-2 w-25 ">preco:2000</p>
                 
