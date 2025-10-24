@@ -49,3 +49,23 @@ export const Home = () =>{
     )
 }
 export default Home
+
+
+{/*pedido personalizado*/}
+ 
+  <div className="flex flex-col md:flex-row max-w-xl w-full rounded-lg shadow-lg bg-gray-200
+  duration-300 hover:scale-110">
+   
+    <div className="w-full md:w-4/6 p-6 flex flex-col justify-between">
+      <h1 className="text-xl font-semibold mt-2">Pedido Personalizado</h1>
+      <p className="text-gray-600 mb-3 text-sm mt-5">
+        Venha para esse campo para fazer um pedido personalizado que não tenha no nosso catálogo.
+      </p>
+      <button
+        type="submit"
+        className="border rounded p-2 mt-5 bg-blue-700 text-white"
+      >
+        Personalizar
+      </button>
+    </div>
+  </div>

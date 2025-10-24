@@ -11,7 +11,7 @@ export const Home = () => {
       <div className="relative h-[80vh]">
         {/* Imagem de fundo */}
         <img 
-          src="src/img/campo_rosas.webp" 
+          src="src/img/bolos/entrada.jpg" 
           alt="Campo de rosas"
           className="w-full h-full object-cover"
         />
@@ -19,10 +19,10 @@ export const Home = () => {
         {/* Texto sobre a imagem */}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white bg-black/30">
           <h1 className="text-5xl font-bold mb-4">
-            🌹 Bem-vindo ao Campo das Rosas 🌹
+            🌹 Bem-vindo aos doces da Dinalda 🌹
           </h1>
           <p className="text-lg max-w-2xl">
-            Descubra a beleza das rosas com nossos arranjos exclusivos e especiais para você.
+            Descubra a beleza do mundo de docuras e rosas que cativam a rodos que experimentam.
           </p>
           <button className="bg-fuchsia-300 p-3 border border-white rounded-lg m-8">ver mais</button>
         </div>
@@ -45,24 +45,24 @@ export const Home = () => {
 
           <Link to={"/Rosas"} className="m-4 text-center">
             <img 
-              src="src/img/cetim.JPEG" 
+              src="src/img/bolos/coracao.jpg" 
               alt="Rosa 2" 
               className="w-60 h-auto border-2 border-purple-400 rounded-lg 
               transition-transform duration-300 hover:scale-110"
             />
             <h1 className="mt-2 font-mono hover:text-purple-400 
-            duration-300 transition-colors ease-in-out">Rosas de Setim</h1>
+            duration-300 transition-colors ease-in-out">Bolos personalizados</h1>
           </Link>
 
           <Link to={"/Rosas"} className="m-4 text-center">
             <img 
-              src="src/img/mix.JPEG" 
+              src="src/img/bolos/combo.jpg" 
               alt="Rosa 3" 
               className="w-60 h-auto border-2 border-purple-400 rounded-lg 
               transition-transform duration-300 hover:scale-110"
             />
             <h1 className="mt-2 font-mono hover:text-purple-400 
-            duration-300 transition-colors ease-in-out">Bouquet de Rosas</h1>
+            duration-300 transition-colors ease-in-out">Biscoitos</h1>
           </Link>
 
         </div>
