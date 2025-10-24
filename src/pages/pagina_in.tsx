@@ -17,13 +17,17 @@ export const Home = () => {
         />
 
         {/* Texto sobre a imagem */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white bg-black/30">
+        <div className="absolute inset-0 flex flex-col items-center justify-center 
+        text-center text-white bg-black/30">
+          <div className=" hover:text-purple-400 
+            duration-1000 transition-colors ease-in-out">
           <h1 className="text-5xl font-bold mb-4">
             🌹 Bem-vindo aos doces da Dinalda 🌹
           </h1>
-          <p className="text-lg max-w-2xl">
+          <p className="text-lg text-center">
             Descubra a beleza do mundo de docuras e rosas que cativam a rodos que experimentam.
           </p>
+          </div>
           <button className="bg-fuchsia-300 p-3 border border-white rounded-lg m-8">ver mais</button>
         </div>
       </div>
