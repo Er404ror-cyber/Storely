@@ -1,6 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import { Home } from "./pages/pagina_in";
-import Rosas from "./pages/rosas";
+import Rosas from "./pages/novo/rosas";
 import { Contacto } from "./pages/contacto";
 import Box from "./pages/produtos/box";
 import Cetim from "./pages/produtos/cetim";
@@ -16,6 +16,7 @@ import Pote from "./pages/produtos/pote";
 import Marmita from "./pages/produtos/marmita";
 import Mini from "./pages/produtos/mini";
 import Combo from "./pages/produtos/combo";
+import DetalhesProduto from "./pages/novo/detalhes";
 export const route = createBrowserRouter ([
     {
         path: "/",
@@ -24,6 +25,10 @@ export const route = createBrowserRouter ([
       {
         path:"/Rosas",
         element:<Rosas/>,
+      },
+      {
+        path:"/rosas/:id",
+        element:<DetalhesProduto/>,
       },
       {
         path:"/Contacto",
