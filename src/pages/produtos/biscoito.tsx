@@ -12,19 +12,11 @@ export  const Biscoito = () => {
             <div className=" text-justify   p-4 mt-20">
             <p className=" ">
                 Esses biscoitos artesanais encantam tanto pelos olhos quanto pelo paladar. 
-                Com formatos que lembram flores delicadas, eles combinam massas amanteigadas 
-                douradas e escuras, decoradas com fios sutis de chocolate e um recheio cremoso 
-                irresistível no centro de cada um.
-                O contraste entre o sabor suave da baunilha e a intensidade do cacau proporciona
-                uma experiência sofisticada, perfeita para acompanhar um café ou oferecer de 
-                presente em ocasiões especiais. Cada mordida revela frescor e textura crocante, 
-                evidenciando o carinho e a dedicação investidos no preparo. São a escolha ideal 
-                para quem deseja surpreender e conquistar o coração dos convidados com um mimo doce 
-                e inesquecível.
+                Vendidos por duzias
           </p>
             </div>
             <div className="m-4 flex justify-center">
-                <p className="border-2 rounded-lg p-2 w-25 ">preco:2000</p>
+                <p className="border-2 rounded-lg p-2 w-25 ">preco: 150.00 mt</p>
                 
             </div>
 

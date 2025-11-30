@@ -12,17 +12,11 @@ export  const Gulabos = () => {
             <div className=" text-justify   p-4 mt-20">
             <p className=" ">
          Esses gulabos são verdadeiras joias da confeitaria, perfeitos para quem busca encantar o 
-         paladar com uma iguaria delicada e envolvente. Leves e macios, cada pedaço é dourado com 
-         perfeição e envolto em uma nuvem de coco ralado e açúcar, criando uma textura irresistível
-          já ao primeiro toque.
-        Ao saborear, a casquinha levemente crocante revela um interior úmido e aromático, 
-        perfeito para transformar qualquer pausa em um momento especial. Combinam tradição
-        e carinho em cada detalhe, tornando-se a escolha ideal para acompanhar um chá da tarde, 
-        resentear alguém querido ou simplesmente deixar qualquer reunião mais doce, alegre e memorável.
+         paladar com uma iguaria delicada e envolvente. 1kg
          </p>
             </div>
             <div className="m-4 flex justify-center">
-                <p className="border-2 rounded-lg p-2 w-25 ">preco:2000</p>
+                <p className="border-2 rounded-lg p-2 w-25 ">preco: 600.00 mt</p>
                 
             </div>
 

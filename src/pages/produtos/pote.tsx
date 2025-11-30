@@ -12,18 +12,11 @@ export  const Pote = () => {
             <div className=" text-justify   p-4 mt-20">
             <p className=" ">
                 O bolo no pote é uma irresistível explosão de camadas, criado para proporcionar 
-                prazer em cada colherada. Visualmente encantador, ele traz a combinação perfeita 
-                de massa fofinha, recheios cremosos e coberturas generosas, tudo montado com o capricho 
-                artesanal que transforma o simples em extraordinário.
-                Seja com chocolate intenso, chantilly delicado ou um toque frutado vibrante, cada 
-                pote entrega frescor, textura e sabor marcante em porções individuais práticas e 
-                sofisticadas. Ideal para presentear, servir em eventos ou simplesmente adoçar o dia 
-                a qualquer hora, esse doce conquista pelo visual apetitoso e pela experiência completa 
-                de uma sobremesa feita sob medida para agradar e surpreender.
+                prazer em cada colherada. 
           </p>
             </div>
             <div className="m-4 flex justify-center">
-                <p className="border-2 rounded-lg p-2 w-25 ">preco:2000</p>
+                <p className="border-2 rounded-lg p-2 w-25 ">preco: 100,00 mt</p>
                 
             </div>
 

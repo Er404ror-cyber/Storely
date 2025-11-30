@@ -11,15 +11,11 @@ export  const Mini = () => {
             <div className="w-1/2 ">
             <div className=" text-justify   p-4 mt-20">
             <p className=" ">
-                Esses mini bolos são pequenas obras de arte da confeitaria, perfeitos para quem 
-                deseja saborear um doce sofisticado na medida certa. Cada unidade traz uma massa 
-                macia e saborosa, envolvida por uma camada generosa de cobertura cremosa 
-                 seja de chocolate intenso ou de um delicado creme branco 
-                 finalizada com fios decorativos de chocolate que realçam ainda mais o visual e o sabor.
+                Esses mini bolos são pequenas obras de arte da confeitaria
            </p>
             </div>
             <div className="m-4 flex justify-center">
-                <p className="border-2 rounded-lg p-2 w-25 ">preco:2000</p>
+                <p className="border-2 rounded-lg p-2 w-25 ">preco: 175,00 mt</p>
                 
             </div>
 

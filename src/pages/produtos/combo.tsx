@@ -11,17 +11,14 @@ export  const Combo = () => {
             <div className="w-1/2 ">
             <div className=" text-justify   p-4 mt-20">
             <p className=" ">
-                Este combo é a expressão perfeita de carinho e sofisticação, ideal para transformar 
                 Acompanhando o bolo, dois cupcakes irresistíveis 
                 cobertos com chantilly suave, mini chocolates e detalhes dourados
-                 trazem um toque extra de charme e sabor ao conjunto. Cada mordida revela maciez, 
-                 frescor e equilíbrio, oferecendo ao cliente uma experiência doce repleta de elegância 
-                 e sabor.qualquer aniversário em um momento inesquecível.
+                
            </p>
            
             </div>
             <div className="m-4 flex justify-center">
-                <p className="border-2 rounded-lg p-2 w-25 ">preco:2000</p>
+                <p className="border-2 rounded-lg p-2 w-25 ">preco: 600,00 mt </p>
                 
             </div>
 

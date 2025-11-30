@@ -11,20 +11,12 @@ export  const Bombom = () => {
             <div className="w-1/2 ">
             <div className=" text-justify   p-4 mt-20">
             <p className=" ">
-                Estes bombons artesanais são a definição de pura tentação para os amantes de chocolate. 
-                Delicadamente moldados em esferas perfeitas, apresentam uma casquinha de chocolate 
-                nobre, lisinha e brilhante, capaz de despertar desejos à primeira vista. Dois deles 
-                trazem um irresistível toque especial de granulados crocantes, prometendo uma explosão 
-                de texturas a cada mordida.
-                Ao provar, você será surpreendido por um equilíbrio perfeito entre o sabor intenso do 
-                chocolate e a maciez do recheio, criando uma experiência única e sofisticada. 
-                Ideais para presentear ou servir em ocasiões especiais, esses bombons são pequenos luxos 
-                embalados com carinho, perfeitos para transformar qualquer momento em um instante 
-                inesquecível e doce
+                Estes bombons artesanais recheados de chocolate por dentro encantao os amantes de doces.
+                vendidos 50 por unidade
           </p>
             </div>
             <div className="m-4 flex justify-center">
-                <p className="border-2 rounded-lg p-2 w-25 ">preco:2000</p>
+                <p className="border-2 rounded-lg p-2 w-25 ">preco: 50,00mt </p>
                 
             </div>
 

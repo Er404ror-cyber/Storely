@@ -11,19 +11,11 @@ export  const Marmita = () => {
             <div className="w-1/2 ">
             <div className=" text-justify   p-4 mt-20">
             <p className=" ">
-                A marmita de bolo é a escolha perfeita para quem deseja unir praticidade e puro 
-                prazer em cada pedaço. Montada em uma embalagem generosa e segura, ela traz camadas 
-                super macias de bolo intercaladas com recheios cremosos e uma cobertura de chocolate 
-                reluzente que convida à indulgência.
-                Finalizada com confeitos ou granulado crocante, cada marmita surpreende pelo 
-                aroma envolvente e pela apresentação caseira, transmitindo carinho e capricho em 
-                cada detalhe. Ideal para compartilhar, presentear ou simplesmente se deliciar sem 
-                culpa, essa marmita transforma qualquer ocasião em um momento especial, trazendo a 
-                doçura e o aconchego que só um bolo feito com dedicação pode proporcionar.
+                A marmita de bolo é a escolha perfeita para quem deseja saborear uma porção generosa
            </p>
             </div>
             <div className="m-4 flex justify-center">
-                <p className="border-2 rounded-lg p-2 w-25 ">preco:2000</p>
+                <p className="border-2 rounded-lg p-2 w-25 ">preco: 75.00 mt</p>
                 
             </div>
 

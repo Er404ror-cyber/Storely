@@ -27,7 +27,7 @@ export  const Box = () => {
             </div>
             </div>
             <div className="m-4 flex justify-center">
-                <p className="border-2 rounded-lg p-2 w-25 ">preco:2000</p>
+                <p className="border-2 rounded-lg p-2 w-25 ">preco:2000,00 mt</p>
                 
             </div>
 

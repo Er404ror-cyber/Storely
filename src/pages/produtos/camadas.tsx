@@ -11,21 +11,13 @@ export  const Camadas = () => {
             <div className="w-1/2 ">
             <div className=" text-justify   p-4 mt-20">
             <p className=" ">
-             duas camadas generosas de massa, intercaladas com recheios cremosos e 
-             envoltos por coberturas sofisticadas, resultando em uma sobremesa irresistível 
-             tanto no sabor quanto no visual. Sua estrutura mais alta permite servir mais pessoas, 
-             sendo a escolha ideal para festas, aniversários e momentos em que reunir a família e 
-             amigos faz a diferença.
-            Cada camada é pensada para proporcionar uma experiência única a cada mordida,
-            harmonizando texturas macias com recheios equilibrados e deliciosos. 
-            A versatilidade dos bolos de duas camadas permite personalização em sabores, recheios, c
-            oberturas e decorações, tornando cada celebração ainda mais especial e memorável.
-            </p>
+             tres camadas generosas de massa, intercaladas com recheios cremosos e 
+             envoltos por coberturas festivas </p>
             
          
             </div>
             <div className="m-4 flex justify-center">
-                <p className="border-2 rounded-lg p-2 w-25 ">preco:2000</p>
+                <p className="border-2 rounded-lg p-2 w-25 ">preco: 1600.00 mt</p>
                 
             </div>
 

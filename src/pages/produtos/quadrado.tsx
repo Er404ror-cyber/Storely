@@ -11,21 +11,14 @@ export  const Quadrado = () => {
             <div className="w-1/2 ">
             <div className=" text-justify   p-4 mt-20">
             <p className=" ">
-           Os bolos quadrados grandes são verdadeiras estrelas em eventos memoráveis,
-           perfeitos para quem deseja encantar muitos convidados sem abrir mão da sofisticação e do sabor.
-            Sua base robusta e formato generoso são pensados justamente para proporcionar fatias fartas, 
-            ideais para grandes celebrações como aniversários, casamentos ou festas corporativas.
-            Com possibilidades infinitas de decoração, esses bolos combinam camadas macias 
-            e recheios irresistíveis, decorados de maneira criativa para harmonizar com o 
-            tema da ocasião. Além de impressionarem pelo tamanho, oferecem uma apresentação 
-            impecável, destacando-se em qualquer mesa de festa e tornando cada momento ainda 
-            mais especial. 
+              perfeitos para quem deseja encantar muitos convidados sem abrir mão da sofisticação e do sabor.
+             
             </p>
             
           
             </div>
             <div className="m-4 flex justify-center">
-                <p className="border-2 rounded-lg p-2 w-25 ">preco:2000</p>
+                <p className="border-2 rounded-lg p-2 w-25 ">preco: 3000,00 mt </p>
                 
             </div>
 

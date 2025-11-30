@@ -11,21 +11,11 @@ export  const Orelhodos = () => {
             <div className="w-1/2 ">
             <div className=" text-justify   p-4 mt-20">
             <p className=" ">
-                Estes cupcakes “orelhudos” são uma verdadeira explosão de charme e sabor, 
-                perfeitos para encantar qualquer mesa de doces. Com uma massa leve e dourada,
-                eles vêm recheados com um creme sedoso e delicado, formando um topo criativo onde 
-                pedaços de bolo representam simpáticas orelhinhas, destacando ainda mais a apresentação 
-                divertida e única.
-                Finalizados com uma suave nevada de açúcar de confeiteiro, 
-                cada cupcake oferece uma textura macia aliada ao aroma irresistível de
-                 baunilha e um toque de frescor proporcionado pelo recheio cremoso. 
-                 São ideais para festas infantis, eventos especiais ou para quem simplesmente 
-                 deseja adoçar o dia com uma sobremesa que conquista de primeira pelo visual 
-                 criativo e sabor envolvente. Certamente farão qualquer cliente se apaixonar à 
-                 primeira mordida!
+                Estes cupcakes “orelhudos” sao uma verdadeira atracao visual e gustativa. 
+                uma duzia
            </p>  </div>
             <div className="m-4 flex justify-center">
-                <p className="border-2 rounded-lg p-2 w-25 ">preco:2000</p>
+                <p className="border-2 rounded-lg p-2 w-25 ">preco: 850,00 mt</p>
                 
             </div>
 
