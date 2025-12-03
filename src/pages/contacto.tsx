@@ -6,47 +6,63 @@ export const Contacto = () =>{
         <div>
             <Header/>
 
-            <div className="flex justify-between ">    
-                <div className="w-1/2 flex justify-center mt-32 ">
+            <div className="   ">
+      
+      {/* Titulo  */}
+      <h1 className=" text-5xl md:text-6xl font-normal mb-4 text-center mt-6">
+        CONTACTE-NOS
+      </h1>
 
-                <form action="">
-                    <h2>Nome:</h2>
-                    <label htmlFor="nome" className="text-gray-700 font-semibold"></label>
-                    <input type="text" required placeholder="Digite seu nome" 
-                    className="border-gray-300 border hover:bg-black/5 transition-all duration-300 ease-in-out p-2 
-                    rounded mt-1" />
+      
 
-                    <h2>e-mail:</h2>
-                    <label htmlFor="e-mail" className="text-gray-700 font-semibold"></label>
-                    <input type="email"  required placeholder="Digite seu e-mail" 
-                    className="border-gray-300 border hover:bg-black/5 transition-all duration-300 ease-in-out p-2 
-                    rounded mt-1" />
+      {/* Área do formulario */}
+      <div className=" space-y-5 flex  flex-col w-xl mx-auto px-4 mb-20">
+        
+        {/* Input: Nome */}
+        <div className="">
+          <input 
+            type="text" 
+            placeholder="Nome:" 
+            className="w-full bg-white text-gray-800 px-4 py-3.5 rounded-lg    shadow-sm"
+          />
+        </div>
 
-                     <h2>Deixe o seu pedido:</h2>
-                    <label htmlFor="mensagem" className="text-gray-700 font-semibold"></label>
-                    <input type="text"  required placeholder="Deixe seu pedido" 
-                    className="border-gray-300 border hover:bg-black/5 transition-all duration-300 ease-in-out p-2 
-                    rounded mt-1" />
+        {/* Input: Numero telefone */}
+        <div className="">
+          <input 
+            type="number" 
+            placeholder="Numero de telefone:" 
+            className="w-full bg-white text-gray-800 px-4 py-3.5 rounded-lg    shadow-sm"
+          />
+        </div>
 
-                    <button type="submit" 
-                    className="border border-black  hover: bg-blue-500 transition-all duration-300
-                    ease-in-out p-2 rounded grid mt-6 ml-12">Submeter</button>
+        {/* Input: Email */}
+        <div className="">
+          <input 
+            type="email" 
+            placeholder="Email:" 
+            className="w-full bg-white text-gray-800 px-4 py-3.5 rounded-lg    shadow-sm"
+          />
+        </div>
 
-                </form>
+        {/* Textarea: Menssagem */}
+        <div className="w-full">
+          <textarea 
+            placeholder="Mensagem:" 
+            rows={6}
+            className="w-full bg-white text-gray-800 px-4 py-3.5 rounded-lg    shadow-sm "
+          ></textarea>
+        </div>
 
-                </div>
+        {/* Botão */}
+        <div className="w-full pt-2">
+          <button className="bg-blue-400 hover:bg-blue-600 text-white font-bold py-4 px-10 rounded-lg shadow-md transition-colors ease-in-out">
+            Enviar
+          </button>
+        </div>
 
-                <div className="w-1/2 h-screen bg-gradient-to-r from-pink-300 to-red-400">
-                <img src="src/img/casal.JPEG" alt="Foto" 
-                className="border border-black rounded-md transition-all duration-1000 
-                ease-in-out m-5 hover:border-purple-800 w-auto h-96 ml-50 " />
-                    <h3 className="text-xl font-semibold mt-2 mb-4 text-center">Informações de Contato</h3>
-                    <p className="mb-2 text-center"><strong>Telefone:</strong> +258 83 374 2053</p>
-                    <p className="mb-2 text-center"><strong>Email:</strong> dicksontembe42@gmail.com</p>
-                    <p className="mb-2 text-center"><strong>Endereço:</strong> Malhapsene</p>
-                    
-                </div>`
-            </div>
+      </div>
+    </div>
         </div>
     )
 }
