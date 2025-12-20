@@ -21,9 +21,9 @@ export const Home = () => {
         text-center text-white bg-black/30">
           <div className=" hover:text-purple-400 
             duration-1000 transition-colors ease-in-out">
-          <h1 className="text-5xl font-bold mb-4">
-            🌹 Bem-vindo aos doces da Dinalda 🌹
-          </h1>
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight drop-shadow-lg">
+          Doces da <span className="text-purple-400 italic">Dinalda</span>
+        </h1>
           <p className="text-lg text-center">
             Descubra a beleza do mundo de docuras e rosas que cativam a rodos que experimentam.
           </p>
@@ -34,7 +34,12 @@ export const Home = () => {
       {/* Seção das mixi exibicao*/}
       <div className="bg-gradient-to-r from-blue-50 to-indigo-300 py-16">
         
-          <h1 className="text-center font-mono m-10">mini exibicao💮</h1>
+          <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4">Mini Exibição 💮</h2>
+           <p className="mt-6 text-gray-600 max-w-xl mx-auto">
+            Uma prévia das nossas criações mais amadas, feitas com ingredientes premium e muito carinho.
+          </p>
+</div>
         <div className="flex justify-center flex-wrap">
           <Link to={"/Rosas"} className="m-4 text-center">
             <img 
@@ -43,7 +48,7 @@ export const Home = () => {
               className="w-60 h-auto border-2 border-purple-400 rounded-lg 
               transition-transform duration-300 hover:scale-110"
             />                                          
-            <h1 className="mt-2 font-mono hover:text-purple-400 
+            <h1 className="mt-2 font-serif hover:text-purple-400 
             duration-300 transition-colors ease-in-out">Caixa de Rosas</h1>
           </Link>
 
@@ -54,7 +59,7 @@ export const Home = () => {
               className="w-60 h-auto border-2 border-purple-400 rounded-lg 
               transition-transform duration-300 hover:scale-110"
             />
-            <h1 className="mt-2 font-mono hover:text-purple-400 
+            <h1 className="mt-2 font-serif hover:text-purple-400 
             duration-300 transition-colors ease-in-out">Bolos personalizados</h1>
           </Link>
 
@@ -65,7 +70,7 @@ export const Home = () => {
               className="w-60 h-auto border-2 border-purple-400 rounded-lg 
               transition-transform duration-300 hover:scale-110"
             />
-            <h1 className="mt-2 font-mono hover:text-purple-400 
+            <h1 className="mt-2 font-serif hover:text-purple-400 
             duration-300 transition-colors ease-in-out">Biscoitos</h1>
           </Link>
 
@@ -73,27 +78,22 @@ export const Home = () => {
       </div>
 
       {/* Motivo de escolher nossa loja*/}
-      <h1 className="text-center font-mono bg-gradient-to-r from-blue-50 to-indigo-300 p-10">
-        Porque a Petal🌹
-        </h1>
-       <div className="flex justify-between  bg-gradient-to-r from-blue-50 to-indigo-300 ">
+      <section className=" bg-gradient-to-r from-blue-50 to-indigo-300">
+    <h2 className="text-center text-4xl font-bold mb-14">Por que escolher a Petal🌹</h2>
+       <div className="flex justify-between  ">
         
       {/*primeiro cartao*/}
-        <div className="w-1/2 flex flex-col 
-        items-center ">
+        <div className="w-1/2 flex flex-col mb-6 items-center ">
         <div className="w-90 h-60 bg-gray-100 rounded-2xl shadow-md flex flex-col 
-        items-center justify-center  ">
+        items-center justify-center  border-2 border-purple-300">
           <img 
-            src="public\img\entregador_mota.webp" 
+            src="public\img\delivery.png" 
             alt="Entregador" 
             className="w-20 h-20 mb-2 "
           />
           <p className="text-sm font-bold">Delivery</p>
           <p className="text-center">
-            Serviço de entrega rápido e seguro       Serviço de entrega rápido e seguro 
-            Serviço de entrega rápido e seguro 
-            Serviço de entrega rápido e seguro 
-
+           Serviço de delivery seguro e pontual, garantindo que seus doces cheguem frescos e impecáveis.
           </p>
         </div>
         </div>
@@ -101,27 +101,34 @@ export const Home = () => {
         
 
         {/*segundo cartao*/}
-        <div className="w-1/2 flex flex-col 
-        items-center ">
+        <div className="w-1/2 flex flex-col mb-6 items-center ">
         <div className="w-90 h-60 bg-gray-100 rounded-2xl shadow-md flex flex-col 
-        items-center justify-center  ">
+        items-center justify-center border-2 border-purple-300 ">
           <img 
-            src="public\img\entregador_mota.webp" 
+            src="public\img\personalizacao.png" 
             alt="Entregador" 
             className="w-20 h-20 mb-2 "
           />
-          <p className="text-sm font-bold">Pedidos custumizaveis</p>
+          <p className="text-sm font-bold">Personalização Total</p>
           <p className="text-center">
-            Facilidade de personalizar seus pedidos conforme suas preferências e ocasiões especiais.
-            Facilidade de personalizar seus pedidos conforme suas preferências e ocasiões especiais.
-            
-
+            acilidade de customizar seus pedidos para aniversários, casamentos ou ocasiões especiais.
           </p>
         </div>
         </div>
 
-        </div>
+        </div></section>
         
+         <section className="bg-gradient-to-r from-blue-50 to-indigo-300 py-20 text-center ">
+        <div className="max-w-3xl mx-auto px-6">
+          <h2 className="text-4xl font-bold mb-6 italic">Transforme seus momentos em doçura</h2>
+          <p className="text-lg mb-8 opacity-90">
+            Cada doce é uma obra de arte feita à mão, pronta para encantar seus sentidos e perfumar seu dia com a delicadeza das rosas.
+          </p>
+          <button className="bg-white text-pink-600 px-10 py-4 rounded-full font-bold text-lg hover:bg-pink-50 transition-all shadow-xl">
+            Fazer Encomenda no WhatsApp
+          </button>
+        </div>
+      </section>
 
         </div>
 
