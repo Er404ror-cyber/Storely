@@ -150,7 +150,7 @@ const DetalhesProduto: React.FC = () => {
     <div className='bg-gray-50 min-h-screen'>
       <Header />
       
-      <div className="container mx-auto p-4 md:p-10">
+      <div className="container mx-auto p-2 md:px-10 py-10 pt-16">
         <button 
           onClick={() => navigate(-1)} 
           className="text-blue-700 hover:text-blue-900 mb-8 flex items-center font-medium"
@@ -160,7 +160,7 @@ const DetalhesProduto: React.FC = () => {
         </button>
 
         <div className="bg-white rounded-xl shadow-2xl p-6 md:p-10">
-          <h1 className="text-4xl font-extrabold text-gray-900 mb-8 border-b pb-4">{produto.nome}</h1>
+          <h1 className="text-3xl font-extrabold text-gray-900 mb-8 border-b pb-4">{produto.nome}</h1>
 
           <div className="flex flex-col lg:flex-row gap-10">
             
@@ -234,7 +234,7 @@ const DetalhesProduto: React.FC = () => {
         onChange={(e) => setQuantidade(Number(e.target.value))}
         className="w-full p-3 border border-blue-400 rounded-lg shadow-md bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500 text-base"
     >
-        {/* Correção para o erro 'produto.opcoes' is possibly 'undefined' */}
+       
         {produto.opcoes.opcoesFixas.map(opt => (
             <option key={opt} value={opt}>{opt} {produto.opcoes!.unidade}{opt > 1 && 's'}</option>
         ))}
@@ -252,13 +252,13 @@ const DetalhesProduto: React.FC = () => {
               </div>
 
               {/* Preço por Unidade */}
-              <div className="text-xl font-medium text-gray-800 mb-3">
+              <div className="text-lg font-medium text-gray-800 mb-3">
                 Preço por {produto.opcoes?.multiplicadorPreco ? produto.opcoes.unidade : 'unidade'}: 
                 <span className="text-xl font-bold text-gray-900 ml-2">{formatarPrecoMZN(produto.precoBase)}</span>
               </div>
 
               {/* Total Estimado */}
-              <div className="text-3xl font-black text-gray-800 mb-8">
+              <div className="text-2xl font-black text-gray-800 mb-8">
                 Total Estimado: 
                 <span className="text-green-600 ml-2">{formatarPrecoMZN(precoTotal)}</span>
               </div>
