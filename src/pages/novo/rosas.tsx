@@ -1,6 +1,6 @@
 import { useState, useMemo, memo } from 'react';
 import type { FC } from 'react';
-import { Header } from '../../components/header';
+import { Header } from '../../components/headeroficial';
 import ProdutoCard from '../../components/rosas/card';
 import { produtos } from '../../data/produtos';
 

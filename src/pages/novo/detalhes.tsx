@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { produtos } from '../../data/produtos';
 import { formatarPrecoMZN } from '../../utils/mzn';
-import { Header } from '../../components/header';
+import { Header } from '../../components/headeroficial';
 import type { Produto } from '../../types/details';
 import FullScreenModal from '../../components/rosas/fullscrean';
 

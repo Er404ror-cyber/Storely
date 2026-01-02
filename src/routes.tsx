@@ -1,97 +1,69 @@
-import { createBrowserRouter } from "react-router-dom";
-import { Home } from "./pages/pagina_in";
-import Rosas from "./pages/novo/rosas";
-import { Contacto } from "./pages/contacto";
-import Box from "./pages/produtos/box";
-import Cetim from "./pages/produtos/cetim";
-import Buque from "./pages/produtos/buque";
-import Normal from "./pages/produtos/normal";
-import Camadas from "./pages/produtos/camadas";
-import Quadrado from "./pages/produtos/quadrado";
-import Biscoito from "./pages/produtos/biscoito";
-import Orelhodos from "./pages/produtos/orelhodos";
-import Bombom from "./pages/produtos/bombom";
-import Gulabos from "./pages/produtos/gulabos";
-import Pote from "./pages/produtos/pote";
-import Marmita from "./pages/produtos/marmita";
-import Mini from "./pages/produtos/mini";
-import Combo from "./pages/produtos/combo";
-import DetalhesProduto from "./pages/novo/detalhes";
-export const route = createBrowserRouter ([
-    {
-        path: "/",
-        element: <Home/>,
+import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { AdminLayout } from './layout/AdminLayout';
+import Dashboard from './dashboard/dashboard';
+import { PagesList } from './dashboard/PagesList';
+import { Editor } from './dashboard/PageEditor';
+import { Products } from './dashboard/Products';
+import { AdminHeaderSettings } from './components/configGeral';
+import { AuthPage } from './auth/register';
+import { PublicLayout } from './layout/publicLayout';
+import { PageView } from './pages/user/pageview';
+
+// Importe o seu novo Layout Público e a View da Página
+// import { PublicLayout } from './layout/PublicLayout';
+// import { PageView } from './pages/PageView';
+
+export const route = createBrowserRouter([
+  {
+    path: '/',
+    element: <Navigate to="/admin" replace />,
+  },
+  {
+    path: '/auth',
+    element: <AuthPage />,
+  },
+  // 🔐 ÁREA DO VENDEDOR (ADMIN)
+  {
+    path: '/admin',
+    element: <AdminLayout />,
+    children: [
+      {
+        index: true,
+        element: <Dashboard />,
       },
       {
-        path:"/Rosas",
-        element:<Rosas/>,
+        path: 'paginas',
+        element: <PagesList />,
       },
       {
-        path:"/rosas/:id",
-        element:<DetalhesProduto/>,
+        path: 'editor/:pageId',
+        element: <Editor />,
       },
       {
-        path:"/Contacto",
-        element:<Contacto/>,
+        path: 'produtos',
+        element: <Products />,
       },
       {
-        path: "/Box",
-        element: <Box/>,
+        path: 'configuracoes',
+        element: <AdminHeaderSettings />,
+      },
+    ],
+  },
+
+  // 🌍 ÁREA PÚBLICA (LOJA)
+  // Estrutura: dominio.com/nome-da-loja/nome-da-pagina
+  {
+    path: '/:storeSlug',
+    element: <PublicLayout />,
+    children: [
+      {
+        index: true, 
+        element: <PageView />, // Renderiza a home da loja
       },
       {
-        path: "/Cetim",
-        element: <Cetim/>,
+        path: ':pageSlug',
+        element: <PageView />, // Renderiza outras páginas
       },
-      {
-        path: "/Buque",
-        element: <Buque/>,
-      },
-       {
-        path: "/Normal",
-        element: <Normal/>,
-      },
-      {
-        path: "/Camadas",
-        element: <Camadas/>,
-      },
-      {
-        path: "/Quadrado",
-        element: <Quadrado/>,
-      },
-      {
-        path: "/Biscoito",
-        element: <Biscoito/>,
-      },
-      {
-        path: "/Orelhodos",
-        element: <Orelhodos/>,
-      },
-      {
-        path: "/Bombom",
-        element: <Bombom/>,
-      },
-      {
-        path: "/Gulabos",
-        element: <Gulabos/>,
-      },
-      {
-        path: "/Pote",
-        element: <Pote/>,
-      },
-      {
-        path: "/Marmita",
-        element: <Marmita/>,
-      },
-      {
-        path: "/Mini",
-        element: <Mini/>,
-      },
-      {
-        path: "/Combo",
-        element: <Combo/>,
-      },
-     
-    
-      
-      
-])
+    ],
+  },
+]);
