@@ -8,6 +8,7 @@ import { AdminHeaderSettings } from './components/configGeral';
 import { AuthPage } from './auth/register';
 import { PublicLayout } from './layout/publicLayout';
 import { PageView } from './pages/user/pageview';
+import { StartHome } from './pages/home/startHome';
 
 // Importe o seu novo Layout Público e a View da Página
 // import { PublicLayout } from './layout/PublicLayout';
@@ -16,8 +17,9 @@ import { PageView } from './pages/user/pageview';
 export const route = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/admin" replace />,
+    element: <StartHome />,
   },
+  
   {
     path: '/auth',
     element: <AuthPage />,
