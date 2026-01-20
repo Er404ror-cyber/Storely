@@ -44,9 +44,8 @@ export function AuthPage() {
   return (
     <div className='relative w-full overflow-hidden h-screen'>
       <HeaderLog />
-<img src="public\img\melhorar a qualidade.png" alt=""
-className='absolute inset-0 w-full h-full object-cover'
-/>
+
+<img src="/img/login.png" alt="Banner" className='absolute inset-0 w-full h-full object-cover' />
 
     <div className='absolute inset-0 flex items-center justify-start p-4 mb-30'>
     <p className='text-white text-5xl font-serif p-2'>Nome</p>
