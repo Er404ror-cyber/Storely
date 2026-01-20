@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, UserPlus, Store, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { HeaderLog } from '../components/headerlog';
+
 
 export function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -40,9 +42,38 @@ export function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-        <div className="text-center mb-8">
+    <div className='relative w-full overflow-hidden h-screen'>
+      <HeaderLog />
+<img src="public\img\melhorar a qualidade.png" alt=""
+className='absolute inset-0 w-full h-full object-cover'
+/>
+
+    <div className='absolute inset-0 flex items-center justify-start p-4 mb-30'>
+    <p className='text-white text-5xl font-serif p-2'>Nome</p>
+    </div>
+   <div className='absolute inset-0 flex items-center justify-start p-4'>
+    <h1 className='text-blue-600 text-5xl font-extrabold p-2'>Construa</h1>
+    <h1 className='text-white text-5xl font-extrabold p-2'>Seu</h1>
+    <h1 className='text-pink-400 text-5xl font-extrabold p-2'>Website</h1>
+   </div>
+
+   <div className='absolute inset-0 flex items-center justify-start p-4 mt-20'>
+    <p className='text-white text-5xl font-extrabold p-2'>Aqui.</p>
+    </div>
+
+    <div className='absolute inset-0 flex items-center justify-start p-4 mt-50'>
+      <p className='text-white text-xl font-light p-2 mt-4'>De Forma Simples e Rapida</p>
+      <p className='text-white text-xl font-light p-1 mt-4'>comece a vender hoje</p>
+    </div>
+
+   <div className='absolute inset-0 flex items-center justify-start p-4 mt-60'>  
+        <p className='text-white text-xl font-light p-2 mt-4'>de forma gratuita</p>
+   </div>
+   
+    <div className="  absolute inset-0 items-center justify-end  p-4">
+      
+      <div className="max-w-md top-28 right-4 absolute  w-full bg-white/30 backdrop-blur-sm rounded-2xl shadow-xl p-8  border-gray-100">
+        <div className="text-center  mb-8">
           <div className="bg-blue-600 w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-4 text-white">
             <Store size={28} />
           </div>
@@ -57,26 +88,26 @@ export function AuthPage() {
         <form onSubmit={handleAuth} className="space-y-4">
           {isSignUp && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Loja</label>
+              <label className="block text-sm font-medium text-black mb-1">Nome da Loja</label>
               <input 
-                type="text" required className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                type="text" required className="w-full bg-white p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
                 placeholder="Ex: Minha Boutique" value={storeName} onChange={e => setStoreName(e.target.value)}
               />
             </div>
           )}
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-black mb-1">Email</label>
             <input 
-              type="email" required className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+              type="email" required className="w-full bg-white p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
               placeholder="seu@email.com" value={email} onChange={e => setEmail(e.target.value)}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Palavra-passe</label>
+            <label className="block text-sm font-medium text-black mb-1">Palavra-passe</label>
             <input 
-              type="password" required className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+              type="password" required className="w-full bg-white p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
               placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)}
             />
           </div>
@@ -99,6 +130,12 @@ export function AuthPage() {
           </button>
         </div>
       </div>
+
+
+
+
     </div>
+    </div>
+
   );
 }

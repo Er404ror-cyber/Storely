@@ -8,14 +8,16 @@ import { AdminHeaderSettings } from './components/configGeral';
 import { AuthPage } from './auth/register';
 import { PublicLayout } from './layout/publicLayout';
 import { PageView } from './pages/user/pageview';
+import { StartHome } from './pages/home/startHome';
 import { ScrollToTop } from './components/scrollToTop';
 
 
 export const route = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/admin" replace />,
+    element: <StartHome />,
   },
+  
   {
     path: '/auth',
     element: <AuthPage />,
