@@ -2,12 +2,12 @@
     "version": 2,
     "cleanUrls": true,
     "trailingSlash": false,
-    "rewrites": [
-      {
-        "source": "/((?!api/|static/|_next/|favicon.ico|logo192.png|assets/).*)",
-        "destination": "/index.html"
-      }
-    ],
+"rewrites": [
+  {
+    "source": "/((?!api/|static/|_next/|favicon.ico|logo192.png|assets/).*)",
+    "destination": "/index.html"
+  }
+],
     "headers": [
       {
         "source": "/(.*)",
