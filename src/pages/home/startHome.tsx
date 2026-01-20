@@ -2,11 +2,99 @@ import { HeaderLog } from "../../components/headerlog";
 
 export const StartHome = () => {
     return (
-        <div>
+        <div className="bg-blue-800 h-screen">
             <HeaderLog/>
-            <div>
+            <div className="flex justify-start p-2 ml-2 mt-10">
+                <h1 className="text-6xl font-bold text-white">Construa</h1>
+                <h1 className="text-6xl font-bold bg-linear-to-r from-blue-600 to-white bg-clip-text text-transparent ml-2">Seu</h1>
+            </div>
+            <div className="flex justify-start p-2 ml-2">
+                <h1 className="text-6xl font-bold text-white">Website</h1>
+                <h1 className="text-6xl font-bold bg-linear-to-r from-pink-400 to-white bg-clip-text text-transparent ml-2">Aqui.</h1>
+            </div>
+            <div className="flex flex-col justify-start p-2 ml-2 mt-">
+                <p className="text-gray-300 text-xl font-light">De Forma Simples e Rapida</p>
+                <p className="text-gray-300 text-xl font-light">crie o seu site online e proficional</p>
+                <p className="text-gray-300 text-xl font-light">comece a vender hoje de forma gratuita</p>
+                <p className="text-gray-300 text-xl font-light">sem precisar escrever uma limha de codigo</p>
+            </div>
+            <button className="mt-6 ml-4 px-6 py-3 bg-white text-pink-400 font-semibold rounded-full hover:bg-pink-400 transition duration-300">
+             Comece Agora - É Grátis!
+            </button>
+            
+            <div className="bg-black h-screen">
+            <div className="mt-20 p-4 flex justify-center">
+                <h1 className="text-blue-600 mt-10 text-3xl font-serif">Funcionalidades</h1>
+            </div>
+            <div className="text-white flex justify-center ">
+                <p >
+                    Tudo que a nossa plantaforma apresenta para fazer da sua experiencia a melhor</p>
+            </div>
+                
+                <div className="flex justify-between mt-10">
+                    
+                    <div className="w-1/3 text-white flex justify-center">
+                        <div className="p-10 bg-gray-800 rounded-2xl w-90">
+                            <img src="public\img\drop.png" alt="imagem" className="w-10" />
+                            <h2 className="text-xl font-bold mt-4">Montagem</h2>
+                            <p className="mt-2">Arraste e solte elementos para construir seu site visualmente. 
+                                É tão fácil quanto montar um quebra-cabeça.</p>
+                        </div>
+                    </div>
 
-<h1 className="">New Page</h1>
+                    <div className="w-1/3 text-white flex justify-center">
+                        <div className="p-10 bg-gray-800 rounded-2xl w-90">
+                            <img src="public\img\fastt.png" alt="imagem" className="w-10" />
+                            <h2 className="text-xl font-bold mt-4">Velocidade Incrível</h2>
+                            <p className="mt-2">Seus sites carregam em menos de 1 segundo. 
+                                Foco total em CEO e experiência do usuário.</p>
+                        </div>
+                    </div>
+
+                    <div className="w-1/3 text-white flex justify-center">
+                        <div className="p-10 bg-gray-800 rounded-2xl w-90">
+                            <img src="public\img\nav.png" alt="imagem" className="w-10 " />
+                            <h2 className="text-xl font-bold mt-4 r">Hospedagem Grátis</h2>
+                            <p className="mt-2">Não se preocupe com servidores. Nós cuidamos de tudo para que seu site esteja sempre online.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex justify-between mt-10">
+                    
+                    <div className="w-1/3 text-white flex justify-center">
+                        <div className="p-10 bg-gray-800 rounded-2xl w-90">
+                            <img src="public\img\template.png" alt="imagem" className="w-10" />
+                            <h2 className="text-xl font-bold mt-4">Templates Premium</h2>
+                            <p className="mt-2">Centenas de modelos prontos criados por 
+                                designers profissionais para diversos nichos.</p>
+                        </div>
+                    </div>
+
+                    <div className="w-1/3 text-white flex justify-center">
+                        <div className="p-10 bg-gray-800 rounded-2xl w-90">
+                            <img src="public\img\desig.png" alt="imagem" className="w-10" />
+                            <h2 className="text-xl font-bold mt-4">Design Responsivo</h2>
+                            <p className="mt-2">Seu site se adapta automaticamente a qualquer tela: 
+                                celulares, tablets ou desktops.</p>
+                        </div>
+                    </div>
+
+                    <div className="w-1/3 text-white flex justify-center">
+                        <div className="p-10 bg-gray-800 rounded-2xl w-90">
+                            <img src="public\img\supp.jpeg" alt="imagem" className="w-10 " />
+                            <h2 className="text-xl font-bold mt-4 r">Suporte 24/7</h2>
+                            <p className="mt-2">Dúvidas? Nossa equipe está pronta para te ajudar a qualquer hora do dia ou da noite.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div className="bg-blue-800 h-screen">
+                <div className="flex justify-start p-2 ">
+                 <h1 className="mt-20 ml-2 text-3xl font-bold text-white">Alguns dos sites que ja foram constuidos</h1>
+                </div>
             </div>
         </div>
     )

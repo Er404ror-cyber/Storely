@@ -25,7 +25,7 @@ export const Header: React.FC = () => {
         
         {/* LOGO À ESQUERDA */}
         <Link to="/" className="z-10">
-          <span className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
+          <span className="text-2xl font-bold bg-linear-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
             Dinalda 🌹
           </span>
         </Link>
