@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter } from 'react-router-dom';
 import { AdminLayout } from './layout/AdminLayout';
 import Dashboard from './dashboard/dashboard';
 import { PagesList } from './dashboard/PagesList';
