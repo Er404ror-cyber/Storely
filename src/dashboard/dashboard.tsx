@@ -50,7 +50,7 @@ import { supabase } from '../lib/supabase';
         ))}
       </div>
 
-      <div className="mt-10 p-6 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl text-white flex justify-between items-center">
+      <div className="mt-10 p-6 bg-linear-to-r from-blue-600 to-indigo-700 rounded-2xl text-white flex justify-between items-center">
         <div>
           <h2 className="text-xl font-bold">A sua loja está online!</h2>
           <p className="opacity-90">Personalize o seu catálogo e comece a vender agora.</p>

@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, useNavigate, useBlocker } from 'react-router-dom';
+import  { useState, useEffect, useMemo } from 'react';
+import { useParams,  useBlocker } from 'react-router-dom';
 import { 
   Settings2, Plus, Save, Monitor, Smartphone, 
-  Palette, Layout, AlignLeft, AlignCenter, AlignJustify, Layers, X, 
-  ChevronUp, ChevronDown, Loader2, Type, Sun, Moon, RotateCcw, Clock, Trash2, AlertCircle,
+   Layout, AlignLeft, AlignCenter, AlignJustify, Layers, X, 
+   ChevronDown, Loader2, Type, Sun, Moon, Clock, Trash2, AlertCircle,
   ExternalLink
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -20,17 +20,27 @@ export interface SectionStyle {
 export interface Section {
   id: string;
   type: keyof typeof SectionLibrary;
-  content: Record<string, any>;
+  content: Record<string, unknown>; 
   style: SectionStyle;
 }
 
 type ModalType = 'SAVE' | 'DISCARD' | 'NAVIGATION' | null;
+interface SidebarContentProps {
+  sections: Section[];
+  activeSection: Section | undefined;
+  editingId: string | null;
+  setEditingId: (id: string | null) => void;
+  // We use keyof SectionStyle to ensure 'k' is a valid style property
+  updateStyle: (id: string, k: keyof SectionStyle, v: string) => void;
+  setSections: React.Dispatch<React.SetStateAction<Section[]>>;
+  setShowAddModal: (show: boolean) => void;
+}
+
 
 export function Editor() {
   // --- NOVOS ESTADOS PARA SLUGS ---
   const [slugs, setSlugs] = useState<{ store: string; page: string } | null>(null);
   const { pageId } = useParams<{ pageId: string }>();
-  const navigate = useNavigate();
   const [sections, setSections] = useState<Section[]>([]);
   const [originalSections, setOriginalSections] = useState<Section[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -229,7 +239,7 @@ if (sectionsData) {
           <div 
             style={{ width: view === 'mobile' ? '375px' : '100%' }}
             className={`bg-white min-h-full transition-all duration-500 shadow-2xl relative z-10 
-              ${view === 'mobile' ? 'my-8 rounded-[3rem] border-[12px] border-slate-900 overflow-hidden' : ''}`}
+              ${view === 'mobile' ? 'my-8 rounded-[3rem] border-12px border-slate-900 overflow-hidden' : ''}`}
           >
             {sections.map((s) => {
               const Comp = SectionLibrary[s.type];
@@ -247,13 +257,15 @@ if (sectionsData) {
                   }}
                 >
                   <div className={`w-full overflow-hidden ${s.style.theme === 'dark' ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}`}>
-                    <Comp 
-                      content={s.content} 
-                      style={s.style} 
-                      onUpdate={(k, v) => {
-                        setSections(prev => prev.map(sec => sec.id === s.id ? { ...sec, content: { ...sec.content, [k]: v } } : sec));
-                      }} 
-                    />
+                  <Comp 
+  content={s.content} 
+  style={s.style} 
+  onUpdate={(k: string, v: unknown) => {
+    setSections(prev => prev.map(sec => 
+      sec.id === s.id ? { ...sec, content: { ...sec.content, [k]: v } } : sec
+    ));
+  }} 
+/>
                   </div>
                 </div>
               ) : null;
@@ -263,7 +275,7 @@ if (sectionsData) {
 
         {/* MOBILE DRAWER */}
         {editingId && editingId !== '_layers' && (
-          <div className={`md:hidden fixed bottom-0 inset-x-0 z-[10] transition-transform duration-300 ${mobileDrawerOpen ? 'translate-y-0' : 'translate-y-[calc(100%-64px)]'}`}>
+          <div className={`md:hidden fixed bottom-0 inset-x-0 z-10 transition-transform duration-300 ${mobileDrawerOpen ? 'translate-y-0' : 'translate-y-[calc(100%-64px)]'}`}>
             <div className="bg-white rounded-t-[3rem] shadow-[0_-20px_60px_rgba(0,0,0,0.3)] border-t border-slate-100">
               <div onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)} className="h-16 flex flex-col items-center justify-center cursor-pointer">
                 <div className="w-12 h-1.5 bg-slate-200 rounded-full mb-1" />
@@ -287,7 +299,7 @@ if (sectionsData) {
 
       {/* MODAL DE SEGURANÇA (UNIFICADO) */}
       {activeModal && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-300 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl text-center">
             <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <AlertCircle size={32} />
@@ -315,7 +327,7 @@ if (sectionsData) {
 
       {/* MODAL ADICIONAR */}
       {showAddModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in">
+        <div className="fixed inset-0 z-200 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in">
           <div className="bg-white w-full max-w-lg rounded-[3rem] p-10 shadow-2xl flex flex-col max-h-[85vh]">
             <div className="flex justify-between items-center mb-8">
               <h3 className="font-black text-2xl uppercase tracking-tighter italic">Biblioteca de Blocos</h3>

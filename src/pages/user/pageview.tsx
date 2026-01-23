@@ -44,10 +44,11 @@ export function PageView() {
 
       return { sections, resolvedSlug: page.slug };
     },
-    // OTIMIZAÇÃO 4: Cache Agressivo
-    staleTime: 1000 * 60 * 5, // Considera os dados "frescos" por 5 minutos
-    gcTime: 1000 * 60 * 30,    // Mantém no cache por 30 minutos
-    retry: 1,
+    refetchInterval: 1000, // Pergunta ao banco a cada 1 segundo (quase instantâneo)
+    refetchIntervalInBackground: true, // Continua atualizando mesmo se o usuário mudar de aba
+    staleTime: 0, // Considera os dados velhos imediatamente para sempre buscar o novo
+    gcTime: 1000 * 60 * 10, 
+    placeholderData: (previousData) => previousData, // CHAVE: Mantém o conteúdo atual na tela enquanto baixa o novo (Zero Flicker)
   });
 
   // OTIMIZAÇÃO 5: Injeção de URL via History API (Zero flicker)

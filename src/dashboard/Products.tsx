@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { Plus, Package, Trash2, Loader2, Power } from 'lucide-react';
+import { Plus, Package, Loader2, Power } from 'lucide-react';
 import { useAdminStore } from '../hooks/useAdminStore';
 import { supabase } from '../lib/supabase';
 

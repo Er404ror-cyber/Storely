@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, FileText, ShoppingBag, Settings, Store, Menu, X } from 'lucide-react';
 
 // Otimização: Memoizamos os itens de menu para evitar re-calculo em cada render
-const NavItem = memo(({ item, isActive, onClick, isEditorPage }: any) => (
+const NavItem = memo(({ item, isActive, onClick }: any) => (
   <Link
     to={item.path}
     onClick={onClick}

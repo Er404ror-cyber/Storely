@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { 
-  Plus, FileText, ChevronRight, Loader2, Home, 
-  LayoutTemplate, X, CheckCircle2, AlertCircle, 
-  ShoppingBag, Mail, Layout, Star, ArrowRight,
-  Settings, Trash2
+  Plus, FileText, Loader2, Home, 
+  LayoutTemplate, X, Mail, Layout, Star, ArrowRight,
 } from 'lucide-react';
 import { useAdminStore } from '../hooks/useAdminStore';
 import { supabase } from '../lib/supabase';
@@ -106,8 +104,7 @@ const TEMPLATES = {
   }
 };
 export function PagesList() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newPage, setNewPage] = useState({ slug: '', type: 'home' });
 
@@ -128,38 +125,38 @@ export function PagesList() {
   });
 
   // --- LÓGICA DE DEFINIR HOME ---
-  const setAsHome = useMutation({
-    mutationFn: async (pageId: string) => {
-      if (!store?.id) throw new Error("ID da loja não encontrado");
-  
-      // PASSO 1: Resetar todas as páginas da loja que ATUALMENTE são home
-      const { error: clearError } = await supabase
-        .from('pages')
-        .update({ is_home: false })
-        .eq('store_id', store.id)
-        .eq('is_home', true); // Apenas quem já é home
-  
-      if (clearError) throw clearError;
-  
-      // PASSO 2: Definir a nova página escolhida como home
-      const { error: setError } = await supabase
-        .from('pages')
-        .update({ is_home: true })
-        .eq('id', pageId);
-  
-      if (setError) throw setError;
-      
-      return pageId;
-    },
-    onSuccess: () => {
-      // IMPORTANTE: Invalidar a query 'pages' garante que o React Query 
-      // busque os novos dados do banco imediatamente
-      queryClient.invalidateQueries({ queryKey: ['pages', store?.id] });
-    },
-    onError: (error: any) => {
-      alert("Erro no banco: " + (error.message || "Falha ao salvar"));
-    }
-  });
+  // --- LÓGICA DE DEFINIR HOME ---
+const setAsHome = useMutation({
+  mutationFn: async (pageId: string) => {
+    if (!store?.id) throw new Error("ID da loja não encontrado");
+
+    // PASSO 1: Resetar todas as páginas da loja
+    const { error: clearError } = await supabase
+      .from('pages')
+      .update({ is_home: false })
+      .eq('store_id', store.id)
+      .eq('is_home', true);
+
+    if (clearError) throw clearError;
+
+    // PASSO 2: Definir a nova página escolhida como home
+    const { error: setError } = await supabase
+      .from('pages')
+      .update({ is_home: true })
+      .eq('id', pageId);
+
+    if (setError) throw setError;
+    
+    return pageId;
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['pages', store?.id] });
+  },
+  // FIX: Using Error type instead of any
+  onError: (error: Error) => {
+    alert("Erro no banco: " + error.message);
+  }
+});
 
   const createPage = useMutation({
     mutationFn: async ({ slug, type }: { slug: string, type: string }) => {
@@ -240,7 +237,7 @@ export function PagesList() {
               key={page.id} 
               className={`relative group p-1 rounded-[2.5rem] transition-all duration-500 ${
                 page.is_home 
-                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 shadow-xl shadow-blue-100' 
+                ? 'bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 shadow-xl shadow-blue-100' 
                 : 'bg-slate-100 hover:bg-slate-200'
               }`}
             >
@@ -289,7 +286,7 @@ export function PagesList() {
   </button>
 )}
                   
-                  <div className="h-8 w-[1px] bg-slate-100 mx-2 hidden md:block" />
+                  <div className="h-8 w-px bg-slate-100 mx-2 hidden md:block" />
 
                   <Link 
                     to={`/admin/editor/${page.id}`} 
@@ -308,7 +305,7 @@ export function PagesList() {
 
       {/* MODAL DE CRIAÇÃO (DESIGN REFINADO) */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xl animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-200 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xl animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-xl rounded-[3rem] p-10 shadow-2xl relative border border-white/20">
             <button onClick={() => setIsModalOpen(false)} className="absolute top-8 right-8 p-2 text-slate-300 hover:text-slate-900 transition-colors">
               <X size={24} />
@@ -340,7 +337,7 @@ export function PagesList() {
                     <button
                       key={key}
                       onClick={() => setNewPage({...newPage, type: key})}
-                      className={`p-5 rounded-[2rem] border-2 text-left transition-all ${
+                      className={`p-5 rounded-4xl border-2 text-left transition-all ${
                         newPage.type === key 
                         ? 'border-blue-600 bg-blue-50/50 ring-4 ring-blue-50' 
                         : 'border-slate-50 hover:border-slate-200'
