@@ -4,7 +4,7 @@ export const HeaderLog = () => {
     return (
     <header>
       {/* CONTAINER PRINCIPAL */}
-      <div className='flex justify-between p-6 max-w-7xl mx-auto z-10 bg-purple-500/10 rounded-b-2xl'>
+      <div className='flex justify-between p-6 max-w-7xl mx-auto z-10 bg-purple-500/40 rounded-b-2xl'>
      <div>
       
        {/* LOGO À ESQUERDA */}
