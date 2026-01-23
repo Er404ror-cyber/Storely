@@ -6,17 +6,13 @@ export const StartHome = () => {
             <HeaderLog/>
             <div className="flex justify-between">
                 <div className="w-1/2">
-            <div className="flex justify-start p-2 ml-2">
-                <h1 className="text-8xl font-bold text-white">Construa</h1>
-            </div>
-            <div className="flex justify-start p-2 ml-2 ">
-                <h1 className="text-8xl font-serif bg-linear-to-r from-blue-600 to-white bg-clip-text text-transparent ml-2">Seu</h1>
+            <div className="flex justify-start p-2 ml-2 mt-10">
+                <h1 className="text-6xl font-bold text-white">Construa</h1>
+                <h1 className="text-6xl font-bold bg-linear-to-r from-blue-600 to-white bg-clip-text text-transparent ml-2">Seu</h1>
             </div>
             <div className="flex justify-start p-2 ml-2">
-                <h1 className="text-8xl font-bold text-white">Website</h1>
-            </div>
-            <div className="flex justify-start p-2 ml-2">
-                <h1 className="text-8xl font-serif bg-linear-to-r from-pink-400 to-white bg-clip-text text-transparent ml-2">Aqui.</h1>
+                <h1 className="text-6xl font-bold text-white">Website</h1>
+                <h1 className="text-6xl font-bold bg-linear-to-r from-pink-400 to-white bg-clip-text text-transparent ml-2">Aqui.</h1>
             </div>
             <div className="flex flex-col justify-start p-2 ml-2 mt-">
                 <p className="text-gray-300 text-xl font-light">De Forma Simples e Rapida</p>
