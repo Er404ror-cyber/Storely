@@ -1,4 +1,4 @@
-import { Building2, CircleQuestionMark, Home, LucideVerified, Users } from "lucide-react";
+import {  CircleQuestionMark,  LucideVerified, Users } from "lucide-react";
 import { HeaderLog } from "../../components/headerlog";
 
 export const Faq = () => {
