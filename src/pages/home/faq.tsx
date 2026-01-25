@@ -1,77 +1,110 @@
+import { Building2, CircleQuestionMark, Home, LucideVerified, Users } from "lucide-react";
+import { HeaderLog } from "../../components/headerlog";
+
 export const Faq = () => {
     return (
-        <div className="bg-gray-100 min-h-screen p-8">
-            <h1 className="text-4xl font-bold text-center mb-8">Frequently Asked Questions</h1>
-            <div className="max-w-4xl mx-auto space-y-6">
-                <div className="bg-white p-6 rounded-lg shadow">
-                    <h2 className="text-2xl font-semibold mb-4">What is Petal Rose?</h2>
-                    <p>Petal Rose is a platform that allows you to create stunning websites with ease, using pre-designed templates and a user-friendly interface.</p>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow">
-                    <h2 className="text-2xl font-semibold mb-4">How much does it cost?</h2>
-                    <p>Petal Rose offers a variety of pricing plans, including a free tier with basic features. Premium plans with additional features are available at competitive rates.</p>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow">
-                    <h2 className="text-2xl font-semibold mb-4">Can I use my own domain?</h2>
-                    <p>Yes, you can connect your own custom domain to your Petal Rose website for a more professional appearance.</p>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow">
-                    <h2 className="text-2xl font-semibold mb-4">Is there customer support available?</h2>
-                    <p>Absolutely! Our customer support team is available 24/7 to assist you with any questions or issues you may encounter.</p>
+        <div className="bg-linear-to-b from-gray-300 to-gray-100 h-screen ">
+            <HeaderLog/>
+            
+            <div className="text-center mt-40 ">
+                <p className="text-4xl text-black font-medium">We are here to help clear up your debts</p>
+                <p className="text-lg text-black mt-4">If you have any doubts, concerns, or just want to have a
+                </p>
+                <p className="text-lg text-black">chat with our team, feel free, you're in the right place.</p>
+            </div>
+            
+            <div>
+             <div className="flex justify-between mt-10">                   
+                    <div className="w-1/3 text-white flex justify-end">
+                        <div className="p-10 bg-orange-500/30 rounded-2xl w-60 h-45">
+                            <Users size={32} className="bg-amber-800 p-2 rounded-2xl "/>
+                            <h2 className="text-xl font-light mt-4 text-black">Talk to our team</h2>
+                          
+                        </div>
+                    </div>
+                    <div className="w-1/3 text-white flex justify-center">
+                        <div className="p-10 bg-orange-500/30 rounded-2xl w-60 h-45">
+                            <CircleQuestionMark size={32} className="bg-amber-800 p-2 rounded-2xl "/>
+                            <h2 className="text-xl font-light mt-4 text-black">Frequently Asked Questions</h2>
+                          
+                        </div>
+                    </div>
+                    <div className="w-1/3 text-white flex justify-start">
+                        <div className="p-10 bg-orange-500/30 rounded-2xl w-60 h-45">
+                            <LucideVerified size={32} className="bg-amber-800 p-2 rounded-2xl "/>
+                            <h2 className="text-xl font-light mt-4 text-black">Our news blog</h2>
+                          
+                        </div>
+                    </div>                
                 </div>
             </div>
 
-            <section className="bg-linear-to-b from-neutral-900 to-black py-20 px-6">
-      <div className="max-w-7xl mx-auto">
+             <div className="h-screen mt-20 flex items-center justify-center bg-linear-to-b from-gray-100 to-gray-300">
+      <div className=" bg-orange-500/30 rounded-3xl flex overflow-hidden shadow-2xl">
 
-        {/* TÍTULO */}
-        <div className="flex items-center gap-3 mb-12">
-          <span className="text-pink-500 text-2xl">📞</span>
-          <h2 className="text-3xl font-bold text-white">Contactos</h2>
+        <div className="w-1/2">
+          <img
+            src="https://tse2.mm.bing.net/th/id/OIP.A_FCkPjO6XXaafMD1XPq3gHaEK?rs=1&pid=ImgDetMain&o=7&rm=3"
+            alt="Imagem"
+            className="w-full h-full object-cover"
+          />
         </div>
 
-        {/* CARDS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="w-1/2 p-10 text-black">
+          <h2 className="text-4xl font-medium mb-3">
+            Fale Conosco
+          </h2>
 
-          {/* VENDAS */}
-          <div className="bg-neutral-800 rounded-2xl p-6 text-white">
-            <h3 className="text-xl font-semibold mb-4">Vendas</h3>
-            <div className="border-b border-white/10 mb-4"></div>
+          <p className="text-black mb-8">
+            Preencha os campos abaixo e entraremos em contato o mais breve possível.
+          </p>
 
-            <p className="text-blue-400 mb-4">← vendas@orn.co.mz</p>
-            <p className="text-green-400">📞 +258 844775094</p>
-          </div>
+          <form className="flex flex-col gap-4">
 
-          {/* INFORMAÇÕES */}
-          <div className="bg-neutral-800 rounded-2xl p-6 text-white">
-            <h3 className="text-xl font-semibold mb-4">Informações</h3>
-            <div className="border-b border-white/10 mb-4"></div>
+            <div className="flex gap-4">
+              <input
+                type="text"
+                placeholder="Nome"
+                className="w-1/2 p-3 rounded-xl bg-gray-300 border border-gray-700 outline-none "
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                className="w-1/2 p-3 rounded-xl bg-gray-300 border border-gray-700 outline-none"
+              />
+            </div>
 
-            <p className="text-blue-400 mb-4">← info@orn.co.mz</p>
-            <p className="text-green-400">📞 +258 879272636</p>
-          </div>
+            <textarea
+              placeholder="Sua mensagem"
+              className="h-40 p-3 rounded-xl bg-gray-300 border border-gray-700 outline-none resize-none"
+            />
 
-          {/* SUPORTE */}
-          <div className="bg-neutral-800 rounded-2xl p-6 text-white">
-            <h3 className="text-xl font-semibold mb-4">Suporte</h3>
-            <div className="border-b border-white/10 mb-4"></div>
+            <div className="flex gap-4 mt-4">
+              <button
+                type="button"
+                className="w-1/2 py-3 rounded-xl bg-white text-gray-800 font-medium hover:bg-blue-600"
+              >
+                Enviar por Email
+              </button>
 
-            <p className="text-blue-400 mb-4">← suporte@orn.co.mz</p>
-            <p className="text-green-400">📞 +258 863710091</p>
-          </div>
+              <button
+                type="button"
+                className="w-1/2 py-3 rounded-xl bg-white text-gray-800 font-medium hover:bg-green-600"
+              >
+                Enviar por WhatsApp
+              </button>
+            </div>
 
-          {/* RH */}
-          <div className="bg-neutral-800 rounded-2xl p-6 text-white">
-            <h3 className="text-xl font-semibold mb-4">RH</h3>
-            <div className="border-b border-white/10 mb-4"></div>
-
-            <p className="text-blue-400 mb-4">← rh@orn.co.mz</p>
-            <p className="text-green-400">📞 +258 21321127</p>
-          </div>
-
+          </form>
         </div>
       </div>
-    </section>
+    </div>
+
+            <div className="bg-linear-to-b from-gray-300 to-gray-100 h-screen ">
+                densevolvedores da Plataforma Storely
+
+            </div>
+            
         </div>
     );
 } 

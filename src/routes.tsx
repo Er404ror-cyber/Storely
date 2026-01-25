@@ -10,12 +10,18 @@ import { PublicLayout } from './layout/publicLayout';
 import { PageView } from './pages/user/pageview';
 import { StartHome } from './pages/home/startHome';
 import { ScrollToTop } from './components/scrollToTop';
+import { Faq } from './pages/home/faq';
 
 
 export const route = createBrowserRouter([
   {
     path: '/',
     element: <StartHome />,
+  },
+
+  {
+    path: '/faq',
+    element: <Faq />,
   },
   
   {

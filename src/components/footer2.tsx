@@ -7,41 +7,36 @@ const Footer = () => {
 
         <div className="w-1/3">
             <div className="">
-                 <h3 className="text-2xl font-bold text-pink-400 mb-6">Doces da Dinalda🌹</h3>
-          <h4 className="font-bold mb-6 flex justify-center">Links Rápidos</h4>
+                 <h3 className="text-2xl font-bold text-pink-400 mb-6">STORELY</h3>
+          <h4 className="font-bold mb-6 flex justify-center">Quick Links</h4>
           <ul className="space-y-4 text-gray-400 flex justify-center flex-col items-center">
-            <li><a href="/" className="hover:text-white transition-colors">Início</a></li>
-            <li><a href="/#/rosas" className="hover:text-white transition-colors">Produtos</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">Encomendas</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">Privacidade</a></li>
+            <li><a href="/" className="hover:text-white transition-colors">Start</a></li>
+            <li><a href="/faq" className="hover:text-white transition-colors">About</a></li>
+            <li><a href="" className="hover:text-white transition-colors">Doubts</a></li>
+            <li><a href="" className="hover:text-white transition-colors">Contact</a></li>
           </ul>
         </div>
         </div>
 
         <div className="w-1/3">
-            <h1 className=" font-bold text-center mt-14">Siga-nos nas nossas redes</h1>
+            <h1 className=" font-bold text-center mt-14">Follow us on our social media</h1>
         <div className="flex justify-center mt-4  ">
-            <img src="public\img\whats.png" alt="" className="h-20" />
-            <img src="public/img/igss.png" alt="" className="h-20" />
+            <img src="public\img\whatsss.png" alt="" className="h-20" />
+            <img src="public\img\ig.webp" alt="" className="h-20" />
+            <img src="public\img\twit.png" alt="" className="h-20" />
+            <img src="public\img\guit.png" alt="" className="h-20" />
             
         </div> 
         </div>
 
         <div className="w-1/3"> 
             <div className="flex justify-center flex-col items-center mt-14">
-          <h4 className="font-bold mb-6">Localização</h4>
-          <p className="text-gray-400">
-            Av. das Rosas, 123<br />
-            Bairro Doçura<br />
-            São Paulo - SP<br />
-            (11) 98888-7777
-          </p>
+          <h4 className="font-bold mb-6">Logo Aqui</h4>
+          
         </div>
         </div>
 
-        <div className="container mx-auto text-center">
-            <p className="text-sm">&copy; {new Date().getFullYear()} Doces da Dinalda. Todos os direitos reservados.</p>
-        </div>
+       
     </footer>
   );
 }
