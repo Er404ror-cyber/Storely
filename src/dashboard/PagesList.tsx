@@ -6,7 +6,7 @@ import {
   Trash2, Edit3, AlertCircle, Search, 
   Check, Globe, Copy, Star
 } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast'; 
+import toast from 'react-hot-toast'; 
 import { useAdminStore } from '../hooks/useAdminStore';
 import { supabase } from '../lib/supabase';
 import { TEMPLATES } from './templetes';
@@ -315,26 +315,25 @@ export function PagesList() {
   );
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 py-16 md:py-0">
-      <Toaster position="top-center" />
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900  md:py-0">
       
-      <nav className="w-full bg-white border-b border-slate-200 px-6 md:px-12 py-4 flex items-center justify-between">
+      <nav className="w-full bg-white border-b border-slate-200 px-6 md:px-12 py-3 flex items-center justify-between">
   <div className="flex items-center gap-4">
     <div className="bg-slate-900 p-2.5 rounded-[18px] text-white shadow-2xl shadow-slate-300">
-      <Layout size={24} />
+      <Layout size={16} />
     </div>
     <div>
       <h2 className="font-black text-lg md:text-xl tracking-tighter uppercase italic">{store?.name}</h2>
       <div className="flex items-center gap-2">
         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-        <p className="text-[10px] font-black text-slate-400 tracking-widest uppercase">Updated</p>
+        <p className="text-[8px] font-black text-slate-400 tracking-widest uppercase">Updated</p>
       </div>
     </div>
   </div>
   
   <button 
     onClick={() => setIsModalOpen(true)} 
-    className="bg-indigo-600 text-white px-4 py-3.5 rounded-2xl font-black text-xs md:text-sm hover:bg-indigo-700 transition-all active:scale-95 shadow-2xl shadow-indigo-200 flex items-center gap-2"
+    className="bg-indigo-600 text-white px-3 py-3 rounded-2xl font-black text-xs md:text-sm hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-200 flex items-center gap-2"
   >
     <Plus size={20} /> <span>NEW PAGE</span>
   </button>
