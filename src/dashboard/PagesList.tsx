@@ -1,364 +1,489 @@
-import { useState } from 'react';
+import { useState, useMemo, memo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { 
-  Plus, FileText, Loader2, Home, 
-  LayoutTemplate, X, Mail, Layout, Star, ArrowRight,
+  Plus, Loader2, Home, X, Layout, ArrowRight,
+  Trash2, Edit3, AlertCircle, Search, 
+  Check, Globe, Copy, Star
 } from 'lucide-react';
+import toast from 'react-hot-toast'; 
 import { useAdminStore } from '../hooks/useAdminStore';
 import { supabase } from '../lib/supabase';
+import { TEMPLATES } from './templetes';
 
-const TEMPLATES = {
-  home: { 
-    label: 'Landing Page Comercial', 
-    icon: <Home size={24} />,
-    description: 'Focado em conversão e apresentação de serviços.',
-    sections: [
-      { 
-        type: 'hero_comercial', 
-        content: { title: 'Elevamos o seu Negócio', sub: 'Soluções profissionais sob medida para o mercado de Moçambique.' }, 
-        style: { theme: 'dark', align: 'center', fontSize: 'medium' },
-        order_index: 0 
-      },
-      { 
-        type: 'estatisticas_larga', 
-        content: {}, 
-        style: { theme: 'dark', fontSize: 'small' },
-        order_index: 1 
-      },
-      { 
-        type: 'servicos_modern', 
-        content: { items: [{}, {}, {}] }, 
-        style: { theme: 'light', cols: '3', fontSize: 'medium' },
-        order_index: 2 
-      },
-      { 
-        type: 'testemunhos_focados', 
-        content: {}, 
-        style: { theme: 'light', fontSize: 'medium' },
-        order_index: 3 
-      },
-      { 
-        type: 'contacto_mapa', 
-        content: {}, 
-        style: { theme: 'light', fontSize: 'medium' },
-        order_index: 4 
-      }
-    ] 
-  },
-  produtos: { 
-    label: 'Portfólio & Galeria', 
-    icon: <LayoutTemplate size={24} />,
-    description: 'Ideal para fotógrafos, arquitetos ou catálogos.',
-    sections: [
-      { 
-        type: 'hero_comercial', 
-        content: { title: 'Nosso Portfólio', sub: 'Explore os nossos projetos mais recentes.' }, 
-        style: { theme: 'light', align: 'left', fontSize: 'small' },
-        order_index: 0 
-      },
-      { 
-        type: 'galeria_grid', 
-        content: { images: [{}, {}, {}, {}, {}, {}, {}, {}] }, 
-        style: { theme: 'light', cols: '4' },
-        order_index: 1 
-      },
-      { 
-        type: 'precos_moderno', 
-        content: {}, 
-        style: { theme: 'light', fontSize: 'small' },
-        order_index: 2 
-      }
-    ] 
-  },
-  contactos: { 
-    label: 'Página de Suporte', 
-    icon: <Mail size={24} />,
-    description: 'Central de ajuda e contactos diretos.',
-    sections: [
-      { 
-        type: 'hero_comercial', 
-        content: { title: 'Como podemos ajudar?', sub: 'Estamos disponíveis para responder às suas questões.' }, 
-        style: { theme: 'dark', align: 'center', fontSize: 'small' },
-        order_index: 0 
-      },
-      { 
-        type: 'faq_clean', 
-        content: {}, 
-        style: { theme: 'light', fontSize: 'medium' },
-        order_index: 1 
-      },
-      { 
-        type: 'contacto_mapa', 
-        content: {}, 
-        style: { theme: 'light', fontSize: 'medium' },
-        order_index: 2 
-      }
-    ] 
-  },
-  blank: { 
-    label: 'Página Limpa', 
-    icon: <Plus size={24} />,
-    description: 'Comece com uma estrutura vazia.',
-    sections: [] 
-  }
+const BASE_DOMAIN = "http://storelyy.vercel.app";
+
+// --- CUSTOM TOAST STYLES ---
+const notify = {
+  success: (msg: string) => toast.success(msg, {
+    style: {
+      border: '1px solid #6366f1',
+      padding: '16px',
+      color: '#fff',
+      background: 'rgba(15, 23, 42, 0.9)',
+      backdropFilter: 'blur(10px)',
+      borderRadius: '20px',
+      fontWeight: 'bold',
+      fontSize: '14px'
+    },
+    iconTheme: { primary: '#6366f1', secondary: '#fff' },
+  }),
+  error: (msg: string) => toast.error(msg, {
+    style: {
+      border: '1px solid #ef4444',
+      padding: '16px',
+      color: '#fff',
+      background: 'rgba(15, 23, 42, 0.9)',
+      borderRadius: '20px',
+      fontWeight: 'bold',
+      fontSize: '14px'
+    },
+  })
 };
+
+// --- SUPPORTING COMPONENTS ---
+
+const Section = memo(({ title, icon, count, children, variant = 'default' }: any) => (
+  <section className="mb-10 animate-in fade-in slide-in-from-bottom-2 duration-500 will-change-transform">
+    <div className="flex items-center gap-2 mb-4 px-2">
+      <span className="shrink-0">{icon}</span>
+      <h3 className={`text-[10px] md:text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 ${variant === 'danger' ? 'text-red-600' : 'text-slate-400'}`}>
+        {title} {count !== undefined && <span className="opacity-50">({count})</span>}
+      </h3>
+      <div className="h-[1px] flex-1 bg-slate-200 ml-2 opacity-50"></div>
+    </div>
+    <div className="space-y-3">{children}</div>
+  </section>
+));
+
+const PageRow = memo(({ page, storeSlug, isConflict, setAsHome, updateSlug, deletePage, editingState }: any) => {
+  const { editingId, setEditingId, editValue, setEditValue } = editingState;
+  const isEditing = editingId === page.id;
+  const storePath = storeSlug || 'store';
+  const fullUrl = `${BASE_DOMAIN}/${storePath}/${page.slug}`;
+
+  // Melhora na função de cópia para garantir compatibilidade
+  const copyUrl = useCallback(() => {
+    // Tenta o método moderno primeiro
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(fullUrl)
+        .then(() => notify.success('Link copiado!'))
+        .catch(() => fallbackCopy(fullUrl));
+    } else {
+      // Se não houver suporte ou não for HTTPS, usa o plano B
+      fallbackCopy(fullUrl);
+    }
+  }, [fullUrl]);
+
+  // Função de segurança para navegadores mobile antigos ou sem HTTPS
+  const fallbackCopy = (text: string) => {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    
+    // Garante que o elemento não apareça na tela mas seja selecionável
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    textArea.style.top = "0";
+    document.body.appendChild(textArea);
+    
+    textArea.focus();
+    textArea.select();
+    
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) notify.success('Link copiado!');
+      else notify.error('Erro ao copiar');
+    } catch (err) {
+      notify.error('Erro ao copiar link');
+    }
+    
+    document.body.removeChild(textArea);
+  };
+
+  const handleCancel = () => {
+    setEditingId(null);
+    setEditValue('');
+  };
+
+  return (
+    <div className={`group bg-white border rounded-[24px] p-5 flex flex-col md:grid md:grid-cols-12 md:items-center gap-4 transition-all duration-300 ${
+      isConflict ? 'border-red-200 bg-red-50/40 ring-2 ring-red-100' : 'border-slate-200 hover:border-indigo-400'
+    }`}>
+      
+      {/* SEÇÃO SUPERIOR: Ícone e Info */}
+      <div className="md:col-span-7 flex items-start gap-4">
+        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
+          page.is_home ? 'bg-indigo-600 text-white shadow-lg' : isConflict ? 'bg-red-100 text-red-600' : 'bg-slate-50 text-slate-400'
+        }`}>
+          {page.is_home ? <Home size={22} /> : isConflict ? <AlertCircle size={22} /> : <Globe size={22} />}
+        </div>
+        
+        <div className="min-w-0 flex-1">
+          {isEditing ? (
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 animate-in fade-in zoom-in-95 duration-200">
+              <input 
+                autoFocus
+                className="w-full bg-slate-100 px-4 py-3 rounded-xl text-base font-bold outline-none text-indigo-700 border-2 border-indigo-500"
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+              />
+              <div className="flex gap-2">
+                <button onClick={() => updateSlug.mutate({ id: page.id, newSlug: editValue })} className="flex-1 sm:flex-none p-3 bg-indigo-600 text-white rounded-xl flex justify-center"><Check size={20} /></button>
+                <button onClick={handleCancel} className="flex-1 sm:flex-none p-3 bg-slate-200 text-slate-600 rounded-xl flex justify-center"><X size={20} /></button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                <span className={`text-lg font-black tracking-tight truncate ${isConflict ? 'text-red-700' : 'text-slate-900'}`}>/{page.slug}</span>
+                {page.is_home && <span className="bg-indigo-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-md">Primary</span>}
+              </div>
+              {/* Botão de cópia com área de clique maior no mobile */}
+              <button 
+                onClick={copyUrl} 
+                className="flex items-center gap-2 mt-2 py-1 text-slate-400 hover:text-indigo-600 active:opacity-50 transition-all"
+              >
+                <span className="text-xs font-bold truncate opacity-60">storelyy/{storePath}/{page.slug}</span>
+                <Copy size={14} className="shrink-0" />
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* SEÇÃO INFERIOR: Ações */}
+      <div className="md:col-span-5 flex items-center justify-between md:justify-end gap-2 mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-slate-100">
+        
+        {/* Lado Esquerdo (Mobile): Opções de Perigo/Edição */}
+        <div className="flex items-center gap-1">
+          {!isEditing && (
+            <>
+              <button onClick={() => { setEditingId(page.id); setEditValue(page.slug); }} className="p-4 text-slate-400 hover:text-indigo-600"><Edit3 size={20} /></button>
+              {!page.is_home && <button onClick={() => setAsHome.mutate(page.id)} className="p-4 text-slate-300 hover:text-amber-500"><Star size={20} /></button>}
+              {/* Lixo afastado do botão de Design no mobile */}
+              {!page.is_home && !isEditing && (
+  <button 
+    onClick={() => {
+      // Confirmação antes de disparar a mutação
+      const confirmou = window.confirm("Excluir esta página permanentemente?");
+      if (confirmou) {
+        deletePage.mutate(page.id);
+      }
+    }} 
+    className="p-4 text-slate-400 hover:text-red-500 active:bg-red-50 rounded-2xl transition-all"
+    title="Apagar página"
+  >
+    <Trash2 size={20} />
+  </button>
+)}
+            </>
+          )}
+        </div>
+
+        {/* Lado Direito: Ação Principal */}
+        <Link 
+          to={`/admin/editor/${page.id}`} 
+          className="bg-slate-900 text-white px-8 py-4 rounded-2xl text-[13px] font-black hover:bg-indigo-600 transition-all flex items-center gap-2 active:scale-95 shadow-xl shadow-slate-200"
+        >
+          DESIGN <ArrowRight size={18} />
+        </Link>
+      </div>
+    </div>
+  );
+});
+
+// --- MAIN PAGE ---
+
 export function PagesList() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newPage, setNewPage] = useState({ slug: '', type: 'home' });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [newPage, setNewPage] = useState({ slug: '', type: 'agency' });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
 
   const { data: store, isLoading: storeLoading } = useAdminStore();
 
   const { data: pages, isLoading: pagesLoading } = useQuery({
     queryKey: ['pages', store?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('pages')
-        .select('*')
-        .eq('store_id', store?.id)
-        .order('is_home', { ascending: false }); 
+      const { data, error } = await supabase.from('pages').select('*').eq('store_id', store?.id).order('is_home', { ascending: false });
       if (error) throw error;
       return data || [];
     },
     enabled: !!store?.id,
   });
 
-  // --- LÓGICA DE DEFINIR HOME ---
-  // --- LÓGICA DE DEFINIR HOME ---
-const setAsHome = useMutation({
-  mutationFn: async (pageId: string) => {
-    if (!store?.id) throw new Error("ID da loja não encontrado");
-
-    // PASSO 1: Resetar todas as páginas da loja
-    const { error: clearError } = await supabase
-      .from('pages')
-      .update({ is_home: false })
-      .eq('store_id', store.id)
-      .eq('is_home', true);
-
-    if (clearError) throw clearError;
-
-    // PASSO 2: Definir a nova página escolhida como home
-    const { error: setError } = await supabase
-      .from('pages')
-      .update({ is_home: true })
-      .eq('id', pageId);
-
-    if (setError) throw setError;
-    
-    return pageId;
-  },
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['pages', store?.id] });
-  },
-  // FIX: Using Error type instead of any
-  onError: (error: Error) => {
-    alert("Erro no banco: " + error.message);
-  }
-});
-
   const createPage = useMutation({
     mutationFn: async ({ slug, type }: { slug: string, type: string }) => {
-      const isFirstPage = !pages || pages.length === 0;
-      const { data: page, error: pError } = await supabase
-        .from('pages')
-        .insert([{ 
-          store_id: store?.id, 
-          slug: slug.toLowerCase().trim().replace(/\s+/g, '-'),
-          type: type,
-          is_home: isFirstPage,
-          title: slug 
-        }])
-        .select().single();
-
+      const formattedSlug = slug.toLowerCase().trim().replace(/\s+/g, '-');
+      const { data: page, error: pError } = await supabase.from('pages').insert([{ 
+        store_id: store?.id, 
+        slug: formattedSlug, 
+        type, 
+        is_home: !pages?.length, 
+        title: slug 
+      }]).select().single();
+      
       if (pError) throw pError;
-
-      const templateSections = TEMPLATES[type as keyof typeof TEMPLATES]?.sections || [];
-      if (templateSections.length > 0) {
-        await supabase.from('page_sections').insert(
-          templateSections.map(s => ({ ...s, page_id: page.id }))
-        );
+      
+      const sections = TEMPLATES[type as keyof typeof TEMPLATES]?.sections || [];
+      if (sections.length > 0) {
+        await supabase.from('page_sections').insert(sections.map(s => ({ ...s, page_id: page.id })));
       }
       return page;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pages', store?.id] });
+      notify.success('Page Deployed!');
       setIsModalOpen(false);
-      setNewPage({ slug: '', type: 'home' });
+      setNewPage({ slug: '', type: 'agency' });
+      queryClient.invalidateQueries({ queryKey: ['pages', store?.id] });
+    },
+    onError: () => notify.error('Path conflict! Try another.')
+  });
+
+  const updateSlug = useMutation({
+    mutationFn: async ({ id, newSlug }: { id: string, newSlug: string }) => {
+      const formatted = newSlug.toLowerCase().trim().replace(/\s+/g, '-');
+      const { error } = await supabase.from('pages').update({ slug: formatted }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      notify.success('Path Updated!');
+      setEditingId(null);
+      queryClient.invalidateQueries({ queryKey: ['pages', store?.id] });
+    },
+    onError: () => notify.error('Slug already exists.')
+  });
+
+  const setAsHome = useMutation({
+    mutationFn: async (pageId: string) => {
+      await supabase.from('pages').update({ is_home: false }).eq('store_id', store?.id);
+      await supabase.from('pages').update({ is_home: true }).eq('id', pageId);
+    },
+    onSuccess: () => {
+      notify.success('Primary Changed!');
+      queryClient.invalidateQueries({ queryKey: ['pages', store?.id] });
     }
   });
 
+  const deletePage = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('pages').delete().eq('id', id);
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => {
+      notify.success('Página removida!');
+      queryClient.invalidateQueries({ queryKey: ['pages', store?.id] });
+    },
+    onError: (err) => {
+      notify.error('Erro ao deletar no banco de dados');
+      console.error(err);
+    }
+  });
+
+  const organized = useMemo(() => {
+    if (!pages) return { homePage: null, grouped: {}, conflicts: [], total: 0 };
+    
+    const filtered = pages.filter(p => p.slug.toLowerCase().includes(searchQuery.toLowerCase()));
+    const slugs = pages.map(p => p.slug.toLowerCase());
+    const duplicates = new Set(slugs.filter((s, i) => slugs.indexOf(s) !== i));
+
+    const conflicts = filtered.filter(p => duplicates.has(p.slug.toLowerCase()));
+    const conflictIds = new Set(conflicts.map(p => p.id));
+    const safePages = filtered.filter(p => !conflictIds.has(p.id));
+
+    return {
+      total: filtered.length,
+      conflicts,
+      homePage: safePages.find(p => p.is_home),
+      grouped: safePages.reduce((acc, p) => {
+        if (p.is_home) return acc;
+        const type = p.type || 'others';
+        if (!acc[type]) acc[type] = [];
+        acc[type].push(p);
+        return acc;
+      }, {} as Record<string, any[]>)
+    };
+  }, [pages, searchQuery]);
+
   if (storeLoading || pagesLoading) return (
-    <div className="h-96 flex flex-col items-center justify-center animate-pulse">
-      <Loader2 className="animate-spin text-blue-500 mb-4" size={32} />
-      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Carregando Ecossistema...</span>
+    <div className="h-screen flex items-center justify-center bg-slate-50">
+      <Loader2 className="animate-spin text-indigo-600" size={48} />
     </div>
   );
 
   return (
-    <div className="p-4 md:p-12 max-w-6xl mx-auto min-h-screen">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900  md:py-0">
       
-      {/* HEADER MELHORADO */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-16">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{store?.name} • Online</span>
-          </div>
-          <h1 className="text-5xl font-black tracking-tighter text-slate-900 uppercase italic">
-            Páginas <span className="text-blue-600 not-italic">.</span>
-          </h1>
-        </div>
-        
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="group bg-slate-900 text-white pl-8 pr-6 py-5 rounded-[2.5rem] flex items-center gap-4 hover:bg-blue-600 transition-all shadow-2xl shadow-slate-200 active:scale-95"
-        >
-          <span className="font-black text-[11px] uppercase tracking-widest">Criar nova experiência</span>
-          <div className="bg-white/10 p-2 rounded-full group-hover:rotate-90 transition-transform">
-            <Plus size={20} />
-          </div>
-        </button>
+      <nav className="w-full bg-white border-b border-slate-200 px-6 md:px-12 py-3 flex items-center justify-between">
+  <div className="flex items-center gap-4">
+    <div className="bg-slate-900 p-2.5 rounded-[18px] text-white shadow-2xl shadow-slate-300">
+      <Layout size={16} />
+    </div>
+    <div>
+      <h2 className="font-black text-lg md:text-xl tracking-tighter uppercase italic">{store?.name}</h2>
+      <div className="flex items-center gap-2">
+        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        <p className="text-[8px] font-black text-slate-400 tracking-widest uppercase">Updated</p>
       </div>
-
-      {/* LISTAGEM COM LAYOUT DE CARTÕES PROFISSIONAIS */}
-      <div className="grid grid-cols-1 gap-4">
-        {pages?.length === 0 ? (
-          <div className="border-4 border-dashed border-slate-100 rounded-[3rem] p-20 text-center">
-            <div className="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300">
-              <Layout size={32} />
-            </div>
-            <p className="font-black text-slate-400 uppercase tracking-widest text-xs">Nenhuma página encontrada</p>
-          </div>
-        ) : (
-          pages?.map(page => (
-            <div 
-              key={page.id} 
-              className={`relative group p-1 rounded-[2.5rem] transition-all duration-500 ${
-                page.is_home 
-                ? 'bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 shadow-xl shadow-blue-100' 
-                : 'bg-slate-100 hover:bg-slate-200'
-              }`}
-            >
-              <div className="bg-white px-8 py-7 rounded-[2.4rem] flex flex-col md:flex-row md:items-center justify-between gap-6">
-                
-                <div className="flex items-center gap-6">
-                  <div className={`w-16 h-16 rounded-[1.8rem] flex items-center justify-center transition-all duration-500 ${
-                    page.is_home ? 'bg-blue-600 text-white rotate-6' : 'bg-slate-50 text-slate-400 group-hover:bg-white'
-                  }`}>
-                    {page.is_home ? <Home size={28} /> : <FileText size={28} />}
-                  </div>
-
-                  <div>
-                    <div className="flex items-center gap-3 mb-1">
-                      <h3 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter">
-                        /{page.slug}
-                      </h3>
-                      {page.is_home && (
-                        <div className="flex items-center gap-1 bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-100">
-                          <Star size={10} fill="currentColor" />
-                          <span className="text-[9px] font-black uppercase tracking-tighter">Principal</span>
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                      <LayoutTemplate size={12} className="text-blue-500" />
-                      Template: {page.type}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 self-end md:self-center">
-                 {!page.is_home && (
+    </div>
+  </div>
+  
   <button 
-    onClick={() => setAsHome.mutate(page.id)}
-    disabled={setAsHome.isPending}
-    className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all
-      ${setAsHome.isPending ? 'opacity-50 cursor-wait' : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'}`}
+    onClick={() => setIsModalOpen(true)} 
+    className="bg-indigo-600 text-white px-3 py-3 rounded-2xl font-black text-xs md:text-sm hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-200 flex items-center gap-2"
   >
-    {setAsHome.isPending && setAsHome.variables === page.id ? (
-      <Loader2 size={14} className="animate-spin" />
-    ) : (
-      <Home size={14} /> 
-    )}
-    Tornar Home
+    <Plus size={20} /> <span>NEW PAGE</span>
   </button>
-)}
-                  
-                  <div className="h-8 w-px bg-slate-100 mx-2 hidden md:block" />
+</nav>
 
-                  <Link 
-                    to={`/admin/editor/${page.id}`} 
-                    className="flex items-center gap-3 bg-slate-900 text-white pl-6 pr-4 py-4 rounded-2xl hover:bg-blue-600 transition-all group/btn active:scale-95"
-                  >
-                    <span className="text-[10px] font-black uppercase tracking-widest">Editar Conteúdo</span>
-                    <ArrowRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
-                  </Link>
+      <main className="max-w-6xl mx-auto px-4 pt-12">
+        <div className="flex flex-col md:flex-row items-center justify-between mb-12 gap-8">
+          <div className="relative w-full md:w-[450px]">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={22} />
+            <input 
+              className="w-full pl-14 pr-6 py-5 bg-white border-2 border-slate-100 rounded-3xl shadow-sm focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition-all font-bold text-slate-700" 
+              placeholder="Search Pages..." 
+              value={searchQuery} 
+              onChange={(e) => setSearchQuery(e.target.value)} 
+            />
+          </div>
+          <div className="px-8 py-4 bg-white border border-slate-100 rounded-3xl shadow-sm flex items-center gap-4">
+            <div className="text-center border-r border-slate-100 pr-4">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Assets</p>
+              <p className="text-xl font-black text-indigo-600">{organized.total}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</p>
+              <p className="text-xs font-black text-emerald-500 uppercase">Operational</p>
+            </div>
+          </div>
+        </div>
+
+        {organized.conflicts.length > 0 && (
+          <Section title="Link duplicated. Please rename" icon={<AlertCircle className="text-red-500" size={18} />} count={organized.conflicts.length} variant="danger">
+            {organized.conflicts.map((p: any) => <PageRow key={p.id} page={p} storeSlug={store?.slug} isConflict editingState={{editingId, setEditingId, editValue, setEditValue}} {...{setAsHome, updateSlug, deletePage}} />)}
+          </Section>
+        )}
+
+        {organized.homePage && (
+          <Section title="Primary Infrastructure (Home)" icon={<Home className="text-indigo-600" size={18} />}>
+            <PageRow page={organized.homePage} storeSlug={store?.slug} editingState={{editingId, setEditingId, editValue, setEditValue}} {...{setAsHome, updateSlug, deletePage}} />
+          </Section>
+        )}
+
+        {Object.entries(organized.grouped).map(([type, items]: any) => (
+          <Section key={type} title={TEMPLATES[type as keyof typeof TEMPLATES]?.label || type} icon={<div className="text-slate-400">{TEMPLATES[type as keyof typeof TEMPLATES]?.icon || <Globe size={18}/>}</div>} count={items.length}>
+            {items.map((p: any) => <PageRow key={p.id} page={p} storeSlug={store?.slug} editingState={{editingId, setEditingId, editValue, setEditValue}} {...{setAsHome, updateSlug, deletePage}} />)}
+          </Section>
+        ))}
+      </main>
+
+      {/* NEW ASSET MODAL - SIDEBAR (PC) / DRAWER (MOBILE) */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[200] flex items-end md:items-stretch md:justify-end bg-slate-900/40  animate-in fade-in duration-500">
+          
+          {/* Lógica de Fechamento ao clicar fora (Overlay) */}
+          <div className="absolute inset-0 -z-10" onClick={() => setIsModalOpen(false)} />
+
+          <div className="bg-white w-full md:w-[500px] h-[90vh] md:h-screen rounded-t-[2.5rem] md:rounded-l-[3rem] md:rounded-tr-none shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-full md:slide-in-from-right-full duration-500 ease-out will-change-transform">
+            
+            {/* HANDLE DE ARRASTE (Mobile) / FECHAR (Desktop) */}
+            <div className="flex justify-center py-4 md:hidden shrink-0 cursor-grab active:cursor-grabbing" onClick={() => setIsModalOpen(false)}>
+              <div className="w-16 h-1.5 bg-slate-200 rounded-full hover:bg-slate-300 transition-colors" />
+            </div>
+
+            {/* HEADER OTIMIZADO */}
+            <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
+              <div className="min-w-0">
+                <h2 className="text-xl font-black tracking-tight italic">New Deployment</h2>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                  <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Configuring Page</p>
                 </div>
-
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <button 
+                  disabled={!newPage.slug || createPage.isPending} 
+                  onClick={() => createPage.mutate(newPage)} 
+                  className="px-8 py-3.5 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.1em] disabled:opacity-20 hover:bg-indigo-600 active:scale-95 transition-all shadow-xl shadow-slate-200 flex items-center gap-2"
+                >
+                  {createPage.isPending ? <Loader2 size={16} className="animate-spin" /> : 'Deploy now'}
+                </button>
+                {/* Botão fechar discreto para PC */}
+                <button onClick={() => setIsModalOpen(false)} className="hidden md:flex p-3 bg-slate-50 text-slate-400 hover:text-red-500 rounded-2xl transition-colors">
+                  <X size={20} />
+                </button>
               </div>
             </div>
-          ))
-        )}
-      </div>
+            
+            {/* BODY COM INDICADOR DE SCROLL */}
+            <div className="relative flex-1 flex flex-col min-h-0">
+              <div className="p-8 space-y-10 overflow-y-auto overscroll-contain flex-1 custom-scrollbar scroll-smooth">
+                
+                {/* URL PATH */}
+                <div className="space-y-4">
+                  <div className="flex justify-between items-end px-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Destination Path</label>
+                    <span className="text-[9px] font-bold text-indigo-400">Required</span>
+                  </div>
+                  <div className="flex items-center bg-slate-50 border-2 border-slate-100 rounded-[24px] focus-within:ring-8 focus-within:ring-indigo-500/5 focus-within:bg-white focus-within:border-indigo-500 transition-all overflow-hidden group">
+                    <div className="flex items-center text-slate-400 font-bold text-xs pl-6 pr-2 shrink-0 border-r border-slate-100 bg-slate-100/30">
+                      <span className="text-slate-900 truncate max-w-[50px]">{store?.slug}</span>
+                      <span className="opacity-30">/</span>
+                    </div>
+                    <input 
+                      className="w-full bg-transparent px-5 py-5 text-slate-900 font-black text-lg outline-none placeholder:font-normal placeholder:opacity-20" 
+                      placeholder="offer-name" 
+                      value={newPage.slug} 
+                      onChange={(e) => setNewPage({...newPage, slug: e.target.value})} 
+                    />
+                  </div>
+                </div>
 
-      {/* MODAL DE CRIAÇÃO (DESIGN REFINADO) */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-200 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-xl rounded-[3rem] p-10 shadow-2xl relative border border-white/20">
-            <button onClick={() => setIsModalOpen(false)} className="absolute top-8 right-8 p-2 text-slate-300 hover:text-slate-900 transition-colors">
-              <X size={24} />
-            </button>
-
-            <h2 className="text-3xl font-black italic uppercase tracking-tighter mb-8">
-              Nova <span className="text-blue-600">Página</span>
-            </h2>
-
-            <div className="space-y-8">
-              <div className="group">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3 group-focus-within:text-blue-600 transition-colors">Identificador na URL</label>
-                <div className="flex items-center bg-slate-50 rounded-2xl px-6 focus-within:ring-2 ring-blue-500 transition-all">
-                  <span className="text-slate-300 font-bold mr-2">/</span>
-                  <input 
-                    type="text" 
-                    placeholder="ex: servicos-vip"
-                    className="w-full py-5 bg-transparent border-none outline-none font-bold text-slate-800 placeholder:text-slate-200"
-                    value={newPage.slug}
-                    onChange={e => setNewPage({...newPage, slug: e.target.value})}
-                  />
+                {/* ARCHITECTURE SELECT */}
+                <div className="space-y-5 ">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Blueprint Architecture</label>
+                  <div className="grid grid-cols-1 gap-3">
+                    {Object.entries(TEMPLATES).map(([key, val]) => (
+                      <button 
+                        key={key} 
+                        onClick={() => setNewPage({...newPage, type: key})} 
+                        className={`flex items-center gap-6 p-6 rounded-[28px] border-2 transition-all text-left active:scale-[0.97] will-change-transform ${
+                          newPage.type === key 
+                          ? 'border-indigo-600 bg-indigo-50/40 shadow-inner' 
+                          : 'border-slate-50 bg-slate-50/50 hover:border-slate-200'
+                        }`}
+                      >
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+                          newPage.type === key ? 'bg-indigo-600 text-white rotate-6 shadow-lg shadow-indigo-200' : 'bg-white text-slate-400 border border-slate-100'
+                        }`}>
+                          {val.icon}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className={`text-sm font-black uppercase tracking-tight transition-colors ${newPage.type === key ? 'text-indigo-900' : 'text-slate-700'}`}>{val.label}</div>
+                          <p className="text-[11px] text-slate-500 font-medium leading-relaxed mt-1 line-clamp-2">{val.description}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-4">Estrutura Inicial</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {Object.entries(TEMPLATES).map(([key, value]) => (
-                    <button
-                      key={key}
-                      onClick={() => setNewPage({...newPage, type: key})}
-                      className={`p-5 rounded-4xl border-2 text-left transition-all ${
-                        newPage.type === key 
-                        ? 'border-blue-600 bg-blue-50/50 ring-4 ring-blue-50' 
-                        : 'border-slate-50 hover:border-slate-200'
-                      }`}
-                    >
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${newPage.type === key ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                        {value.icon}
-                      </div>
-                      <span className="text-[10px] font-black uppercase tracking-widest block mb-1">{value.label}</span>
-                      <p className="text-[9px] font-bold text-slate-400 leading-tight uppercase opacity-60">{value.description}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* GRADIENTE DE SCROLL (Visual que indica que tem mais conteúdo) */}
+              <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none opacity-100" />
+            </div>
 
+            {/* FOOTER - CANCELAR */}
+            <div className="px-8 py-2 md:py-8 bg-white border-t border-slate-100 shrink-0 pb-2 md:pb-8">
               <button 
-                disabled={!newPage.slug || createPage.isPending}
-                onClick={() => createPage.mutate(newPage)}
-                className="w-full bg-slate-900 text-white py-6 rounded-3xl font-black uppercase tracking-[0.2em] text-[11px] shadow-xl hover:bg-blue-600 disabled:opacity-20 transition-all flex items-center justify-center gap-3"
+                onClick={() => setIsModalOpen(false)} 
+                className="w-full py-5 rounded-[22px] border-2 border-slate-100 bg-red-50 text-[11px] font-black text-red-500 uppercase tracking-[0.2em] hover:text-slate-100 hover:border-red-100 hover:bg-red-700 transition-all active:scale-95"
               >
-                {createPage.isPending ? <Loader2 className="animate-spin" /> : 'Confirmar e Instanciar'}
+                Cancel 
               </button>
             </div>
           </div>
