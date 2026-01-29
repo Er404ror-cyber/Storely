@@ -63,47 +63,39 @@ const PageRow = memo(({ page, storeSlug, isConflict, setAsHome, updateSlug, dele
   const fullUrl = `${BASE_DOMAIN}/${storePath}/${page.slug}`;
 
   // Melhora na função de cópia para garantir compatibilidade
-  const copyUrl = useCallback(() => {
-    // Tenta o método moderno primeiro
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(fullUrl)
-        .then(() => notify.success('Link copiado!'))
-        .catch(() => fallbackCopy(fullUrl));
-    } else {
-      // Se não houver suporte ou não for HTTPS, usa o plano B
-      fallbackCopy(fullUrl);
-    }
-  }, [fullUrl]);
-
-  // Função de segurança para navegadores mobile antigos ou sem HTTPS
   const fallbackCopy = (text: string) => {
     const textArea = document.createElement("textarea");
     textArea.value = text;
-    
-    // Garante que o elemento não apareça na tela mas seja selecionável
     textArea.style.position = "fixed";
     textArea.style.left = "-9999px";
-    textArea.style.top = "0";
     document.body.appendChild(textArea);
-    
+  
     textArea.focus();
     textArea.select();
-    
+  
     try {
-      const successful = document.execCommand('copy');
-      if (successful) notify.success('Link copiado!');
-      else notify.error('Erro ao copiar');
-    } catch (err) {
-      notify.error('Erro ao copiar link');
+      document.execCommand("copy");
+      notify.success("Link copiado!");
+    } catch {
+      notify.error("Erro ao copiar link");
     }
-    
+  
     document.body.removeChild(textArea);
   };
-
-  const handleCancel = () => {
-    setEditingId(null);
-    setEditValue('');
-  };
+  
+  const copyUrl = useCallback(async () => {
+    try {
+      if (navigator.clipboard?.writeText && window.isSecureContext) {
+        await navigator.clipboard.writeText(fullUrl);
+        notify.success("Link copiado!");
+      } else {
+        fallbackCopy(fullUrl);
+      }
+    } catch {
+      fallbackCopy(fullUrl);
+    }
+  }, [fullUrl]);
+  
 
   return (
     <div className={`group bg-white border rounded-[24px] p-5 flex flex-col md:grid md:grid-cols-12 md:items-center gap-4 transition-all duration-300 ${
