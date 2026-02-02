@@ -61,6 +61,11 @@ const PageRow = memo(({ page, storeSlug, isConflict, setAsHome, updateSlug, dele
   const isEditing = editingId === page.id;
   const storePath = storeSlug || 'store';
   const fullUrl = `${BASE_DOMAIN}/${storePath}/${page.slug}`;
+  
+  const handleCancel = useCallback(() => {
+    setEditingId(null);
+    setEditValue('');
+  }, [setEditingId, setEditValue]);
 
   // Melhora na função de cópia para garantir compatibilidade
   const fallbackCopy = (text: string) => {
