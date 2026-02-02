@@ -17,9 +17,8 @@ export const HeaderLog = () => {
 
      <div> 
      <nav className="absolute left-1/2 -translate-x-1/2 flex gap-8 font-medium text-lg">
-          <Link to="" className="hover:bg-linear-to-r hover:from-blue-500 hover:to-purple-600 hover:bg-clip-text hover:text-transparent text-black">Sobre </Link>
-          <Link to="/faq" className="hover:bg-linear-to-r hover:from-blue-500 hover:to-purple-600 hover:bg-clip-text hover:text-transparent text-black">Duvidas</Link>          
-          <Link to="" className="hover:bg-linear-to-r hover:from-blue-500 hover:to-purple-600 hover:bg-clip-text hover:text-transparent text-black">Contatos</Link>          
+          <Link to="" className="hover:bg-linear-to-r hover:from-orange-500 hover:to-cyan-800 hover:bg-clip-text hover:text-transparent text-black">Blog </Link>
+          <Link to="/duvidas" className="hover:bg-linear-to-r hover:from-orange-500 hover:to-cyan-800 hover:bg-clip-text hover:text-transparent text-black">Duvidas</Link>          
           </nav>
      </div>
 

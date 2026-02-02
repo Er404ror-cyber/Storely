@@ -3,7 +3,7 @@ import { HeaderLog } from "../../components/headerlog";
 
 export const StartHome = () => {
     return (
-        <div className="bg-gray-100 h-screen">
+        <div className="bg-[#EAE0D5] h-screen">
             <HeaderLog/>
             <div className="flex justify-between">
                 <div className="w-1/2">
@@ -37,7 +37,7 @@ export const StartHome = () => {
             </div>
             </div>
 
-            <div className="bg-gray-100 h-screen inset-0"> 
+            <div className="bg-[#EAE0D5] h-screen inset-0"> 
                 <div className="mt-20 p-4 flex justify-center">
                     <h1 className="text-black mt-10 text-5xl font-bold">Why Choose Storely?</h1>
                 </div>
@@ -47,7 +47,7 @@ export const StartHome = () => {
                 </div>
                 {/*1*/}
                 <div className="w-full flex justify-center mt-10">
-                <div className="w-[80%]  bg-orange-500/70 rounded-[40px] p-10 flex gap-10">
+                <div className="w-[80%]  shadow-2xl border-2  rounded-[40px] p-10 flex gap-10">
                     <div className="w-1/2 text-black">
                     <h2 className="text-4xl font-extrabold leading-tight mb-6"> Assembly <br /> </h2> 
                      <p className="text-black text-lg leading-relaxed">
@@ -56,7 +56,7 @@ export const StartHome = () => {
                     </p>
                     </div>
                 
-                    <div className="w-1/2 bg-amber-800 rounded-[30px] p-6">             
+                    <div className="w-1/2 bg-[#1B998B] rounded-[30px] p-6">             
                     <iframe width="400" height="250" src="https://www.youtube.com/embed/tgbNymZ7vqY">
                     </iframe>
                 </div>
@@ -64,9 +64,9 @@ export const StartHome = () => {
                 </div>
                 {/*2*/}
                 <div className="w-full flex justify-center mt-10">
-                <div className="w-[80%] max-w-6xl bg-orange-500/70 rounded-[40px] p-10 flex gap-10">
+                <div className="w-[80%] max-w-6xl shadow-2xl border-2 rounded-[40px] p-10 flex gap-10">
                 
-                    <div className="w-1/2 bg-amber-800 rounded-[30px] p-6">             
+                    <div className="w-1/2 bg-orange-500 rounded-[30px] p-6">             
                     <iframe width="400" height="250" src="https://www.youtube.com/embed/tgbNymZ7vqY">
                     </iframe>
                 </div>
@@ -81,7 +81,7 @@ export const StartHome = () => {
                 </div>
                  {/*3*/}
                 <div className="w-full flex justify-center mt-10">
-                <div className="w-[80%] max-w-6xl bg-orange-500/70 rounded-[40px] p-10 flex gap-10">
+                <div className="w-[80%] max-w-6xl shadow-2xl border-2 rounded-[40px] p-10 flex gap-10">
                     <div className="w-1/2 text-black">
                     <h2 className="text-4xl font-extrabold leading-tight mb-6"> Free Hosting <br /> </h2> 
                      <p className="text-black text-lg leading-relaxed">
@@ -89,7 +89,7 @@ export const StartHome = () => {
                     </p>
                     </div>
                 
-                    <div className="w-1/2 bg-amber-800 rounded-[30px] p-6">             
+                    <div className="w-1/2 bg-[#1B998B] rounded-[30px] p-6">             
                     <iframe width="400" height="250" src="https://www.youtube.com/embed/tgbNymZ7vqY">
                     </iframe>
                 </div>
@@ -97,9 +97,9 @@ export const StartHome = () => {
                 </div>
                 {/*4*/}
                 <div className="w-full flex justify-center mt-10">
-                <div className="w-[80%] max-w-6xl bg-orange-500/70 rounded-[40px] p-10 flex gap-10">
+                <div className="w-[80%] max-w-6xl shadow-2xl border-2 rounded-[40px] p-10 flex gap-10">
                 
-                    <div className="w-1/2 bg-amber-800 rounded-[30px] p-6">             
+                    <div className="w-1/2 bg-orange-500 rounded-[30px] p-6">             
                     <iframe width="400" height="250" src="https://www.youtube.com/embed/tgbNymZ7vqY">
                     </iframe>
                 </div>
@@ -112,14 +112,14 @@ export const StartHome = () => {
                 </div>
                  {/*5*/}
                 <div className="w-full flex justify-center mt-10">
-                <div className="w-[80%] max-w-6xl bg-orange-500/70 rounded-[40px] p-10 flex gap-10">
+                <div className="w-[80%] max-w-6xl shadow-2xl border-2 rounded-[40px] p-10 flex gap-10">
                     <div className="w-1/2 text-black">
                     <h2 className="text-4xl font-extrabold leading-tight mb-6">Responsive Design<br /> </h2> 
                      <p className="text-black text-lg leading-relaxed">
                         Your website automatically adapts to any screen: phones, tablets, or desktops.                    </p>
                     </div>
                 
-                    <div className="w-1/2 bg-amber-800 rounded-[30px] p-6">             
+                    <div className="w-1/2 bg-[#1B998B] rounded-[30px] p-6">             
                     <iframe width="400" height="250" src="https://www.youtube.com/embed/tgbNymZ7vqY">
                     </iframe>
                 </div>
@@ -128,7 +128,7 @@ export const StartHome = () => {
     
             </div>
       
-
+{/*
             <div className="bg-blue-950 ">
                 <div className="flex justify-start p-2 ">
                  <h1 className="mt-20 ml-2 text-3xl font-serif text-blue-600">Some of the most visited websites</h1>
@@ -158,7 +158,7 @@ export const StartHome = () => {
                 </div>
 
             </div>
-            <Footer/>
+            <Footer/>*/}
         </div>
     )
 }

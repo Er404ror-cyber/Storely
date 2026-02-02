@@ -10,7 +10,9 @@ import { PublicLayout } from './layout/publicLayout';
 import { PageView } from './pages/user/pageview';
 import { StartHome } from './pages/home/startHome';
 import { ScrollToTop } from './components/scrollToTop';
-import { Faq } from './pages/home/faq';
+import { Duvidas } from './pages/home/duvidas';
+import { Faq } from './pages/faq';
+import { Contacto } from './pages/contacto';
 
 
 export const route = createBrowserRouter([
@@ -20,8 +22,17 @@ export const route = createBrowserRouter([
   },
 
   {
+    path: '/Duvidas',
+    element: <Duvidas />,
+  },
+
+  {
     path: '/faq',
     element: <Faq />,
+  },
+  {
+    path: '/contacto',
+    element: <Contacto/>,
   },
   
   {

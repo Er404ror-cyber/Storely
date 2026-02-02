@@ -1,9 +1,11 @@
 import {  CircleQuestionMark,  LucideVerified, Users } from "lucide-react";
 import { HeaderLog } from "../../components/headerlog";
+import Footer from "../../components/footer2";
+import { Link } from "react-router-dom";
 
-export const Faq = () => {
+export const Duvidas = () => {
     return (
-        <div className="bg-linear-to-b from-gray-300 to-gray-100 h-screen ">
+        <div className="bg-[#EAE0D5] h-screen ">
             <HeaderLog/>
             
             <div className="text-center mt-40 ">
@@ -17,29 +19,33 @@ export const Faq = () => {
              <div className="flex justify-between mt-10">                   
                     <div className="w-1/3 text-white flex justify-end">
                         <div className="p-10 bg-orange-500/30 rounded-2xl w-60 h-45">
-                            <Users size={32} className="bg-amber-800 p-2 rounded-2xl "/>
-                            <h2 className="text-xl font-light mt-4 text-black">Talk to our team</h2>
+                            <Users size={32} className="bg-[#1B998B] p-2 rounded-2xl "/>
+                            <h2 className="text-xl font-light mt-4 text-black
+                            hover:text-white">Talk to our team</h2>
                           
                         </div>
                     </div>
                     <div className="w-1/3 text-white flex justify-center">
                         <div className="p-10 bg-orange-500/30 rounded-2xl w-60 h-45">
-                            <CircleQuestionMark size={32} className="bg-amber-800 p-2 rounded-2xl "/>
-                            <h2 className="text-xl font-light mt-4 text-black">Frequently Asked Questions</h2>
+                            <CircleQuestionMark size={32} className="bg-[#1B998B] p-2 rounded-2xl "/>
+                            <Link to="/faq" 
+                            className="text-xl font-light mt-4 text-black
+                            hover:text-white">Frequently Asked Questions</Link>
                           
                         </div>
                     </div>
                     <div className="w-1/3 text-white flex justify-start">
                         <div className="p-10 bg-orange-500/30 rounded-2xl w-60 h-45">
-                            <LucideVerified size={32} className="bg-amber-800 p-2 rounded-2xl "/>
-                            <h2 className="text-xl font-light mt-4 text-black">Our news blog</h2>
+                            <LucideVerified size={32} className="bg-[#1B998B] p-2 rounded-2xl "/>
+                            <h2 className="text-xl font-light mt-4 text-black
+                            hover:text-white">Our news blog</h2>
                           
                         </div>
                     </div>                
                 </div>
             </div>
 
-             <div className="h-screen mt-20 flex items-center justify-center bg-linear-to-b from-gray-100 to-gray-300">
+             <div className="h-screen mt-20 flex items-center justify-center bg-[#EAE0D5]">
       <div className=" bg-orange-500/30 rounded-3xl flex overflow-hidden shadow-2xl">
 
         <div className="w-1/2">
@@ -65,18 +71,18 @@ export const Faq = () => {
               <input
                 type="text"
                 placeholder="Nome"
-                className="w-1/2 p-3 rounded-xl bg-gray-300 border border-gray-700 outline-none "
+                className="w-1/2 p-3 rounded-xl bg-gray-100 border border-gray-700 outline-none "
               />
               <input
                 type="email"
                 placeholder="Email"
-                className="w-1/2 p-3 rounded-xl bg-gray-300 border border-gray-700 outline-none"
+                className="w-1/2 p-3 rounded-xl bg-gray-100 border border-gray-700 outline-none"
               />
             </div>
 
             <textarea
               placeholder="Sua mensagem"
-              className="h-40 p-3 rounded-xl bg-gray-300 border border-gray-700 outline-none resize-none"
+              className="h-40 p-3 rounded-xl bg-gray-100 border border-gray-700 outline-none resize-none"
             />
 
             <div className="flex gap-4 mt-4">
@@ -97,14 +103,21 @@ export const Faq = () => {
 
           </form>
         </div>
+        
       </div>
     </div>
 
-            <div className="bg-linear-to-b from-gray-300 to-gray-100 h-screen ">
-                densevolvedores da Plataforma Storely
+    <div className="bg-[#EAE0D5]  ">
+      <div className="text-white flex justify-center">
+                        <div className="p-10 bg-orange-500/30 rounded-2xl w-2xl h-30 mb-20 mt-20 shadow-2xl">  
+                            <Users size={32} className="bg-[#1B998B] p-2 rounded-2xl "/>
+                            <p className="text-xl font-light mt-4 text-black ">Talk to our team</p>
+                          
+        </div>
+      </div>
+    </div>
 
-            </div>
-            
+        <Footer/>
         </div>
     );
 } 
