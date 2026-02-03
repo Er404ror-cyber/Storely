@@ -1,7 +1,7 @@
  
 const Footer = () => {
   return (
-    <footer className="bg-[#065a50] text-white py-6 mt-12 flex justify-between px-6 flex-wrap">
+    <footer className="bg-blue-600 text-white py-6 mt-12 flex justify-between px-6 flex-wrap">
 
         
 

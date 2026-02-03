@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 export const Duvidas = () => {
     return (
-        <div className="bg-[#EAE0D5] h-screen ">
+        <div className="bg-white h-screen ">
             <HeaderLog/>
             
             <div className="text-center mt-40 ">
@@ -18,16 +18,16 @@ export const Duvidas = () => {
             <div>
              <div className="flex justify-between mt-10">                   
                     <div className="w-1/3 text-white flex justify-end">
-                        <div className="p-10 bg-orange-500/30 rounded-2xl w-60 h-45">
-                            <Users size={32} className="bg-[#1B998B] p-2 rounded-2xl "/>
+                        <div className="p-10  shadow-2xl rounded-2xl w-60 h-45">
+                            <Users size={32} className="bg-blue-400 p-2 rounded-2xl "/>
                             <h2 className="text-xl font-light mt-4 text-black
-                            hover:text-white">Talk to our team</h2>
+                            hover:text-blue-400">Talk to our team</h2>
                           
                         </div>
                     </div>
                     <div className="w-1/3 text-white flex justify-center">
-                        <div className="p-10 bg-orange-500/30 rounded-2xl w-60 h-45">
-                            <CircleQuestionMark size={32} className="bg-[#1B998B] p-2 rounded-2xl "/>
+                        <div className="p-10 shadow-2xl rounded-2xl w-60 h-45">
+                            <CircleQuestionMark size={32} className="bg-blue-400 p-2 rounded-2xl "/>
                             <Link to="/faq" 
                             className="text-xl font-light mt-4 text-black
                             hover:text-white">Frequently Asked Questions</Link>
@@ -35,8 +35,8 @@ export const Duvidas = () => {
                         </div>
                     </div>
                     <div className="w-1/3 text-white flex justify-start">
-                        <div className="p-10 bg-orange-500/30 rounded-2xl w-60 h-45">
-                            <LucideVerified size={32} className="bg-[#1B998B] p-2 rounded-2xl "/>
+                        <div className="p-10 shadow-2xl rounded-2xl w-60 h-45">
+                            <LucideVerified size={32} className="bg-blue-400 p-2 rounded-2xl "/>
                             <h2 className="text-xl font-light mt-4 text-black
                             hover:text-white">Our news blog</h2>
                           
@@ -45,8 +45,8 @@ export const Duvidas = () => {
                 </div>
             </div>
 
-             <div className="h-screen mt-20 flex items-center justify-center bg-[#EAE0D5]">
-      <div className=" bg-orange-500/30 rounded-3xl flex overflow-hidden shadow-2xl">
+             <div className="h-screen mt-20 flex items-center justify-center ">
+      <div className="  rounded-3xl flex overflow-hidden border-2 border-gray-400 shadow-2xl ">
 
         <div className="w-1/2">
           <img
@@ -88,14 +88,14 @@ export const Duvidas = () => {
             <div className="flex gap-4 mt-4">
               <button
                 type="button"
-                className="w-1/2 py-3 rounded-xl bg-white text-gray-800 font-medium hover:bg-blue-600"
+                className="w-1/2 py-3 rounded-xl bg-white text-gray-800 border border-gray-700 font-medium hover:bg-blue-600"
               >
                 Enviar por Email
               </button>
 
               <button
                 type="button"
-                className="w-1/2 py-3 rounded-xl bg-white text-gray-800 font-medium hover:bg-green-600"
+                className="w-1/2 py-3 rounded-xl bg-white text-gray-800 border border-gray-700 font-medium hover:bg-green-600"
               >
                 Enviar por WhatsApp
               </button>
@@ -107,10 +107,10 @@ export const Duvidas = () => {
       </div>
     </div>
 
-    <div className="bg-[#EAE0D5]  ">
+    <div className="  ">
       <div className="text-white flex justify-center">
-                        <div className="p-10 bg-orange-500/30 rounded-2xl w-2xl h-30 mb-20 mt-20 shadow-2xl">  
-                            <Users size={32} className="bg-[#1B998B] p-2 rounded-2xl "/>
+                        <div className="p-10 shadow-2xl rounded-2xl w-2xl h-30 mb-20 mt-20 ">  
+                            <Users size={32} className="bg-blue-400 p-2 rounded-2xl "/>
                             <p className="text-xl font-light mt-4 text-black ">Talk to our team</p>
                           
         </div>

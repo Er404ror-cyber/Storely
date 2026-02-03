@@ -9,7 +9,7 @@ export const HeaderLog = () => {
       
        {/* LOGO À ESQUERDA */}
        <Link to="/" className="">
-          <h1 className="text-2xl font-bold bg-linear-to-r from-orange-500 to-cyan-800 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold bg-linear-to-r from-blue-500 to-gray-200 bg-clip-text text-transparent">
             STORELY
           </h1>
         </Link>
@@ -17,14 +17,15 @@ export const HeaderLog = () => {
 
      <div> 
      <nav className="absolute left-1/2 -translate-x-1/2 flex gap-8 font-medium text-lg">
-          <Link to="" className="hover:bg-linear-to-r hover:from-orange-500 hover:to-cyan-800 hover:bg-clip-text hover:text-transparent text-black">Blog </Link>
-          <Link to="/duvidas" className="hover:bg-linear-to-r hover:from-orange-500 hover:to-cyan-800 hover:bg-clip-text hover:text-transparent text-black">Duvidas</Link>          
+          <Link to="/" className="hover:bg-linear-to-r hover:from-blue-500 hover:to-gray-200 hover:bg-clip-text hover:text-transparent text-black">Home </Link>
+          <Link to="/blog" className="hover:bg-linear-to-r hover:from-blue-500 hover:to-gray-200 hover:bg-clip-text hover:text-transparent text-black">Blog </Link>
+          <Link to="/duvidas" className="hover:bg-linear-to-r hover:from-blue-500 hover:to-gray-200 hover:bg-clip-text hover:text-transparent text-black">Duvidas</Link>          
           </nav>
      </div>
 
      <div>
      <Link to='/auth' 
-      className="bg-orange-500 text-gray-800 p-2 rounded-2xl font-medium ">Login</Link> 
+      className="bg-blue-500 text-gray-800 p-2 rounded-2xl font-medium ">Login</Link> 
             
      </div>
   </div>

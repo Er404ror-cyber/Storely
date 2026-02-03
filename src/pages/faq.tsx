@@ -4,7 +4,7 @@ import { ArrowBigLeftDash } from "lucide-react";
 
 export const Faq = () => {
     return (
-        <div className="bg-[#EAE0D5] h-screen ">
+        <div className="h-screen ">
             <HeaderLog/>
             <Link to="/duvidas" className="ml-10 mt-6 inline-block text-orange-500 hover:underline ">
         <ArrowBigLeftDash className="bg-cyan-800 rounded-2xl "  /> 
