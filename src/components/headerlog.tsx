@@ -115,7 +115,7 @@ export const HeaderLog = () => {
             
             <Link 
               to="/auth" 
-              className="hidden md:block px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-black uppercase tracking-widest rounded-full hover:opacity-90 transition-all shadow-xl shadow-slate-200 dark:shadow-none"
+              className="hidden md:block px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-black uppercase tracking-widest rounded-full hover:opacity-90 transition-all shadow-sm shadow-slate-200 dark:shadow-none"
             >
               Get Started
             </Link>

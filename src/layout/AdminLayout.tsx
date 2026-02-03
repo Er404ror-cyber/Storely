@@ -161,7 +161,7 @@ export function AdminLayout() {
       await supabase.auth.signOut();
       localStorage.removeItem(STORE_CACHE_KEY);
       queryClient.clear();
-      navigate('/auth');
+      navigate('/');
     } catch {
       toast.error('Error exiting');
     }
