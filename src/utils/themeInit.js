@@ -1,14 +1,17 @@
 // src/themeInit.ts
+
 const initTheme = () => {
+  // 1. Tenta buscar a escolha manual do usuário
   const savedTheme = localStorage.getItem('theme');
 
+  // 2. Se houver escolha salva, aplica imediatamente
   if (savedTheme) {
-    // Se o usuário CLICOU no botão alguma vez, respeitamos essa escolha fixa
     document.documentElement.classList.toggle('dark', savedTheme === 'dark');
-  } else {
-    // Se ele NUNCA clicou, decidimos pela hora atual
+  } 
+  // 3. Se não houver, decide pela hora, mas NÃO salva no localStorage
+  else {
     const hour = new Date().getHours();
-    const isNight = hour >= 18 || hour < 6; // Noite entre 18h e 06h
+    const isNight = hour >= 18 || hour < 6; // Noite: 18h às 06h
 
     if (isNight) {
       document.documentElement.classList.add('dark');
@@ -18,5 +21,7 @@ const initTheme = () => {
   }
 };
 
+// Executa imediatamente para evitar o "flicker" de cor ao carregar a página
 initTheme();
+
 export {};

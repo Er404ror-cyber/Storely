@@ -20,17 +20,16 @@ interface ProjectProps {
 }
 // --- SUB-COMPONENTES ---
 
-const FeatureCard: React.FC<FeatureProps> = ({ title, desc, icon }) => (
+// Memo impede re-render se as props não mudarem
+const FeatureCard = memo(({ title, desc, icon }: FeatureProps) => (
     <div className="p-8 rounded-[2rem] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-blue-500/50 transition-all duration-300 shadow-sm hover:shadow-2xl hover:shadow-blue-500/5 group">
         <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-all">
             {icon}
         </div>
         <h3 className="text-xl font-bold mb-3 tracking-tight">{title}</h3>
-        <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed text-sm sm:text-base">
-            {desc}
-        </p>
+        <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed text-sm sm:text-base">{desc}</p>
     </div>
-);
+));
 
 const ProjectCard: React.FC<ProjectProps> = memo(({ category, title, description, url }) => {
     const [shouldRender, setShouldRender] = useState(false);
@@ -68,10 +67,10 @@ const ProjectCard: React.FC<ProjectProps> = memo(({ category, title, description
                         <iframe 
                             src={url}
                             title={title}
-                            className="w-full h-full border-none"
+                            className="w-full h-full border-none rounded-t-3xl"
                             loading="lazy"
                             scrolling="no"
-                            sandbox="allow-same-origin" 
+                            sandbox="allow-scripts allow-same-origin" 
                         />
                     </div>
                 ) : (
@@ -104,7 +103,7 @@ export const StartHome: React.FC = () => {
             <HeaderLog />
 
             {/* HERO SECTION */}
-           <section className="relative pt-20 pb-16 md:pt-32 md:pb-40 px-4 sm:px-6 lg:px-8 overflow-hidden bg-white dark:bg-zinc-950">
+           <section className="relative pt-20 pb-16 md:pt-28 md:pb-32 px-4 sm:px-6 lg:px-8 overflow-hidden bg-white dark:bg-zinc-950">
 
 
     <div className="max-w-7xl mx-auto relative">
@@ -244,7 +243,7 @@ export const StartHome: React.FC = () => {
                     <ProjectCard 
                         category="Design Systems"
                         title="Tailwind Components"
-                        url="https://tailwindui.com"
+                        url="https://storelyy.vercel.app/tio/"
                         description="Arquitetura de interface escalável, demonstrando a versatilidade de nossos componentes nativos e fidelidade visual."                    />
                     </div>
                 </div>

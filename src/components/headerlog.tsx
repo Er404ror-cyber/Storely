@@ -15,22 +15,26 @@ export const HeaderLog = () => {
   }, []);
 
   const toggleTheme = () => {
-    const update = () => {
-      // Verifica se atualmente está dark
+    const performUpdate = () => {
       const isDarkNow = document.documentElement.classList.contains('dark');
       const nextTheme = !isDarkNow;
   
-      setIsDark(nextTheme);
+      // Atualiza a classe no HTML
       document.documentElement.classList.toggle('dark', nextTheme);
       
-      // AQUI: Só salvamos no localStorage porque o usuário clicou explicitamente
+      // Atualiza o estado do React para o ícone mudar
+      setIsDark(nextTheme);
+  
+      // SOMENTE AQUI salvamos, pois foi uma ação consciente do usuário
       localStorage.setItem('theme', nextTheme ? 'dark' : 'light');
     };
   
+    // Se o navegador suportar a animação chique (Chrome/Edge)
     if (document.startViewTransition) {
-      document.startViewTransition(update);
+      document.startViewTransition(performUpdate);
     } else {
-      update();
+      // Se não (Safari/Firefox), apenas muda as cores com o fade do CSS
+      performUpdate();
     }
   };
   // 2. Controle de Scroll e Bloqueio

@@ -1,18 +1,23 @@
 @import "tailwindcss";
 
-/* 1. ATIVAÇÃO DO DARK MODE POR CLASSE (Tailwind v4) */
+/* Ativação do Dark Mode por classe para Tailwind v4 */
 @variant dark (&:where(.dark, .dark *));
 
-/* 2. TRANSIÇÃO SUAVE PARA TODOS OS ELEMENTOS */
 @layer base {
+  html, body {
+    /* Cores base para evitar que a tela fique transparente na transição */
+    @apply bg-white text-slate-900 dark:bg-[#020617] dark:text-slate-50;
+  }
+
   *, ::after, ::before {
-    transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+    /* Transições de cores individuais suaves */
+    transition-property: background-color, color, border-color;
     transition-duration: 300ms;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-timing-function: linear;
   }
 }
 
-/* 3. EFEITO CORTINA (View Transitions) */
+/* --- MÁGICA DA TRANSIÇÃO DIAGONAL --- */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
@@ -20,33 +25,34 @@
   display: block;
   position: fixed;
   inset: 0;
+  /* Aceleração de hardware */
+  transform: translateZ(0);
 }
 
-/* O tema novo entra como uma cortina da esquerda para a direita */
 ::view-transition-new(root) {
   z-index: 9999;
-  animation: curtain-reveal 700ms cubic-bezier(0.5, 0, 0.1, 1) both;
+  /* Curva de luxo: rápida no início, suave no fim */
+  animation: diagonal-sweep 800ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  will-change: clip-path;
 }
 
 ::view-transition-old(root) {
   z-index: 1;
 }
 
-/* ANIMAÇÃO DA CORTINA */
-@keyframes curtain-reveal {
+@keyframes diagonal-sweep {
   from {
-    /* Cortina totalmente escondida à esquerda */
-    clip-path: inset(0 100% 0 0);
+    /* Começa no topo esquerdo (0,0) */
+    clip-path: polygon(0% 0%, 0% 0%, 0% 0%);
   }
   to {
-    /* Cortina cobre a tela toda */
-    clip-path: inset(0 0 0 0);
+    /* Expande em triângulo até o canto oposto (250% para garantir cobertura total) */
+    clip-path: polygon(0% 0%, 250% 0%, 0% 250%);
   }
 }
 
-/* OPCIONAL: Se quiser que venha de CIMA para BAIXO, use este keyframe:
-@keyframes curtain-reveal {
-  from { clip-path: inset(0 0 100% 0); }
-  to { clip-path: inset(0 0 0 0); }
+/* Bloqueia qualquer bug de clique durante o movimento */
+html.view-transitioning * {
+  pointer-events: none !important;
+  transition: none !important;
 }
-*/
