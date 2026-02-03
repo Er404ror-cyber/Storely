@@ -1,12 +1,11 @@
 import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Store as StoreIcon, X, Menu, LogOut, Loader2, Check, Edit2, Clock, ExternalLink 
+  Store as StoreIcon, X, LogOut, Loader2, Check, Edit2, Clock, ExternalLink 
 } from 'lucide-react';
-// Importação de tipo específica corrigida abaixo:
 import type { UseMutationResult } from '@tanstack/react-query';
 
-// --- Interfaces Estritas ---
+// --- Interfaces ---
 interface Store {
   id: string;
   name: string;
@@ -36,8 +35,6 @@ interface SidebarProps {
   newName: string;
   setNewName: (val: string) => void;
   timeLeft: string;
-  // Usando 'any' nos generics do MutationResult para evitar conflitos de Schema complexos, 
-  // mas mantendo a estrutura de tipo correta.
   updateStoreMutation: UseMutationResult<any, Error, string, any>;
   confirmLogout: boolean;
   setConfirmLogout: (val: boolean) => void;
@@ -46,6 +43,7 @@ interface SidebarProps {
   menuItems: MenuItem[];
 }
 
+// --- Componente de Item de Navegação ---
 const NavItem = memo(({ item, isActive, onClick, badge }: { item: MenuItem; isActive: boolean; onClick: () => void; badge?: number }) => (
   <Link
     to={item.path}
@@ -76,24 +74,31 @@ export function AdminSidebar({
 }: SidebarProps) {
   
   const isNameTaken = updateStoreMutation.error?.message.includes("taken");
+  const isEditorRoute = location.pathname.includes('/editor/');
 
-  // Função para cancelar a edição e resetar o estado de erro
   const handleCancel = () => {
     setIsEditingName(false);
-    updateStoreMutation.reset(); // Limpa o erro do mutation
+    updateStoreMutation.reset();
   };
+
   return (
     <>
-      {/* Overlay - Z-INDEX 80 */}
+      {/* Overlay - Z-INDEX 80 (Ativo se estiver aberto no mobile ou no editor desktop) */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[80] lg:hidden" 
+          className="fixed inset-0 bg-slate-900/40  z-[80]" 
           onClick={() => setIsOpen(false)} 
         />
       )}
 
       {/* Sidebar - Z-INDEX 90 */}
-      <aside className={`fixed inset-y-0 left-0 z-[90] w-[295px] bg-white border-r border-slate-100 flex flex-col transition-all duration-500 lg:relative lg:translate-x-0 ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
+      <aside className={`
+        fixed inset-y-0 left-0 z-[90] w-[295px] bg-white border-r border-slate-100 flex flex-col transition-all duration-500 ease-in-out
+        ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
+        ${!isEditorRoute ? 'lg:relative lg:translate-x-0' : 'lg:fixed'}
+      `}>
+        
+        {/* Header da Sidebar */}
         <div className="h-20 flex items-center justify-between px-8 shrink-0">
           <div className="flex items-center gap-3 font-black text-lg tracking-tighter uppercase italic">
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-lg">
@@ -101,11 +106,16 @@ export function AdminSidebar({
             </div>
             Storelyy
           </div>
-          <button onClick={() => setIsOpen(false)} className="lg:hidden p-2 text-slate-400">
+          {/* Botão fechar: Visível no mobile OU se for rota de editor */}
+          <button 
+            onClick={() => setIsOpen(false)} 
+            className={`${!isEditorRoute ? 'lg:hidden' : 'flex'} p-2 text-slate-400 hover:bg-slate-50 rounded-lg transition-colors`}
+          >
             <X size={20} />
           </button>
         </div>
 
+        {/* Menu de Navegação */}
         <nav className="flex-1 px-4 py-4 space-y-1.5 overflow-y-auto">
           {menuItems.map((item) => (
             <NavItem 
@@ -118,6 +128,7 @@ export function AdminSidebar({
           ))}
         </nav>
 
+        {/* Rodapé da Sidebar (Perfil/Loja e Logout) */}
         <div className="p-4 border-t border-slate-50 bg-slate-50/50">
           <div className="flex flex-col gap-2">
             <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
@@ -136,45 +147,24 @@ export function AdminSidebar({
                           onChange={(e) => setNewName(e.target.value)}
                           className={`text-[13px] font-black text-slate-900 bg-slate-50 px-2 py-1 rounded-lg w-full border outline-none ${isNameTaken ? 'border-red-500 ring-1 ring-red-500' : 'border-slate-200 focus:border-indigo-600'}`}
                         />
-                       {/* Botão Confirmar */}
-                      <button 
-                        disabled={updateStoreMutation.isPending} 
-                        onClick={() => updateStoreMutation.mutate(newName)} 
-                        className="text-emerald-500 hover:bg-emerald-50 p-1 rounded-md transition-colors disabled:opacity-50"
-                        title="Salvar"
-                      >
-                        {updateStoreMutation.isPending ? (
-                          <Loader2 size={16} className="animate-spin"/>
-                        ) : (
-                          <Check size={18} strokeWidth={3}/>
-                        )}
-                      </button>
-
-                      {/* Botão Cancelar (O X que você pediu) */}
-                      <button 
-                        onClick={handleCancel}
-                        className="text-slate-400 hover:bg-slate-100 p-1 rounded-md transition-colors"
-                        title="Cancelar"
-                      >
-                        <X size={18} />
-                      </button>
+                        <button 
+                          disabled={updateStoreMutation.isPending} 
+                          onClick={() => updateStoreMutation.mutate(newName)} 
+                          className="text-emerald-500 hover:bg-emerald-50 p-1 rounded-md disabled:opacity-50"
+                        >
+                          {updateStoreMutation.isPending ? <Loader2 size={16} className="animate-spin"/> : <Check size={18} strokeWidth={3}/>}
+                        </button>
+                        <button onClick={handleCancel} className="text-slate-400 hover:bg-slate-100 p-1 rounded-md">
+                          <X size={18} />
+                        </button>
                       </div>
-                      {isNameTaken && (
-                        <span className="text-[9px] text-red-600 font-black uppercase tracking-tighter block animate-pulse">
-                          Nome indisponível!
-                        </span>
-                      )}
+                      {isNameTaken && <span className="text-[9px] text-red-600 font-black uppercase block animate-pulse">Nome indisponível!</span>}
                     </div>
                   ) : (
                     <div className="flex flex-col">
                       <div className="flex items-center justify-between gap-1">
                         <div 
-                          onClick={() => { 
-                            if (!timeLeft && store) { 
-                              setNewName(store.name); 
-                              setIsEditingName(true); 
-                            }
-                          }}
+                          onClick={() => { if (!timeLeft && store) { setNewName(store.name); setIsEditingName(true); } }}
                           className={`flex items-center gap-1.5 min-w-0 group ${!timeLeft ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                         >
                           <span className={`text-[13px] font-black uppercase italic truncate ${!timeLeft ? 'hover:text-indigo-600' : 'text-slate-400'}`}>
@@ -200,7 +190,7 @@ export function AdminSidebar({
                 <LogOut size={16} /> Logout
               </button>
             ) : (
-              <div className="flex gap-2">
+              <div className="flex gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <button onClick={handleLogout} className="flex-1 p-3.5 bg-red-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest italic">Exit</button>
                 <button onClick={() => setConfirmLogout(false)} className="p-3.5 bg-slate-200 text-slate-600 rounded-2xl font-black text-[11px] uppercase tracking-widest">
                   <X size={16} />
