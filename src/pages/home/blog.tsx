@@ -1,3 +1,4 @@
+import Footer from "../../components/footer2";
 import { HeaderLog } from "../../components/headerlog";
 export const Blog = () => {
     return (
@@ -51,25 +52,25 @@ export const Blog = () => {
             <div className="w-1/4">
             <img src="https://wallpaperaccess.com/full/489337.jpg" 
                  alt=""
-                 className="w-60 h-70 rounded-2xl" />
+                 className="w-70 h-70 rounded-2xl" />
                  <p>flower store</p>
                  </div>
             <div className="w-1/4">
             <img src="https://wallpapercave.com/wp/wp2225269.jpg" 
                  alt=""
-                 className="w-60 h-70 rounded-2xl" />
+                 className="w-70 h-70 rounded-2xl" />
                  <p>shein store</p>
                  </div>
             <div className="w-1/4">
             <img src="https://www.fotonerd.it/wp-content/uploads/2020/11/fotonerd-luminar-4-aggiornamento-big-sur-feat.jpg" 
                  alt=""
-                 className="w-60 h-70 rounded-2xl" />
+                 className="w-70 h-70 rounded-2xl" />
                  <p>candy store</p>
                  </div>
             <div className="w-1/4">
             <img src="https://cdn.pixabay.com/photo/2024/07/19/08/16/waves-8905720_1280.png" 
                  alt=""
-                 className="w-60 h-70 rounded-2xl" />
+                 className="w-70 h-70 rounded-2xl" />
                  <p>hair store</p>
                  </div>
             
@@ -82,7 +83,7 @@ export const Blog = () => {
           <div className="w-1/2 ml-20 mt-10">
           <img src="https://i.pinimg.com/originals/37/9e/4d/379e4d1753745cc45551022cc621f378.jpg" 
                alt=""
-               className="max-w-2xl h-70" />
+               className="max-w-2xl h-70 border-4 border-blue-400 rounded-2xl" />
 
                <div className="mt-4">
                <p className="text-2xl font-semibold">Load bugh</p>
@@ -95,7 +96,7 @@ export const Blog = () => {
           <div className="w-1/3 flex justify-between">
           <img src="https://image.cdn2.seaart.ai/2023-10-06/19157478906307589/d01e7026e489e9d4744b4635ecf2898cf8f87e26_high.webp" 
                alt=""
-               className="w-30 h-35" />
+               className="w-30 h-35 border-4 border-blue-400 rounded-2xl" />
                </div>
                <div className="">
                <p className="text-2xl font-bold ml-">New logo.</p>
@@ -106,7 +107,7 @@ export const Blog = () => {
           <div className="w-1/3 flex justify-between">
           <img src="https://tse3.mm.bing.net/th/id/OIP.D0P5MTaO_Oc3nrvDXfYw4QHaQC?w=640&h=1386&rs=1&pid=ImgDetMain&o=7&rm=3" 
                alt=""
-               className="w-30 h-35" />
+               className="w-30 h-35 border-4 border-blue-400 rounded-2xl" />
                </div>
                <div className="">
                <p className="text-2xl font-bold ml-">New logo.</p>
@@ -117,7 +118,7 @@ export const Blog = () => {
           <div className="w-1/3 flex justify-between">
           <img src="https://img.freepik.com/premium-photo/building-city-during-sunset-warm-golden-light-setting-sun-paints-urban-skyline_750630-5400.jpg" 
                alt=""
-               className="w-30 h-35" />
+               className="w-30 h-35 border-4 border-blue-400 rounded-2xl" />
                </div>
                <div className="">
                <p className="text-2xl font-bold ml-">New logo.</p>
@@ -126,6 +127,7 @@ export const Blog = () => {
           </div>
           </div>
         </div>
+        <Footer/>
         </div>
     );
 };
