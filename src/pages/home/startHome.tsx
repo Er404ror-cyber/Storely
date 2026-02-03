@@ -104,7 +104,7 @@ export const StartHome: React.FC = () => {
             <HeaderLog />
 
             {/* HERO SECTION */}
-           <section className="relative pt-8 pb-16 md:pt-32 md:pb-40 px-4 sm:px-6 lg:px-8 overflow-hidden bg-white dark:bg-zinc-950">
+           <section className="relative pt-20 pb-16 md:pt-32 md:pb-40 px-4 sm:px-6 lg:px-8 overflow-hidden bg-white dark:bg-zinc-950">
 
 
     <div className="max-w-7xl mx-auto relative">
