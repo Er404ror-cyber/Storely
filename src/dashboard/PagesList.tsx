@@ -11,7 +11,7 @@ import { useAdminStore } from '../hooks/useAdminStore';
 import { supabase } from '../lib/supabase';
 import { TEMPLATES } from './templetes';
 
-const BASE_DOMAIN = "http://storelyy.vercel.app";
+const BASE_DOMAIN = "https://storelyy.vercel.app";
 
 // --- CUSTOM TOAST STYLES ---
 const notify = {

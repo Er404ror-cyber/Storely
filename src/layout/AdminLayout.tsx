@@ -41,7 +41,7 @@ interface NavItemProps {
   badge?: number;
 }
 
-const BASE_DOMAIN = "http://storelyy.vercel.app";
+const BASE_DOMAIN = "https://storelyy.vercel.app";
 const STORE_CACHE_KEY = 'storelyy_persistent_store';
 
 const generateSlug = (text: string): string => {
