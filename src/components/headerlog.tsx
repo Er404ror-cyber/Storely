@@ -202,7 +202,7 @@ const toggleTheme = () => {
   }`}
 >
   {/* Fundo com Glassmorphism leve */}
-  <div className="absolute inset-0 bg-white/98 dark:bg-slate-950/98 backdrop-blur-xl" />
+  <div className="absolute inset-0 bg-white/98 dark:bg-zinc-950/98 backdrop-blur-sm" />
 
   <div className="relative flex flex-col h-full pt-28 px-8 pb-8">
     
@@ -237,8 +237,7 @@ const toggleTheme = () => {
       })}
     </nav>
 
-    {/* Footer do Menu - Menos ruído visual */}
-   {/* Container Inferior - Focado em Compositing puro */}
+   
 <div 
   className={`mt-auto transition-all duration-500 transform-gpu ${
     isOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
