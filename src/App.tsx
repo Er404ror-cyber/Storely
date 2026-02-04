@@ -1,10 +1,12 @@
 import { RouterProvider } from "react-router-dom";
 import { route } from "./routes";
 import { Toaster } from "react-hot-toast";
+import { LanguageProvider } from "./context/LanguageContext";
 
 const App = () => {
   return (
     <>
+    <LanguageProvider>
       <Toaster 
         position="bottom-right" 
         reverseOrder={false}
@@ -34,6 +36,7 @@ const App = () => {
         }} 
       />
       <RouterProvider router={route} />
+      </LanguageProvider>
     </>
   );
 };

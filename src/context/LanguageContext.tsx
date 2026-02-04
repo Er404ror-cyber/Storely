@@ -1,0 +1,151 @@
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+
+// 1. Defina aqui todos os seus textos
+const translations = {
+  en: {
+    nav_home: "Home",
+    nav_blog: "Blog",
+    nav_support: "Support",
+    nav_privacy: "Privacy",
+    btn_dashboard: "GET STARTED",
+    btn_close: "Close Menu",
+    theme_light: "Light",
+    theme_dark: "Dark",
+    theme_auto: "Auto",
+    theme_desc_night: "Active: Night (6pm-6am)",
+    theme_desc_day: "Active: Day (6am-6pm)",
+    menu_nav: "Navigation",
+    footer_rights: "All Rights Reserved",
+    theme_desc_auto_base: "Changes automatically based on time.",
+  theme_desc_manual: "This mode will stay active until you switch to Auto.",
+  theme_click_toggle: "Click to toggle",
+  
+    // Hero
+    hero_title_1: "Build",
+    hero_title_2: "Your",
+    hero_title_3: "Website",
+    hero_title_4: "Here.",
+    hero_desc: "The ultimate platform for those seeking extreme performance.",
+    hero_subtitle: "No code. No limits.",
+    btn_gallery: "VIEW GALLERY",
+    // Features
+    feat_tag: "Features",
+    feat_title: "Everything in one place.",
+    feat_1_title: "Drag & Drop Editor",
+    feat_1_desc: "Build visually without touching a line of code. Simple, intuitive, and powerful.",
+    feat_2_title: "Native SEO",
+    feat_2_desc: "Your page is born optimized for search engines, ensuring better visibility.",
+    feat_3_title: "Edge Hosting",
+    feat_3_desc: "Sites loaded instantly anywhere in the world with our premium CDN.",
+    // Showcase
+    showcase_title_1: "Excellence in",
+    showcase_title_2: "every pixel.",
+    showcase_desc: "Explore high-performance websites created by our community of designers and entrepreneurs.",
+    project_explore: "Explore Website",
+    proj_1_tag: "E-commerce Engine",
+    proj_1_desc: "An e-commerce infrastructure focused on loading speed and conversion optimized for modern retail.",
+    proj_2_tag: "Design Systems",
+    proj_2_desc: "Scalable interface architecture, demonstrating the versatility of our native components and visual fidelity.",
+    // CTA
+    cta_tag: "Instant Access",
+    cta_title_1: "Ready to",
+    cta_title_2: "master",
+    cta_title_3: "the web?",
+    cta_desc: "Join thousands of creators and get your project online in less than 10 minutes.",
+    cta_subtitle: "No hidden costs.",
+    btn_create_site: "CREATE MY SITE NOW",
+    cta_members: "+12k members",
+  },
+  pt: {
+    nav_home: "Início",
+    nav_blog: "Blog",
+    nav_support: "Suporte",
+    nav_privacy: "Privacidade",
+    btn_dashboard: "Começar Agora",
+    btn_close: "Fechar Menu",
+    theme_light: "Claro",
+    theme_dark: "Escuro",
+    theme_auto: "Auto",
+    theme_desc_night: "Ativado: Noite (18h-06h)",
+    theme_desc_day: "Ativado: Dia (06h-18h)",
+    menu_nav: "Navegação",
+    footer_rights: "Direitos reservados",
+    theme_desc_auto_base: "Muda sozinho conforme o horário.",
+  theme_desc_manual: "Este modo permanecerá ativo até que você altere para Automático.",
+  theme_click_toggle: "Clique para alternar",
+  
+  // Hero
+  hero_title_1: "Construa",
+  hero_title_2: "Seu",
+  hero_title_3: "Website",
+  hero_title_4: "Aqui.",
+  hero_desc: "A plataforma definitiva para quem busca performance extrema.",
+  hero_subtitle: "Sem código. Sem limites.",
+  btn_gallery: "VER GALERIA",
+  // Features
+  feat_tag: "Funcionalidades",
+  feat_title: "Tudo em um só lugar.",
+  feat_1_title: "Editor Drag & Drop",
+  feat_1_desc: "Construa visualmente sem tocar em uma linha de código. Simples, intuitivo e poderoso.",
+  feat_2_title: "SEO Nativo",
+  feat_2_desc: "Sua página já nasce otimizada para os motores de busca, garantindo melhor visibilidade.",
+  feat_3_title: "Hospedagem Edge",
+  feat_3_desc: "Sites carregados instantaneamente em qualquer lugar do mundo com nossa CDN premium.",
+  // Showcase
+  showcase_title_1: "Excelência em",
+  showcase_title_2: "cada pixel.",
+  showcase_desc: "Explore websites de alta performance criados por nossa comunidade de designers e empreendedores.",
+  project_explore: "Explorar Website",
+  proj_1_tag: "Motor E-commerce",
+  proj_1_desc: "Uma infraestrutura de comércio eletrônico focada em velocidade de carregamento e conversão otimizada para o varejo moderno.",
+  proj_2_tag: "Sistemas de Design",
+  proj_2_desc: "Arquitetura de interface escalável, demonstrando a versatilidade de nossos componentes nativos e fidelidade visual.",
+  // CTA
+  cta_tag: "Acesso Instantâneo",
+  cta_title_1: "Pronto para",
+  cta_title_2: "dominar",
+  cta_title_3: "a web?",
+  cta_desc: "Junte-se a milhares de criadores e coloque seu projeto no ar em menos de 10 minutos.",
+  cta_subtitle: "Sem custos ocultos.",
+  btn_create_site: "CRIAR MEU SITE AGORA",
+  cta_members: "+12k membros",
+  }
+} as const;
+
+// Tipagem Automática baseada no dicionário acima
+type Language = 'en' | 'pt';
+type TranslationKeys = keyof typeof translations['en'];
+
+interface LanguageContextType {
+  lang: Language;
+  setLang: (lang: Language) => void;
+  t: (key: TranslationKeys) => string;
+}
+
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+export const LanguageProvider = ({ children }: { children: ReactNode }) => {
+  const [lang, setLang] = useState<Language>(() => {
+    return (localStorage.getItem('lang') as Language) || 'pt';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('lang', lang);
+  }, [lang]);
+
+  const t = (key: TranslationKeys): string => {
+    return translations[lang][key] || key;
+  };
+
+  return (
+    <LanguageContext.Provider value={{ lang, setLang, t }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+};
+
+export const useTranslate = () => {
+  const context = useContext(LanguageContext);
+  if (!context) throw new Error('useTranslate must be used within LanguageProvider');
+  return context;
+};
