@@ -94,7 +94,7 @@ const toggleTheme = () => {
       <header 
         className={`fixed top-0 w-full z-[100] transition-all duration-300 ${
           scrolled || isOpen
-            ? 'bg-white/95 dark:bg-slate-950/90  border-b border-gray-100 dark:border-slate-800 py-3' 
+            ? 'bg-white/95 dark:bg-zinc-950/90  border-b border-gray-100 dark:border-slate-800 py-3' 
             : 'bg-transparent py-4'
         }`}
       >
