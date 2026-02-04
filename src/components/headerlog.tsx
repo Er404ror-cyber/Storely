@@ -1,42 +1,77 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Sun, Moon } from 'lucide-react';
-
+import { Menu, X, Sun, Moon, Monitor } from 'lucide-react';
+import toast from 'react-hot-toast'; 
 export const HeaderLog = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [isDark, setIsDark] = useState(false);
-  const location = useLocation();
+  const getThemeLabel = () => {
+    if (themeMode === 'light') return 'Modo Claro';
+    if (themeMode === 'dark') return 'Modo Escuro';
+    return 'Automático (Horário)';
 
-  // 1. Gerenciamento de Tema
-  useEffect(() => {
-    const isDarkTheme = document.documentElement.classList.contains('dark');
-    setIsDark(isDarkTheme);
-  }, []);
+  };
+  
+  const getThemeDescription = () => {
+    if (themeMode === 'auto') {
+      const isNight = new Date().getHours() >= 18 || new Date().getHours() < 6;
+      return isNight ? 'Ativado: Noite (18h-06h)' : 'Ativado: Dia (06h-18h)';
+    }
+    return 'Definido manualmente';
+  };
+ 
+// Definimos 'auto' como valor inicial padrão
+const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'auto'>('auto');
+const location = useLocation();
 
-  const toggleTheme = () => {
-    const performUpdate = () => {
-      const isDarkNow = document.documentElement.classList.contains('dark');
-      const nextTheme = !isDarkNow;
+
+const applyAutoTheme = useCallback((showNotification = false) => {
+  const isNight = new Date().getHours() >= 18 || new Date().getHours() < 6;
+  document.documentElement.classList.toggle('dark', isNight);
   
-      // Atualiza a classe no HTML
-      document.documentElement.classList.toggle('dark', nextTheme);
-      
-      // Atualiza o estado do React para o ícone mudar
-      setIsDark(nextTheme);
+  if (showNotification) {
+    toast.success(`Auto: ${isNight ? 'Noite' : 'Dia'}`, {
+      id: 'theme',
+      icon: isNight ? '🌙' : '☀️',
+      style: { borderRadius: '12px', background: '#1e293b', color: '#fff' }
+    });
+  }
+}, []);
+
+useEffect(() => {
+  const saved = (localStorage.getItem('theme') as any) || 'auto';
+  setThemeMode(saved);
   
-      // SOMENTE AQUI salvamos, pois foi uma ação consciente do usuário
-      localStorage.setItem('theme', nextTheme ? 'dark' : 'light');
-    };
-  
-    // Se o navegador suportar a animação chique (Chrome/Edge)
-    if (document.startViewTransition) {
-      document.startViewTransition(performUpdate);
-    } else {
-      // Se não (Safari/Firefox), apenas muda as cores com o fade do CSS
-      performUpdate();
+  if (saved === 'auto') applyAutoTheme(false);
+  else document.documentElement.classList.toggle('dark', saved === 'dark');
+
+  const interval = setInterval(() => {
+    if (localStorage.getItem('theme') === 'auto') applyAutoTheme(false);
+  }, 60000);
+
+  return () => clearInterval(interval);
+}, [applyAutoTheme]);
+
+const toggleTheme = () => {
+  const modes: ('light' | 'dark' | 'auto')[] = ['light', 'dark', 'auto'];
+  const next = modes[(modes.indexOf(themeMode) + 1) % modes.length];
+
+  const update = () => {
+    setThemeMode(next);
+    localStorage.setItem('theme', next);
+    if (next === 'auto') applyAutoTheme(true);
+    else {
+      document.documentElement.classList.toggle('dark', next === 'dark');
+      toast.success(next === 'dark' ? 'Modo Escuro' : 'Modo Claro', { 
+        id: 'theme', 
+        icon: next === 'dark' ? '🌙' : '☀️' 
+      });
     }
   };
+
+  if (document.startViewTransition) document.startViewTransition(update);
+  else update();
+};
   // 2. Controle de Scroll e Bloqueio
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -105,14 +140,39 @@ export const HeaderLog = () => {
 
           {/* ACTIONS (Toggle + Auth) */}
           <div className="flex items-center gap-4 md:gap-8 z-[110]">
-            <button 
-              onClick={toggleTheme}
-              className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-100 transition-colors"
-              aria-label="Alternar Tema"
-            >
-              {isDark ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
+          <div className="relative group"> 
+    {/* Container para o botão e o balão explicativo */}
+    <button 
+                onClick={toggleTheme}
+                className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-slate-100/80 dark:bg-slate-800/80 border border-transparent hover:border-indigo-500/30 transition-all active:scale-90 transform-gpu"
+              >
+                <div className="text-slate-600 dark:text-slate-300">
+                  {themeMode === 'light' && <Sun size={18} className="text-amber-500 fill-amber-500/10" />}
+                  {themeMode === 'dark' && <Moon size={18} className="text-indigo-400 fill-indigo-400/10" />}
+                  {themeMode === 'auto' && <Monitor size={18} className="animate-pulse-slow" />}
+                </div>
+                <div className="text-left hidden md:block">
+                  <p className="text-[10px] font-bold text-slate-900 dark:text-white leading-none">
+                    {themeMode === 'auto' ? 'Auto' : themeMode.charAt(0).toUpperCase() + themeMode.slice(1)}
+                  </p>
+                </div>
+              </button>
 
+    {/* TOOLTIP EXPLICATIVO (Aparece no Hover) */}
+    <div className="absolute top-full mt-3 right-0 w-48 p-3 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all pointer-events-none z-[120]">
+      <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">
+        {getThemeLabel()}
+      </p>
+      <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
+        {themeMode === 'auto' 
+          ? `Muda sozinho conforme o horário. ${getThemeDescription()}`
+          : 'Este modo permanecerá ativo até que você altere para Automático.'}
+      </p>
+      <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-[9px] text-slate-400 italic">
+        Clique para alternar
+      </div>
+    </div>
+  </div>
             <Link to="/auth" className="hidden md:block text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
               Log in
             </Link>

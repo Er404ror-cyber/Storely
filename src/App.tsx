@@ -6,10 +6,10 @@ const App = () => {
   return (
     <>
       <Toaster 
-        position="top-center" 
+        position="bottom-right" 
         reverseOrder={false}
         toastOptions={{
-          duration: 4000, // O toast some sozinho após 4 segundos
+          duration: 3000, // O toast some sozinho após 4 segundos
           style: {
             background: '#1e293b', // Fundo escuro elegante (Slate-800)
             color: '#fff',
