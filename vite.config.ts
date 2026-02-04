@@ -14,6 +14,8 @@ export default defineConfig({
 
   build: {
     outDir: 'dist',
+    // Aumenta o limite do aviso de 500kb para 1000kb
+    chunkSizeWarningLimit: 1000, 
     // Desativado para proteger seu código-fonte em produção
     sourcemap: false,
     // Limpa a pasta dist antes de cada build para evitar arquivos obsoletos
