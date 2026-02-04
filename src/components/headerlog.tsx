@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Sun, Moon, Monitor } from 'lucide-react';
+import { Menu, X, Sun, Moon, Monitor, ShieldCheck, Zap, HelpCircle } from 'lucide-react';
 import toast from 'react-hot-toast'; 
 export const HeaderLog = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -197,40 +197,109 @@ const toggleTheme = () => {
 
       {/* MOBILE MENU OVERLAY */}
       <div 
-        className={`fixed inset-0 bg-white dark:bg-slate-950 z-[90] md:hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-          isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'
-        }`}
-      >
-        <div className="flex flex-col h-full pt-32 px-10 pb-10">
-          <span className="text-slate-300 dark:text-slate-700 text-[11px] font-black tracking-[0.3em] uppercase mb-8">Navegação</span>
-          
-          <div className="flex flex-col gap-6">
-            {navLinks.map((link, i) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                onClick={() => setIsOpen(false)}
-                className={`text-4xl font-bold tracking-tighter transition-all duration-300 ${
-                  location.pathname === link.path ? 'text-slate-900 dark:text-white pl-4 border-l-4 border-slate-900 dark:border-white' : 'text-slate-400'
-                } ${isOpen ? 'translate-x-0 opacity-100' : '-translate-x-10 opacity-0'}`}
-                style={{ transitionDelay: `${i * 50}ms` }}
-              >
-                {link.name}
-              </Link>
-            ))}
-          </div>
+  className={`fixed inset-0 z-[90] md:hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+    isOpen ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'
+  }`}
+>
+  {/* Fundo com Glassmorphism leve */}
+  <div className="absolute inset-0 bg-white/98 dark:bg-slate-950/98 backdrop-blur-xl" />
 
-          <div className="mt-auto space-y-4">
-            <Link 
-              to="/auth"
-              onClick={() => setIsOpen(false)}
-              className="block w-full py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-center rounded-2xl font-bold text-lg"
-            >
-              Começar Agora
-            </Link>
-          </div>
-        </div>
-      </div>
+  <div className="relative flex flex-col h-full pt-28 px-8 pb-8">
+    
+    {/* Header do Menu */}
+    <div className="flex items-center justify-between mb-12 opacity-60">
+      <span className="text-[10px] font-black tracking-[0.3em] uppercase dark:text-white">Navegação</span>
+      <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800 ml-4" />
+    </div>
+    
+    {/* Links mais compactos e elegantes */}
+    <nav className="flex flex-col gap-2">
+      {navLinks.map((link, i) => {
+        const isActive = location.pathname === link.path;
+        return (
+          <Link
+            key={link.path}
+            to={link.path}
+            onClick={() => setIsOpen(false)}
+            className={`flex items-center gap-4 py-3 transition-all duration-500 ${
+              isOpen ? 'translate-x-0 opacity-100' : '-translate-x-8 opacity-0'
+            }`}
+            style={{ transitionDelay: `${100 + i * 40}ms` }}
+          >
+            <span className={`text-3xl font-bold tracking-tight transition-colors ${
+              isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-900 dark:text-white'
+            }`}>
+              {link.name}
+            </span>
+            {isActive && <div className="w-1.5 h-1.5 rounded-full bg-indigo-600" />}
+          </Link>
+        );
+      })}
+    </nav>
+
+    {/* Footer do Menu - Menos ruído visual */}
+   {/* Container Inferior - Focado em Compositing puro */}
+<div 
+  className={`mt-auto transition-all duration-500 transform-gpu ${
+    isOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+  }`}
+  style={{ backfaceVisibility: 'hidden', perspective: 1000 }} // Força aceleração sem overhead
+>
+  {/* Links de Suporte - Simples e Leves */}
+  <div className="flex items-center gap-6 mb-8 px-1">
+    <Link 
+      to="/suporte" 
+      onClick={() => setIsOpen(false)}
+      className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-500 transition-colors duration-200"
+    >
+      <HelpCircle size={14} />
+      Suporte
+    </Link>
+    <Link 
+      to="/termos" 
+      onClick={() => setIsOpen(false)}
+      className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-500 transition-colors duration-200"
+    >
+      <ShieldCheck size={14} />
+      Privacidade
+    </Link>
+  </div>
+
+  {/* Ações Principais - Sem sombras pesadas ou filtros */}
+  <div className="flex flex-col gap-3">
+    <Link 
+      to="/auth"
+      onClick={() => setIsOpen(false)}
+      className="flex items-center justify-center gap-2 w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black text-sm tracking-wide active:scale-[0.98] transition-transform duration-200"
+    >
+      <Zap size={18} className="fill-current" />
+      GET STARTED
+    </Link>
+
+    <button 
+      onClick={() => setIsOpen(false)}
+      className="flex items-center justify-center gap-2 w-full py-4 bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-slate-200/60 dark:border-slate-800/60 active:opacity-70 transition-opacity duration-200"
+    >
+      <X size={16} />
+      FECHAR MENU
+    </button>
+  </div>
+  
+ 
+  <div className="flex flex-col items-center gap-3 mt-auto py-2 select-none">
+  {/* Detalhe visual de linha mínima para estrutura */}
+  <div className="w-8 h-[1px] bg-slate-200 dark:bg-slate-800/50" />
+
+  <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-600 flex items-center gap-3">
+    <span>© {new Date().getFullYear()} Storely</span>
+    <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-800" />
+    <span className="font-medium tracking-[0.15em] opacity-80">All Rights Reserved</span>
+  </p>
+  
+</div>
+</div>
+  </div>
+</div>
     </>
   );
 };
