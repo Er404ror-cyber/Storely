@@ -103,7 +103,7 @@ export const HeaderLog = () => {
             : 'bg-transparent py-4'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-6 md:px-10 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-6 md:px-8 flex justify-between items-center">
           
           <div className="z-[110] flex items-center gap-4">
             <Link to="/" className="flex items-center gap-2 group">
@@ -137,7 +137,7 @@ export const HeaderLog = () => {
           </nav>
 
           <div className="flex items-center gap-3 md:gap-5 z-[110]">
-            <div className="relative  group">
+            <div className="relative hidden lg:block  group">
    
 
     <button 

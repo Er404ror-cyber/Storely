@@ -70,6 +70,7 @@ export const translations = {
       hero_title_2: "Seu",
       hero_title_3: "Website",
       hero_title_4: "Aqui.",
+      
       hero_desc: "A plataforma definitiva para quem busca performance extrema.",
       hero_subtitle: "Sem código. Sem limites.",
       btn_gallery: "VER GALERIA",

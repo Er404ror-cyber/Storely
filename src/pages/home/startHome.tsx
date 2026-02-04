@@ -3,7 +3,7 @@ import React, { memo, useState, useEffect, useRef } from 'react';
 import { HeaderLog } from "../../components/headerlog";
 import { Link } from 'react-router-dom';
 import { useTranslate } from "../../context/LanguageContext"; // Importe o seu hook
-
+import { Helmet } from 'react-helmet-async';
 // --- INTERFACES ---
 interface FeatureProps {
     title: string;
@@ -75,10 +75,13 @@ const ProjectCard: React.FC<ProjectProps> = memo(({ category, title, description
 });
 
 export const StartHome: React.FC = () => {
-    const { t } = useTranslate();
-
+    const { t, lang } = useTranslate();
     return (
         <div className="min-h-screen transition-colors duration-300 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans selection:bg-blue-500 selection:text-white">
+    <Helmet>
+    <title>{lang === 'pt' ? 'Início' : 'Home'}</title>
+    <meta name="description" content={t('hero_desc')} />
+</Helmet>
             <HeaderLog />
 
             {/* HERO SECTION */}
