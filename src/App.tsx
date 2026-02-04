@@ -35,7 +35,7 @@ const AppContent = () => {
 </Helmet>
 
 <Toaster 
-        position="top-center" 
+        position="bottom-right" 
         reverseOrder={false}
         toastOptions={{
           duration: 4000, // O toast some sozinho após 4 segundos
