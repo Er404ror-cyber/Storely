@@ -3,7 +3,7 @@ import type { MediaItem } from '../../types/library';
 import { toast } from 'react-hot-toast'; // Certifique-se de ter o react-hot-toast instalado
 
 
-export const MAX_FILE_SIZE_MB = 50;
+export const MAX_FILE_SIZE_MB = 20;
 
 export const getTheme = (theme: string | undefined) => 
   theme === 'dark' ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-900';
@@ -11,8 +11,8 @@ export const getTheme = (theme: string | undefined) =>
 // No seu arquivo de helpers
 export const getFontSize = (size: string = 'medium', type: 'h1' | 'h2' | 'h3' | 'p' = 'h1') => {
   const sizes: any = {
-    h1: { small: 'text-3xl', medium: 'text-5xl', large: 'text-7xl' },
-    h2: { small: 'text-2xl', medium: 'text-4xl', large: 'text-6xl' },
+    h1: { small: 'text-3xl', medium: 'text-5xl', large: 'text-6xl' },
+    h2: { small: 'text-xl md:text-2xl', medium: 'text-2xl md:text-4xl', large: 'text-3xl md:text-5xl' },
     h3: { small: 'text-xl', medium: 'text-2xl', large: 'text-4xl' },
     p:  { small: 'text-sm',  medium: 'text-base', large: 'text-lg' }
   };
@@ -33,10 +33,9 @@ export const editableProps = (isEditable: boolean, onBlur: (val: string) => void
 export const handleMultipleUploads = async (
   files: FileList, 
   currentItems: MediaItem[],
-  indexToReplace: number | null = null, // Se vier index, ele substitui
+  indexToReplace: number | null = null,
   callback: (newMedia: MediaItem[]) => void
 ) => {
-  const limit = 10;
   const filesArray = Array.from(files);
   
   const uploadPromises = filesArray.map(file => {
@@ -45,30 +44,29 @@ export const handleMultipleUploads = async (
       const reader = new FileReader();
       reader.onload = (e) => {
         let result = e.target?.result as string;
-        if (isVideo) result = result.replace(/^data:video\/[^;]+;/, 'data:video/mp4;');
         resolve({
           id: crypto.randomUUID(),
           url: result,
-          type: isVideo ? 'video' : 'image'
+          type: isVideo ? 'video' : 'image',
+          size: file.size // ADICIONE ESTA LINHA: Captura o peso em bytes
         });
       };
       reader.readAsDataURL(file);
     });
   });
 
-  const newResults = await Promise.all(uploadPromises);
-  let finalArray = [...currentItems];
-
+  const uploadedMedia = await Promise.all(uploadPromises);
+  
+  let finalMedia = [...currentItems];
   if (indexToReplace !== null) {
-    // Modo Substituir 1 foto
-    finalArray[indexToReplace] = newResults[0];
+    finalMedia[indexToReplace] = uploadedMedia[0];
   } else {
-    // Modo Adicionar várias
-    finalArray = [...finalArray, ...newResults].slice(0, limit);
+    finalMedia = [...currentItems, ...uploadedMedia].slice(0, 10);
   }
-
-  callback(finalArray);
+  
+  callback(finalMedia);
 };
+  
 export const handleFileUpload = (
   file: File, 
   callback: (media: MediaItem) => void

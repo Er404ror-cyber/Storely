@@ -130,16 +130,19 @@ if (sectionsData) {
     if (!pageId) return;
     setIsSaving(true);
     try {
-      // 1. Remove as seções antigas para evitar duplicidade ou conflito de ordem
+      // Log para depuração: veja no console se o 'size' aparece aqui antes de salvar
+      console.log("Salvando seções com metadados:", sections);
+  
+      // 1. Remove as seções antigas
       await supabase.from('page_sections').delete().eq('page_id', pageId);
   
-      // 2. Prepara a nova lista garantindo que o index do array seja o order_index
+      // 2. Prepara a nova lista
       const toInsert = sections.map((s, i) => ({
         page_id: pageId,
         type: s.type,
-        content: s.content,
+        content: s.content, // <--- Aqui o campo 'size' está viajando para o banco!
         style: s.style,
-        order_index: i // O índice 'i' garante que a ordem visual seja salva no banco
+        order_index: i 
       }));
   
       // 3. Insere em lote

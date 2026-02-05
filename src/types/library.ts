@@ -9,6 +9,7 @@ export interface MediaItem {
   url?: string;
   type?: 'image' | 'video';
   thumbnail?: string;
+  size?: number; // O ponto de interrogação é importante porque pode ser opcional
 }
 
 export interface SectionContent {
