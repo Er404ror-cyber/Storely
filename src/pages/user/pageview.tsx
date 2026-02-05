@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
-import { SectionLibrary } from '../../components/sections/SectionLibrary';
+import { SectionLibrary } from '../../components/sections/main';
 
 export function PageView() {
   const { storeSlug, pageSlug } = useParams();

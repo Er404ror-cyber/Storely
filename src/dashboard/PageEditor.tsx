@@ -7,7 +7,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { SectionLibrary } from '../components/sections/SectionLibrary';
+import { SectionLibrary } from '../components/sections/main';
 
 // --- Definições de Tipos ---
 export interface SectionStyle {
