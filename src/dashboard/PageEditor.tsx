@@ -4,10 +4,14 @@ import {
   Settings2, Plus, Save, Monitor, Smartphone, 
    Layout, AlignLeft, AlignCenter, AlignJustify, Layers, X, 
    ChevronDown, Loader2, Type, Sun, Moon, Clock, Trash2, AlertCircle,
-  ExternalLink
+  ExternalLink,
+  CloudUpload,
+  FileWarning
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { SectionLibrary } from '../components/sections/main';
+import { toast } from 'react-hot-toast'; // ou sua biblioteca de preferência
+import { useTranslate } from '../context/LanguageContext';
 
 // --- Definições de Tipos ---
 export interface SectionStyle {
@@ -51,117 +55,171 @@ export function Editor() {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
+  const { t } = useTranslate();
 
   const hasChanges = useMemo(() => 
     JSON.stringify(sections) !== JSON.stringify(originalSections), 
   [sections, originalSections]);
+  // Dentro do componente Editor, abaixo do hasChanges
+const hasPendingUploads = useMemo(() => {
+  return sections.some(section => 
+    (section.content?.images as any[])?.some(img => img.isTemp)
+  );
+}, [sections]);
 
   // --- Sistema de Bloqueio de Navegação ---
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      hasChanges && currentLocation.pathname !== nextLocation.pathname
-  );
+ // Atualize o seu useBlocker existente
+const blocker = useBlocker(
+  ({ currentLocation, nextLocation }) =>
+    (hasChanges || hasPendingUploads) && currentLocation.pathname !== nextLocation.pathname
+);
+useEffect(() => {
+  const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    // Se houver mudanças no banco ou uploads locais pendentes
+    if (hasChanges || hasPendingUploads) {
+      e.preventDefault();
+      e.returnValue = ''; // Exibe o alerta padrão do navegador
+    }
+  };
+
+  window.addEventListener('beforeunload', handleBeforeUnload);
+  return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+}, [hasChanges, hasPendingUploads]);
 
   useEffect(() => {
     if (blocker.state === "blocked") setActiveModal('NAVIGATION');
   }, [blocker.state]);
 
   // Carregar dados iniciais
-  useEffect(() => {
-    const loadData = async () => {
-      if (!pageId) return;
+ // Carregar dados iniciais com proteção contra interrupção de rede
+useEffect(() => {
+  // 1. Criamos o controlador de aborto
+  const controller = new AbortController();
 
-      try {
-        // Busca os dados da página usando o pageId (o código UUID)
-        const { data: pageData, error: pageError } = await supabase
-          .from('pages')
-          .select('slug, store_id') // Pega o ID da loja vinculado
-          .eq('id', pageId)
+  const loadData = async () => {
+    if (!pageId) return;
+
+    try {
+      setLoading(true);
+
+      // 2. Busca os dados da página passando o signal
+      const { data: pageData, error: pageError } = await supabase
+        .from('pages')
+        .select('slug, store_id')
+        .eq('id', pageId)
+        .abortSignal(controller.signal) // <--- CONEXÃO SEGURA
+        .single();
+
+      if (pageError) throw pageError;
+
+      if (pageData) {
+        const { data: storeData, error: storeErr } = await supabase
+          .from('stores')
+          .select('slug')
+          .eq('id', pageData.store_id)
+          .abortSignal(controller.signal) // <--- CONEXÃO SEGURA
           .single();
 
-        if (pageError) throw pageError;
+        setSlugs({
+          page: pageData.slug || pageId,
+          store: storeData?.slug || pageData.store_id
+        });
+      }
 
-        if (pageData) {
-          // Agora busca o slug da loja usando o store_id que acabamos de pegar
-          const { data: storeData } = await supabase
-            .from('stores')
-            .select('slug')
-            .eq('id', pageData.store_id)
-            .single();
+      // 3. Carrega as seções com o signal
+      const { data: sectionsData, error: secErr } = await supabase
+        .from('page_sections')
+        .select('*')
+        .eq('page_id', pageId)
+        .order('order_index', { ascending: true })
+        .abortSignal(controller.signal); // <--- CONEXÃO SEGURA
 
-          setSlugs({
-            page: pageData.slug || pageId, // Se não tiver slug, usa o ID
-            store: storeData?.slug || pageData.store_id // Se não tiver slug, usa o ID da loja
-          });
-        }
+      if (secErr) throw secErr;
 
-        // Carrega as seções normalmente
-       // Dentro do useEffect que carrega o Data
-const { data: sectionsData, error: secErr } = await supabase
-  .from('page_sections')
-  .select('*')
-  .eq('page_id', pageId)
-  .order('order_index', { ascending: true }); // Crucial para manter o layout do template
-
-if (secErr) throw secErr;
-
-if (sectionsData) {
-  const formatted: Section[] = sectionsData.map(item => ({
-    id: item.id,
-    type: item.type as keyof typeof SectionLibrary,
-    content: item.content || {},
-    style: item.style || { cols: '1', theme: 'light', align: 'left', fontSize: 'base' }
-  }));
-  
-  setSections(formatted);
-  setOriginalSections(JSON.parse(JSON.stringify(formatted)));
-  setLastSaved(new Date());
-}
-      } catch (err) {
-        console.error("Erro ao carregar via ID:", err);
-      } finally {
+      if (sectionsData) {
+        const formatted: Section[] = sectionsData.map(item => ({
+          id: item.id,
+          type: item.type as keyof typeof SectionLibrary,
+          content: item.content || {},
+          style: item.style || { cols: '1', theme: 'light', align: 'left', fontSize: 'base' }
+        }));
+        
+        setSections(formatted);
+        setOriginalSections(JSON.parse(JSON.stringify(formatted)));
+        setLastSaved(new Date());
+      }
+    } catch (err: any) {
+      // 4. Se for um aborto planejado, não mostramos erro no console
+      if (err.name === 'AbortError' || err.message?.includes('aborted')) {
+        return;
+      }
+      console.error("Erro real de carregamento:", err);
+    } finally {
+      // Evitamos atualizar o loading se o componente já foi desmontado
+      if (!controller.signal.aborted) {
         setLoading(false);
       }
-    };
-    loadData();
-  }, [pageId]);
+    }
+  };
+
+  loadData();
+
+  // 5. FUNÇÃO DE LIMPEZA: Cancela tudo se o usuário sair da página
+  return () => {
+    controller.abort();
+  };
+}, [pageId]);
+
 
   const handleManualSave = async () => {
     if (!pageId) return;
-    setIsSaving(true);
-    try {
-      // Log para depuração: veja no console se o 'size' aparece aqui antes de salvar
-      console.log("Salvando seções com metadados:", sections);
   
-      // 1. Remove as seções antigas
+    // Validação final de segurança
+    const hasPending = sections.some(s => s.content?.images?.some(img => img.isTemp));
+    const isTooHeavy = sections.some(s => {
+      const bytes = s.content?.images?.reduce((acc, curr) => acc + (curr.size || 0), 0) || 0;
+      return bytes > 15 * 1024 * 1024;
+    });
+  
+    if (hasPending) {
+      return toast.error("Sincronize as mídias na nuvem antes de salvar.");
+    }
+  
+    if (isTooHeavy) {
+      return toast.error("Uma das seções excede o limite de 15MB.");
+    }
+  
+    setIsSaving(true);
+    const loadingToast = toast.loading("Salvando página...");
+  
+    try {
+      // 1. Limpa o antigo
       await supabase.from('page_sections').delete().eq('page_id', pageId);
   
-      // 2. Prepara a nova lista
+      // 2. Insere o novo
       const toInsert = sections.map((s, i) => ({
         page_id: pageId,
         type: s.type,
-        content: s.content, // <--- Aqui o campo 'size' está viajando para o banco!
+        content: s.content,
         style: s.style,
         order_index: i 
       }));
   
-      // 3. Insere em lote
-      const { error: insertError } = await supabase.from('page_sections').insert(toInsert);
-      
-      if (insertError) throw insertError;
+      const { error } = await supabase.from('page_sections').insert(toInsert);
+      if (error) throw error;
   
+      toast.success("Publicado com sucesso!", { id: loadingToast });
+      
       setOriginalSections(JSON.parse(JSON.stringify(sections)));
       setLastSaved(new Date());
-      setActiveModal(null);
       if (blocker.state === "blocked") blocker.proceed();
     } catch (error) {
-      console.error("Erro ao salvar ordem:", error);
-      alert("Erro ao publicar as alterações.");
+      console.error(error);
+      toast.error("Erro ao publicar.", { id: loadingToast });
     } finally {
       setIsSaving(false);
     }
   };
-
   const handleDiscard = () => {
     setSections(JSON.parse(JSON.stringify(originalSections)));
     setActiveModal(null);
@@ -301,32 +359,77 @@ if (sectionsData) {
       </main>
 
       {/* MODAL DE SEGURANÇA (UNIFICADO) */}
-      {activeModal && (
-        <div className="fixed inset-0 z-300 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl text-center">
-            <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <AlertCircle size={32} />
-            </div>
-            <h3 className="text-xl font-black mb-2 uppercase tracking-tight italic">
-              {activeModal === 'SAVE' ? 'Publicar Site?' : activeModal === 'DISCARD' ? 'Descartar tudo?' : 'Mudanças Pendentes'}
-            </h3>
-            <p className="text-slate-500 text-[11px] mb-8 px-4 leading-relaxed">
-              {activeModal === 'SAVE' && 'Deseja tornar estas alterações públicas para todos os visitantes?'}
-              {activeModal === 'DISCARD' && 'Tem certeza? Perderá todas as edições feitas nesta sessão.'}
-              {activeModal === 'NAVIGATION' && 'Você tem alterações não salvas. O que deseja fazer antes de sair?'}
-            </p>
-            <div className="flex flex-col gap-2">
-              {(activeModal === 'SAVE' || activeModal === 'NAVIGATION') && (
-                <button onClick={handleManualSave} className="w-full bg-blue-600 text-white p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-100">Salvar e Publicar</button>
-              )}
-              {(activeModal === 'DISCARD' || activeModal === 'NAVIGATION') && (
-                <button onClick={handleDiscard} className="w-full bg-red-50 text-red-500 p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">Descartar Mudanças</button>
-              )}
-              <button onClick={() => { setActiveModal(null); blocker.reset?.(); }} className="w-full bg-slate-100 text-slate-400 p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest mt-2">Continuar Editando</button>
-            </div>
-          </div>
+{activeModal && (
+  <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/60 animate-in fade-in duration-200">
+    <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl text-center border border-white/20">
+      
+      {/* ÍCONE DINÂMICO */}
+      <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 ${
+        hasPendingUploads ? 'bg-amber-50 text-amber-600 animate-pulse' : 'bg-blue-50 text-blue-600'
+      }`}>
+        {hasPendingUploads ? <FileWarning size={32} /> : <AlertCircle size={32} />}
+      </div>
+
+      <h3 className="text-xl font-black mb-2 uppercase tracking-tight italic">
+        {activeModal === 'SAVE' ? t('editor_modal_save_title') : 
+         activeModal === 'DISCARD' ? t('editor_modal_discard_title') : 
+         hasPendingUploads ? t('editor_modal_pending_media_title') : t('editor_modal_pending_changes_title')}
+      </h3>
+
+      <p className="text-slate-500 text-[11px] mb-8 px-4 leading-relaxed">
+        {activeModal === 'SAVE' && t('editor_modal_save_desc')}
+        {activeModal === 'DISCARD' && t('editor_modal_discard_desc')}
+        {activeModal === 'NAVIGATION' && (
+          hasPendingUploads 
+            ? t('editor_modal_nav_media_desc') 
+            : t('editor_modal_nav_changes_desc')
+        )}
+      </p>
+
+      {/* ALERTA DE BLOQUEIO POR MÍDIA */}
+      {hasPendingUploads && activeModal !== 'DISCARD' && (
+        <div className="mb-6 p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center gap-2 text-amber-700 text-left">
+          <CloudUpload size={14} className="shrink-0" />
+          <span className="text-[9px] font-black uppercase leading-tight">
+            {t('editor_modal_sync_warning')}
+          </span>
         </div>
       )}
+
+      <div className="flex flex-col gap-2">
+        {(activeModal === 'SAVE' || activeModal === 'NAVIGATION') && (
+          <button 
+            onClick={handleManualSave} 
+            disabled={hasPendingUploads}
+            className={`w-full p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${
+              hasPendingUploads 
+              ? 'bg-slate-100 text-slate-300 cursor-not-allowed' 
+              : 'bg-blue-600 text-white shadow-lg shadow-blue-100 hover:scale-[1.02]'
+            }`}
+          >
+            {hasPendingUploads ? t('editor_modal_btn_locked') : t('editor_modal_btn_save')}
+          </button>
+        )}
+
+        {(activeModal === 'DISCARD' || activeModal === 'NAVIGATION') && (
+          <button 
+            onClick={handleDiscard} 
+            className="w-full bg-red-50 text-red-500 p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all"
+          >
+            {hasPendingUploads ? t('editor_modal_btn_discard_all') : t('editor_modal_btn_discard')}
+          </button>
+        )}
+
+        <button 
+          onClick={() => { setActiveModal(null); blocker.reset?.(); }} 
+          className="w-full bg-slate-100 text-slate-400 p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest mt-2"
+        >
+          {t('editor_modal_btn_continue')}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* MODAL ADICIONAR */}
       {showAddModal && (

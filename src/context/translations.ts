@@ -74,8 +74,43 @@ export const translations = {
     gallery_weight: "Weight",
     gallery_limit_reached: "Full",
     gallery_slots: "Files",
+    gallery_tutorial_subtitle: "Visual Curation",
+    gallery_tutorial_title: "Combine your best captures in a high-performance professional layout.",
+    gallery_limit_label: "Capacity",
+    gallery_items: "Items",
 
+
+
+
+    // editor
+
+    editor_modal_save_title: "Publish Site?",
+    editor_modal_save_desc: "Do you want to make these changes public for all visitors?",
+    editor_modal_discard_title: "Discard everything?",
+    editor_modal_discard_desc: "Are you sure? You will lose all edits made in this session.",
+    editor_modal_pending_media_title: "Pending Media!",
+    editor_modal_pending_changes_title: "Pending Changes",
+    editor_modal_nav_media_desc: "You have photos or videos that are still only on your computer. If you leave now, they will be deleted!",
+    editor_modal_nav_changes_desc: "You have unsaved text or layout changes. What would you like to do?",
+    editor_modal_sync_warning: "Sync media in the gallery before publishing",
+    editor_modal_btn_locked: "Locked: Sync Media",
+    editor_modal_btn_save: "Save and Publish",
+    editor_modal_btn_discard: "Discard Changes",
+    editor_modal_btn_discard_all: "Discard and Lose Media",
+    editor_modal_btn_continue: "Continue Editing",
   },
+
+
+
+
+
+
+
+
+
+
+
+
   pt: {
     // Navegação & UI
     nav_home: "Início",
@@ -150,6 +185,28 @@ export const translations = {
     gallery_weight: "Peso",
     gallery_limit_reached: "Cheio",
     gallery_slots: "Mídia",
+    gallery_tutorial_subtitle: "Curadoria Visual",
+    gallery_tutorial_title: "Combine suas melhores capturas em um layout profissional de alta performance.",
+    gallery_limit_label: "Capacidade",
+    gallery_items: "Itens",
+
+
+        // editor
+
+    editor_modal_save_title: "Publicar Site?",
+    editor_modal_save_desc: "Deseja tornar estas alterações públicas para todos os visitantes?",
+    editor_modal_discard_title: "Descartar tudo?",
+    editor_modal_discard_desc: "Tem certeza? Perderá todas as edições feitas nesta sessão.",
+    editor_modal_pending_media_title: "Mídias Pendentes!",
+    editor_modal_pending_changes_title: "Mudanças Pendentes",
+    editor_modal_nav_media_desc: "Você tem fotos ou vídeos que ainda estão apenas no seu computador. Se sair agora, eles serão excluídos!",
+    editor_modal_nav_changes_desc: "Você tem alterações de texto ou layout não salvas. O que deseja fazer?",
+    editor_modal_sync_warning: "Sincronize as mídias na galeria antes de publicar",
+    editor_modal_btn_locked: "Bloqueado: Sincronize Mídias",
+    editor_modal_btn_save: "Salvar e Publicar",
+    editor_modal_btn_discard: "Descartar Mudanças",
+    editor_modal_btn_discard_all: "Descartar e Perder Mídias",
+    editor_modal_btn_continue: "Continuar Editando",
 
   }
 } as const;

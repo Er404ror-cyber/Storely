@@ -1,7 +1,8 @@
 import React from 'react';
 import { Camera } from 'lucide-react';
 import type { SectionProps } from '../types';
-import { getTheme, getFontSize, editableProps, handleFileUpload, MediaRenderer } from '../helpers';
+import { getTheme, getFontSize, editableProps, handleFileUpload } from '../helpers';
+import { MediaRenderer } from '../mediarender';
 
 export const HeroComercial: React.FC<SectionProps> = ({ content, style, onUpdate }) => {
   const isEditable = !!onUpdate;
