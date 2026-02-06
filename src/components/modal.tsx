@@ -1,6 +1,13 @@
-import React, { useEffect, useRef, useState, MouseEvent, ChangeEvent } from 'react';
 import { X, Play, Pause, Volume2, VolumeX, Maximize2, Share2, Check, Minimize2 } from 'lucide-react';
-import type { MediaItem } from './sections/helpers';
+import type { MediaItem } from '../types/library';
+
+import React, { 
+  useEffect, 
+  useRef, 
+  useState, 
+  type MouseEvent, // Individual type prefix
+  type ChangeEvent  // Individual type prefix
+} from 'react';
 
 interface MediaModalProps {
   media: MediaItem | null;

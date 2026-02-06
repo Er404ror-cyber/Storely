@@ -6,14 +6,18 @@ export type SectionStyles = {
 };
 
 export interface MediaItem {
-  url?: string;
-  type?: 'image' | 'video';
+  id?: string;          // Mude para opcional (?)
+  url: string;         // Mude para opcional (?)
+  type: 'video' | 'image';
   thumbnail?: string;
-  size?: number; // O ponto de interrogação é importante porque pode ser opcional
+  size?: number;        // Mude para opcional (?)
+  file?: File;
+  isTemp?: boolean;
+  delete_token?: string; 
 }
-
 export interface SectionContent {
   title?: string;
+  category?: string; // Add this!
   sub?: string;
   description?: string;
   image?: string;
@@ -23,10 +27,29 @@ export interface SectionContent {
   items?: Array<{ title: string; desc: string; price?: string }>;
   images?: MediaItem[];
   [key: string]: unknown;
+  
 }
 
 export interface SectionProps {
   content: SectionContent;
   style: SectionStyles;
   onUpdate?: (k: string, v: unknown) => void;
+}
+// src/types/library.ts
+
+export interface GalleryHeaderProps<K extends string = string> { // <--- Adicione isto
+  content: {
+    category?: string;
+    title?: string;
+    description?: string;
+    [key: string]: unknown;
+  };
+  style: {
+    align?: 'center' | 'left' | 'justify';
+        fontSize?: string;
+    [key: string]: unknown;
+  };
+  isEditable: boolean;
+  onUpdate?: (field: string, value: string) => void;
+  t: (key: K) => string; // <--- Agora usamos o K aqui
 }

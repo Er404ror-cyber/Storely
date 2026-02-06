@@ -1,10 +1,14 @@
 import React, { useRef, useEffect } from 'react';
 
-interface MediaRendererProps {
-  media?: { url: string; type: 'image' | 'video' };
-  className: string;
+export interface MediaData {
+  url: string; 
+  type: 'image' | 'video';
 }
 
+interface MediaRendererProps {
+  media?: MediaData;
+  className: string;
+}
 /* =========================
    ULTRA LOW POWER ENGINE
 ========================= */

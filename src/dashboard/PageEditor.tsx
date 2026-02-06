@@ -9,7 +9,7 @@ import {
   FileWarning
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { SectionLibrary } from '../components/sections/main';
+import { SectionLibrary, type MediaItem, type SectionContent } from '../components/sections/main';
 import { toast } from 'react-hot-toast'; // ou sua biblioteca de preferência
 import { useTranslate } from '../context/LanguageContext';
 
@@ -92,8 +92,7 @@ useEffect(() => {
 
   // Carregar dados iniciais
  // Carregar dados iniciais com proteção contra interrupção de rede
-useEffect(() => {
-  // 1. Criamos o controlador de aborto
+ useEffect(() => {
   const controller = new AbortController();
 
   const loadData = async () => {
@@ -102,12 +101,12 @@ useEffect(() => {
     try {
       setLoading(true);
 
-      // 2. Busca os dados da página passando o signal
+      // 2. Busca os dados da página
       const { data: pageData, error: pageError } = await supabase
         .from('pages')
         .select('slug, store_id')
         .eq('id', pageId)
-        .abortSignal(controller.signal) // <--- CONEXÃO SEGURA
+        .abortSignal(controller.signal)
         .single();
 
       if (pageError) throw pageError;
@@ -117,8 +116,10 @@ useEffect(() => {
           .from('stores')
           .select('slug')
           .eq('id', pageData.store_id)
-          .abortSignal(controller.signal) // <--- CONEXÃO SEGURA
+          .abortSignal(controller.signal)
           .single();
+
+        if (storeErr) throw storeErr;
 
         setSlugs({
           page: pageData.slug || pageId,
@@ -126,13 +127,13 @@ useEffect(() => {
         });
       }
 
-      // 3. Carrega as seções com o signal
+      // 3. Carrega as seções
       const { data: sectionsData, error: secErr } = await supabase
         .from('page_sections')
         .select('*')
         .eq('page_id', pageId)
         .order('order_index', { ascending: true })
-        .abortSignal(controller.signal); // <--- CONEXÃO SEGURA
+        .abortSignal(controller.signal);
 
       if (secErr) throw secErr;
 
@@ -140,7 +141,7 @@ useEffect(() => {
         const formatted: Section[] = sectionsData.map(item => ({
           id: item.id,
           type: item.type as keyof typeof SectionLibrary,
-          content: item.content || {},
+          content: (item.content as SectionContent) || {}, // 💡 Usando sua interface aqui
           style: item.style || { cols: '1', theme: 'light', align: 'left', fontSize: 'base' }
         }));
         
@@ -148,14 +149,16 @@ useEffect(() => {
         setOriginalSections(JSON.parse(JSON.stringify(formatted)));
         setLastSaved(new Date());
       }
-    } catch (err: any) {
-      // 4. Se for um aborto planejado, não mostramos erro no console
-      if (err.name === 'AbortError' || err.message?.includes('aborted')) {
-        return;
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        if (err.name === 'AbortError' || err.message.includes('aborted')) {
+          return;
+        }
+        console.error("Erro real de carregamento:", err.message);
+      } else {
+        console.error("Erro desconhecido:", err);
       }
-      console.error("Erro real de carregamento:", err);
     } finally {
-      // Evitamos atualizar o loading se o componente já foi desmontado
       if (!controller.signal.aborted) {
         setLoading(false);
       }
@@ -164,62 +167,64 @@ useEffect(() => {
 
   loadData();
 
-  // 5. FUNÇÃO DE LIMPEZA: Cancela tudo se o usuário sair da página
   return () => {
     controller.abort();
   };
 }, [pageId]);
 
 
-  const handleManualSave = async () => {
-    if (!pageId) return;
-  
-    // Validação final de segurança
-    const hasPending = sections.some(s => s.content?.images?.some(img => img.isTemp));
-    const isTooHeavy = sections.some(s => {
-      const bytes = s.content?.images?.reduce((acc, curr) => acc + (curr.size || 0), 0) || 0;
-      return bytes > 15 * 1024 * 1024;
-    });
-  
-    if (hasPending) {
-      return toast.error("Sincronize as mídias na nuvem antes de salvar.");
-    }
-  
-    if (isTooHeavy) {
-      return toast.error("Uma das seções excede o limite de 15MB.");
-    }
-  
-    setIsSaving(true);
-    const loadingToast = toast.loading("Salvando página...");
-  
-    try {
-      // 1. Limpa o antigo
-      await supabase.from('page_sections').delete().eq('page_id', pageId);
-  
-      // 2. Insere o novo
-      const toInsert = sections.map((s, i) => ({
-        page_id: pageId,
-        type: s.type,
-        content: s.content,
-        style: s.style,
-        order_index: i 
-      }));
-  
-      const { error } = await supabase.from('page_sections').insert(toInsert);
-      if (error) throw error;
-  
-      toast.success("Publicado com sucesso!", { id: loadingToast });
-      
-      setOriginalSections(JSON.parse(JSON.stringify(sections)));
-      setLastSaved(new Date());
-      if (blocker.state === "blocked") blocker.proceed();
-    } catch (error) {
-      console.error(error);
-      toast.error("Erro ao publicar.", { id: loadingToast });
-    } finally {
-      setIsSaving(false);
-    }
-  };
+const handleManualSave = async () => {
+  if (!pageId) return;
+
+  // 1. Validações usando a sua interface SectionContent
+  const hasPending = sections.some(s => {
+    const content = s.content as SectionContent;
+    // O TS agora sabe que content.images é MediaItem[] | undefined
+    return content.images?.some((img: MediaItem) => img.isTemp);
+  });
+
+  const isTooHeavy = sections.some(s => {
+    const content = s.content as SectionContent;
+    const totalBytes = content.images?.reduce((acc: number, curr: MediaItem) => {
+      return acc + (curr.size || 0);
+    }, 0) || 0;
+    
+    return totalBytes > 15 * 1024 * 1024;
+  });
+
+  if (hasPending) return toast.error("Sincronize as mídias na nuvem antes de salvar.");
+  if (isTooHeavy) return toast.error("Uma das seções excede o limite de 15MB.");
+
+  setIsSaving(true);
+  const loadingToast = toast.loading("Salvando página...");
+
+  try {
+    // 2. Persistência
+    await supabase.from('page_sections').delete().eq('page_id', pageId);
+
+    const toInsert = sections.map((s, i) => ({
+      page_id: pageId,
+      type: s.type,
+      content: s.content,
+      style: s.style,
+      order_index: i 
+    }));
+
+    const { error } = await supabase.from('page_sections').insert(toInsert);
+    if (error) throw error;
+
+    toast.success("Publicado com sucesso!", { id: loadingToast });
+    
+    setOriginalSections(JSON.parse(JSON.stringify(sections)));
+    setLastSaved(new Date());
+    if (blocker.state === "blocked") blocker.proceed();
+  } catch (err: unknown) {
+    console.error(err);
+    toast.error("Erro ao publicar.", { id: loadingToast });
+  } finally {
+    setIsSaving(false);
+  }
+};
   const handleDiscard = () => {
     setSections(JSON.parse(JSON.stringify(originalSections)));
     setActiveModal(null);

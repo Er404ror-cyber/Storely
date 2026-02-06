@@ -1,18 +1,9 @@
 import React from 'react';
-
-export interface MediaItem {
-  id: string;
-  url: string;
-  type: 'video' | 'image';
-  size: number;
-  file?: File;
-  isTemp?: boolean;
-  delete_token?: string; // Guardamos o token para apagar em até 10min
-}
+import type { MediaItem } from './main';
 
 const CLOUD_NAME = "dcffpnzxn"; 
 const UPLOAD_PRESET = "galeria_preset"; 
-export const MAX_FILE_SIZE_MB = 50;
+export const MAX_FILE_SIZE_MB = 15;
 
 export function forceMp4(url: string): string {
   if (!url || !url.includes('res.cloudinary.com')) return url;
@@ -117,9 +108,7 @@ export const handleMultipleUploads = async (
   callback(finalMedia);
 };
 
-/**
- * handleFileUpload: Versão individual
- */
+
 export const handleFileUpload = async (
   file: File, 
   callback: (media: MediaItem) => void
@@ -157,17 +146,24 @@ export const saveAllToCloudinary = async (items: MediaItem[]): Promise<MediaItem
 export const getTheme = (theme: string | undefined) => 
   theme === 'dark' ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-900';
 
-export const getFontSize = (size: string = 'medium', type: 'h1' | 'h2' | 'h3' | 'p' = 'h1') => {
-  const sizes: any = {
+export const getFontSize = (
+  size: string = 'medium', 
+  type: 'card' | 'h1' | 'h2' | 'h3' | 'p' = 'h1'
+): string => {
+  
+  // Incluímos 'card' no Record
+  const sizes: Record<'h1' | 'h2' | 'h3' | 'p' | 'card', Record<string, string>> = {
     h1: { small: 'text-3xl', medium: 'text-5xl', large: 'text-6xl' },
     h2: { small: 'text-xl md:text-2xl', medium: 'text-2xl md:text-4xl', large: 'text-3xl md:text-5xl' },
     h3: { small: 'text-xl', medium: 'text-2xl', large: 'text-4xl' },
-    p:  { small: 'text-sm',  medium: 'text-base', large: 'text-lg' }
+    p:  { small: 'text-sm',  medium: 'text-base', large: 'text-lg' },
+    card: { small: 'text-xs', medium: 'text-sm', large: 'text-base' } // Exemplo de valores
   };
-  const selectedType = sizes[type] || sizes['h1'];
+
+  // Agora o TS sabe que 'type' sempre existirá em 'sizes'
+  const selectedType = sizes[type];
   return selectedType[size] || selectedType['medium'];
 };
-
 export const editableProps = (isEditable: boolean, onBlur: (val: string) => void) => ({
   contentEditable: isEditable,
   suppressContentEditableWarning: true,

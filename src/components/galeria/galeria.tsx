@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ChangeEvent, MouseEvent, DragEvent } from 'react';
+import type { ChangeEvent } from 'react';
 import { 
   Camera, X, Trash2, RefreshCcw, ShieldAlert, 
   Database, ChevronLeft, ChevronRight, 
@@ -8,7 +8,7 @@ import {
 import { 
   editableProps, getFontSize, 
 } from '../sections/helpers';
-import type { SectionProps, MediaItem} from '../sections/main';
+import type { GalleryHeaderProps, MediaItem} from '../sections/main';
 import { MediaRenderer } from '../sections/mediarender';
 
 // Constantes Locais (necessárias aqui para validação visual se houver)
@@ -111,33 +111,42 @@ export const StorageDashboard: React.FC<StorageDashboardProps> = ({
 };
 
 // --- 2. Cabeçalho da Galeria ---
-export interface GalleryHeaderProps {
-  content: SectionProps['content'];
-  style: SectionProps['style'];
-  isEditable: boolean;
-  onUpdate?: SectionProps['onUpdate'];
-  t: (key: string) => string;
-}
 
-export const GalleryHeader: React.FC<GalleryHeaderProps> = ({ content, style, isEditable, onUpdate, t }) => (
+
+export const GalleryHeader = <K extends string,>({ 
+  content, 
+  style, 
+  isEditable, 
+  onUpdate, 
+  t 
+}: GalleryHeaderProps<K>) => (
   <header className={`mb-6 flex flex-col gap-0.5 ${style.align === 'center' ? 'items-center text-center' : 'items-start text-left'}`}>
     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 mb-2">
       <Tag size={12} />
-      <span {...editableProps(isEditable, (v) => onUpdate?.('category', v))} className="text-[9px] font-black uppercase tracking-[0.2em]">
-        {content.category || "Portfolio"}
+      <span 
+        {...editableProps(isEditable, (v) => onUpdate?.('category', v))} 
+        className="text-[9px] font-black uppercase tracking-[0.2em]"
+      >
+        {/* Cast para K garante que o conteúdo seja tratável pela tipagem de texto */}
+        {(content.category as string) || "Portfolio"}
       </span>
     </div>
-    <h1 {...editableProps(isEditable, (v) => onUpdate?.('title', v))}
-        className={`font-black uppercase tracking-tight leading-none ${getFontSize(style.fontSize, 'h2')}`}>
-      {content.title || t('gallery_default_title')}
+
+    <h1 
+      {...editableProps(isEditable, (v) => onUpdate?.('title', v))}
+      className={`font-black uppercase tracking-tight leading-none ${getFontSize(style.fontSize, 'h2')}`}
+    >
+      {(content.title as string) || t('gallery_default_title' as K)}
     </h1>
-    <p {...editableProps(isEditable, (v) => onUpdate?.('description', v))}
-       className="opacity-40 dark:opacity-50 text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-bold">
-      {content.description || t('gallery_default_desc')}
+
+    <p 
+      {...editableProps(isEditable, (v) => onUpdate?.('description', v))}
+      className="opacity-40 dark:opacity-50 text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-bold"
+    >
+      {(content.description as string) || t('gallery_default_desc' as K)}
     </p>
   </header>
 );
-
 // --- 3. Estado Vazio (Blueprint) ---
 export interface EmptyStateProps {
   isEditable: boolean;
