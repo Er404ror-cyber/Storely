@@ -5,7 +5,7 @@ import { PagesList } from './dashboard/PagesList';
 import { Editor } from './dashboard/PageEditor';
 import { Products } from './dashboard/Products';
 import { AdminHeaderSettings } from './components/configGeral';
-import { AuthPage } from './auth/register';
+import { AuthPage } from './auth/auth';
 import { PublicLayout } from './layout/publicLayout';
 import { PageView } from './pages/user/pageview';
 import { StartHome } from './pages/home/startHome';
@@ -79,4 +79,4 @@ export const route = createBrowserRouter([
       },
     ],
   },
-]);
+]); 

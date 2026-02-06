@@ -1,1 +1,58 @@
 @import "tailwindcss";
+
+/* Ativação do Dark Mode por classe para Tailwind v4 */
+@variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  html, body {
+    /* Cores base para evitar que a tela fique transparente na transição */
+    @apply bg-[#f9fafb] text-slate-900 dark:bg-[#020617] dark:text-slate-50;
+  }
+
+  *, ::after, ::before {
+    /* Transições de cores individuais suaves */
+    transition-property: background-color, color, border-color;
+    transition-duration: 300ms;
+    transition-timing-function: linear;
+  }
+}
+
+/* --- MÁGICA DA TRANSIÇÃO DIAGONAL --- */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+  display: block;
+  position: fixed;
+  inset: 0;
+  /* Aceleração de hardware */
+  transform: translateZ(0);
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+  /* Curva de luxo: rápida no início, suave no fim */
+  animation: diagonal-sweep 800ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  will-change: clip-path;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+@keyframes diagonal-sweep {
+  from {
+    /* Começa no topo esquerdo (0,0) */
+    clip-path: polygon(0% 0%, 0% 0%, 0% 0%);
+  }
+  to {
+    /* Expande em triângulo até o canto oposto (250% para garantir cobertura total) */
+    clip-path: polygon(0% 0%, 250% 0%, 0% 250%);
+  }
+}
+
+/* Bloqueia qualquer bug de clique durante o movimento */
+html.view-transitioning * {
+  pointer-events: none !important;
+  transition: none !important;
+}
