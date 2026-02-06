@@ -22,10 +22,10 @@ const Footer = () => {
           
           <h4 className="font-bold mb-6 flex justify-center ">Quick Links</h4>
           <ul className="space-y-4 text-gray-200 flex justify-center flex-col items-center">
-            <li><a href="/" className="hover:text-white transition-colors">Start</a></li>
+            <li><a href="/" className="hover:text-white transition-colors">Home</a></li>
             <li><a href="/duvidas" className="hover:text-white transition-colors">About</a></li>
             <li><a href="/faq" className="hover:text-white transition-colors">Doubts</a></li>
-            <li><a href="/auth" className="hover:text-white transition-colors"></a></li>
+            <li><a href="/auth" className="hover:text-white transition-colors">Login</a></li>
           </ul>
         </div>
 
