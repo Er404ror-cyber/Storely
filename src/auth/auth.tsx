@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Store, Loader2, ArrowLeft, HelpCircle, ChevronRight, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { toast, Toaster } from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 
 export function AuthPage() {
@@ -79,7 +79,6 @@ export function AuthPage() {
   }
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center font-sans overflow-hidden bg-black">
-      <Toaster position="top-center" />
       
       {/* GPU Optimization: Background with decoding async */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
