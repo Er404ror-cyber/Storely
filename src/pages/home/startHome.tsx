@@ -29,6 +29,7 @@ const FeatureCard = memo(({ title, desc, icon }: FeatureProps) => (
     </div>
 ));
 
+
 const ProjectCard: React.FC<ProjectProps> = memo(({ category, title, description, url }) => {
     const { t } = useTranslate();
     const [shouldRender, setShouldRender] = useState(false);
@@ -49,30 +50,88 @@ const ProjectCard: React.FC<ProjectProps> = memo(({ category, title, description
     }, []);
 
     const openSite = () => window.open(url, '_blank', 'noopener,noreferrer');
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
+    const style = isMobile
+      ? {
+          width: '350%',
+          height: '350%',
+          transform: 'scale(0.29)',
+          transformOrigin: 'top left'
+        }
+      : {
+          width: '250%',
+          height: '250%',
+          transform: 'scale(0.40)',
+          transformOrigin: 'top left'
+        };
+    
     return (
-        <div className="group rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-            <div ref={containerRef} onClick={openSite} className="relative aspect-video bg-zinc-100 dark:bg-zinc-800 cursor-pointer">
-                {shouldRender ? (
-                    <div className="absolute inset-0 pointer-events-none" style={{ width: '200%', height: '200%', transform: 'scale(0.5)', transformOrigin: '0 0' }}>
-                        <iframe src={url} title={title} className="w-full h-full border-none rounded-t-3xl" loading="lazy" scrolling="no" sandbox="allow-scripts allow-same-origin" />
-                    </div>
-                ) : (
-                    <div className="absolute inset-0 bg-zinc-50 dark:bg-zinc-800 animate-pulse" />
-                )}
-                <div className="absolute inset-0 z-20 bg-transparent" />
+        <div className="group rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 overflow-hidden flex flex-col h-full">
+            {/* Container da Imagem/Iframe */}
+            <div 
+                ref={containerRef} 
+                onClick={openSite} 
+                className="relative w-full aspect-video bg-zinc-100 dark:bg-zinc-800 cursor-pointer overflow-hidden"
+            >{shouldRender ? (
+                <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
+                  <div
+  className="absolute inset-0"
+  style={style}
+>
+  <iframe
+    src={url}
+    title={title}
+    tabIndex={-1}
+    className="w-full h-full border-none bg-white dark:bg-zinc-950"
+    loading="lazy"
+    scrolling="no"
+    sandbox="allow-scripts allow-same-origin"
+  />
+</div>
+
+                </div>
+              ) : (
+                <div className="absolute inset-0 bg-zinc-50 dark:bg-zinc-800 animate-pulse" />
+              )}
+              
+              
+                
+                {/* Overlay para garantir o clique e proteger interações */}
+                <div className="absolute inset-0 z-20 bg-transparent transition-colors group-hover:bg-black/5 dark:group-hover:bg-white/5" />
             </div>
-            <div className="p-4">
-                <span className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">{category}</span>
-                <h3 className="font-bold text-zinc-900 dark:text-zinc-100 mt-1">{title}</h3>
-                <p className="text-zinc-500 text-[11px] mt-1 line-clamp-2">{description}</p>
-                <button onClick={openSite} className="mt-4 w-full py-2 text-[10px] font-black border border-zinc-200 dark:border-zinc-700 rounded-md hover:bg-zinc-900 hover:text-white transition-colors cursor-pointer uppercase tracking-tighter">
-                    {t('project_explore')}
-                </button>
+
+            {/* Conteúdo do Card */}
+            <div className="p-4 flex flex-col flex-1">
+                <span className="text-[9px] font-bold text-blue-600 uppercase tracking-widest mb-1">
+                    {category}
+                </span>
+                <h3 className="font-bold text-zinc-900 dark:text-zinc-100 leading-tight">
+                    {title}
+                </h3>
+                <p className="text-zinc-500 dark:text-zinc-400 text-[11px] mt-2 line-clamp-2 leading-relaxed">
+                    {description}
+                </p>
+                
+                <div className="mt-auto pt-4">
+                    <button 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            openSite();
+                        }}
+                        className="w-full py-2.5 text-[10px] font-black border border-zinc-200 dark:border-zinc-700 rounded-lg 
+                                 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-900 hover:text-white dark:hover:bg-zinc-100 dark:hover:text-zinc-900 
+                                 transition-all duration-300 cursor-pointer uppercase tracking-widest active:scale-[0.98]"
+                    >
+                        {t('project_explore')}
+                    </button>
+                </div>
             </div>
         </div>
     );
 });
+
+export default ProjectCard;
 
 export const StartHome: React.FC = () => {
     const { t, lang } = useTranslate();
