@@ -59,13 +59,11 @@ export const translations = {
     cta_members: "+12k members",
 
     // --- New Gallery Translations ---
-    gallery_storage: "Section Payload",
     gallery_limit_error: "Limit Exceeded: Optimization Required",
     gallery_add: "Import Media",
     gallery_support: "Images & videos (JPG, PNG, MP4)\n1 MB photo · 10 MB video",
     gallery_file_error: "Individual size error detected",
-    gallery_default_title: "Visual Media Assets",
-    gallery_default_desc: "Digital Asset Management System",
+
     gallery_empty: "Start with an upload",
     gallery_empty_sub: "Initialize sequence via upload",
     gallery_compress: "Reduce",
@@ -74,10 +72,31 @@ export const translations = {
     gallery_weight: "Weight",
     gallery_limit_reached: "Full",
     gallery_slots: "Files",
-    gallery_tutorial_subtitle: "Visual Curation",
     gallery_tutorial_title: "Combine your best captures in a high-performance professional layout.",
     gallery_limit_label: "Capacity",
     gallery_items: "Items",
+    gallery_storage: "Storage",
+  gallery_action_blocked: "Action Blocked",
+  gallery_action_required: "Action Required",
+  gallery_btn_blocked: "Blocked",
+  gallery_btn_sync: "Sync Now",
+  gallery_error_total_limit: "Remove files (Max 15MB)",
+  gallery_error_individual: "Errors in specific files",
+  gallery_pending_local: "Pending local files",
+  gallery_msg_error: "Some files have errors. Remove or compress items marked in red.",
+  gallery_msg_ready: "All set — sync to save. (Compression optional)",
+  gallery_compress_images: "Compress images",
+  gallery_compress_videos: "Compress videos",
+  gallery_default_category: "Portfolio",
+  gallery_default_title: "My Gallery",
+  gallery_default_desc: "Click to edit your gallery description",
+  gallery_tutorial_subtitle: "Empty Gallery",
+  gallery_type_photos: "Photos",
+  gallery_max_1mb: "Max 1MB",
+  gallery_type_videos: "Video",
+  gallery_max_10mb: "Max 10MB",
+
+  gallery_new_badge: "New",
 
 
 
@@ -98,6 +117,7 @@ export const translations = {
     editor_modal_btn_discard: "Discard Changes",
     editor_modal_btn_discard_all: "Discard and Lose Media",
     editor_modal_btn_continue: "Continue Editing",
+    
   },
 
 
@@ -170,13 +190,11 @@ export const translations = {
     cta_members: "+12k membros",
 
     // --- Novas Traduções da Galeria ---
-    gallery_storage: "Carga da Seção",
     gallery_limit_error: "Resolva os erros para salvar",
     gallery_add: "Importar Mídia",
     gallery_support: "Imagens e vídeos (JPG, PNG, MP4)\n1 MB foto · 10 MB vídeo",
     gallery_file_error: "Erro de tamanho individual detectado",
-    gallery_default_title: "Ativos de Mídia Visual",
-    gallery_default_desc: "Sistema de Gestão de Ativos Digitais",
+
     gallery_empty: "Comece com um upload",
     gallery_empty_sub: "Inicie a sequência via upload",
     gallery_compress: "Reduzir",
@@ -185,10 +203,32 @@ export const translations = {
     gallery_weight: "Peso",
     gallery_limit_reached: "Cheio",
     gallery_slots: "Mídia",
-    gallery_tutorial_subtitle: "Curadoria Visual",
     gallery_tutorial_title: "Combine suas melhores capturas em um layout profissional de alta performance.",
     gallery_limit_label: "Capacidade",
     gallery_items: "Itens",
+    
+    gallery_storage: "Armazenamento",
+  gallery_action_blocked: "Ação Bloqueada",
+  gallery_action_required: "Ação Necessária",
+  gallery_btn_blocked: "Bloqueado",
+  gallery_btn_sync: "Sincronizar",
+  gallery_error_total_limit: "Remova arquivos (Máx 15MB)",
+  gallery_error_individual: "Erro em arquivos específicos",
+  gallery_pending_local: "Arquivos locais pendentes",
+  gallery_msg_error: "Alguns arquivos estão com erro. Remova ou comprima os itens marcados em vermelho.",
+  gallery_msg_ready: "Tudo pronto — sincronize para salvar. (Compressão opcional)",
+  gallery_compress_images: "Comprimir imagens",
+  gallery_compress_videos: "Comprimir vídeos",
+  gallery_default_category: "Portfólio",
+  gallery_default_title: "Minha Galeria",
+  gallery_default_desc: "Clique para editar a descrição da sua galeria",
+  gallery_tutorial_subtitle: "Galeria Vazia",
+  gallery_type_photos: "Fotos",
+  gallery_max_1mb: "Máx 1MB",
+  gallery_type_videos: "Vídeo",
+  gallery_max_10mb: "Máx 10MB",
+  
+  gallery_new_badge: "Novo",
 
 
         // editor
