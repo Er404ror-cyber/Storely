@@ -32,19 +32,32 @@ const FILE_LIMITS = { image: 1, video: 5 };
 
 // --- SUB-COMPONENTS ---
 
+interface WhatsAppButtonProps {
+  isEditable: boolean;
+  content: {
+    phone?: string;
+    countryCode?: CountryCode;
+    btnText?: string;
+  };
+  t: (key: string) => string;
+  isTemp: boolean;
+  isOverLimit: boolean;
+  onUpdate?: (field: string, value: string) => void;
+  isCenter?: boolean;
+}
 const WhatsAppButton = memo(({ 
   isEditable, 
   content, 
   t, 
-  isTemp, 
-  isOverLimit, 
   onUpdate, 
   isCenter 
-}: any) => {
-  // 1. Validação do número (Mesma lógica do AdminControls)
-  const currentCountry: any = content.countryCode || 'BR';
+}: WhatsAppButtonProps) => {
+
+  // 1. HOOKS NO TOPO
+  const currentCountry = (content.countryCode || 'MZ') as CountryCode;
+  
   const countryPrefix = useMemo(() => {
-    try { return getCountryCallingCode(currentCountry); } catch { return '55'; }
+    try { return getCountryCallingCode(currentCountry); } catch { return '258'; }
   }, [currentCountry]);
 
   const cleanPhone = (content.phone || '').replace(/\D/g, '');
@@ -53,13 +66,26 @@ const WhatsAppButton = memo(({
     return cleanPhone.length > 0 && isValidPhoneNumber(`+${countryPrefix}${cleanPhone}`);
   }, [cleanPhone, countryPrefix]);
 
-  // Se for visitante e o número estiver errado, não renderiza nada
-  if (!isEditable && !isValid) return null;
+  // LOGICA DE ATUALIZAÇÃO REFORÇADA
+  const handleTextUpdate = useCallback((val: string) => {
+    const defaultText = t('defaultBtn');
+    const trimmedValue = val.trim();
+    
+    // Se estiver vazio, mandamos o padrão para o banco/estado
+    const finalValue = trimmedValue.length > 0 
+      ? trimmedValue.substring(0, LIMITS.BUTTON) 
+      : defaultText;
+  
+    onUpdate?.('btnText', finalValue);
+  }, [onUpdate, t]);
 
-  const finalLink = `https://wa.me/${countryPrefix}${cleanPhone}`;
-
+  // 2. HANDLERS
   const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>, max: number) => {
-    if (e.key === 'Enter') { e.preventDefault(); return; }
+    if (e.key === 'Enter') { 
+      e.preventDefault(); 
+      e.currentTarget.blur(); // Força a saída e dispara o update
+      return; 
+    }
     if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) return;
     if (e.currentTarget.innerText.length >= max) {
       e.preventDefault();
@@ -74,17 +100,13 @@ const WhatsAppButton = memo(({
   };
 
   const handleClick = (e: React.MouseEvent) => {
-    if (isEditable) {
-      e.preventDefault();
-      if (isTemp || isOverLimit || !isValid) {
-        toast.error(!isValid ? t('invalidPhone') : t('testLinkError'));
-      }
-    }
+    if (isEditable) e.preventDefault();
   };
 
-  const handleTextUpdate = useCallback((val: string) => {
-    onUpdate?.('btnText', val.trim().length > 0 ? val.trim().substring(0, LIMITS.BUTTON) : t('defaultBtn'));
-  }, [onUpdate, t]);
+  // 3. RETURN ANTECIPADO (Sempre após os hooks)
+  if (!isEditable && !isValid) return null;
+
+  const finalLink = `https://wa.me/${countryPrefix}${cleanPhone}`;
 
   return (
     <div className={`mt-5 flex flex-col gap-2 ${isCenter ? 'items-center' : 'items-start'}`}>
@@ -93,7 +115,7 @@ const WhatsAppButton = memo(({
         onClick={handleClick}
         target="_blank" 
         rel="noreferrer"
-        className={`transform-gpu will-change-transform h-[44px] w-[190px] flex items-center justify-center gap-2 rounded-lg font-bold shadow-md no-underline shrink-0 z-30 transition-all ${
+        className={`transform-gpu h-[44px] w-[190px] flex items-center justify-center gap-2 rounded-lg font-bold shadow-md no-underline shrink-0 z-30 transition-all ${
           isValid 
             ? 'bg-[#25D366] text-white hover:brightness-110 active:scale-95' 
             : 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-60 grayscale'
@@ -104,27 +126,30 @@ const WhatsAppButton = memo(({
           {...editableProps(isEditable, handleTextUpdate)} 
           onKeyDown={(e) => handleKeyDown(e, LIMITS.BUTTON)} 
           onPaste={(e) => handlePaste(e, LIMITS.BUTTON)} 
-          className="truncate text-sm outline-none font-bold"
+          suppressContentEditableWarning={true}
+          className="truncate text-sm outline-none font-bold min-w-[20px] text-center"
         >
-          {content.btnText || t('defaultBtn')}
+          {/* Se o texto for vazio no estado, o React renderiza o defaultBtn aqui */}
+          {content.btnText && content.btnText.trim().length > 0 
+            ? content.btnText 
+            : t('defaultBtn')}
         </span>
       </a>
 
       {isEditable && !isValid && (
-  <div className={`flex flex-col gap-0.5 animate-in fade-in slide-in-from-top-1 ${isCenter ? 'items-center text-center' : 'items-start'}`}>
-    <div className="flex items-center gap-1 text-red-500">
-      <AlertCircle size={12} />
-      <span className="text-[10px] font-black uppercase tracking-tighter">{t('hiddenToPublic')}</span>
-    </div>
-    <p className="text-[9px] text-slate-400 font-bold leading-tight max-w-[200px]">
-      {t('invalidPhoneDesc')}
-    </p>
-  </div>
-)}
+        <div className={`flex flex-col gap-0.5 animate-in fade-in slide-in-from-top-1 ${isCenter ? 'items-center text-center' : 'items-start'}`}>
+          <div className="flex items-center gap-1 text-red-500">
+            <AlertCircle size={12} />
+            <span className="text-[10px] font-black uppercase tracking-tighter">{t('hiddenToPublic')}</span>
+          </div>
+          <p className="text-[9px] text-slate-400 font-bold leading-tight max-w-[200px]">
+            {t('invalidPhoneDesc')}
+          </p>
+        </div>
+      )}
     </div>
   );
 });
-
 
 interface AdminControlsProps {
   isEditable: boolean;
@@ -137,8 +162,7 @@ interface AdminControlsProps {
   isCenter?: boolean;
   isDark?: boolean;
   t: (key: string) => string;
-  onUpdate?: (field: string, value: string | number | null) => void;
-  handleSync: () => void;
+  onUpdate?: (field: string, value: string | number | null | MediaContent) => void;  handleSync: () => void;
   isSyncing: boolean;
   mediaSizeMB: number;
   currentLimit: number;
@@ -146,16 +170,29 @@ interface AdminControlsProps {
   isTemp: boolean;
   mediaType: 'image' | 'video';
 }
+interface MediaContent {
+  url: string;
+  size: number;
+  file?: File;
+}
 const AdminControls = memo(({ 
   isEditable, isMounted, content, isCenter, isDark, t, onUpdate,
   handleSync, isSyncing, mediaSizeMB, currentLimit, isOverLimit, isTemp, mediaType
 }: AdminControlsProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const currentCountry = (content.countryCode || 'BR') as CountryCode;
-    const countryPrefix = useMemo(() => getCountryCallingCode(currentCountry), [currentCountry]);
+  // 1. Definição da tipagem do país com base no seu padrão salvo
+  const currentCountry = (content.countryCode || 'MZ') as CountryCode;
+  
+  // 2. Todos os Hooks devem vir antes de qualquer 'return null'
+  const countryPrefix = useMemo(() => {
+    try {
+      return getCountryCallingCode(currentCountry);
+    } catch {
+      return '258'; // Fallback seguro
+    }
+  }, [currentCountry]);
 
-  // Memoriza a validação para não travar o input enquanto digita
   const { isPhoneInvalid, hasPhone } = useMemo(() => {
     const phone = content.phone || '';
     const has = phone.length > 0;
@@ -163,9 +200,13 @@ const AdminControls = memo(({
     return { isPhoneInvalid: invalid, hasPhone: has };
   }, [content.phone, countryPrefix]);
 
+  // Identifica o componente da bandeira e valida se existe no Record
+  const Flag = flags[currentCountry];
+
   const hasError = isPhoneInvalid || isOverLimit;
   const canSave = !isOverLimit && (!hasPhone || !isPhoneInvalid);
 
+  // 3. Early return movido para DEPOIS dos hooks
   if (!isEditable || !isMounted) return null;
 
   const isEnglish = t('whatsappPlaceholder').toLowerCase().includes('enter');
@@ -191,14 +232,14 @@ const AdminControls = memo(({
         </div>
       </div>
 
-      {/* WHATSAPP FIELD */}
       <div className="flex flex-col gap-1 mb-1">
         <span className="text-[7px] font-bold text-slate-400 uppercase ml-1 opacity-70">{t('whatsappLabel')}</span>
         <div className="flex items-center gap-1.5 h-[36px]">
           <div className="relative flex items-center bg-white/5 dark:bg-white/10 rounded-lg border border-white/10 h-full shrink-0">
             <div className="flex items-center gap-2 px-2.5 pointer-events-none">
               <div className="w-5 h-3.5 flex shrink-0 overflow-hidden rounded-sm border border-white/10">
-                {React.createElement(flags[currentCountry])}
+                {/* Correção do erro de overload: Validamos se Flag existe antes de criar o elemento */}
+                {Flag ? React.createElement(Flag as React.ElementType) : <div className="bg-slate-200 w-full h-full" />}
               </div>
               <span className={`text-[10px] font-black ${isPhoneInvalid && 'text-black dark:text-white'}`}>+{countryPrefix}</span>
               <ChevronDown size={10} />
@@ -239,12 +280,24 @@ const AdminControls = memo(({
         >
           <Camera size={14} /> {isOverLimit ? t('tryAnother') : t('changeMedia')}
         </button>
-        <input ref={fileInputRef} type="file" className="hidden" accept="image/*,video/*" onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) handleFileUpload(file, (newMedia: any) => onUpdate?.('media', newMedia));
-        }} />
-          {/* PESO DA MÍDIA */}
-          {content.media?.size && (
+        
+        <input 
+  ref={fileInputRef} 
+  type="file" 
+  className="hidden" 
+  accept="image/*,video/*" 
+  onChange={(e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // 2. Use a interface aqui em vez de 'any'
+      handleFileUpload(file, (newMedia: MediaContent) => {
+        onUpdate?.('media', newMedia);
+      });
+    }
+  }} 
+/>
+
+        {content.media?.size && (
           <div className={`flex items-center justify-between px-2 py-1.5 rounded-lg ${isOverLimit ? 'bg-red-100' : 'bg-slate-50 dark:bg-white/5'}`}>
             <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">{t('weight')}</span>
             <span className={`text-[9px] font-black ${isOverLimit ? 'text-red-600' : 'text-emerald-600'}`}>
@@ -253,7 +306,6 @@ const AdminControls = memo(({
           </div>
         )}
 
-        {/* ERROR BANNER */}
         {hasError && (
           <div className="p-3 bg-red-600 rounded-xl flex flex-col gap-2 shadow-md animate-in fade-in slide-in-from-top-1">
             <div className="flex items-center gap-1.5 text-white">
@@ -265,7 +317,6 @@ const AdminControls = memo(({
             <p className="text-[9px] text-white/90 font-bold leading-tight">
               {isOverLimit ? t('limitExceeded') : t('invalidPhoneDesc')}
             </p>
-            {/* Só mostra compressão se o erro for de mídia */}
             {isOverLimit && (
               <a 
                 href={mediaType === 'video' ? "https://www.freeconvert.com/video-compressor" : "https://tinypng.com/"} 
@@ -278,7 +329,6 @@ const AdminControls = memo(({
           </div>
         )}
 
-        {/* SYNC BUTTON */}
         {isTemp && (
           <button 
             onClick={(e) => { e.preventDefault(); handleSync(); }} 
@@ -338,10 +388,9 @@ const HeroTextFields = memo(({ content, isEditable, isDark, isDarkBg, style, t, 
     e.preventDefault();
     const rawPastedText = e.clipboardData.getData('text/plain');
     
-    // Divide e garante que só pegamos o número exato de linhas físicas
+  // CORREÇÃO ESLINT: Usando 'const' em filteredText
     const lines = rawPastedText.split(/\r?\n/).filter(line => line.length > 0).slice(0, maxLines);
-    let filteredText = lines.join('\n').substring(0, maxChars);
-
+    const filteredText = lines.join('\n').substring(0, maxChars);
     const selection = window.getSelection();
     if (!selection?.rangeCount) return;
     selection.deleteFromDocument();
@@ -465,21 +514,9 @@ const LayoutBackground = memo(({ isDark, isCenter, content, children }: any) => 
   </div>
 ));
 
-const LayoutStorely = memo(({ isDark, isCenter, content, t, children, isEditable, onUpdate }: any) => {
+const LayoutStorely = memo(({ isDark, isCenter, content, children }: any) => {
   
-  // Handler para validar e salvar o badge respeitando o limite de 15 caracteres
-  const handleBadgeUpdate = useCallback((val: string) => {
-    onUpdate?.('badge', val.trim().length > 0 ? val.trim().substring(0, LIMITS.BADGE) : t('defaultBadge'));
-  }, [onUpdate, t]);
-
-  // Handler de teclado para impedir que ultrapasse o limite visualmente enquanto digita
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
-    if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'].includes(e.key)) return;
-    if (e.currentTarget.innerText.length >= LIMITS.BADGE) {
-      e.preventDefault();
-      toast.error(t('limits').replace('{max}', LIMITS.BADGE.toString()), { id: 'limit-badge' });
-    }
-  };
+  
 
   return (
     <div className="relative w-full max-w-7xl mx-auto px-6 lg:px-12 py-10 content-visibility-auto">

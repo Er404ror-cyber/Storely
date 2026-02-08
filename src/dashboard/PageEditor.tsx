@@ -6,10 +6,9 @@ import {
    ChevronDown, Loader2, Type, Sun, Moon, Clock, Trash2, AlertCircle,
   ExternalLink,
   CloudUpload,
-  FileWarning
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { SectionLibrary, type MediaItem, type SectionContent } from '../components/sections/main';
+import { SectionLibrary, type SectionContent } from '../components/sections/main';
 import { toast } from 'react-hot-toast'; // ou sua biblioteca de preferência
 import { useTranslate } from '../context/LanguageContext';
 
