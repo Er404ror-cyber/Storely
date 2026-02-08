@@ -176,30 +176,41 @@ useEffect(() => {
 const handleManualSave = async () => {
   if (!pageId) return;
 
-  // 1. Validações usando a sua interface SectionContent
-  const hasPending = sections.some(s => {
-    const content = s.content as SectionContent;
-    // O TS agora sabe que content.images é MediaItem[] | undefined
-    return content.images?.some((img: MediaItem) => img.isTemp);
-  });
-
-  const isTooHeavy = sections.some(s => {
-    const content = s.content as SectionContent;
-    const totalBytes = content.images?.reduce((acc: number, curr: MediaItem) => {
-      return acc + (curr.size || 0);
-    }, 0) || 0;
+  // 1. Identifica quais seções têm problemas (isTemp ou Peso)
+  const problematicSections = sections.filter(s => {
+    const content = s.content as any;
     
-    return totalBytes > 15 * 1024 * 1024;
+    // Verifica mídia única (Hero) ou array de mídias (Galeria)
+    const mediaItems = content.images || (content.media ? [content.media] : []);
+    
+    const hasTemp = mediaItems.some((img: any) => img.isTemp);
+    const totalBytes = mediaItems.reduce((acc: number, curr: any) => acc + (curr.size || 0), 0);
+    const isHeavy = totalBytes > 15 * 1024 * 1024;
+
+    return hasTemp || isHeavy;
   });
 
-  if (hasPending) return toast.error("Sincronize as mídias na nuvem antes de salvar.");
-  if (isTooHeavy) return toast.error("Uma das seções excede o limite de 15MB.");
+  // 2. Bloqueio com instrução clara para o usuário
+  if (problematicSections.length > 0) {
+    // Pegamos o nome do tipo da primeira seção com erro para dar um exemplo no toast
+    const firstErrorType = problematicSections[0].type.toUpperCase();
+    
+    return toast.error(
+      `Ação Bloqueada: A seção ${firstErrorType} possui mídias pendentes ou muito grandes. ` +
+      `Corrija e sincronize dentro da própria seção antes de salvar.`, 
+      { 
+        id: "save-blocked",
+        duration: 5000,
+        icon: "🚫"
+      }
+    );
+  }
 
+  // --- Fluxo de salvamento original (mantido intacto) ---
   setIsSaving(true);
   const loadingToast = toast.loading("Salvando página...");
 
   try {
-    // 2. Persistência
     await supabase.from('page_sections').delete().eq('page_id', pageId);
 
     const toInsert = sections.map((s, i) => ({
@@ -364,59 +375,67 @@ const handleManualSave = async () => {
       </main>
 
       {/* MODAL DE SEGURANÇA (UNIFICADO) */}
-{activeModal && (
-  <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/60 animate-in fade-in duration-200">
-    <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl text-center border border-white/20">
-      
-      {/* ÍCONE DINÂMICO */}
-      <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 ${
-        hasPendingUploads ? 'bg-amber-50 text-amber-600 animate-pulse' : 'bg-blue-50 text-blue-600'
-      }`}>
-        {hasPendingUploads ? <FileWarning size={32} /> : <AlertCircle size={32} />}
-      </div>
+{activeModal && (() => {
+  // 1. Identifica exatamente quais seções ainda têm mídias temporárias (isTemp)
+  const pendingSections = sections.filter(s => {
+    const content = s.content as any;
+    const mediaItems = content.images || (content.media ? [content.media] : []);
+    return mediaItems.some((img: any) => img.isTemp);
+  });
 
-      <h3 className="text-xl font-black mb-2 uppercase tracking-tight italic">
-        {activeModal === 'SAVE' ? t('editor_modal_save_title') : 
-         activeModal === 'DISCARD' ? t('editor_modal_discard_title') : 
-         hasPendingUploads ? t('editor_modal_pending_media_title') : t('editor_modal_pending_changes_title')}
-      </h3>
+  const hasPending = pendingSections.length > 0;
 
-      <p className="text-slate-500 text-[11px] mb-8 px-4 leading-relaxed">
-        {activeModal === 'SAVE' && t('editor_modal_save_desc')}
-        {activeModal === 'DISCARD' && t('editor_modal_discard_desc')}
-        {activeModal === 'NAVIGATION' && (
-          hasPendingUploads 
-            ? t('editor_modal_nav_media_desc') 
-            : t('editor_modal_nav_changes_desc')
-        )}
-      </p>
-
-      {/* ALERTA DE BLOQUEIO POR MÍDIA */}
-      {hasPendingUploads && activeModal !== 'DISCARD' && (
-        <div className="mb-6 p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center gap-2 text-amber-700 text-left">
-          <CloudUpload size={14} className="shrink-0" />
-          <span className="text-[9px] font-black uppercase leading-tight">
-            {t('editor_modal_sync_warning')}
-          </span>
+  return (
+    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/60 animate-in fade-in duration-200">
+      <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl text-center border border-white/20">
+        
+        {/* ÍCONE DINÂMICO */}
+        <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 ${
+          hasPending ? 'bg-amber-50 text-amber-600 animate-pulse' : 'bg-blue-50 text-blue-600'
+        }`}>
+          {hasPending ? <CloudUpload size={32} /> : <AlertCircle size={32} />}
         </div>
-      )}
 
-      <div className="flex flex-col gap-2">
-        {(activeModal === 'SAVE' || activeModal === 'NAVIGATION') && (
-          <button 
-            onClick={handleManualSave} 
-            disabled={hasPendingUploads}
-            className={`w-full p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${
-              hasPendingUploads 
-              ? 'bg-slate-100 text-slate-300 cursor-not-allowed' 
-              : 'bg-blue-600 text-white shadow-lg shadow-blue-100 hover:scale-[1.02]'
-            }`}
-          >
-            {hasPendingUploads ? t('editor_modal_btn_locked') : t('editor_modal_btn_save')}
-          </button>
+        <h3 className="text-xl font-black mb-2 uppercase tracking-tight italic">
+          {hasPending ? "Sincronização Necessária" : activeModal === 'SAVE' ? t('editor_modal_save_title') : t('editor_modal_pending_changes_title')}
+        </h3>
+
+        {/* LISTAGEM DE SEÇÕES PARA SINCRONIZAR */}
+        {hasPending ? (
+          <div className="mb-6 px-2">
+            <p className="text-slate-500 text-[11px] mb-4 leading-relaxed">
+            {t('editor_modal_sync_warning')}
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {pendingSections.map((s, idx) => (
+                <span key={idx} className="px-3 py-1 bg-amber-50 text-amber-700 text-[9px] font-black rounded-full border border-amber-100 uppercase italic">
+                  {s.type.replace(/([A-Z])/g, ' $1').trim()}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className="text-slate-500 text-[11px] mb-8 px-4 leading-relaxed">
+            {activeModal === 'SAVE' ? t('editor_modal_save_desc') : t('editor_modal_nav_changes_desc')}
+          </p>
         )}
 
-        {(activeModal === 'DISCARD' || activeModal === 'NAVIGATION') && (
+        <div className="flex flex-col gap-2">
+          {(activeModal === 'SAVE' || activeModal === 'NAVIGATION') && (
+            <button 
+              onClick={handleManualSave} 
+              disabled={hasPending}
+              className={`w-full p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${
+                hasPending 
+                ? 'bg-slate-100 text-slate-300 cursor-not-allowed' 
+                : 'bg-blue-600 text-white shadow-lg shadow-blue-100 hover:scale-[1.02]'
+              }`}
+            >
+              {hasPending ? t('editor_modal_btn_save') : t('editor_modal_btn_save')}
+            </button>
+          )}
+
+{(activeModal === 'DISCARD' || activeModal === 'NAVIGATION') && (
           <button 
             onClick={handleDiscard} 
             className="w-full bg-red-50 text-red-500 p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all"
@@ -425,16 +444,18 @@ const handleManualSave = async () => {
           </button>
         )}
 
-        <button 
-          onClick={() => { setActiveModal(null); blocker.reset?.(); }} 
-          className="w-full bg-slate-100 text-slate-400 p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest mt-2"
-        >
-          {t('editor_modal_btn_continue')}
-        </button>
+
+          <button 
+            onClick={() => { setActiveModal(null); blocker.reset?.(); }} 
+            className="w-full bg-slate-100 text-slate-400 p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest mt-2"
+          >
+            {t('editor_modal_btn_continue')}
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-)}
+  );
+})()}
 
       {/* MODAL ADICIONAR */}
       {showAddModal && (

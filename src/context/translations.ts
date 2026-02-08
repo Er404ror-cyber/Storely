@@ -117,6 +117,33 @@ export const translations = {
     editor_modal_btn_discard: "Discard Changes",
     editor_modal_btn_discard_all: "Discard and Lose Media",
     editor_modal_btn_continue: "Continue Editing",
+
+
+    limits: "Limit: {max} characters",
+    uploading: "Uploading to cloud...",
+    mediaSaved: "Media saved!",
+    saveError: "Error saving.",
+    maxMedia: "Max Media Size:",
+    photoLimit: "PHOTO: 1MB",
+    videoLimit: "VIDEO: 5MB",
+    whatsappLabel: "WhatsApp (Country Code + Number)",
+    whatsappPlaceholder: "Enter number",
+    changeMedia: "Change Media",
+    tryAnother: "Try another file",
+    weight: "Size:",
+    reduceSize: "Reduce Size",
+    limitExceeded: "This file exceeds the synchronization limits.",
+    compressNow: "Compress Now",
+    syncNow: "Sync Now",
+    syncing: "Uploading...",
+    testLinkError: "Fix or sync media before testing the link.",
+    defaultBadge: "PERFORMANCE",
+    defaultTitle: "Your Title",
+    defaultSub: "Descriptive subtitle.",
+    
+    defaultBtn: "Get in touch",
+        hiddenToPublic: "Hidden from public",
+    invalidPhoneDesc: "The button won't appear on the site until a valid WhatsApp number is provided. Solve it below in the control panel.",
     
   },
 
@@ -248,6 +275,33 @@ export const translations = {
     editor_modal_btn_discard_all: "Descartar e Perder Mídias",
     editor_modal_btn_continue: "Continuar Editando",
 
+
+    limits: "Limite: {max} caracteres",
+    uploading: "Enviando para nuvem...",
+    mediaSaved: "Mídia salva!",
+    saveError: "Erro ao salvar.",
+    maxMedia: "Mídia Máxima:",
+    photoLimit: "FOTO: 1MB",
+    videoLimit: "VÍDEO: 5MB",
+    whatsappLabel: "WhatsApp (DDI + Número)",
+    whatsappPlaceholder: "Número com DDD",
+    
+    changeMedia: "Trocar Mídia",
+    tryAnother: "Tentar outro arquivo",
+    weight: "Peso:",
+    reduceSize: "Reduzir Tamanho",
+    limitExceeded: "Este arquivo ultrapassa os limites permitidos para sincronização.",
+    compressNow: "Comprimir Agora",
+    syncNow: "Sincronizar Agora",
+    syncing: "Enviando...",
+    testLinkError: "Corrija ou sincronize a mídia antes de testar o link.",
+    defaultBadge: "PERFORMANCE",
+    defaultTitle: "Seu Título",
+    defaultSub: "Subtítulo descritivo.",
+    
+    defaultBtn: "Iniciar contacto",   
+    hiddenToPublic: "Invisível para o público",
+    invalidPhoneDesc: "O botão não aparecerá no site até que o número de WhatsApp seja válido. Solucione abaixo no painel de controle.",
   }
 } as const;
 
