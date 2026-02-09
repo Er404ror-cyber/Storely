@@ -56,3 +56,18 @@ html.view-transitioning * {
   pointer-events: none !important;
   transition: none !important;
 }
+/* --- FLOAT ANIMATION (Mascote no Footer) --- */
+
+@keyframes float {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-6px);
+  }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+  will-change: transform;
+}
