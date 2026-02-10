@@ -1,4 +1,4 @@
-import { memo, useState, useEffect } from "react";
+import { memo, useState, useEffect, useRef } from "react";
 import { Link, useParams, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Menu, X, ChevronRight } from "lucide-react";
@@ -8,7 +8,7 @@ export const StoreHeader = memo(({ storeId }: { storeId: string }) => {
   const { storeSlug, pageSlug } = useParams();
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-
+  const scrollRef = useRef<HTMLDivElement>(null);
   // Fecha o menu ao mudar de página
   useEffect(() => setIsOpen(false), [location.pathname]);
 
@@ -47,36 +47,40 @@ export const StoreHeader = memo(({ storeId }: { storeId: string }) => {
 
     
 
-        {/* NAV DESKTOP (Invisível no Mobile) */}
-        <nav className="hidden md:flex items-center gap-8">
-        {pages?.map(p => {
-          // LÓGICA DINÂMICA DE ATIVAÇÃO:
-          // Se não houver pageSlug na URL e esta página for a Home -> ATIVA
-          // Se o pageSlug na URL for igual ao slug desta página -> ATIVA
-          const isLinkToHome = p.is_home;
-          const isActive = (isLinkToHome && !pageSlug) || (p.slug === pageSlug);
+        <nav className="hidden md:flex flex-1 relative items-center overflow-hidden">
+          {/* Fade Esquerdo para indicar mais conteúdo */}
+          <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white/80 to-transparent z-10 pointer-events-none" />
           
-          // Se for home, o link é apenas o domínio da loja
-          const path = isLinkToHome ? `/${storeSlug}` : `/${storeSlug}/${p.slug}`;
+          <div 
+            ref={scrollRef}
+            className="flex items-center gap-6 overflow-x-auto no-scrollbar scroll-smooth px-8"
+            style={{ scrollbarWidth: 'none' }}
+          >
+            {pages?.map(p => {
+              const isLinkToHome = p.is_home;
+              const isActive = (isLinkToHome && !pageSlug) || (p.slug === pageSlug);
+              const path = isLinkToHome ? `/${storeSlug}` : `/${storeSlug}/${p.slug}`;
 
-          return (
-            <Link 
-              key={p.slug} 
-              to={path} 
-              className={`relative py-2 text-[10px] font-black uppercase tracking-[0.2em] transition-all group ${
-                isActive ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'
-              }`}
-            >
-              {p.title || p.slug}
-              
-              {/* Barra indicadora que atualiza quando a Home muda */}
-              <span className={`absolute bottom-0 left-0 h-[2px] bg-blue-600 transition-all duration-500 ${
-                isActive ? 'w-full' : 'w-0 group-hover:w-full opacity-20'
-              }`} />
-            </Link>
-          );
-        })}
-      </nav>
+              return (
+                <Link 
+                  key={p.slug} 
+                  to={path} 
+                  className={`relative py-2 text-[10px] font-black uppercase tracking-[0.15em] transition-all shrink-0 group ${
+                    isActive ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  {p.title || p.slug}
+                  <span className={`absolute bottom-0 left-0 h-[2px] bg-blue-600 transition-all duration-300 ${
+                    isActive ? 'w-full' : 'w-0 group-hover:w-full opacity-20'
+                  }`} />
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Fade Direito */}
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white/80 to-transparent z-10 pointer-events-none" />
+        </nav>
         {/* BOTÃO MOBILE E AÇÃO DESKTOP */}
         <div className="flex items-center gap-4 z-[110]">
           <button className="hidden md:block bg-slate-900 text-white px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.2em] active:scale-95 transition-all">

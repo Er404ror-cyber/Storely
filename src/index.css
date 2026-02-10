@@ -71,3 +71,12 @@ html.view-transitioning * {
   animation: float 4s ease-in-out infinite;
   will-change: transform;
 }
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
