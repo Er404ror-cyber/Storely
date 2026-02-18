@@ -1,12 +1,20 @@
 import  { useState, useEffect } from 'react';
+import { useTranslate } from '../context/LanguageContext';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+    const { t } = useTranslate();
   
   const mascotImages = [
     "/img/Mascote.png",
     "/img/Mascote2.png",
     "/img/Mascote4.png"
+  ];
+  const navLinks = [
+    { name: t('nav_home'), path: '/' },
+    { name: t('nav_blog'), path: '/blog' },
+    { name: t('nav_support'), path: '/duvidas' },
   ];
 
   const [activeIndex, setActiveIndex] = useState(0);
@@ -65,9 +73,20 @@ const Footer = () => {
 
             <div className="lg:col-span-4 flex flex-col items-center">
               <nav className="relative z-10 flex gap-6 px-6 py-3 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-sm ">
-                <a href="/" className="text-xs font-bold uppercase tracking-widest hover:text-cyan-500 transition-colors">Início</a>
-                <a href="/sobre" className="text-xs font-bold uppercase tracking-widest hover:text-cyan-500 transition-colors">Sobre</a>
-                <a href="/contato" className="text-xs font-bold uppercase tracking-widest hover:text-cyan-500 transition-colors">Contato</a>
+              {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={` relative group
+                  text-xs font-bold uppercase tracking-widest hover:text-cyan-500 transition-colors
+                  ${
+                  location.pathname === link.path ? 'text-slate-900 dark:text-white' : 'text-slate-400 hover:text-slate-900 dark:hover:text-slate-300'
+                }`}
+              >
+                {link.name}
+                <span className={`absolute -bottom-1 left-0 h-[2px] bg-slate-900 dark:bg-white transition-all ${location.pathname === link.path ? 'w-full' : 'w-0 group-hover:w-full'}`} />
+              </Link>
+            ))}
               </nav>
             </div>
 

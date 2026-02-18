@@ -4,7 +4,8 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 import { translations, type Language, type TranslationKeys } from './translations';
 
 interface LanguageContextType {
-  lang: Language;
+  lang: Language; // Mantido para compatibilidade
+  language: Language; // Adicionado para resolver o erro no ProductsList
   setLang: (lang: Language) => void;
   t: (key: TranslationKeys) => string;
 }
@@ -13,7 +14,6 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [lang, setLang] = useState<Language>(() => {
-    // 1. Prioridade: Preferência salva manualmente no localStorage
     const saved = localStorage.getItem('lang') as Language;
     if (saved === 'en' || saved === 'pt') return saved;
 
@@ -21,16 +21,13 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     const browserLangFull = nav.language || nav.userLanguage || 'en';
     const baseLang = browserLangFull.split('-')[0].toLowerCase();
 
-    // 3. Validação de Variantes: Identifica qualquer PT ou qualquer EN
     if (baseLang === 'pt') return 'pt';
     if (baseLang === 'en') return 'en';
 
-    // 4. Fallback: Se for qualquer outra língua (es, fr, ru...), o padrão é Inglês
     return 'en';
   });
 
   useEffect(() => {
-    // Salva a escolha e atualiza a tag <html lang="...">
     localStorage.setItem('lang', lang);
     document.documentElement.lang = lang;
   }, [lang]);
@@ -40,7 +37,8 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <LanguageContext.Provider value={{ lang, setLang, t }}>
+    // Passamos lang para ambos os nomes para satisfazer o TypeScript
+    <LanguageContext.Provider value={{ lang, language: lang, setLang, t }}>
       {children}
     </LanguageContext.Provider>
   );

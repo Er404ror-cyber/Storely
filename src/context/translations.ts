@@ -144,6 +144,18 @@ export const translations = {
     defaultBtn: "Get in touch",
         hiddenToPublic: "Hidden from public",
     invalidPhoneDesc: "The button won't appear on the site until a valid WhatsApp number is provided. Solve it below in the control panel.",
+
+    inventory_title: "Inventory",
+    wpp_section_title: "Sales Channel",
+    wpp_section_desc: "Set the official number to receive orders via WhatsApp.",
+    whatsapp_placeholder: "84 000 0000",
+    btn_new_product: "New Product",
+    btn_save_whatsapp: "Save",
+    search_placeholder: "Search products...",
+    stat_total: "Total Items",
+    status_active: "Active",
+    status_paused: "Paused",
+    error_invalid_phone: "Invalid number for this country."
     
   },
 
@@ -302,6 +314,19 @@ export const translations = {
     defaultBtn: "Iniciar contacto",   
     hiddenToPublic: "Invisível para o público",
     invalidPhoneDesc: "O botão não aparecerá no site até que o número de WhatsApp seja válido. Solucione abaixo no painel de controle.",
+
+    inventory_title: "Inventário",
+    wpp_section_title: "Canal de Vendas",
+    wpp_section_desc: "Configure o número oficial para receber pedidos via WhatsApp.",
+    whatsapp_placeholder: "84 000 0000",
+    btn_new_product: "Novo Produto",
+    btn_save_whatsapp: "Salvar",
+    search_placeholder: "Pesquisar produtos...",
+    stat_total: "Total de Itens",
+    status_active: "Ativo",
+    status_paused: "Pausado",
+    error_invalid_phone: "Número inválido para o país."
+
   }
 } as const;
 
