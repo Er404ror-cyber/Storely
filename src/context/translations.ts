@@ -150,13 +150,38 @@ export const translations = {
     wpp_section_desc: "Set the official number to receive orders via WhatsApp.",
     whatsapp_placeholder: "84 000 0000",
     btn_new_product: "New Product",
-    btn_save_whatsapp: "Save",
     search_placeholder: "Search products...",
-    stat_total: "Total Items",
     status_active: "Active",
     status_paused: "Paused",
-    error_invalid_phone: "Invalid number for this country."
     
+    
+
+  stat_total: "Total Products",
+  label_wpp_section_title: "Sales Channel",
+  label_wpp_section_desc: "Set the WhatsApp number where you will receive customer orders.",
+  placeholder_whatsapp: "Sales number",
+  btn_save_whatsapp: "Save Number",
+  error_invalid_phone: "Invalid number for this country.",
+  placeholder_search: "Search by product name...",
+  label_product: "Product",
+  label_category: "Category",
+  label_price: "Price",
+  label_status: "Status",
+
+  label_created_at: "Created at",
+  label_actions: "Actions",
+  view_product: "View",
+  btn_edit: "Edit",
+
+
+
+  product: "Product",
+  price: "Price",
+  status: "Status",
+  actions: "Actions",
+ 
+  no_products_found: "No products found",
+  
   },
 
 
@@ -320,13 +345,43 @@ export const translations = {
     wpp_section_desc: "Configure o número oficial para receber pedidos via WhatsApp.",
     whatsapp_placeholder: "84 000 0000",
     btn_new_product: "Novo Produto",
-    btn_save_whatsapp: "Salvar",
     search_placeholder: "Pesquisar produtos...",
-    stat_total: "Total de Itens",
     status_active: "Ativo",
     status_paused: "Pausado",
-    error_invalid_phone: "Número inválido para o país."
 
+
+
+  
+  stat_total: "Total de Produtos",
+  label_wpp_section_title: "Canal de Vendas",
+  label_wpp_section_desc: "Configure o número de WhatsApp que receberá os pedidos dos clientes.",
+  placeholder_whatsapp: "Número de vendas",
+  btn_save_whatsapp: "Salvar Número",
+  error_invalid_phone: "Número inválido para este país.",
+  placeholder_search: "Pesquisar por nome do produto...",
+  label_product: "Produto",
+  label_category: "Categoria",
+  label_price: "Preço",
+  label_status: "Status",
+
+  label_created_at: "Criado em",
+  label_actions: "Ações",
+  btn_view_product: "Ver",
+  btn_edit: "Editar",
+
+
+
+  product: "Produto",
+price: "Preço",
+status: "Status",
+actions: "Ações",
+
+
+
+
+
+
+no_products_found: "Nenhum produto encontrado",
   }
 } as const;
 
