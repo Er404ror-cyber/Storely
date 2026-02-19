@@ -56,25 +56,35 @@ export const route = createBrowserRouter([
     ],
   },
 
-  // 🌍 ÁREA PÚBLICA (LOJA)
-  {
-    path: '/:storeSlug',
-    // O ScrollToTop envolve o PublicLayout e a PageView
-    element: <ScrollToTop />, 
-    children: [
-      {
-        element: <PublicLayout />,
-        children: [
-          {
-            index: true, 
-            element: <PageView />, 
-          },
-          {
-            path: ':pageSlug',
-            element: <PageView />, 
-          },
-        ],
-      },
-    ],
-  },
+ // 🌍 ÁREA PÚBLICA (LOJA)
+{
+  path: '/:storeSlug',
+  element: <ScrollToTop />, 
+  children: [
+    {
+      element: <PublicLayout />,
+      children: [
+        {
+          index: true, 
+          element: <PageView />, 
+        },
+        {
+          // Esta rota cuida de /loja/contato ou /loja/servicos
+          path: ':pageSlug',
+          children: [
+            {
+              index: true,
+              element: <PageView />,
+            },
+            {
+           
+              path: ':productId',
+              element: <ProductDetails />, 
+            },
+          ]
+        },
+      ],
+    },
+  ],
+},
 ]); 

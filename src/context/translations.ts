@@ -182,6 +182,18 @@ export const translations = {
  
   no_products_found: "No products found",
   
+
+
+
+
+
+  whatsapp_success: "WhatsApp updated successfully!",
+  save_error: "Error saving",
+  product_status_success: "Product status updated!",
+  product_status_error: "Could not update product status.",
+  save_button: "Save Changes",
+  saving: "Saving...",
+  
   },
 
 
@@ -378,7 +390,12 @@ actions: "Ações",
 
 
 
-
+whatsapp_success: "WhatsApp atualizado com sucesso!",
+save_error: "Erro ao salvar",
+product_status_success: "Status do produto atualizado!",
+product_status_error: "Não foi possível alterar o status do produto.",
+save_button: "Salvar Alterações",
+saving: "Salvando...",
 
 
 no_products_found: "Nenhum produto encontrado",

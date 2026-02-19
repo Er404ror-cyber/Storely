@@ -17,13 +17,15 @@ import ptLabels from 'react-phone-number-input/locale/pt.json';
 import { 
   Plus, Loader2, LayoutGrid, Save, Search, 
   Edit, Smartphone, Package, ArrowUpRight, X, 
-  AlertCircle, Tag, Eye
+  AlertCircle, Tag, Eye,
+  Power
 } from 'lucide-react';
 
 import { useAdminStore } from '../hooks/useAdminStore';
 import { supabase } from '../lib/supabase';
 import { useTranslate } from '../context/LanguageContext';
 import { ProductDetails } from './ProdutcsDetails';
+import toast from 'react-hot-toast';
 
 // Sub-componente memoizado para evitar re-renders pesados de imagens
 const ProductImage = memo(({ src, alt }: { src: string, alt: string }) => (
@@ -91,13 +93,24 @@ export function ProductsList() {
       setIsSavingWpp(true);
       const ddi = getCountryCallingCode(selectedCountry);
       const fullNumber = `${ddi}${phoneNumber}`.replace(/\D/g, '');
-      const { error } = await supabase.from('stores').update({ whatsapp_number: fullNumber }).eq('id', store?.id);
+      
+      const { error } = await supabase
+        .from('stores')
+        .update({ whatsapp_number: fullNumber })
+        .eq('id', store?.id);
+        
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-store'] });
-      setIsSavingWpp(false);
-    }
+ onSuccess: () => {
+  queryClient.invalidateQueries({ queryKey: ['admin-store'] });
+  toast.success(t('whatsapp_success'));
+  setIsSavingWpp(false);
+},
+onError: (error: any) => {
+  // Concatenação simples para evitar o erro TS(2554)
+  toast.error(`${t('save_error')}: ${error.message}`);
+  setIsSavingWpp(false);
+}
   });
 
   const { data: products, isLoading } = useQuery({
@@ -108,6 +121,24 @@ export function ProductsList() {
       return data;
     },
     enabled: !!store?.id
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string, status: boolean }) => {
+      const { error } = await supabase
+        .from('products')
+        .update({ is_active: !status })
+        .eq('id', id);
+        
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast.success(t('product_status_success'));
+    },
+    onError: () => {
+      toast.error(t('product_status_error'));
+    }
   });
 
   const filteredProducts = products?.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -239,6 +270,7 @@ export function ProductsList() {
                   <th className="px-6 py-4">{t('price')}</th>
                   <th className="px-6 py-4 text-center">{t('status')}</th>
                   <th className="px-6 py-4 text-right">{t('actions')}</th>
+                  <th className="px-6 py-4 text-right">{t('actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -271,6 +303,19 @@ export function ProductsList() {
                         </span>
                       </div>
                     </td>
+                    <td>
+                      <div className='flex justify-center gap-2'>
+
+                    <button 
+                    onClick={() => toggleMutation.mutate({ id: p.id, status: p.is_active })}
+                    className={`p-2 rounded-lg transition-colors ${p.is_active ? 'text-orange-500 hover:bg-orange-50' : 'text-green-500 hover:bg-green-50'}`}
+                    title={p.is_active ? "Desativar" : "Ativar"}
+                  >
+                    <Power size={18} />
+                  </button>
+                  </div>
+
+                    </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
                         {/* BOTÃO VER PRODUTO */}
@@ -285,8 +330,11 @@ export function ProductsList() {
                           <span className="hidden md:inline">{t('view_product') || 'Ver'}</span>
                         </button>
                         </Link>
+
                       </div>
                     </td>
+                   
+                    
                   </tr>
                 ))}
               </tbody>
