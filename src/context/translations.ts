@@ -194,7 +194,30 @@ export const translations = {
   save_button: "Save Changes",
   saving: "Saving...",
   
+
+// Showcase Section
+showcase_defaultCategory: "New Arrivals",
+showcase_defaultTitle: "Our Collection",
+showcase_defaultDescription: "Explore our curated selection of exclusive products with premium design and quality.",
+showcase_maxPrice: "Max Price",
+showcase_empty: "No products available",
+
+// Common / UI
+common_all: "All",
+common_details: "Details",
+common_loading: "Loading...",
+
+
+
+showcase_clear_all: "Clear Filters",
+    showcase_filter_active: "Active Filters",
+    showcase_price_up_to: "Up to ${{price}}",
+    showcase_category: "Category: {{category}}",
+    filter_unlimited: "Unlimited",
+    showcase_searchPlaceholder: "What are you looking for?",
+    showcase_viewFull: "Browse All"
   },
+
 
 
 
@@ -399,6 +422,25 @@ saving: "Salvando...",
 
 
 no_products_found: "Nenhum produto encontrado",
+
+showcase_defaultCategory: "Lançamentos",
+    showcase_defaultTitle: "Nossa Coleção",
+    showcase_defaultDescription: "Explore produtos selecionados com design exclusivo e qualidade premium para você.",
+    showcase_searchPlaceholder: "Buscar na vitrine...",
+    showcase_maxPrice: "Preço Máx.",
+    showcase_empty: "Nenhum produto disponível",
+    
+    // Common / UI
+    common_all: "Todos",
+    common_details: "Detalhes",
+    common_loading: "Carregando...",
+    showcase_clear_all: "Limpar Filtros",
+    showcase_filter_active: "Filtros Ativos",
+    showcase_price_up_to: "Até R$ {{price}}",
+    showcase_category: "Categoria: {{category}}",
+    filter_unlimited: "Ilimitado",
+    showcase_viewFull: "Ver Tudo"
+ 
   }
 } as const;
 

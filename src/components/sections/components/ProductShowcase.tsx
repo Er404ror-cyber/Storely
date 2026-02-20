@@ -1,155 +1,290 @@
-import { useState, useMemo } from "react";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { useState, useMemo, useCallback } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAdminStore } from "../../../hooks/useAdminStore";
-import type { SectionProps } from "../main";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../../lib/supabase";
-import { Loader2, ArrowRight, Package, Plus, Search } from "lucide-react";
+import { Loader2, Package, Search, Plus, Target, X, RotateCcw } from "lucide-react";
+import { useTranslate } from "../../../context/LanguageContext";
+import { LayoutGrid, LayoutList } from "../../produtos/layouts";
 
-export function ProductShowcase({ content, style }: SectionProps) {
+const LIMITS = { category: 12, title: 30, description: 100 };
+const FONT_SIZE_MAP = {
+  small: { title: "text-xl md:text-2xl", desc: "text-xs md:text-sm" },
+  base: { title: "text-2xl md:text-3xl", desc: "text-sm md:text-base" },
+  medium: { title: "text-3xl md:text-4xl", desc: "text-base md:text-lg" },
+  large: { title: "text-4xl md:text-5xl", desc: "text-lg md:text-xl" },
+};
+
+export type SectionStyles = {
+  theme?: 'dark' | 'light';
+  align?: 'center' | 'left' | 'justify';
+  fontSize?: 'small' | 'medium' | 'large' | 'base';
+  cols?: string | number;
+};
+
+interface ShowcaseProps {
+  content: { title?: string; category?: string; description?: string; };
+  style: SectionStyles;
+  onUpdate?: (field: string, value: string) => void;
+}
+
+export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
+  const { t } = useTranslate();
   const { data: store } = useAdminStore();
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
   const { storeSlug, pageSlug } = useParams();
+  
+  const isDark = style?.theme === 'dark';
+  const isReadOnly = !location.pathname.includes('/editor/');
 
-  // Estados de Filtro
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("Todos");
-  const [maxPrice, setMaxPrice] = useState<number>(20000);
+  const [selectedCategory, setSelectedCategory] = useState(() => t("common_all"));
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
-  const isEditor = location.pathname.includes("/admin/editor");
-  const layout = Number((style as any)?.cols) || 1;
+  const selectedSize = FONT_SIZE_MAP[style?.fontSize as keyof typeof FONT_SIZE_MAP || 'medium'];
+
+  // Handlers otimizados
+  const handleTextChange = useCallback((field: string, value: string, limit: number) => {
+    const sanitized = value.replace(/[\n\r]/g, "").slice(0, limit);
+    onUpdate?.(field, sanitized);
+  }, [onUpdate]);
+
+  const preventEnter = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter") e.preventDefault();
+  }, []);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["public-products", store?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      if (!store?.id) return [];
+      const { data } = await supabase
         .from("products")
         .select("*")
         .eq("store_id", store?.id)
-        .eq("is_active", true) // Regra: Apenas ativos (ignora pausados)
-        .order("created_at", { ascending: false }); // Regra: Mais recentes primeiro
-
-      if (error) throw error;
-      return data;
+        .eq("is_active", true);
+      return data || [];
     },
     enabled: !!store?.id,
+    staleTime: 1000 * 60 * 5, // Cache de 5 minutos para performance
   });
 
-  // Extração de categorias únicas
-  const categories = useMemo(() => {
-    const cats = products?.map((p) => p.category).filter(Boolean) || [];
-    return ["Todos", ...Array.from(new Set(cats))];
+ // Estados de Filtro
+ 
+
+  // Funções para Limpar Filtros
+  const clearFilters = useCallback(() => {
+    setSelectedCategory(t("common_all"));
+    setMaxPrice(null);
+    setSearchTerm("");
+  }, [t]);
+
+ 
+
+  const absoluteMaxPrice = useMemo(() => {
+    if (!products?.length) return 10000;
+    return Math.max(...products.map(p => p.price));
   }, [products]);
 
-  // Lógica de Filtragem combinada
-  const filteredProducts = useMemo(() => {
-    return products?.filter((p) => {
-      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === "Todos" || p.category === selectedCategory;
-      const matchesPrice = p.price <= maxPrice;
+  const categories = useMemo(() => {
+    const cats = products?.map(p => p.category).filter(Boolean) || [];
+    return [t("common_all"), ...Array.from(new Set(cats))];
+  }, [products, t]);
+
+  const displayProducts = useMemo(() => {
+    if (!products) return [];
+    const term = searchTerm.toLowerCase();
+    const filtered = products.filter(p => {
+      const matchesSearch = !term || p.name.toLowerCase().includes(term);
+      const matchesCategory = selectedCategory === t("common_all") || p.category === selectedCategory;
+      const matchesPrice = maxPrice === null ? true : p.price <= maxPrice;
       return matchesSearch && matchesCategory && matchesPrice;
     });
-  }, [products, searchTerm, selectedCategory, maxPrice]);
+    return showAll || filtered.length <= 6 ? filtered : filtered.slice(0, 6);
+  }, [products, searchTerm, selectedCategory, maxPrice, showAll, t]);
 
-  const handleAction = (productId: string) => {
-    if (isEditor) return;
-    const sSlug = storeSlug || store?.slug;
-    const pSlug = pageSlug || "home";
-    if (sSlug) navigate(`/${sSlug}/${pSlug}/${productId}`);
-  };
+  const hasActiveFilters = selectedCategory !== t("common_all") || maxPrice !== null || searchTerm !== "";
 
-  if (isLoading) {
-    return (
-      <div className="py-24 flex flex-col items-center gap-4">
-        <Loader2 className="animate-spin text-blue-600" size={32} />
-        <span className="text-xs font-black uppercase tracking-widest opacity-40">
-          Sincronizando vitrine...
-        </span>
-      </div>
-    );
-  }
+  const handleProductClick = useCallback((productId: string) => {
+    if (!isReadOnly) return;
+    navigate(`/${storeSlug}/${pageSlug || "home"}/${productId}`);
+  }, [isReadOnly, navigate, storeSlug, pageSlug]);
 
-  const commonProps = { products: filteredProducts, onAction: handleAction };
+  const alignClass = style?.align === 'center' ? 'text-center items-center' : 'text-left items-start';
+  
+  const inputBaseClass = isReadOnly 
+    ? "bg-transparent border-none p-0 m-0 resize-none focus:ring-0 cursor-default overflow-hidden block pointer-events-none" 
+    : "w-full transition-all duration-200 border-b border-transparent hover:border-slate-300 dark:hover:border-zinc-700 hover:bg-slate-50/50 dark:hover:bg-white/5 focus:bg-transparent focus:border-blue-500 focus:ring-0 outline-none px-1 py-0.5 cursor-edit";
 
   return (
-    <section className="py-16 px-4 md:px-8">
-      <div className="max-w-[1400px] mx-auto">
+    <section className={`py-12 px-6 transition-colors duration-500 ${isDark ? 'bg-[#0a0a0a] text-zinc-100' : 'bg-white text-slate-900'}`}>
+      <div className="max-w-5xl mx-auto">
         
-        {/* HEADER - Título e Descrição editáveis */}
-        <div className="mb-12 text-center">
-          {content?.category && (
-            <span className="text-blue-600 font-black text-xs uppercase tracking-[0.3em]">
-              {content.category}
-            </span>
-          )}
-          <h2 className="text-3xl md:text-5xl font-black mt-3 break-words">
-            {content?.title || "Nossos Produtos"}
-          </h2>
-          {content?.description && (
-            <p className="opacity-60 max-w-2xl mx-auto mt-4 text-sm md:text-base">
-              {content.description}
-            </p>
-          )}
-        </div>
+        {/* HEADER */}
+        <header className={`mb-8 flex flex-col w-full ${alignClass}`}>
+          <div className={`flex flex-col gap-1 w-full max-w-3xl ${style?.align === 'center' ? 'mx-auto' : ''}`}>
+            
+            <div className="relative group w-fit">
+              <input
+                readOnly={isReadOnly}
+                value={content?.category || ""}
+                onKeyDown={preventEnter}
+                onChange={(e) => handleTextChange("category", e.target.value, LIMITS.category)}
+                placeholder={t("showcase_defaultCategory")}
+                className={`${inputBaseClass} ${style?.align === 'center' ? 'text-center' : ''} text-blue-500 dark:text-blue-400 font-bold text-[10px] uppercase tracking-[0.2em]`}
+              />
+            </div>
 
-        {/* FILTROS E BUSCA */}
-        <div className="mb-10 flex flex-col md:flex-row gap-6 items-center justify-between p-6 rounded-[2rem] bg-slate-50/5">
-          <div className="relative w-full md:w-72">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30" size={18} />
-            <input 
-              type="text"
-              placeholder="Buscar..."
-              className="w-full pl-12 pr-4 py-3 rounded-full bg-slate-100/10 border-none focus:ring-2 focus:ring-blue-500 text-sm"
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+            <div className="relative group w-full">
+              <textarea
+                readOnly={isReadOnly}
+                value={content?.title || ""}
+                onKeyDown={preventEnter}
+                onChange={(e) => handleTextChange("title", e.target.value, LIMITS.title)}
+                placeholder={t("showcase_defaultTitle")}
+                rows={1}
+                className={`${inputBaseClass} ${style?.align === 'center' ? 'text-center' : ''} ${selectedSize?.title} font-extrabold tracking-tight leading-tight uppercase resize-none`}
+              />
+            </div>
+
+            <div className="relative group w-full mt-1">
+              <textarea
+                readOnly={isReadOnly}
+                value={content?.description || ""}
+                onKeyDown={preventEnter}
+                onChange={(e) => handleTextChange("description", e.target.value, LIMITS.description)}
+                placeholder={t("showcase_defaultDescription")}
+                rows={2}
+                className={`${inputBaseClass} ${style?.align === 'center' ? 'text-center mx-auto' : ''} ${selectedSize?.desc} text-zinc-500 dark:text-zinc-400 font-medium leading-snug max-w-2xl resize-none`}
+              />
+            </div>
+          </div>
+        </header>
+
+        {/* FILTROS */}
+        <div className="mb-6 flex flex-col gap-4">
+          <div className="flex flex-col lg:flex-row gap-3">
+            <div className={`flex items-center gap-3 flex-1 px-5 py-3 rounded-2xl border ${isDark ? 'bg-zinc-900/40 border-zinc-800' : 'bg-slate-50 border-slate-100'}`}>
+              <Search size={18} className="opacity-40" />
+              <input 
+                type="text" 
+                value={searchTerm}
+                placeholder={t("showcase_searchPlaceholder")}
+                className="bg-transparent border-none outline-none w-full text-sm font-semibold"
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              {searchTerm && <button onClick={() => setSearchTerm("")}><X size={14} /></button>}
+            </div>
+            
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-5 py-2.5 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-all border whitespace-nowrap ${
+                    selectedCategory === cat ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20" : isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-slate-200 text-slate-500"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-2">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-5 py-2 rounded-full text-xs font-bold transition ${
-                  selectedCategory === cat 
-                  ? "bg-blue-600 text-white" 
-                  : "bg-slate-100/10 hover:bg-slate-100/20"
-                }`}
+          {/* RANGE DE PREÇO */}
+          <div className={`grid grid-cols-1 md:grid-cols-[auto_1fr_auto] items-center gap-6 px-6 py-4 rounded-3xl border ${isDark ? 'bg-zinc-900/20 border-zinc-800' : 'bg-slate-50/30 border-slate-100'}`}>
+             <div className="flex items-center gap-3">
+                <Target size={16} className="text-blue-600" />
+                <span className="text-[10px] font-bold uppercase opacity-60">{t("showcase_maxPrice")}</span>
+             </div>
+             <input 
+                type="range" min="0" max={absoluteMaxPrice} 
+                value={maxPrice ?? absoluteMaxPrice}
+                onChange={(e) => setMaxPrice(Number(e.target.value))}
+                className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full appearance-none accent-blue-600 cursor-pointer"
+             />
+             <div className={`flex items-center border rounded-xl px-3 py-2 min-w-[100px] ${isDark ? 'bg-zinc-950/50 border-zinc-800' : 'bg-white border-slate-200'}`}>
+              <span className="text-xs mr-1 opacity-40">R$</span>
+              <input 
+                type="text"
+                value={maxPrice === null ? "" : maxPrice}
+                placeholder={t("filter_unlimited")}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "");
+                  setMaxPrice(val === "" ? null : Number(val));
+                }}
+                className="bg-transparent font-bold text-sm w-full outline-none text-center"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* BARRA DE FILTROS ATIVOS (NOVIDADE) */}
+        {hasActiveFilters && (
+          <div className="flex flex-wrap items-center gap-2 mb-8 animate-in fade-in slide-in-from-top-1">
+            <span className="text-[10px] font-black uppercase tracking-tighter opacity-40 mr-2">{t("showcase_filter_active")}</span>
+            
+            {selectedCategory !== t("common_all") && (
+              <button 
+                onClick={() => setSelectedCategory(t("common_all"))}
+                className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-[10px] font-bold text-blue-500 hover:bg-blue-500/20 transition-all"
               >
-                {cat}
+                {selectedCategory} <X size={12} />
               </button>
-            ))}
-          </div>
+            )}
 
-          <div className="flex items-center gap-4 min-w-[200px]">
-            <span className="text-[10px] font-bold uppercase opacity-40">Preço</span>
-            <input 
-              type="range" 
-              min="0" 
-              max="20000" 
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(Number(e.target.value))}
-              className="w-full h-1 bg-blue-600/20 rounded-lg appearance-none cursor-pointer accent-blue-600"
-            />
-            <span className="text-xs font-bold">${maxPrice}</span>
-          </div>
-        </div>
+            {maxPrice !== null && (
+              <button 
+                onClick={() => setMaxPrice(null)}
+                className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-[10px] font-bold text-blue-500 hover:bg-blue-500/20 transition-all"
+              >
+                {t("showcase_price_up_to").replace("{{price}}", String(maxPrice))} <X size={12} />
+              </button>
+            )}
 
-        {/* EXIBIÇÃO DOS PRODUTOS */}
-        <div className="min-h-[300px]">
-          {filteredProducts && filteredProducts.length > 0 ? (
-            <>
-              {layout === 1 && <LayoutInteractiveList {...commonProps} />}
-              {layout === 2 && <LayoutHorizontalStage {...commonProps} />}
-              {layout === 4 && <LayoutOrganicMasonry {...commonProps} />}
-              {![1, 2, 4].includes(layout) && <LayoutInteractiveList {...commonProps} />}
-            </>
+            <button 
+              onClick={clearFilters}
+              className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold opacity-60 hover:opacity-100 transition-all"
+            >
+              <RotateCcw size={12} /> {t("showcase_clear_all")}
+            </button>
+          </div>
+        )}
+
+        {/* LISTAGEM */}
+        <div className="min-h-[400px]">
+          {isLoading ? (
+            <div className="flex justify-center py-20">
+              <Loader2 className="animate-spin text-blue-500" size={40} />
+            </div>
           ) : (
-            <div className="py-20 text-center border-2 border-dashed border-slate-500/20 rounded-3xl">
-              <Package className="mx-auto opacity-20 mb-4" size={40} />
-              <p className="text-xs font-black uppercase tracking-widest opacity-40">
-                Nenhum produto encontrado
-              </p>
+            <>
+              {Number(style?.cols) === 1 ? (
+                <LayoutList products={displayProducts} onAction={handleProductClick} isDark={isDark} t={t} />
+              ) : (
+                <LayoutGrid products={displayProducts} onAction={handleProductClick} cols={Number(style?.cols) || 3} isDark={isDark} t={t} />
+              )}
+
+              {!showAll && (products?.length || 0) > 6 && (
+                <div className="mt-12 flex justify-center">
+                  <button 
+                    onClick={() => setShowAll(true)} 
+                    className={`flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-[11px] uppercase tracking-widest transition-all active:scale-95 ${
+                      isDark ? 'bg-white text-black hover:bg-zinc-100' : 'bg-zinc-900 text-white hover:bg-black'
+                    }`}
+                  >
+                    <Plus size={16} /> {t("showcase_viewFull")}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {!isLoading && displayProducts.length === 0 && (
+            <div className="text-center py-20 rounded-3xl border border-dashed border-zinc-200 dark:border-zinc-800">
+              <Package size={40} className="mx-auto mb-4 opacity-10 text-zinc-500" />
+              <p className="text-xs font-bold uppercase tracking-widest opacity-40">{t("showcase_empty")}</p>
             </div>
           )}
         </div>
@@ -157,82 +292,3 @@ export function ProductShowcase({ content, style }: SectionProps) {
     </section>
   );
 }
-
-// --- LAYOUTS COM SUPORTE A TÍTULOS LONGOS ---
-
-const LayoutInteractiveList = ({ products, onAction }: any) => (
-  <div className="flex flex-col border-t border-slate-500/10">
-    {products?.map((p: any) => (
-      <div
-        key={p.id}
-        onClick={() => onAction(p.id)}
-        className="group flex items-center justify-between py-8 border-b border-slate-500/10 cursor-pointer hover:px-6 transition-all duration-500"
-      >
-        <div className="flex items-center gap-6 overflow-hidden">
-          <div className="hidden md:block w-0 group-hover:w-40 h-24 overflow-hidden rounded-2xl transition-all duration-500 opacity-0 group-hover:opacity-100 flex-shrink-0">
-            <img src={p.main_image} className="w-full h-full object-cover" alt="" />
-          </div>
-          <h3 className="text-xl md:text-5xl font-black tracking-tighter opacity-60 group-hover:opacity-100 transition truncate pr-4">
-            {p.name}
-          </h3>
-        </div>
-        <div className="flex flex-col items-end flex-shrink-0">
-          <span className="text-lg md:text-2xl font-black whitespace-nowrap">
-            {p.currency} {p.price.toLocaleString()}
-          </span>
-          <span className="text-[10px] font-bold text-blue-600 opacity-0 group-hover:opacity-100 uppercase tracking-widest">
-            Ver detalhes
-          </span>
-        </div>
-      </div>
-    ))}
-  </div>
-);
-
-const LayoutHorizontalStage = ({ products, onAction }: any) => (
-  <div className="flex overflow-x-auto gap-6 pb-6 snap-x no-scrollbar">
-    {products?.map((p: any) => (
-      <div
-        key={p.id}
-        onClick={() => onAction(p.id)}
-        className="min-w-[280px] md:min-w-[450px] aspect-[16/11] bg-slate-500/5 rounded-[2.5rem] overflow-hidden relative cursor-pointer snap-center group"
-      >
-        <img src={p.main_image} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition duration-700" alt="" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-8 text-white">
-          <h3 className="text-2xl font-black line-clamp-2 leading-tight">{p.name}</h3>
-          <div className="flex justify-between items-center mt-4">
-            <span className="text-xl font-medium">{p.currency} {p.price.toLocaleString()}</span>
-            <div className="p-3 bg-white text-black rounded-full shadow-lg flex-shrink-0"><Plus size={18} /></div>
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-);
-
-const LayoutOrganicMasonry = ({ products, onAction }: any) => (
-  <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
-    {products?.map((p: any, idx: number) => (
-      <div
-        key={p.id}
-        onClick={() => onAction(p.id)}
-        className={`relative break-inside-avoid rounded-[2rem] overflow-hidden group cursor-pointer bg-slate-500/5 ${
-          idx % 3 === 0 ? "aspect-[3/4]" : "aspect-square"
-        }`}
-      >
-        <img src={p.main_image} className="w-full h-full object-cover group-hover:scale-105 transition duration-700" alt="" />
-        <div className="absolute top-4 left-4 bg-white/90 text-black px-4 py-2 rounded-full font-black text-[10px] shadow-xl">
-          {p.currency} {p.price.toLocaleString()}
-        </div>
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-blue-600/90 text-white p-6 text-center">
-          <div className="max-w-full">
-            <h3 className="text-lg font-black mb-4 line-clamp-3">{p.name}</h3>
-            <div className="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center mx-auto flex-shrink-0">
-              <ArrowRight size={20} />
-            </div>
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-);

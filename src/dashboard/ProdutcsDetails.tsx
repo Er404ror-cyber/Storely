@@ -264,9 +264,9 @@ export function ProductDetails({ isCreating = false, onClose }: { isCreating?: b
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start">
             <div className="w-full lg:sticky lg:top-24">
-              <div className="relative aspect-[4/5] rounded-[2.5rem] overflow-hidden bg-slate-50 border border-slate-100 shadow-xl">
+              <div className="relative aspect-[1/1.05] rounded-[2.5rem] overflow-hidden bg-slate-50 border border-slate-100 shadow-xl">
                 <img key={activeIndex} src={previews.filter(Boolean)[activeIndex] || 'https://via.placeholder.com/800'} alt="Preview" className="w-full h-full object-cover animate-in fade-in duration-700" />
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/20 backdrop-blur-md p-2 rounded-full">
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/20  p-2 rounded-full">
                   {previews.filter(Boolean).map((_, i) => (
                     <button key={i} onClick={() => setActiveIndex(i)} className={`h-1 rounded-full transition-all ${i === activeIndex ? 'w-8 bg-white' : 'w-2 bg-white/40'}`} />
                   ))}
