@@ -393,6 +393,7 @@ showcase_clear_all: "Clear Filters",
   placeholder_whatsapp: "Número de vendas",
   btn_save_whatsapp: "Salvar Número",
   error_invalid_phone: "Número inválido para este país.",
+  
   placeholder_search: "Pesquisar por nome do produto...",
   label_product: "Produto",
   label_category: "Categoria",

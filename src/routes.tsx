@@ -11,7 +11,6 @@ import { StartHome } from './pages/home/startHome';
 import { ScrollToTop } from './components/scrollToTop';
 import { Duvidas } from './pages/home/duvidas';
 import { Faq } from './pages/faq';
-import { Contacto } from './pages/contacto';
 import { Blog } from './pages/home/blog';
 import { ProductDetails } from './dashboard/ProdutcsDetails';
 import { ProductsList } from './dashboard/Products';

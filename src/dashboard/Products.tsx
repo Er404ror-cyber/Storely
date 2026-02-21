@@ -16,8 +16,8 @@ import ptLabels from 'react-phone-number-input/locale/pt.json';
 
 import { 
   Plus, Loader2, LayoutGrid, Save, Search, 
-  Edit, Smartphone, Package, ArrowUpRight, X, 
-  AlertCircle, Tag, Eye,
+  Edit, Smartphone, Package, X, 
+  AlertCircle, Tag,
   Power
 } from 'lucide-react';
 
@@ -54,9 +54,7 @@ export function ProductsList() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isSavingWpp, setIsSavingWpp] = useState(false);
 
-  const CountryFlag = flags[selectedCountry as keyof typeof flags];
-
-  // Sincronizar número do WhatsApp vindo do Banco
+  const flagData = flags[selectedCountry as keyof typeof flags];
   useEffect(() => {
     if (store?.whatsapp_number) {
       const raw = store.whatsapp_number.startsWith('+') ? store.whatsapp_number : `+${store.whatsapp_number}`;
@@ -106,8 +104,8 @@ export function ProductsList() {
   toast.success(t('whatsapp_success'));
   setIsSavingWpp(false);
 },
-onError: (error: any) => {
-  // Concatenação simples para evitar o erro TS(2554)
+onError: (error: Error) => {
+  // Agora o TypeScript sabe que 'error' tem a propriedade 'message'
   toast.error(`${t('save_error')}: ${error.message}`);
   setIsSavingWpp(false);
 }
@@ -197,7 +195,13 @@ onError: (error: any) => {
                 hasWppChanges ? 'border-blue-400 ring-4 ring-blue-50' : 'border-slate-100'
               }`}>
                 <div className="flex items-center gap-2 px-4 border-r border-slate-100 relative py-3 group">
-                  <div className="w-5 h-3.5 rounded-sm overflow-hidden shadow-sm group-hover:scale-110 transition-transform"><CountryFlag /></div>
+                <div className="w-5 h-3.5 rounded-sm overflow-hidden shadow-sm group-hover:scale-110 transition-transform bg-slate-100">
+  {flagData ? (
+    <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: flagData.toString() }} /> 
+  ) : (
+    <div className="w-full h-full bg-slate-200" />
+  )}
+</div>
                   <span className="text-xs font-black text-slate-900">+{getCountryCallingCode(selectedCountry)}</span>
                   <select 
                     value={selectedCountry} 
@@ -226,7 +230,7 @@ onError: (error: any) => {
               {!isPhoneValid && phoneNumber && (
                 <div className="mt-2 flex items-center gap-1 text-red-500 animate-in fade-in slide-in-from-top-1">
                   <AlertCircle size={12} />
-                  <span className="text-[10px] font-black uppercase tracking-tight">{t('invalid_phone') || 'Número Inválido'}</span>
+                  <span className="text-[10px] font-black uppercase tracking-tight">{t('error_invalid_phone') || 'Número Inválido'}</span>
                 </div>
               )}
             </div>

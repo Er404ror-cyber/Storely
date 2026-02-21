@@ -129,7 +129,7 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
     : "w-full transition-all duration-200 border-b border-transparent hover:border-slate-300 dark:hover:border-zinc-700 hover:bg-slate-50/50 dark:hover:bg-white/5 focus:bg-transparent focus:border-blue-500 focus:ring-0 outline-none px-1 py-0.5 cursor-edit";
 
   return (
-    <section className={`py-12 px-6 transition-colors duration-500 ${isDark ? 'bg-[#0a0a0a] text-zinc-100' : 'bg-white text-slate-900'}`}>
+    <section className={`py-12 px-4 md:px-6 transition-colors duration-500 ${isDark ? 'bg-[#0a0a0a] text-zinc-100' : 'bg-white text-slate-900'}`}>
       <div className=" mx-auto">
         
         {/* HEADER */}
