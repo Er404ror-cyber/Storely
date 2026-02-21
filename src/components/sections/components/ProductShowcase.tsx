@@ -1,6 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { useAdminStore } from "../../../hooks/useAdminStore";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../../lib/supabase";
 import { Loader2, Package, Search, Plus, Target, X, RotateCcw } from "lucide-react";
