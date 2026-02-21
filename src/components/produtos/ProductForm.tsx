@@ -219,6 +219,7 @@ export const ProductForm = memo(({
                   options={currencyOptions}
                   styles={SELECT_STYLES}
                   value={currencyOptions.find(opt => opt.value === formData.currency)}
+                  
                   onChange={(val) => val && setFormData({ ...formData, currency: val.value })}
                 />
               </div>

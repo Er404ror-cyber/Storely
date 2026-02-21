@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-br">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -8,37 +8,189 @@
     <title>Storely — Sem código / Sem limites</title>
     <meta name="description" content="A plataforma definitiva para quem busca performance extrema, Sem código, Sem limites" />
 
-    <!-- Canonical -->
     <link rel="canonical" href="https://storelyy.vercel.app/" />
 
-    <!-- Favicon -->
+    <meta name="theme-color" content="#000000" />
+
+    <!-- iOS PWA -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Storely" />
+
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
-    <!-- Open Graph / WhatsApp / Facebook / Instagram -->
+    <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Storely — Sem código / Sem limites" />
     <meta property="og:description" content="A plataforma definitiva para quem busca performance extrema, Sem código, Sem limites" />
     <meta property="og:url" content="https://storelyy.vercel.app/" />
-    <meta property="og:image" content="https://SEU-PROJETO.vercel.app/social-preview.png" />
+    <meta property="og:image" content="https://storelyy.vercel.app/social-preview.png" />
 
-    <!-- Twitter Card -->
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Storely — Sem código / Sem limites" />
     <meta name="twitter:description" content="A plataforma definitiva para quem busca performance extrema, Sem código, Sem limites" />
-    <meta name="twitter:image" content="https://SEU-PROJETO.vercel.app/social-preview.png" />
+    <meta name="twitter:image" content="https://storelyy.vercel.app/social-preview.png" />
 
-    <!-- Segurança -->
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=()" />
+    <style>
+      :root {
+          --bg: #030303;
+          --accent: #6366f1;
+          --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      }
 
+      /* Base Ultra Leve */
+      body { 
+          margin: 0; 
+          background: var(--bg); 
+          font-family: var(--font-main);
+          -webkit-font-smoothing: antialiased;
+      }
+      
+      body.is-loading { overflow: hidden !important; }
+
+      #app-splash {
+          position: fixed;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--bg);
+          z-index: 999999;
+          transition: opacity 0.5s ease;
+          contain: strict;
+      }
+
+      .splash-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          /* GPU Layer */
+          transform: translateZ(0);
+          backface-visibility: hidden;
+      }
+
+      /* Container da Logo Otimizado */
+      .logo-box {
+          position: relative;
+          width: 220px; /* Um pouco maior que a imagem para margem */
+          height: 220px;
+          background: rgba(255, 255, 255, 0.02); /* Quase invisível, zero esforço GPU */
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+      }
+
+      .logo-box img { 
+          width: 195px; 
+          height: auto;
+          display: block;
+          /* Garante nitidez máxima sem tremor */
+          image-rendering: -webkit-optimize-contrast;
+          transform: translateZ(0);
+      }
+
+      .brand-text {
+          margin-top: 24px;
+      }
+
+      .name {
+          font-size: 2.2rem;
+          font-weight: 800;
+          color: #fff;
+          letter-spacing: 0.5em;
+          text-transform: uppercase;
+          opacity: 0;
+          /* Animação simples de escala (CPU friendly) */
+          transform: scale(0.95) translateZ(0);
+          animation: textReveal 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.4s;
+          will-change: transform, opacity;
+      }
+
+      .loader-wrapper {
+          margin-top: 40px;
+          width: 120px;
+          height: 2px;
+          background: rgba(255,255,255,0.06);
+          position: relative;
+          overflow: hidden;
+          border-radius: 2px;
+      }
+
+      .loader-line {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          background: var(--accent);
+          /* TranslateX é a forma mais leve de animar movimento */
+          transform: translateX(-100%);
+          animation: loading 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      }
+
+      /* Animações sem filtros ou repaints pesados */
+      @keyframes logoEntry { 
+          from { transform: scale(0.9) translateZ(0); opacity: 0; } 
+          to { transform: scale(1) translateZ(0); opacity: 1; } 
+      }
+
+      @keyframes textReveal {
+          to { opacity: 1; transform: scale(1) translateZ(0); }
+      }
+
+      @keyframes loading { 
+          0% { transform: translateX(-100%); } 
+          100% { transform: translateX(100%); } 
+      }
+
+      .exit-active { 
+          opacity: 0 !important; 
+          pointer-events: none;
+      }
+    </style>
   </head>
 
-  <body>
-    <noscript>Esta aplicação requer JavaScript para funcionar corretamente.</noscript>
+  <body class="is-loading">
+    <div id="app-splash">
+      <div class="splash-container">
+          <div class="logo-box">
+              <img src="/img/Mascote.png" alt="Logo Storely" />
+          </div>
+          <div class="brand-text">
+            <h1 class="name">Storely</h1>
+          </div>
+          <div class="loader-wrapper">
+              <div class="loader-line"></div>
+          </div>
+      </div>
+    </div>
+
     <div id="root"></div>
+
     <script type="module" src="/src/main.tsx"></script>
+
+    <script>
+      (function() {
+          const splash = document.getElementById('app-splash');
+          const body = document.body;
+          
+          window.addEventListener('load', () => {
+              // Reduzi o tempo de espera para 1s para o site parecer instantâneo
+              setTimeout(() => {
+                  splash.classList.add('exit-active');
+                  body.classList.remove('is-loading');
+                  
+                  // Remoção imediata após o fade-out
+                  setTimeout(() => splash.remove(), 500);
+              }, 1200);
+          });
+      })();
+    </script>
   </body>
 </html>

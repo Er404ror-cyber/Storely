@@ -95,13 +95,24 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
   const displayProducts = useMemo(() => {
     if (!products) return [];
     const term = searchTerm.toLowerCase();
+  
+    // 1. Filtra os produtos
     const filtered = products.filter(p => {
       const matchesSearch = !term || p.name.toLowerCase().includes(term);
       const matchesCategory = selectedCategory === t("common_all") || p.category === selectedCategory;
       const matchesPrice = maxPrice === null ? true : p.price <= maxPrice;
       return matchesSearch && matchesCategory && matchesPrice;
     });
-    return showAll || filtered.length <= 6 ? filtered : filtered.slice(0, 6);
+  
+    // 2. Ordena por data de criação (Mais recentes primeiro)
+    const sorted = [...filtered].sort((a, b) => {
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return dateB - dateA;
+    });
+  
+    // 3. Controla a quantidade (Aumentado para 7 conforme solicitado)
+    return showAll || sorted.length <= 7 ? sorted : sorted.slice(0, 7);
   }, [products, searchTerm, selectedCategory, maxPrice, showAll, t]);
 
   const hasActiveFilters = selectedCategory !== t("common_all") || maxPrice !== null || searchTerm !== "";
@@ -119,7 +130,7 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
 
   return (
     <section className={`py-12 px-6 transition-colors duration-500 ${isDark ? 'bg-[#0a0a0a] text-zinc-100' : 'bg-white text-slate-900'}`}>
-      <div className="max-w-5xl mx-auto">
+      <div className=" mx-auto">
         
         {/* HEADER */}
         <header className={`mb-8 flex flex-col w-full ${alignClass}`}>
@@ -183,7 +194,7 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
                   className={`px-5 py-2.5 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-all border whitespace-nowrap ${
-                    selectedCategory === cat ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20" : isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-slate-200 text-slate-500"
+                    selectedCategory === cat ? "bg-blue-600 border-blue-600 text-white " : isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-slate-200 text-slate-500"
                   }`}
                 >
                   {cat}
@@ -266,18 +277,18 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
                 <LayoutGrid products={displayProducts} onAction={handleProductClick} cols={Number(style?.cols) || 3} isDark={isDark} t={t} />
               )}
 
-              {!showAll && (products?.length || 0) > 6 && (
-                <div className="mt-12 flex justify-center">
-                  <button 
-                    onClick={() => setShowAll(true)} 
-                    className={`flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-[11px] uppercase tracking-widest transition-all active:scale-95 ${
-                      isDark ? 'bg-white text-black hover:bg-zinc-100' : 'bg-zinc-900 text-white hover:bg-black'
-                    }`}
-                  >
-                    <Plus size={16} /> {t("showcase_viewFull")}
-                  </button>
-                </div>
-              )}
+{!showAll && (displayProducts.length >= 7 && products && products.length > 7) && (
+  <div className="mt-12 flex justify-center">
+    <button 
+      onClick={() => setShowAll(true)} 
+      className={`flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-[11px] uppercase tracking-widest transition-all active:scale-95 ${
+        isDark ? 'bg-white text-black hover:bg-zinc-100' : 'bg-zinc-900 text-white hover:bg-black'
+      }`}
+    >
+      <Plus size={16} /> {t("showcase_viewFull")}
+    </button>
+  </div>
+)}
             </>
           )}
 

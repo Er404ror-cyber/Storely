@@ -10,6 +10,7 @@ import { supabase } from '../lib/supabase';
 import { uploadToCloudinary } from '../utils/cloud';
 import { ProductForm } from '../components/produtos/ProductForm';
 import { toast } from "react-hot-toast";
+import { getUserCurrency } from '../utils/mzn';
 
 // Definição do tipo para garantir consistência entre arquivos
 export interface FormData {
@@ -53,16 +54,16 @@ export function ProductDetails({ isCreating = false, onClose }: { isCreating?: b
   const [uploadErrors, setUploadErrors] = useState<string[]>(['', '', '', '']);
 
   // Correção da tipagem inicial para evitar o erro de 'never[]'
-  const [formData, setFormData] = useState<FormData>({
-    name: '', 
-    price: '', 
-    category: '', 
+  const [formData, setFormData] = useState<FormData>(() => ({
+    name: '',
+    price: '',
+    category: '',
     unit: 'un',
-    currency: 'MZN',
-    main_image: '', 
-    gallery: [], 
+    currency: getUserCurrency(),
+    main_image: '',
+    gallery: [],
     full_description: ''
-  });
+  }));
   
   const [storeWhatsApp, setStoreWhatsApp] = useState('');
 
@@ -87,14 +88,16 @@ export function ProductDetails({ isCreating = false, onClose }: { isCreating?: b
 
   useEffect(() => {
     if (product) {
-      setFormData({ 
-        ...product, 
+      setFormData({
+        ...product,
         price: product.price.toString(),
-        currency: product.currency || 'MZN'
+        currency: product.currency || getUserCurrency()
       });
+  
       const imgs = [product.main_image, ...(product.gallery || [])];
       setPreviews([...imgs, '', '', ''].slice(0, 4));
     }
+  
     if (store?.whatsapp_number) setStoreWhatsApp(store.whatsapp_number);
   }, [product, store]);
 

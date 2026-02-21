@@ -1,46 +1,95 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { VitePWA } from 'vite-plugin-pwa'
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+
+    VitePWA({
+      registerType: 'autoUpdate',
+      injectRegister: 'auto',
+
+      manifest: {
+        name: 'Storely — Sem código / Sem limites',
+        short_name: 'Storely',
+        description:
+          'A plataforma definitiva para quem busca performance extrema, Sem código, Sem limites',
+
+        theme_color: '#000000',
+        background_color: '#000000',
+
+        display: 'standalone',
+        orientation: 'portrait',
+        scope: '/',
+        start_url: '/',
+
+        icons: [
+          {
+            src: '/pwa-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: '/pwa-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+          {
+            src: '/pwa-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable',
+          },
+        ],
+      },
+
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/storelyy\.vercel\.app\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'storely-cache',
+            },
+          },
+        ],
+      },
+
+      devOptions: {
+        enabled: true,
+      },
+    }),
   ],
 
-  // Define a base como raiz para garantir que caminhos de assets (js/css) funcionem na Vercel
   base: '/',
 
   build: {
     outDir: 'dist',
-    // Aumenta o limite do aviso de 500kb para 1000kb
-    chunkSizeWarningLimit: 1000, 
-    // Desativado para proteger seu código-fonte em produção
+    chunkSizeWarningLimit: 1000,
     sourcemap: false,
-    // Limpa a pasta dist antes de cada build para evitar arquivos obsoletos
     emptyOutDir: true,
-    // Otimização de entrega de arquivos
+
     rollupOptions: {
       output: {
-        // Divide o código em pedaços menores (chunks) para carregar apenas o necessário
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            return 'vendor';
+            return 'vendor'
           }
         },
-        // Garante nomes de arquivos consistentes para melhor cache do navegador
         entryFileNames: 'assets/[name]-[hash].js',
         chunkFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]'
+        assetFileNames: 'assets/[name]-[hash].[ext]',
       },
     },
-    // Minimiza o tamanho final dos arquivos
+
     minify: 'esbuild',
     target: 'esnext',
   },
 
-  // Configuração para desenvolvimento local suave
   server: {
     port: 5173,
     strictPort: true,
