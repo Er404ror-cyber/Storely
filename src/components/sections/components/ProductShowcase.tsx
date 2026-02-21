@@ -30,7 +30,6 @@ interface ShowcaseProps {
 
 export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
   const { t } = useTranslate();
-  const { data: store } = useAdminStore();
   const location = useLocation();
   const navigate = useNavigate();
   const { storeSlug, pageSlug } = useParams();
@@ -55,20 +54,43 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
     if (e.key === "Enter") e.preventDefault();
   }, []);
 
-  const { data: products, isLoading } = useQuery({
-    queryKey: ["public-products", store?.id],
-    queryFn: async () => {
-      if (!store?.id) return [];
-      const { data } = await supabase
-        .from("products")
-        .select("*")
-        .eq("store_id", store?.id)
-        .eq("is_active", true);
-      return data || [];
-    },
-    enabled: !!store?.id,
-    staleTime: 1000 * 60 * 5, // Cache de 5 minutos para performance
-  });
+  // 1. Pegamos o slug da URL (ex: /nome-da-loja/home)
+
+// 2. Buscamos a Loja pelo Slug (Acesso Público)
+const { data: publicStore, isLoading: isLoadingStore } = useQuery({
+  queryKey: ["public-store-info", storeSlug],
+  queryFn: async () => {
+    if (!storeSlug) return null;
+    const { data, error } = await supabase
+      .from("stores")
+      .select("id, name")
+      .eq("slug", storeSlug)
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+  enabled: !!storeSlug,
+  staleTime: 1000 * 60 * 15 // Cache de 15 min para dados da loja
+});
+
+// 3. Buscamos os produtos usando o ID da loja encontrada na URL
+const { data: products, isLoading: isLoadingProducts } = useQuery({
+  queryKey: ["public-products", publicStore?.id],
+  queryFn: async () => {
+    if (!publicStore?.id) return [];
+    const { data } = await supabase
+      .from("products")
+      .select("*")
+      .eq("store_id", publicStore.id) // FILTRO CRUCIAL
+      .eq("is_active", true);
+    return data || [];
+  },
+  enabled: !!publicStore?.id,
+  staleTime: 1000 * 60 * 5,
+});
+
+const isLoading = isLoadingStore || isLoadingProducts;
 
  // Estados de Filtro
  
