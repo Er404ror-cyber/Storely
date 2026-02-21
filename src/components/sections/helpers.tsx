@@ -1,9 +1,11 @@
 import React from 'react';
 import type { MediaItem } from './main';
+import { toast } from 'react-hot-toast'; // Certifique-se de ter instalado
 
 const CLOUD_NAME = "dcffpnzxn"; 
 const UPLOAD_PRESET = "galeria_preset"; 
 export const MAX_FILE_SIZE_MB = 15;
+
 
 export function forceMp4(url: string): string {
   if (!url || !url.includes('res.cloudinary.com')) return url;
@@ -109,24 +111,46 @@ export const handleMultipleUploads = async (
 };
 
 
-export const handleFileUpload = async (
-  file: File, 
-  callback: (media: MediaItem) => void
-) => {
-  const media: MediaItem = {
-    id: crypto.randomUUID(),
-    url: URL.createObjectURL(file),
-    type: file.type.startsWith('video') ? 'video' : 'image',
-    size: file.size,
-    file: file,
-    isTemp: true
-  };
-  callback(media);
-};
 
-/**
- * Sobe tudo que é temporário para a nuvem
- */
+// ... manter constantes CLOUD_NAME, UPLOAD_PRESET, etc
+
+
+// Adicione esta alteração no seu handleFileUpload
+export const handleFileUpload = async (file: File, callback: (media: any) => void) => {
+  if (!file) return;
+
+  // FileReader garante que o arquivo saia do estado "idle" do sistema operacional
+  const reader = new FileReader();
+  
+  reader.onload = () => {
+    const tempMedia = {
+      id: crypto.randomUUID(),
+      url: URL.createObjectURL(file),
+      type: file.type.startsWith('video') ? 'video' : 'image',
+      size: file.size,
+      file: file,
+      isTemp: true
+    };
+    callback(tempMedia);
+  };
+
+  reader.onerror = () => {
+    toast.error("Erro ao ler o arquivo. Tente novamente.");
+  };
+
+  reader.readAsArrayBuffer(file); 
+};
+export const editableProps = (isEditable: boolean, onUpdate: (val: string) => void) => ({
+  contentEditable: isEditable,
+  suppressContentEditableWarning: true,
+  onBlur: (e: React.FocusEvent<HTMLElement>) => {
+    onUpdate(e.currentTarget.innerText);
+  },
+  className: isEditable ? "outline-none focus:ring-2 focus:ring-blue-500/30 rounded px-1 cursor-text" : ""
+});
+
+
+
 export const saveAllToCloudinary = async (items: MediaItem[]): Promise<MediaItem[]> => {
   const promises = items.map(async (item) => {
     if (!item.isTemp || !item.file) return item;
@@ -150,23 +174,19 @@ export const getFontSize = (
   size: string = 'medium', 
   type: 'card' | 'h1' | 'h2' | 'h3' | 'p' = 'h1'
 ): string => {
-  
-  // Incluímos 'card' no Record
   const sizes: Record<'h1' | 'h2' | 'h3' | 'p' | 'card', Record<string, string>> = {
-    h1: { small: 'text-3xl', medium: 'text-5xl', large: 'text-6xl' },
+    // Ajustei o h1 para ser mais harmônico: 3xl -> 4xl -> 5xl (ou 6xl se preferires muito grande)
+    h1: { 
+      small: 'text-2xl md:text-4xl', 
+      medium: 'text-3xl md:text-5xl', 
+      large: 'text-4xl md:text-5xl 2xl:text-6xl' 
+    },
     h2: { small: 'text-xl md:text-2xl', medium: 'text-2xl md:text-4xl', large: 'text-3xl md:text-5xl' },
     h3: { small: 'text-xl', medium: 'text-2xl', large: 'text-4xl' },
     p:  { small: 'text-sm',  medium: 'text-base', large: 'text-lg' },
-    card: { small: 'text-xs', medium: 'text-sm', large: 'text-base' } // Exemplo de valores
+    card: { small: 'text-xs', medium: 'text-sm', large: 'text-base' }
   };
 
-  // Agora o TS sabe que 'type' sempre existirá em 'sizes'
   const selectedType = sizes[type];
   return selectedType[size] || selectedType['medium'];
 };
-export const editableProps = (isEditable: boolean, onBlur: (val: string) => void) => ({
-  contentEditable: isEditable,
-  suppressContentEditableWarning: true,
-  onBlur: (e: React.FocusEvent<HTMLElement>) => onBlur(e.currentTarget.innerText),
-  className: `outline-none focus:ring-2 focus:ring-blue-500/40 rounded px-1 transition-all`
-});

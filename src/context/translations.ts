@@ -59,13 +59,11 @@ export const translations = {
     cta_members: "+12k members",
 
     // --- New Gallery Translations ---
-    gallery_storage: "Section Payload",
     gallery_limit_error: "Limit Exceeded: Optimization Required",
     gallery_add: "Import Media",
     gallery_support: "Images & videos (JPG, PNG, MP4)\n1 MB photo · 10 MB video",
     gallery_file_error: "Individual size error detected",
-    gallery_default_title: "Visual Media Assets",
-    gallery_default_desc: "Digital Asset Management System",
+
     gallery_empty: "Start with an upload",
     gallery_empty_sub: "Initialize sequence via upload",
     gallery_compress: "Reduce",
@@ -74,10 +72,31 @@ export const translations = {
     gallery_weight: "Weight",
     gallery_limit_reached: "Full",
     gallery_slots: "Files",
-    gallery_tutorial_subtitle: "Visual Curation",
     gallery_tutorial_title: "Combine your best captures in a high-performance professional layout.",
     gallery_limit_label: "Capacity",
     gallery_items: "Items",
+    gallery_storage: "Storage",
+  gallery_action_blocked: "Action Blocked",
+  gallery_action_required: "Action Required",
+  gallery_btn_blocked: "Blocked",
+  gallery_btn_sync: "Sync Now",
+  gallery_error_total_limit: "Remove files (Max 15MB)",
+  gallery_error_individual: "Errors in specific files",
+  gallery_pending_local: "Pending local files",
+  gallery_msg_error: "Some files have errors. Remove or compress items marked in red.",
+  gallery_msg_ready: "All set — sync to save. (Compression optional)",
+  gallery_compress_images: "Compress images",
+  gallery_compress_videos: "Compress videos",
+  gallery_default_category: "Portfolio",
+  gallery_default_title: "My Gallery",
+  gallery_default_desc: "Click to edit your gallery description",
+  gallery_tutorial_subtitle: "Empty Gallery",
+  gallery_type_photos: "Photos",
+  gallery_max_1mb: "Max 1MB",
+  gallery_type_videos: "Video",
+  gallery_max_10mb: "Max 10MB",
+
+  gallery_new_badge: "New",
 
 
 
@@ -98,7 +117,107 @@ export const translations = {
     editor_modal_btn_discard: "Discard Changes",
     editor_modal_btn_discard_all: "Discard and Lose Media",
     editor_modal_btn_continue: "Continue Editing",
+
+
+    limits: "Limit: {max} characters",
+    uploading: "Uploading to cloud...",
+    mediaSaved: "Media saved!",
+    saveError: "Error saving.",
+    maxMedia: "Max Media Size:",
+    photoLimit: "PHOTO: 1MB",
+    videoLimit: "VIDEO: 5MB",
+    whatsappLabel: "WhatsApp (Country Code + Number)",
+    whatsappPlaceholder: "Enter number",
+    changeMedia: "Change Media",
+    tryAnother: "Try another file",
+    weight: "Size:",
+    reduceSize: "Reduce Size",
+    limitExceeded: "This file exceeds the synchronization limits.",
+    compressNow: "Compress Now",
+    syncNow: "Sync Now",
+    syncing: "Uploading...",
+    testLinkError: "Fix or sync media before testing the link.",
+    defaultBadge: "PERFORMANCE",
+    defaultTitle: "Your Title",
+    defaultSub: "Descriptive subtitle.",
+    
+    defaultBtn: "Get in touch",
+        hiddenToPublic: "Hidden from public",
+    invalidPhoneDesc: "The button won't appear on the site until a valid WhatsApp number is provided. Solve it below in the control panel.",
+
+    inventory_title: "Inventory",
+    wpp_section_title: "Sales Channel",
+    wpp_section_desc: "Set the official number to receive orders via WhatsApp.",
+    whatsapp_placeholder: "84 000 0000",
+    btn_new_product: "New Product",
+    search_placeholder: "Search products...",
+    status_active: "Active",
+    status_paused: "Paused",
+    
+    
+
+  stat_total: "Total Products",
+  label_wpp_section_title: "Sales Channel",
+  label_wpp_section_desc: "Set the WhatsApp number where you will receive customer orders.",
+  placeholder_whatsapp: "Sales number",
+  btn_save_whatsapp: "Save Number",
+  error_invalid_phone: "Invalid number for this country.",
+  placeholder_search: "Search by product name...",
+  label_product: "Product",
+  label_category: "Category",
+  label_price: "Price",
+  label_status: "Status",
+
+  label_created_at: "Created at",
+  label_actions: "Actions",
+  view_product: "View",
+  btn_edit: "Edit",
+
+
+
+  product: "Product",
+  price: "Price",
+  status: "Status",
+  actions: "Actions",
+ 
+  no_products_found: "No products found",
+  
+
+
+
+
+
+  whatsapp_success: "WhatsApp updated successfully!",
+  save_error: "Error saving",
+  product_status_success: "Product status updated!",
+  product_status_error: "Could not update product status.",
+  save_button: "Save Changes",
+  saving: "Saving...",
+  
+
+// Showcase Section
+showcase_defaultCategory: "New Arrivals",
+showcase_defaultTitle: "Our Collection",
+showcase_defaultDescription: "Explore our curated selection of exclusive products with premium design and quality.",
+showcase_maxPrice: "Max Price",
+showcase_empty: "No products available",
+
+// Common / UI
+common_all: "All",
+common_details: "Details",
+common_loading: "Loading...",
+
+
+
+showcase_clear_all: "Clear Filters",
+    showcase_filter_active: "Active Filters",
+    showcase_price_up_to: "Up to ${{price}}",
+    showcase_category: "Category: {{category}}",
+    filter_unlimited: "Unlimited",
+    showcase_searchPlaceholder: "What are you looking for?",
+    showcase_viewFull: "Browse All"
   },
+
 
 
 
@@ -170,13 +289,11 @@ export const translations = {
     cta_members: "+12k membros",
 
     // --- Novas Traduções da Galeria ---
-    gallery_storage: "Carga da Seção",
     gallery_limit_error: "Resolva os erros para salvar",
     gallery_add: "Importar Mídia",
     gallery_support: "Imagens e vídeos (JPG, PNG, MP4)\n1 MB foto · 10 MB vídeo",
     gallery_file_error: "Erro de tamanho individual detectado",
-    gallery_default_title: "Ativos de Mídia Visual",
-    gallery_default_desc: "Sistema de Gestão de Ativos Digitais",
+
     gallery_empty: "Comece com um upload",
     gallery_empty_sub: "Inicie a sequência via upload",
     gallery_compress: "Reduzir",
@@ -185,10 +302,32 @@ export const translations = {
     gallery_weight: "Peso",
     gallery_limit_reached: "Cheio",
     gallery_slots: "Mídia",
-    gallery_tutorial_subtitle: "Curadoria Visual",
     gallery_tutorial_title: "Combine suas melhores capturas em um layout profissional de alta performance.",
     gallery_limit_label: "Capacidade",
     gallery_items: "Itens",
+    
+    gallery_storage: "Armazenamento",
+  gallery_action_blocked: "Ação Bloqueada",
+  gallery_action_required: "Ação Necessária",
+  gallery_btn_blocked: "Bloqueado",
+  gallery_btn_sync: "Sincronizar",
+  gallery_error_total_limit: "Remova arquivos (Máx 15MB)",
+  gallery_error_individual: "Erro em arquivos específicos",
+  gallery_pending_local: "Arquivos locais pendentes",
+  gallery_msg_error: "Alguns arquivos estão com erro. Remova ou comprima os itens marcados em vermelho.",
+  gallery_msg_ready: "Tudo pronto — sincronize para salvar. (Compressão opcional)",
+  gallery_compress_images: "Comprimir imagens",
+  gallery_compress_videos: "Comprimir vídeos",
+  gallery_default_category: "Portfólio",
+  gallery_default_title: "Minha Galeria",
+  gallery_default_desc: "Clique para editar a descrição da sua galeria",
+  gallery_tutorial_subtitle: "Galeria Vazia",
+  gallery_type_photos: "Fotos",
+  gallery_max_1mb: "Máx 1MB",
+  gallery_type_videos: "Vídeo",
+  gallery_max_10mb: "Máx 10MB",
+  
+  gallery_new_badge: "Novo",
 
 
         // editor
@@ -208,6 +347,101 @@ export const translations = {
     editor_modal_btn_discard_all: "Descartar e Perder Mídias",
     editor_modal_btn_continue: "Continuar Editando",
 
+
+    limits: "Limite: {max} caracteres",
+    uploading: "Enviando para nuvem...",
+    mediaSaved: "Mídia salva!",
+    saveError: "Erro ao salvar.",
+    maxMedia: "Mídia Máxima:",
+    photoLimit: "FOTO: 1MB",
+    videoLimit: "VÍDEO: 5MB",
+    whatsappLabel: "WhatsApp (DDI + Número)",
+    whatsappPlaceholder: "Número com DDD",
+    
+    changeMedia: "Trocar Mídia",
+    tryAnother: "Tentar outro arquivo",
+    weight: "Peso:",
+    reduceSize: "Reduzir Tamanho",
+    limitExceeded: "Este arquivo ultrapassa os limites permitidos para sincronização.",
+    compressNow: "Comprimir Agora",
+    syncNow: "Sincronizar Agora",
+    syncing: "Enviando...",
+    testLinkError: "Corrija ou sincronize a mídia antes de testar o link.",
+    defaultBadge: "PERFORMANCE",
+    defaultTitle: "Seu Título",
+    defaultSub: "Subtítulo descritivo.",
+    
+    defaultBtn: "Iniciar contacto",   
+    hiddenToPublic: "Invisível para o público",
+    invalidPhoneDesc: "O botão não aparecerá no site até que o número de WhatsApp seja válido. Solucione abaixo no painel de controle.",
+
+    inventory_title: "Inventário",
+    wpp_section_title: "Canal de Vendas",
+    wpp_section_desc: "Configure o número oficial para receber pedidos via WhatsApp.",
+    whatsapp_placeholder: "84 000 0000",
+    btn_new_product: "Novo Produto",
+    search_placeholder: "Pesquisar produtos...",
+    status_active: "Ativo",
+    status_paused: "Pausado",
+
+
+
+  
+  stat_total: "Total de Produtos",
+  label_wpp_section_title: "Canal de Vendas",
+  label_wpp_section_desc: "Configure o número de WhatsApp que receberá os pedidos dos clientes.",
+  placeholder_whatsapp: "Número de vendas",
+  btn_save_whatsapp: "Salvar Número",
+  error_invalid_phone: "Número inválido para este país.",
+  
+  placeholder_search: "Pesquisar por nome do produto...",
+  label_product: "Produto",
+  label_category: "Categoria",
+  label_price: "Preço",
+  label_status: "Status",
+
+  label_created_at: "Criado em",
+  label_actions: "Ações",
+  btn_view_product: "Ver",
+  btn_edit: "Editar",
+
+
+
+  product: "Produto",
+price: "Preço",
+status: "Status",
+actions: "Ações",
+
+
+
+whatsapp_success: "WhatsApp atualizado com sucesso!",
+save_error: "Erro ao salvar",
+product_status_success: "Status do produto atualizado!",
+product_status_error: "Não foi possível alterar o status do produto.",
+save_button: "Salvar Alterações",
+saving: "Salvando...",
+
+
+no_products_found: "Nenhum produto encontrado",
+
+showcase_defaultCategory: "Lançamentos",
+    showcase_defaultTitle: "Nossa Coleção",
+    showcase_defaultDescription: "Explore produtos selecionados com design exclusivo e qualidade premium para você.",
+    showcase_searchPlaceholder: "Buscar na vitrine...",
+    showcase_maxPrice: "Preço Máx.",
+    showcase_empty: "Nenhum produto disponível",
+    
+    // Common / UI
+    common_all: "Todos",
+    common_details: "Detalhes",
+    common_loading: "Carregando...",
+    showcase_clear_all: "Limpar Filtros",
+    showcase_filter_active: "Filtros Ativos",
+    showcase_price_up_to: "Até R$ {{price}}",
+    showcase_category: "Categoria: {{category}}",
+    filter_unlimited: "Ilimitado",
+    showcase_viewFull: "Ver Tudo"
+ 
   }
 } as const;
 

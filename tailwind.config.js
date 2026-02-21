@@ -3,16 +3,19 @@
 /* Ativação por classe para o Tailwind v4 */
 @variant dark (&:where(.dark, .dark *));
 
-/* Transição de cores suave nas divs que você já estilizou */
 @layer base {
-  *, ::after, ::before {
-    transition-property: background-color, color, border-color;
-    transition-duration: 350ms;
-    transition-timing-function: linear; /* Linear é mais leve para a CPU */
+  /* EVITE USAR * { transition: ... } 
+     Isso mata a performance pois o navegador tenta animar TUDO.
+     Use classes específicas ou aplique apenas em elementos de UI.
+  */
+  body {
+    @apply bg-[#030303] text-white;
+    /* Transição suave apenas no body para o modo dark */
+    transition: background-color 350ms linear;
   }
 }
 
-/* Estrutura da Transição de Tela */
+/* Estrutura da Transição de Tela (View Transitions API) */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
@@ -24,27 +27,20 @@
 
 ::view-transition-new(root) {
   z-index: 9999;
-  /* Animação diagonal do topo-esquerdo ao fundo-direito */
   animation: diagonal-sweep 700ms cubic-bezier(0.25, 1, 0.5, 1) both;
   will-change: clip-path;
 }
 
-::view-transition-old(root) {
-  z-index: 1;
-}
-
 @keyframes diagonal-sweep {
   from {
-    /* Começa no ponto 0,0 (Canto Superior Esquerdo) */
     clip-path: polygon(0% 0%, 0% 0%, 0% 0%);
   }
   to {
-    /* Expande em triângulo para cobrir tudo até o Canto Inferior Direito */
     clip-path: polygon(0% 0%, 250% 0%, 0% 250%);
   }
 }
 
-/* Bloqueia cliques durante a animação para economizar processamento */
-html.view-transitioning {
+/* Bloqueia cliques durante a animação */
+.view-transitioning {
   pointer-events: none;
 }
