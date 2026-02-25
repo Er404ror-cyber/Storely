@@ -5,6 +5,7 @@ import { supabase } from "../../../lib/supabase";
 import { Loader2, Package, Search, Plus, Target, X, RotateCcw } from "lucide-react";
 import { useTranslate } from "../../../context/LanguageContext";
 import { LayoutGrid, LayoutList } from "../../produtos/layouts";
+import { useAdminStore } from "../../../hooks/useAdminStore";
 
 const LIMITS = { category: 12, title: 30, description: 100 };
 const FONT_SIZE_MAP = {
@@ -32,7 +33,7 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { storeSlug, pageSlug } = useParams();
-  
+  const { data: adminStore } = useAdminStore();
   const isDark = style?.theme === 'dark';
   const isReadOnly = !location.pathname.includes('/editor/');
 
@@ -55,37 +56,38 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
 
   // 1. Pegamos o slug da URL (ex: /nome-da-loja/home)
 
-// 2. Buscamos a Loja pelo Slug (Acesso Público)
+// 1. Busca ID da loja pelo Slug caso não seja o Admin logado
 const { data: publicStore, isLoading: isLoadingStore } = useQuery({
   queryKey: ["public-store-info", storeSlug],
   queryFn: async () => {
     if (!storeSlug) return null;
     const { data, error } = await supabase
       .from("stores")
-      .select("id, name")
+      .select("id")
       .eq("slug", storeSlug)
       .single();
-    
-    if (error) throw error;
+    if (error) return null;
     return data;
   },
-  enabled: !!storeSlug,
-  staleTime: 1000 * 60 * 15 // Cache de 15 min para dados da loja
+  enabled: !!storeSlug && !adminStore, // Só busca se não tivermos os dados do admin logado
 });
 
-// 3. Buscamos os produtos usando o ID da loja encontrada na URL
+// Define qual ID de loja usar: Prioridade para Admin, depois URL
+const effectiveStoreId = adminStore?.id || publicStore?.id;
+
+// 2. Busca os produtos usando o ID identificado
 const { data: products, isLoading: isLoadingProducts } = useQuery({
-  queryKey: ["public-products", publicStore?.id],
+  queryKey: ["public-products", effectiveStoreId],
   queryFn: async () => {
-    if (!publicStore?.id) return [];
+    if (!effectiveStoreId) return [];
     const { data } = await supabase
       .from("products")
       .select("*")
-      .eq("store_id", publicStore.id) // FILTRO CRUCIAL
+      .eq("store_id", effectiveStoreId)
       .eq("is_active", true);
     return data || [];
   },
-  enabled: !!publicStore?.id,
+  enabled: !!effectiveStoreId,
   staleTime: 1000 * 60 * 5,
 });
 
