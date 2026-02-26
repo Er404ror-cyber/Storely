@@ -163,18 +163,14 @@ const PageRow = memo(({ page, storeSlug, isConflict, setAsHome, updateSlug, dele
             <>
               <button onClick={() => { setEditingId(page.id); setEditValue(page.slug); }} className="p-4 text-slate-400 hover:text-indigo-600"><Edit3 size={20} /></button>
               {!page.is_home && <button onClick={() => setAsHome.mutate(page.id)} className="p-4 text-slate-300 hover:text-amber-500"><Star size={20} /></button>}
-              {/* Lixo afastado do botão de Design no mobile */}
-              {!page.is_home && !isEditing && (
+{!page.is_home && !isEditing && (
   <button 
     onClick={() => {
-      // Confirmação antes de disparar a mutação
-      const confirmou = window.confirm("Excluir esta página permanentemente?");
-      if (confirmou) {
+      if (window.confirm(`Tem certeza que deseja excluir "/${page.slug}"?`)) {
         deletePage.mutate(page.id);
       }
     }} 
     className="p-4 text-slate-400 hover:text-red-500 active:bg-red-50 rounded-2xl transition-all"
-    title="Apagar página"
   >
     <Trash2 size={20} />
   </button>
@@ -272,17 +268,29 @@ export function PagesList() {
 
   const deletePage = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('pages').delete().eq('id', id);
+      // Adicionamos { count: 'exact' } para o Supabase nos dizer se removeu algo
+      const { error, count } = await supabase
+        .from('pages')
+        .delete({ count: 'exact' }) 
+        .eq('id', id);
+    
       if (error) throw error;
+    
+      // Se o count for 0, a Policy do banco ainda está bloqueando
+      if (count === 0) {
+        throw new Error("O Banco de Dados recusou a exclusão (Verifique as Policies/RLS)");
+      }
+    
       return id;
     },
     onSuccess: () => {
-      notify.success('Página removida!');
-      queryClient.invalidateQueries({ queryKey: ['pages', store?.id] });
+      // Forçar a atualização da lista
+      queryClient.refetchQueries({ queryKey: ['pages'] });
+      notify.success('Página removida permanentemente!');
     },
-    onError: (err) => {
-      notify.error('Erro ao deletar no banco de dados');
-      console.error(err);
+    onError: (err: any) => {
+      console.error("Erro ao deletar:", err.message);
+      notify.error(err.message || 'Erro ao remover página.');
     }
   });
 
