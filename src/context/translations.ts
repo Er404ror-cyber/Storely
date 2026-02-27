@@ -215,7 +215,23 @@ showcase_clear_all: "Clear Filters",
     showcase_category: "Category: {{category}}",
     filter_unlimited: "Unlimited",
     showcase_searchPlaceholder: "What are you looking for?",
-    showcase_viewFull: "Browse All"
+    showcase_viewFull: "Browse All",
+    common_close: "Close",
+    common_filters: "Filters",
+
+
+    product_details_visit_store: "Visit Store",
+    product_details_details: "Details",
+    product_details_final_value: "Final Value",
+    product_details_confirm_whatsapp: "Confirm on WhatsApp",
+    product_details_no_description: "No detailed description available for this product.",
+    product_details_edit: "Edit",
+    product_details_cancel: "Cancel",
+    product_details_publish: "Publish",
+    product_details_share_success: "Link copied!",
+    common_category_general: "General"
+    
+        
   },
 
 
@@ -403,6 +419,7 @@ showcase_clear_all: "Clear Filters",
   label_created_at: "Criado em",
   label_actions: "Ações",
   btn_view_product: "Ver",
+  view_product: "Ver",
   btn_edit: "Editar",
 
 
@@ -440,7 +457,25 @@ showcase_defaultCategory: "Lançamentos",
     showcase_price_up_to: "Até R$ {{price}}",
     showcase_category: "Categoria: {{category}}",
     filter_unlimited: "Ilimitado",
-    showcase_viewFull: "Ver Tudo"
+    showcase_viewFull: "Ver Tudo",
+    
+      common_close: "Fechar",
+      common_filters: "Filtros",
+
+
+
+      product_details_visit_store: "Ver Loja",
+  product_details_details: "Detalhes",
+  product_details_final_value: "Valor Final",
+  product_details_confirm_whatsapp: "Confirmar no WhatsApp",
+  product_details_no_description: "Produto sem descrição detalhada disponível no momento.",
+  product_details_edit: "Editar",
+  product_details_cancel: "Cancelar",
+  product_details_publish: "Publicar",
+  product_details_share_success: "Link copiado!",
+  common_category_general: "Geral"
+      
+    
  
   }
 } as const;

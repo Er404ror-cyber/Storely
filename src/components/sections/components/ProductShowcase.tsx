@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../../lib/supabase";
-import { Loader2, Package, Search, Plus, Target, X, RotateCcw } from "lucide-react";
+import { Loader2, Package, Search, Plus, Target, X, RotateCcw, SlidersHorizontal } from "lucide-react";
 import { useTranslate } from "../../../context/LanguageContext";
 import { LayoutGrid, LayoutList } from "../../produtos/layouts";
 import { useAdminStore } from "../../../hooks/useAdminStore";
@@ -34,17 +34,20 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
   const navigate = useNavigate();
   const { storeSlug, pageSlug } = useParams();
   const { data: adminStore } = useAdminStore();
+  
   const isDark = style?.theme === 'dark';
   const isReadOnly = !location.pathname.includes('/editor/');
 
+  // Estados
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(() => t("common_all"));
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const [isFiltersVisible, setIsFiltersVisible] = useState(false);
 
   const selectedSize = FONT_SIZE_MAP[style?.fontSize as keyof typeof FONT_SIZE_MAP || 'medium'];
 
-  // Handlers otimizados
+  // Handlers
   const handleTextChange = useCallback((field: string, value: string, limit: number) => {
     const sanitized = value.replace(/[\n\r]/g, "").slice(0, limit);
     onUpdate?.(field, sanitized);
@@ -54,42 +57,40 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
     if (e.key === "Enter") e.preventDefault();
   }, []);
 
-  // 1. Pegamos o slug da URL (ex: /nome-da-loja/home)
+  // 1. Busca ID da loja pelo Slug da URL (Prioridade máxima para o contexto da página)
+  const { data: publicStore, isLoading: isLoadingStore } = useQuery({
+    queryKey: ["public-store-info", storeSlug],
+    queryFn: async () => {
+      if (!storeSlug) return null;
+      const { data, error } = await supabase
+        .from("stores")
+        .select("id")
+        .eq("slug", storeSlug)
+        .single();
+      if (error) return null;
+      return data;
+    },
+    enabled: !!storeSlug,
+  });
 
-// 1. Busca ID da loja pelo Slug caso não seja o Admin logado
-const { data: publicStore, isLoading: isLoadingStore } = useQuery({
-  queryKey: ["public-store-info", storeSlug],
-  queryFn: async () => {
-    if (!storeSlug) return null;
-    const { data, error } = await supabase
-      .from("stores")
-      .select("id")
-      .eq("slug", storeSlug)
-      .single();
-    if (error) return null;
-    return data;
-  },
-  enabled: !!storeSlug && !adminStore, // Só busca se não tivermos os dados do admin logado
-});
+  // Define qual ID usar: Prioriza a loja da URL, se não houver (ex: editor vazio), usa o admin
+  const effectiveStoreId = publicStore?.id || adminStore?.id;
 
-// Define qual ID de loja usar: Prioridade para Admin, depois URL
-const effectiveStoreId = adminStore?.id || publicStore?.id;
-
-// 2. Busca os produtos usando o ID identificado
-const { data: products, isLoading: isLoadingProducts } = useQuery({
-  queryKey: ["public-products", effectiveStoreId],
-  queryFn: async () => {
-    if (!effectiveStoreId) return [];
-    const { data } = await supabase
-      .from("products")
-      .select("*")
-      .eq("store_id", effectiveStoreId)
-      .eq("is_active", true);
-    return data || [];
-  },
-  enabled: !!effectiveStoreId,
-  staleTime: 1000 * 60 * 5,
-});
+  // 2. Busca os produtos da loja identificada
+  const { data: products, isLoading: isLoadingProducts } = useQuery({
+    queryKey: ["public-products", effectiveStoreId],
+    queryFn: async () => {
+      if (!effectiveStoreId) return [];
+      const { data } = await supabase
+        .from("products")
+        .select("*")
+        .eq("store_id", effectiveStoreId)
+        .eq("is_active", true);
+      return data || [];
+    },
+    enabled: !!effectiveStoreId,
+    staleTime: 1000 * 60 * 5,
+  });
 
 const isLoading = isLoadingStore || isLoadingProducts;
 
@@ -142,7 +143,10 @@ const isLoading = isLoadingStore || isLoadingProducts;
 
   const handleProductClick = useCallback((productId: string) => {
     if (!isReadOnly) return;
-    navigate(`/${storeSlug}/${pageSlug || "home"}/${productId}`);
+    
+    navigate(`/${storeSlug}/${pageSlug || "home"}/${productId}`, {
+      state: { fromStore: true }
+    });
   }, [isReadOnly, navigate, storeSlug, pageSlug]);
 
   const alignClass = style?.align === 'center' ? 'text-center items-center' : 'text-left items-start';
@@ -196,10 +200,10 @@ const isLoading = isLoadingStore || isLoadingProducts;
           </div>
         </header>
 
-        {/* FILTROS */}
+        {/* BARRA DE BUSCA E TOGGLE DE FILTROS */}
         <div className="mb-6 flex flex-col gap-4">
-          <div className="flex flex-col lg:flex-row gap-3">
-            <div className={`flex items-center gap-3 flex-1 px-5 py-3 rounded-2xl border ${isDark ? 'bg-zinc-900/40 border-zinc-800' : 'bg-slate-50 border-slate-100'}`}>
+          <div className="flex gap-2">
+            <div className={`flex items-center gap-3 flex-1 px-5 py-3 rounded-2xl border transition-all ${isDark ? 'bg-zinc-900/40 border-zinc-800 focus-within:border-zinc-600' : 'bg-slate-50 border-slate-100 focus-within:border-slate-300'}`}>
               <Search size={18} className="opacity-40" />
               <input 
                 type="text" 
@@ -211,80 +215,85 @@ const isLoading = isLoadingStore || isLoadingProducts;
               {searchTerm && <button onClick={() => setSearchTerm("")}><X size={14} /></button>}
             </div>
             
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-5 py-2.5 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-all border whitespace-nowrap ${
-                    selectedCategory === cat ? "bg-blue-600 border-blue-600 text-white " : isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-slate-200 text-slate-500"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+            <button 
+              onClick={() => setIsFiltersVisible(!isFiltersVisible)}
+              className={`flex items-center gap-2 px-5 py-3 rounded-2xl border font-bold text-xs transition-all ${
+                isFiltersVisible 
+                ? 'bg-blue-600 border-blue-600 text-white' 
+                : isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <SlidersHorizontal size={16} />
+              <span className="hidden md:block">{isFiltersVisible ? t("common_close") : t("common_filters")}</span>
+            </button>
           </div>
 
-          {/* RANGE DE PREÇO */}
-          <div className={`grid grid-cols-1 md:grid-cols-[auto_1fr_auto] items-center gap-6 px-6 py-4 rounded-3xl border ${isDark ? 'bg-zinc-900/20 border-zinc-800' : 'bg-slate-50/30 border-slate-100'}`}>
-             <div className="flex items-center gap-3">
-                <Target size={16} className="text-blue-600" />
-                <span className="text-[10px] font-bold uppercase opacity-60">{t("showcase_maxPrice")}</span>
-             </div>
-             <input 
-                type="range" min="0" max={absoluteMaxPrice} 
-                value={maxPrice ?? absoluteMaxPrice}
-                onChange={(e) => setMaxPrice(Number(e.target.value))}
-                className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full appearance-none accent-blue-600 cursor-pointer"
-             />
-             <div className={`flex items-center border rounded-xl px-3 py-2 min-w-[100px] ${isDark ? 'bg-zinc-950/50 border-zinc-800' : 'bg-white border-slate-200'}`}>
-              <span className="text-xs mr-1 opacity-40">R$</span>
-              <input 
-                type="text"
-                value={maxPrice === null ? "" : maxPrice}
-                placeholder={t("filter_unlimited")}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, "");
-                  setMaxPrice(val === "" ? null : Number(val));
-                }}
-                className="bg-transparent font-bold text-sm w-full outline-none text-center"
-              />
+          {/* FILTROS EXPANSÍVEIS */}
+          {isFiltersVisible && (
+            <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`px-5 py-2.5 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-all border whitespace-nowrap ${
+                      selectedCategory === cat ? "bg-blue-600 border-blue-600 text-white " : isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-slate-200 text-slate-500"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              <div className={`grid grid-cols-1 md:grid-cols-[auto_1fr_auto] items-center gap-6 px-6 py-4 rounded-3xl border ${isDark ? 'bg-zinc-900/20 border-zinc-800' : 'bg-slate-50/30 border-slate-100'}`}>
+                 <div className="flex items-center gap-3">
+                    <Target size={16} className="text-blue-600" />
+                    <span className="text-[10px] font-bold uppercase opacity-60">{t("showcase_maxPrice")}</span>
+                 </div>
+                 <input 
+                    type="range" min="0" max={absoluteMaxPrice} 
+                    value={maxPrice ?? absoluteMaxPrice}
+                    onChange={(e) => setMaxPrice(Number(e.target.value))}
+                    className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full appearance-none accent-blue-600 cursor-pointer"
+                 />
+                 <div className={`flex items-center border rounded-xl px-3 py-2 min-w-[100px] ${isDark ? 'bg-zinc-950/50 border-zinc-800' : 'bg-white border-slate-200'}`}>
+                  <span className="text-xs mr-1 opacity-40">R$</span>
+                  <input 
+                    type="text"
+                    value={maxPrice === null ? "" : maxPrice}
+                    placeholder={t("filter_unlimited")}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      setMaxPrice(val === "" ? null : Number(val));
+                    }}
+                    className="bg-transparent font-bold text-sm w-full outline-none text-center"
+                  />
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* BARRA DE FILTROS ATIVOS (NOVIDADE) */}
+        {/* FILTROS ATIVOS */}
         {hasActiveFilters && (
-          <div className="flex flex-wrap items-center gap-2 mb-8 animate-in fade-in slide-in-from-top-1">
+          <div className="flex flex-wrap items-center gap-2 mb-8">
             <span className="text-[10px] font-black uppercase tracking-tighter opacity-40 mr-2">{t("showcase_filter_active")}</span>
-            
             {selectedCategory !== t("common_all") && (
-              <button 
-                onClick={() => setSelectedCategory(t("common_all"))}
-                className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-[10px] font-bold text-blue-500 hover:bg-blue-500/20 transition-all"
-              >
+              <button onClick={() => setSelectedCategory(t("common_all"))} className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-[10px] font-bold text-blue-500">
                 {selectedCategory} <X size={12} />
               </button>
             )}
-
             {maxPrice !== null && (
-              <button 
-                onClick={() => setMaxPrice(null)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-[10px] font-bold text-blue-500 hover:bg-blue-500/20 transition-all"
-              >
+              <button onClick={() => setMaxPrice(null)} className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-[10px] font-bold text-blue-500">
                 {t("showcase_price_up_to").replace("{{price}}", String(maxPrice))} <X size={12} />
               </button>
             )}
-
-            <button 
-              onClick={clearFilters}
-              className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold opacity-60 hover:opacity-100 transition-all"
-            >
+            <button onClick={clearFilters} className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold opacity-60 hover:opacity-100">
               <RotateCcw size={12} /> {t("showcase_clear_all")}
             </button>
           </div>
         )}
+
 
         {/* LISTAGEM */}
         <div className="min-h-[400px]">

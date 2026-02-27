@@ -31,7 +31,7 @@ export const StoreHeader = memo(({ storeId }: { storeId: string }) => {
   });
 
   return (
-    <header className="sticky top-0 z-[100] w-full bg-white/80 backdrop-blur-md border-b border-slate-100">
+    <header className="sticky top-0 z-[100] w-full bg-white/80  border-b border-slate-100">
       <div className="flex items-center justify-between px-5 h-16 max-w-7xl mx-auto">
         
         {/* LOGO */}

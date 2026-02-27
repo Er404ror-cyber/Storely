@@ -27,7 +27,7 @@ export function PublicLayout() {
       if (error) throw error;
       return data;
     },
-    refetchInterval: 1500
+    refetchInterval: 20000
   });
 
   if (isLoading) return <div className="h-screen flex items-center justify-center animate-pulse text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Loading Store...</div>;

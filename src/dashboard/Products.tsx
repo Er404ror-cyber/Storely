@@ -204,7 +204,7 @@ export function ProductsList() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-600 font-sans antialiased pb-20">
       
-      <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-[100] h-16 flex items-center px-4 lg:px-10">
+      <nav className="bg-white/80  border-b border-slate-200 sticky top-0 z-[100] h-16 flex items-center px-4 lg:px-10">
         <div className="max-w-[1600px] w-full mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="bg-slate-900 p-2 rounded-xl text-white shadow-lg">
@@ -353,7 +353,8 @@ export function ProductsList() {
 
                     <div className="flex-1 flex justify-end">
                       <Link 
-                        to={`/admin/produtos/${p.id}`} 
+                       to={`/admin/produtos/${p.id}`}
+                       state={{ fromStore: true }}
                         className="inline-flex items-center justify-center gap-2 p-3 md:px-3 md:py-2 bg-blue-50 text-blue-600 rounded-xl md:rounded-lg hover:bg-blue-600 hover:text-white transition-all text-[10px] font-black uppercase"
                       >
                         <Edit className="w-4 h-4 md:w-3.5 md:h-3.5" /> <span className="hidden md:inline">{t('view_product')}</span>
