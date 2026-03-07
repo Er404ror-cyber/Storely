@@ -229,9 +229,102 @@ showcase_clear_all: "Clear Filters",
     product_details_cancel: "Cancel",
     product_details_publish: "Publish",
     product_details_share_success: "Link copied!",
-    common_category_general: "General"
-    
+    common_category_general: "General",
+    editor_limit_reached: "7 section limit reached",
+  editor_limit_advice: "Remove blocks or create a new page to keep your site fast and organized.",
+
+  
+  editor_add_block: "Add Block",
+  editor_back_to_layers: "Back to Layers",
+  editor_structure_cols: "Structure (Columns)",
+  editor_col_unit: "Col",
+  editor_font_size: "Font Size",
+  editor_font_small: "Small",
+  editor_font_medium: "Medium",
+  editor_font_large: "Large",
+  editor_text_align: "Text Alignment",
+  editor_theme_light: "LIGHT",
+  editor_theme_dark: "DARK",
+  editor_delete_block: "Delete Block",
+  editor_layers_order: "Layers Order",
         
+
+
+  templates_photography_label: "Fine Art Photography",
+templates_photography_description: "See what you can do: transform a minimalist layout into your personal gallery with just a few clicks.",
+templates_photography_hero_title: "Your Visual Narrative",
+templates_photography_hero_sub: "A lean and sophisticated space for photographers who value every detail.",
+templates_photography_gallery_empty_title: "Your New Collection",
+templates_photography_gallery_empty_sub: "This gallery is ready for your vision. Start importing your photos.",
+templates_photography_gallery_insp_title: "Inspiration and Aesthetics",
+templates_photography_gallery_insp_sub: "Example of how the layout behaves with organic tones and soft light.",
+templates_photography_contact_title: "Book a Session",
+
+templates_saas_label: "Sales & Product",
+templates_saas_description: "Results-oriented layout, highlighting products and subscription plans.",
+templates_saas_hero_title: "Sell Smarter",
+templates_saas_hero_sub: "The platform that unifies your stock, physical sales, and e-commerce in one place.",
+templates_saas_pricing_title: "Our Plans",
+templates_saas_features_title: "Enterprise Features",
+templates_saas_contact_title: "Schedule a Demo",
+
+templates_brand_label: "Personal Brand",
+templates_brand_description: "Focused on establishing authority for mentors, speakers, and coaches.",
+templates_brand_hero_title: "Turn Your Knowledge into Business",
+templates_brand_hero_sub: "Positioning strategies for professionals aiming for the next level.",
+templates_brand_stats_students: "STUDENTS",
+templates_brand_stats_lives: "LIVES",
+templates_brand_stats_countries: "COUNTRIES",
+templates_brand_stats_roi: "ROI",
+templates_brand_mentorship_title: "Mentorship Programs",
+templates_brand_contact_title: "Talk to My Team",
+
+templates_event_label: "Launch / Event",
+templates_event_description: "Dynamic layout for product launches or major events.",
+templates_event_hero_title: "The Future of Tech",
+templates_event_hero_sub: "Join the biggest innovation event of the year. 24h of networking and insights.",
+templates_event_speakers_title: "Confirmed Speakers",
+templates_event_pricing_title: "Get Your Ticket (Early Bird)",
+templates_event_contact_title: "Event Location",
+
+templates_blank_label: "Empty Canvas",
+templates_blank_description: "Start from scratch.",
+
+common_best_seller: "Best Seller",
+common_starter: "Starter",
+common_limited_vagas: "Limited Spots",
+currency_mt: "MT",
+unit_per_month: "/month",
+
+
+mobile_peek_tap_config: "Tap to configure",
+mobile_drawer_close_hint: "Swipe down to close",
+mobile_discard_changes: "Discard changes",
+
+empty_state_title: "Your page is blank",
+empty_state_description: "Turn this space into something amazing! Start by adding sections like galleries, heroes, or pricing tables.",
+empty_state_action: "Tap the + button to get started",
+editor_confirm_delete: "Are you sure you want to delete this block?",
+
+
+sidebar_title: "Editing Panel",
+sidebar_status_changed: "UNSAVED CHANGES",
+sidebar_status_synced: "SITE SYNCED",
+sidebar_button_publish: "PUBLISH NOW",
+sidebar_button_saving: "PUBLISHING...",
+sidebar_button_discard: "Discard Changes",
+
+modal_library_title: "Block Library",
+modal_library_add_action: "Add",
+section_hero_comercial: "Commercial Hero",
+section_galeria_grid: "Grid Gallery",
+section_vitrine_produtos: "Product Showcase",
+section_servicos_modern: "Modern Services",
+section_contacto_mapa: "Contact & Map",
+section_precos_moderno: "Pricing Table",
+section_estatisticas_larga: "Statistics",
+modal_library_subtitle: "Select a block to build"
+
   },
 
 
@@ -473,10 +566,107 @@ showcase_defaultCategory: "Lançamentos",
   product_details_cancel: "Cancelar",
   product_details_publish: "Publicar",
   product_details_share_success: "Link copiado!",
-  common_category_general: "Geral"
+  common_category_general: "Geral",
       
-    
- 
+    editor_limit_reached: "Limite de 7 seções atingido",
+  editor_limit_advice: "Remova blocos ou crie uma nova página para manter o site rápido e organizado.",
+
+  editor_add_block: "Adicionar Bloco",
+  editor_back_to_layers: "Voltar às Camadas",
+  editor_structure_cols: "Estrutura (Colunas)",
+  editor_col_unit: "Col",
+  editor_font_size: "Tamanho do Texto",
+  editor_font_small: "Pequeno",
+  editor_font_medium: "Médio",
+  editor_font_large: "Grande",
+  editor_text_align: "Alinhamento de Texto",
+  editor_theme_light: "CLARO",
+  editor_theme_dark: "ESCURO",
+  editor_delete_block: "Eliminar Bloco",
+  editor_layers_order: "Ordem das Camadas",
+
+
+
+  templates_photography_label: "Fine Art Photography",
+templates_photography_description: "Olha o que você pode fazer: transforme um layout minimalista na sua galeria pessoal com apenas alguns cliques.",
+templates_photography_hero_title: "A Sua Narrativa Visual",
+templates_photography_hero_sub: "Um espaço enxuto e sofisticado para fotógrafos que valorizam cada detalhe.",
+templates_photography_gallery_empty_title: "Sua Nova Coleção",
+templates_photography_gallery_empty_sub: "Esta galeria está pronta para receber seu olhar. Comece a importar suas fotos.",
+templates_photography_gallery_insp_title: "Inspiração e Estética",
+templates_photography_gallery_insp_sub: "Exemplo de como o layout se comporta com tons orgânicos e luz suave.",
+templates_photography_contact_title: "Agende um Ensaio",
+
+
+
+
+
+
+templates_saas_label: "Vendas & Produto",
+templates_saas_description: "Layout orientado a resultados, destacando produtos e planos de assinatura.",
+templates_saas_hero_title: "Venda Mais com Inteligência",
+templates_saas_hero_sub: "A plataforma que unifica seu estoque, vendas físicas e e-commerce em um só lugar.",
+templates_saas_pricing_title: "Nossos Planos",
+templates_saas_features_title: "Funcionalidades Enterprise",
+templates_saas_contact_title: "Agende uma Demonstração",
+
+templates_brand_label: "Marca Pessoal",
+templates_brand_description: "Focado em estabelecer autoridade para mentores, palestrantes e coaches.",
+templates_brand_hero_title: "Transforme seu Conhecimento em Negócio",
+templates_brand_hero_sub: "Estratégias de posicionamento para profissionais que buscam o próximo nível.",
+templates_brand_stats_students: "ALUNOS",
+templates_brand_stats_lives: "LIVES",
+templates_brand_stats_countries: "PAÍSES",
+templates_brand_stats_roi: "ROI",
+templates_brand_mentorship_title: "Programas de Mentoria",
+templates_brand_contact_title: "Fale com minha Equipe",
+
+templates_event_label: "Lançamento / Evento",
+templates_event_description: "Layout dinâmico para lançamentos de produtos ou grandes eventos.",
+templates_event_hero_title: "O Futuro da Tech em Maputo",
+templates_event_hero_sub: "Participe do maior evento de inovação do ano. 24h de networking e insights.",
+templates_event_speakers_title: "Speakers Confirmados",
+templates_event_pricing_title: "Garanta seu Ticket (Lote 1)",
+templates_event_contact_title: "Localização do Evento",
+
+templates_blank_label: "Tela em Branco",
+templates_blank_description: "Comece do zero.",
+
+common_best_seller: "Mais Vendido",
+common_starter: "Iniciante",
+common_limited_vagas: "Vagas Limitadas",
+currency_mt: "MT",
+unit_per_month: "/mês",
+
+
+
+mobile_peek_tap_config: "Tocar para configurar",
+mobile_drawer_close_hint: "Deslize para fechar",
+mobile_discard_changes: "Descartar as mudanças",
+editor_confirm_delete: "Tem certeza que deseja excluir este bloco?",
+
+empty_state_title: "Sua página está em branco",
+empty_state_description: "Transforme este espaço em algo incrível! Comece adicionando seções como galerias, cabeçalhos ou tabelas de preços.",
+empty_state_action: "Toque no botão + para começar",
+
+
+sidebar_title: "Painel de Edição",
+sidebar_status_changed: "MODIFICAÇÕES ATIVAS",
+sidebar_status_synced: "SITE SINCRONIZADO",
+sidebar_button_publish: "PUBLICAR AGORA",
+sidebar_button_saving: "PUBLICANDO...",
+sidebar_button_discard: "Descartar Mudanças",
+
+modal_library_title: "Biblioteca de Blocos",
+modal_library_add_action: "Adicionar",
+section_hero_comercial: "Banner Comercial",
+section_galeria_grid: "Galeria Grid",
+section_vitrine_produtos: "Vitrine de Produtos",
+section_servicos_modern: "Serviços Modernos",
+section_contacto_mapa: "Contacto e Mapa",
+section_precos_moderno: "Tabela de Preços",
+section_estatisticas_larga: "Estatísticas",
+modal_library_subtitle: "Selecione um bloco para construir"
   }
 } as const;
 

@@ -9,9 +9,10 @@ import {
 import toast from 'react-hot-toast'; 
 import { useAdminStore } from '../hooks/useAdminStore';
 import { supabase } from '../lib/supabase';
-import { TEMPLATES } from './templetes';
+import {  useTemplates } from './templetes';
 
 const BASE_DOMAIN = "https://storelyy.vercel.app";
+
 
 // --- CUSTOM TOAST STYLES ---
 // --- CUSTOM TOAST STYLES ---
@@ -200,6 +201,7 @@ export function PagesList() {
   const [newPage, setNewPage] = useState({ slug: '', type: 'agency' });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  const TEMPLATES = useTemplates();
 
   const { data: store, isLoading: storeLoading } = useAdminStore();
 
@@ -225,7 +227,6 @@ export function PagesList() {
       }]).select().single();
       
       if (pError) throw pError;
-      
       const sections = TEMPLATES[type as keyof typeof TEMPLATES]?.sections || [];
       if (sections.length > 0) {
         await supabase.from('page_sections').insert(sections.map(s => ({ ...s, page_id: page.id })));

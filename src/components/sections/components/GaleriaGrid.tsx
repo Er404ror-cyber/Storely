@@ -166,6 +166,14 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
     }
   };
 
+
+
+
+  // --- REGRA DE OURO: CONDICIONAL DE RENDERIZAÇÃO APÓS OS HOOKS ---
+  if (!isEditable && items.length === 0) {
+    return null;
+  }
+
   return (
     <section className={`py-6 md:py-10 px-2 transition-colors duration-300 ${getTheme(style.theme)}`}>
       <div className="max-w-4xl mx-auto px-4" ref={containerRef}>
