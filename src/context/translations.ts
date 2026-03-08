@@ -323,7 +323,38 @@ section_servicos_modern: "Modern Services",
 section_contacto_mapa: "Contact & Map",
 section_precos_moderno: "Pricing Table",
 section_estatisticas_larga: "Statistics",
-modal_library_subtitle: "Select a block to build"
+modal_library_subtitle: "Select a block to build",
+
+
+
+
+  action_new_product: "New Product",
+  action_new_product_sub: "Launch Catalog",
+  action_create_page: "Create Page",
+  action_create_page_sub: "Build Experience",
+  
+  // Sections & States
+  section_catalog: "Product Catalog",
+  manage_inventory: "Manage Inventory",
+  section_paused: "Paused Items",
+  page_home: "Landing Page",
+  launch_sitemap: "Sitemap Dashboard",
+
+  // Empty States
+  empty_products_title: "Your stock is empty",
+  empty_products_desc: "Add your first product to start selling.",
+  btn_start_catalog: "Start Cataloging",
+  empty_pages_title: "No pages created",
+  empty_pages_desc: "Create pages to give your store an identity.",
+
+  // Technical Footer
+  footer_master_node: "Master Node",
+  footer_uptime: "Uptime",
+  uptime_active: "Active for",
+  uptime_now: "Online Now",
+  footer_store_key: "Store Key",
+  no_contact: "No contact set",
+  loading_engine: "Syncing Storely...",
 
   },
 
@@ -666,7 +697,41 @@ section_servicos_modern: "Serviços Modernos",
 section_contacto_mapa: "Contacto e Mapa",
 section_precos_moderno: "Tabela de Preços",
 section_estatisticas_larga: "Estatísticas",
-modal_library_subtitle: "Selecione um bloco para construir"
+modal_library_subtitle: "Selecione um bloco para construir",
+
+
+
+
+
+
+  action_new_product: "Novo Produto",
+  action_new_product_sub: "Lançar Catálogo",
+  action_create_page: "Criar Página",
+  action_create_page_sub: "Construir Experiência",
+  
+  // Seções e Estados
+  section_catalog: "Catálogo de Produtos",
+  manage_inventory: "Gerenciar Inventário",
+  section_paused: "Itens Pausados",
+  page_home: "Página Principal",
+  launch_sitemap: "Painel de Páginas",
+
+  // Empty States
+  empty_products_title: "Seu estoque está vazio",
+  empty_products_desc: "Adicione seu primeiro produto para começar a vender.",
+  btn_start_catalog: "Começar Cadastro",
+  empty_pages_title: "Nenhuma página criada",
+  empty_pages_desc: "Crie páginas para dar identidade à sua loja.",
+
+  // Footer Técnico
+  footer_master_node: "Master Node",
+  footer_uptime: "Uptime",
+  uptime_active: "Ativa há",
+  uptime_now: "Online Agora",
+  footer_store_key: "Store Key",
+
+  no_contact: "Contato não definido",
+loading_engine: "Sincronizando Storely...",
   }
 } as const;
 
