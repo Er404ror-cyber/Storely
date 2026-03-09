@@ -10,6 +10,7 @@ interface Store {
   id: string;
   name: string;
   slug: string;
+  logo_url?: string; // Verifique se o seu backend envia exatamente este nome
   updated_at_name: string | null;
 }
 
@@ -41,9 +42,9 @@ interface SidebarProps {
   handleLogout: () => Promise<void>;
   storeUrl: string;
   menuItems: MenuItem[];
+  t: any; 
 }
 
-// --- Componente de Item de Navegação ---
 const NavItem = memo(({ item, isActive, onClick, badge }: { item: MenuItem; isActive: boolean; onClick: () => void; badge?: number }) => (
   <Link
     to={item.path}
@@ -70,7 +71,7 @@ export function AdminSidebar({
   isOpen, setIsOpen, store, pages, location, isEditingName, 
   setIsEditingName, newName, setNewName, timeLeft, 
   updateStoreMutation, confirmLogout, setConfirmLogout, handleLogout, 
-  storeUrl, menuItems 
+  storeUrl, menuItems, t
 }: SidebarProps) {
   
   const isNameTaken = updateStoreMutation.error?.message.includes("taken");
@@ -83,30 +84,23 @@ export function AdminSidebar({
 
   return (
     <>
-      {/* Overlay - Z-INDEX 80 (Ativo se estiver aberto no mobile ou no editor desktop) */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 bg-slate-900/40  z-[80]" 
-          onClick={() => setIsOpen(false)} 
-        />
+        <div className="fixed inset-0 bg-slate-900/40 z-[80]" onClick={() => setIsOpen(false)} />
       )}
 
-      {/* Sidebar - Z-INDEX 90 */}
       <aside className={`
         fixed inset-y-0 left-0 z-[90] w-[295px] bg-white border-r border-slate-100 flex flex-col transition-all duration-500 ease-in-out
         ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
         ${!isEditorRoute ? 'lg:relative lg:translate-x-0' : 'lg:fixed'}
       `}>
         
-        {/* Header da Sidebar */}
         <div className="h-20 flex items-center justify-between px-8 shrink-0">
-          <div className="flex items-center gap-3 font-black text-lg tracking-tighter uppercase italic">
+          <div className="flex items-center gap-3 font-black text-lg tracking-tighter uppercase italic text-slate-900">
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-lg">
               <StoreIcon size={18} />
             </div>
             Storelyy
           </div>
-          {/* Botão fechar: Visível no mobile OU se for rota de editor */}
           <button 
             onClick={() => setIsOpen(false)} 
             className={`${!isEditorRoute ? 'lg:hidden' : 'flex'} p-2 text-slate-400 hover:bg-slate-50 rounded-lg transition-colors`}
@@ -115,7 +109,6 @@ export function AdminSidebar({
           </button>
         </div>
 
-        {/* Menu de Navegação */}
         <nav className="flex-1 px-4 py-4 space-y-1.5 overflow-y-auto">
           {menuItems.map((item) => (
             <NavItem 
@@ -128,13 +121,30 @@ export function AdminSidebar({
           ))}
         </nav>
 
-        {/* Rodapé da Sidebar (Perfil/Loja e Logout) */}
         <div className="p-4 border-t border-slate-50 bg-slate-50/50">
           <div className="flex flex-col gap-2">
             <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white font-black text-sm uppercase shrink-0">
-                  {store?.name?.charAt(0)}
+                
+                {/* Lógica de Logo Corrigida */}
+                <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white ">
+                  {store?.logo_url ? (
+                    <img 
+                      src={store.logo_url} 
+                      key={store.logo_url} // Força o React a re-renderizar se a URL mudar
+                      className="w-full h-full object-cover rounded-xl  bg-white" 
+                      alt={store.name}
+                      onError={(e) => {
+                        // Se a imagem falhar (ex: 404), remove o src para mostrar a inicial
+                        (e.target as HTMLImageElement).style.display = 'none';
+                        (e.target as HTMLImageElement).parentElement!.innerHTML = `<span class="font-black text-sm uppercase">${store?.name?.charAt(0)}</span>`;
+                      }}
+                    />
+                  ) : (
+                    <span className="font-black text-sm uppercase">
+                      {store?.name?.charAt(0) || 'S'}
+                    </span>
+                  )}
                 </div>
                 
                 <div className="flex flex-col min-w-0 flex-1">
@@ -150,7 +160,7 @@ export function AdminSidebar({
                         <button 
                           disabled={updateStoreMutation.isPending} 
                           onClick={() => updateStoreMutation.mutate(newName)} 
-                          className="text-emerald-500 hover:bg-emerald-50 p-1 rounded-md disabled:opacity-50"
+                          className="text-emerald-500 hover:bg-emerald-50 p-1 rounded-md"
                         >
                           {updateStoreMutation.isPending ? <Loader2 size={16} className="animate-spin"/> : <Check size={18} strokeWidth={3}/>}
                         </button>
@@ -158,7 +168,7 @@ export function AdminSidebar({
                           <X size={18} />
                         </button>
                       </div>
-                      {isNameTaken && <span className="text-[9px] text-red-600 font-black uppercase block animate-pulse">Nome indisponível!</span>}
+                      {isNameTaken && <span className="text-[9px] text-red-600 font-black uppercase block animate-pulse">{t('name_taken')}</span>}
                     </div>
                   ) : (
                     <div className="flex flex-col">
@@ -177,7 +187,7 @@ export function AdminSidebar({
                         </a>
                       </div>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">
-                        {timeLeft ? `${timeLeft} left` : store?.slug}
+                        {timeLeft ? `${timeLeft} ${t('time_left')}` : store?.slug}
                       </span>
                     </div>
                   )}
@@ -186,13 +196,24 @@ export function AdminSidebar({
             </div>
 
             {!confirmLogout ? (
-              <button onClick={() => setConfirmLogout(true)} className="flex items-center justify-center gap-2 w-full p-3.5 rounded-2xl text-slate-400 font-bold text-[11px] uppercase tracking-widest hover:bg-red-50 hover:text-red-600 transition-all">
-                <LogOut size={16} /> Logout
+              <button 
+                onClick={() => setConfirmLogout(true)} 
+                className="flex items-center justify-center gap-2 w-full p-3.5 rounded-2xl text-slate-400 font-bold text-[11px] uppercase tracking-widest hover:bg-red-50 hover:text-red-600 transition-all"
+              >
+                <LogOut size={16} /> {t('logout_btn')}
               </button>
             ) : (
               <div className="flex gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <button onClick={handleLogout} className="flex-1 p-3.5 bg-red-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest italic">Exit</button>
-                <button onClick={() => setConfirmLogout(false)} className="p-3.5 bg-slate-200 text-slate-600 rounded-2xl font-black text-[11px] uppercase tracking-widest">
+                <button 
+                  onClick={handleLogout} 
+                  className="flex-1 p-3.5 bg-red-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest italic"
+                >
+                  {t('confirm_exit')}
+                </button>
+                <button 
+                  onClick={() => setConfirmLogout(false)} 
+                  className="p-3.5 bg-slate-200 text-slate-600 rounded-2xl font-black text-[11px] uppercase tracking-widest"
+                >
                   <X size={16} />
                 </button>
               </div>

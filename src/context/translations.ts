@@ -426,9 +426,42 @@ loading_session: "Securing your session...",
 edit_label: "EDIT",
 save_success: "Change saved successfully!",
 email_sent_success: "Link sent! Check your new inbox.",
-password_update_success: "Your password has been updated successfully!"
+password_update_success: "Your password has been updated successfully!",
 
 
+
+
+
+
+branding: "Branding",
+logotype: "Logotype",
+upload_cleaning: "Cleaning previous...",
+upload_ready: "Clean swap (Auto-delete)",
+change_image: "Change Image",
+sales_whatsapp: "Sales WhatsApp",
+search_country: "Search country...",
+not_defined: "Not defined",
+save: "Save",
+edit: "Edit",
+short_description: "Short Description",
+description_placeholder: "Click to add a description...",
+description_textarea_placeholder: "Ex: The best shoe store in London...",
+invalid_phone: "Invalid number for this country",
+max_size: "Max 500KB",
+file_too_large: "Image too large (Max 1MB).", 
+compress_link: "Compress image here",
+
+
+name_taken: "Name already taken!",
+time_left: "left",
+logout_btn: "Logout",
+confirm_exit: "Exit now",
+nav_dashboard: "Dashboard",
+nav_pages: "My Pages",
+nav_products: "Products",
+nav_settings: "Settings",
+update_success: "Store updated successfully!",
+error_exiting: "Error exiting",
   },
 
 
@@ -917,9 +950,45 @@ loading_session: "Protegendo sua sessão...",
 edit_label: "ALTERAR",
 save_success: "Alteração salva com sucesso!",
 email_sent_success: "Link enviado! Verifique sua nova caixa de entrada.",
-password_update_success: "Sua senha foi atualizada com sucesso!"
-  }
+password_update_success: "Sua senha foi atualizada com sucesso!",
 
+
+
+
+branding: "Branding",
+logotype: "Logotipo",
+upload_cleaning: "A limpar anterior...",
+upload_ready: "Troca limpa (Auto-delete)",
+change_image: "Trocar Imagem",
+sales_whatsapp: "WhatsApp de Vendas",
+search_country: "Pesquisar país...",
+not_defined: "Não definido",
+save: "Guardar",
+edit: "Editar",
+short_description: "Descrição Curta",
+description_placeholder: "Clique para adicionar uma descrição...",
+description_textarea_placeholder: "Ex: A melhor loja de sapatos de Lisboa...",
+invalid_phone: "Número inválido para este país",
+max_size: "Máximo 500KB",
+
+file_too_large: "Imagem muito grande (Máx 1MB).", 
+compress_link: "Comprimir imagem aqui",
+
+
+
+
+name_taken: "Nome indisponível!",
+time_left: "restante",
+logout_btn: "Logout",
+confirm_exit: "Sair agora",
+nav_dashboard: "Dashboard",
+nav_pages: "Minhas Páginas",
+nav_products: "Produtos",
+nav_settings: "Configurações",
+update_success: "Loja atualizada com sucesso!",
+error_exiting: "Erro ao sair",
+
+  }
 } as const;
 
 export type Language = 'en' | 'pt';

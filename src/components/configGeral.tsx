@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Loader2, Shield, Store, User } from 'lucide-react';
 import { useTranslate } from '../context/LanguageContext';
@@ -9,28 +9,32 @@ import { StoreTab } from './settings/tabs/StoreTab';
 import { AccountTab } from './settings/tabs/AccountTab';
 import { SecurityTab } from './settings/tabs/SecurityTab';
 
-// Import das abas separadas
-
-
 export function AdminSettings() {
   const { t } = useTranslate();
   const queryClient = useQueryClient();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const queryParams = new URLSearchParams(location.search);
   const isRecoveryMode = queryParams.get('reset') === 'true';
-  const isEmailConfirm = window.location.href.includes('type=email_change') || queryParams.get('email_updated') === 'true';
+  const isEmailConfirm = queryParams.get('email_updated') === 'true';
+  const initialTab = queryParams.get('tab') as 'store' | 'account' | 'security' | null;
 
   const [activeTab, setActiveTab] = useState<'store' | 'account' | 'security'>(
-    isRecoveryMode ? 'security' : (isEmailConfirm ? 'account' : 'store')
+    initialTab || (isRecoveryMode ? 'security' : (isEmailConfirm ? 'account' : 'store'))
   );
 
-  // Invalida o cache se o usuário acabou de confirmar e-mail ou senha via link
+  // Sincroniza abas e limpa URL após sucesso
   useEffect(() => {
     if (isRecoveryMode || isEmailConfirm) {
       queryClient.invalidateQueries({ queryKey: ["admin-full-settings"] });
+      // Opcional: Limpar a URL após 5 segundos para remover os parâmetros de sucesso
+      const timer = setTimeout(() => {
+        navigate('/admin/configuracoes', { replace: true });
+      }, 8000);
+      return () => clearTimeout(timer);
     }
-  }, [isRecoveryMode, isEmailConfirm, queryClient]);
+  }, [isRecoveryMode, isEmailConfirm, queryClient, navigate]);
 
   const { data: store, isLoading } = useQuery({
     queryKey: ["admin-full-settings"],
