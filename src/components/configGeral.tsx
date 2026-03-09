@@ -18,7 +18,7 @@ export function AdminSettings() {
   const [isResetting, setIsResetting] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
 
-  // Efeito para gerir a contagem decrescente do timer
+  // Timer para evitar spam de reenvio
   useEffect(() => {
     if (resendTimer > 0) {
       const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
@@ -55,41 +55,28 @@ export function AdminSettings() {
     onError: (err: Error) => notify.error(err.message)
   });
 
-  // Mutação para Atualizar (pede senha) ou REENVIAR (não pede senha)
+  // MUTAÇÃO PARA NOVA TROCA DE E-MAIL (Pede senha)
   const updateEmailMutation = useMutation({
-    mutationFn: async (isResend: boolean = false) => {
-      const emailToTarget = isResend ? store?.new_email_pending : newEmail;
-      
-      if (!emailToTarget) throw new Error("E-mail não definido");
+    mutationFn: async () => {
+      if (!newEmail) throw new Error("Digite o novo e-mail");
+      if (!currentPassword) throw new Error("Senha atual necessária");
 
-      // Se for uma NOVA troca, validamos com a senha
-      if (!isResend) {
-        if (!currentPassword) throw new Error("Introduza a senha atual para trocar o e-mail");
-        
-        const { error: authError } = await supabase.auth.signInWithPassword({
-          email: store?.email || '',
-          password: currentPassword,
-        });
-        if (authError) throw new Error("Senha atual incorreta");
-      }
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: store?.email || '',
+        password: currentPassword,
+      });
+      if (authError) throw new Error("Senha atual incorreta");
 
-      // Executa a atualização/reenvio
       const { error } = await supabase.auth.updateUser(
-        { email: emailToTarget },
-        { emailRedirectTo: `${window.location.origin}/auth/callback` }
+        { email: newEmail },
+        { emailRedirectTo: `https://storelyy.vercel.app/auth/callback` }
       );
 
-      if (error) {
-        if (error.status === 429) {
-          setResendTimer(60);
-          throw new Error("Muitas solicitações. Aguarde 1 minuto.");
-        }
-        throw error;
-      }
+      if (error) throw error;
     },
-    onSuccess: (_, isResend) => {
-      notify.success(isResend ? "Link reenviado com sucesso!" : t('email_sent_success'));
-      setResendTimer(60); 
+    onSuccess: () => {
+      notify.success("Link enviado! Verifique a caixa de entrada do novo e-mail.");
+      setResendTimer(60);
       setNewEmail('');
       setCurrentPassword('');
       queryClient.invalidateQueries({ queryKey: ["admin-full-settings"] });
@@ -97,9 +84,37 @@ export function AdminSettings() {
     onError: (err: Error) => notify.error(err.message)
   });
 
+  // MUTAÇÃO PARA REENVIO DE CONFIRMAÇÃO (Usa resend para evitar erro email_exists)
+  const resendEmailMutation = useMutation({
+    mutationFn: async () => {
+      if (!store?.new_email_pending) throw new Error("Nenhuma troca pendente");
+
+      const { error } = await supabase.auth.resend({
+        type: 'email_change',
+        email: store.new_email_pending,
+        options: {
+          emailRedirectTo: `https://storelyy.vercel.app/auth/callback`
+        }
+      });
+
+      if (error) {
+        if (error.status === 429) {
+          setResendTimer(60);
+          throw new Error("Muitas solicitações. Aguarde um pouco.");
+        }
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      notify.success("Link reenviado com sucesso!");
+      setResendTimer(60);
+    },
+    onError: (err: Error) => notify.error(err.message)
+  });
+
   const updatePasswordMutation = useMutation({
     mutationFn: async () => {
-      if (newPassword !== confirmPassword) throw new Error(t('label_repeat_password') + " mismatch");
+      if (newPassword !== confirmPassword) throw new Error("As senhas não coincidem");
       
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: store?.email || '',
@@ -156,25 +171,24 @@ export function AdminSettings() {
           <SectionInfo title={t('section_email_title')} subtitle={t('section_email_subtitle')} />
           <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl p-10 space-y-8">
             
-            {/* Aviso de E-mail Pendente */}
             {store?.new_email_pending && (
-              <div className="bg-amber-50 border border-amber-100 p-6 rounded-[2rem] flex flex-wrap items-center justify-between gap-4 border-dashed">
+              <div className="bg-amber-50 border border-amber-200 p-6 rounded-[2rem] flex flex-wrap items-center justify-between gap-4 border-dashed">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-white rounded-full text-amber-500 shadow-sm">
-                    {resendTimer > 0 ? <Loader2 className="animate-spin" size={18}/> : <Send size={18}/>}
+                    {resendEmailMutation.isPending ? <Loader2 className="animate-spin" size={18}/> : <Send size={18}/>}
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest italic">Confirmação Pendente</p>
-                    <p className="text-sm font-bold text-amber-900">Link enviado para: {store.new_email_pending}</p>
+                    <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest italic">Troca em andamento</p>
+                    <p className="text-sm font-bold text-amber-900 leading-tight">Confirmar link em: {store.new_email_pending}</p>
                   </div>
                 </div>
                 
                 <button 
-                  disabled={updateEmailMutation.isPending || resendTimer > 0}
-                  onClick={() => updateEmailMutation.mutate(true)}
-                  className="bg-amber-500 text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase hover:bg-amber-600 transition-all disabled:opacity-50 disabled:bg-slate-300 shadow-lg active:scale-95"
+                  disabled={resendEmailMutation.isPending || resendTimer > 0}
+                  onClick={() => resendEmailMutation.mutate()}
+                  className="bg-amber-500 text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase hover:bg-amber-600 transition-all disabled:opacity-50 shadow-lg"
                 >
-                  {resendTimer > 0 ? `Aguarde ${resendTimer}s` : "Reenviar Agora"}
+                  {resendTimer > 0 ? `Aguarde ${resendTimer}s` : "Reenviar Confirmação"}
                 </button>
               </div>
             )}
@@ -190,10 +204,10 @@ export function AdminSettings() {
             <div className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase ml-4 italic">{t('label_new_email')}</label>
-                <input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="ex@novo.com" className="w-full p-6 bg-slate-50 rounded-[1.8rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold" />
+                <input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="novo@email.com" className="w-full p-6 bg-slate-50 rounded-[1.8rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase ml-4 italic">{t('label_confirm_password')}</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase ml-4 italic">Senha atual</label>
                 <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="••••••" className="w-full p-6 bg-slate-50 rounded-[1.8rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold" />
               </div>
             </div>
@@ -201,7 +215,7 @@ export function AdminSettings() {
             <div className="flex justify-end pt-4">
               <button 
                 disabled={!newEmail || !currentPassword || updateEmailMutation.isPending} 
-                onClick={() => updateEmailMutation.mutate(false)} 
+                onClick={() => updateEmailMutation.mutate()} 
                 className="bg-slate-900 text-white px-12 py-5 rounded-[1.5rem] text-[11px] font-black uppercase hover:bg-indigo-600 transition-all shadow-xl disabled:opacity-20 active:scale-95"
               >
                 {updateEmailMutation.isPending ? <Loader2 className="animate-spin" size={18}/> : t('btn_update_email')}
@@ -217,26 +231,28 @@ export function AdminSettings() {
           <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl p-12 space-y-8">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase ml-4 italic tracking-widest">{t('label_current_password')}</label>
-              <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full p-6 bg-slate-50 rounded-[2rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold transition-all" />
+              <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full p-6 bg-slate-50 rounded-[2rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase ml-4 italic">{t('label_new_password')}</label>
-                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full p-6 bg-slate-50 rounded-[2rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold transition-all" />
+                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full p-6 bg-slate-50 rounded-[2rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase ml-4 italic">{t('label_repeat_password')}</label>
-                <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full p-6 bg-slate-50 rounded-[2rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold transition-all" />
+                <label className="text-[10px] font-black text-slate-400 uppercase ml-4 italic">Repetir Senha</label>
+                <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full p-6 bg-slate-50 rounded-[2rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold" />
               </div>
             </div>
             <div className="flex justify-between items-center pt-6">
               <button 
                 onClick={async () => {
                   setIsResetting(true);
-                  const { error } = await supabase.auth.resetPasswordForEmail(store?.email || '');
+                  const { error } = await supabase.auth.resetPasswordForEmail(store?.email || '', {
+                    redirectTo: 'https://storelyy.vercel.app/auth/callback',
+                  });
                   setIsResetting(false);
                   if (error) notify.error(error.message);
-                  else notify.success(t('email_sent_success'));
+                  else notify.success("E-mail de recuperação enviado!");
                 }}
                 className="text-[10px] font-black uppercase text-indigo-600 hover:underline flex items-center gap-2"
               >
@@ -244,7 +260,7 @@ export function AdminSettings() {
                 {t('btn_recovery_email')}
               </button>
               <button disabled={!currentPassword || !newPassword || updatePasswordMutation.isPending} onClick={() => updatePasswordMutation.mutate()} className="bg-slate-900 text-white px-14 py-6 rounded-[2rem] text-[11px] font-black uppercase hover:bg-indigo-600 transition-all shadow-2xl active:scale-95 disabled:opacity-20">
-                 {updatePasswordMutation.isPending ? <Loader2 className="animate-spin" size={18}/> : t('btn_change_password')}
+                 {updatePasswordMutation.isPending ? <Loader2 className="animate-spin" size={18}/> : "Atualizar Senha"}
               </button>
             </div>
           </div>
