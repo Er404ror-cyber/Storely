@@ -11,22 +11,24 @@ import { NewPageModal } from '../components/pageslist/NewPageModal';
 import { EmptyPages } from '../components/pageslist/EmptyPages';
 import { notify } from '../utils/toast';
 import { useTranslate } from '../context/LanguageContext';
+import { MAX_PAGES } from '../utils/maxSections';
+
 
 export function PagesList() {
   const { t } = useTranslate();
   const queryClient = useQueryClient();
+  
+  // Estados de Controle
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // AJUSTE: O type começa vazio para forçar a escolha no Modal
   const [newPage, setNewPage] = useState({ slug: '', type: '' });
-  
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  
   const TEMPLATES = useTemplates();
-
   const { data: store, isLoading: storeLoading } = useAdminStore();
 
+  // Busca de Páginas
   const { data: pages, isLoading: pagesLoading } = useQuery({
     queryKey: ['pages', store?.id],
     queryFn: async () => {
@@ -41,6 +43,7 @@ export function PagesList() {
     enabled: !!store?.id,
   });
 
+  // Lógica de Organização e Conflitos
   const organized = useMemo(() => {
     const initial = { homePage: null, grouped: {}, conflicts: [], total: 0, originalTotal: 0 };
     if (!pages) return initial;
@@ -68,8 +71,13 @@ export function PagesList() {
     };
   }, [pages, searchQuery]);
 
+  const isLimitReached = (pages?.length || 0) >= MAX_PAGES;
+
+  // Mutações
   const createPage = useMutation({
     mutationFn: async ({ slug, type }: { slug: string, type: string }) => {
+      if (isLimitReached) throw new Error('LIMIT_EXCEEDED');
+
       const formattedSlug = slug.toLowerCase().trim().replace(/\s+/g, '-');
       const { data: page, error: pError } = await supabase.from('pages').insert([{ 
         store_id: store?.id, 
@@ -87,13 +95,18 @@ export function PagesList() {
       return page;
     },
     onSuccess: () => {
-      notify.success('Page Deployed!');
+      notify.success(t('page_deployed') || 'Page Deployed!');
       setIsModalOpen(false);
-      // AJUSTE: Reseta para vazio após sucesso
       setNewPage({ slug: '', type: '' });
       queryClient.invalidateQueries({ queryKey: ['pages', store?.id] });
     },
-    onError: () => notify.error('Path conflict!')
+    onError: (err: any) => {
+      if (err.message === 'LIMIT_EXCEEDED') {
+        notify.error(t('limit_error') || `Maximum of ${MAX_PAGES} pages reached.`);
+      } else {
+        notify.error(t('slug_error') || 'Path conflict!');
+      }
+    }
   });
 
   const updateSlug = useMutation({
@@ -135,6 +148,7 @@ export function PagesList() {
     onError: (err: any) => notify.error(err.message)
   });
 
+  // Renderização de Loading
   if (storeLoading || pagesLoading) return (
     <div className="h-screen flex items-center justify-center bg-slate-50">
       <div className="flex flex-col items-center gap-4">
@@ -161,10 +175,16 @@ export function PagesList() {
         </div>
         
         <button 
-          onClick={() => setIsModalOpen(true)} 
-          className="bg-indigo-600 text-white px-3 py-3 rounded-2xl font-black text-xs md:text-sm hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-200 flex items-center gap-2"
+          disabled={isLimitReached}
+          onClick={() => !isLimitReached && setIsModalOpen(true)} 
+          className={`px-4 py-3 rounded-2xl font-black text-xs md:text-sm transition-all flex items-center gap-2 shadow-lg ${
+            isLimitReached 
+            ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200' 
+            : 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 shadow-indigo-100'
+          }`}
         >
-          <Plus size={20} /> <span>{t('new_page')}</span>
+          {isLimitReached ? <AlertCircle size={18} /> : <Plus size={20} />}
+          <span>{isLimitReached ? `${pages?.length}/${MAX_PAGES}` : t('new_page')}</span>
         </button>
       </nav>
 
@@ -180,10 +200,16 @@ export function PagesList() {
                 onChange={(e) => setSearchQuery(e.target.value)} 
               />
             </div>
+            
             <div className="px-8 py-4 bg-white border border-slate-100 rounded-3xl shadow-sm flex items-center gap-4">
               <div className="text-center border-r border-slate-100 pr-4">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('active_assets')}</p>
-                <p className="text-xl font-black text-indigo-600">{organized.total}</p>
+                <div className="flex items-baseline gap-1">
+                  <p className={`text-xl font-black ${isLimitReached ? 'text-amber-500' : 'text-indigo-600'}`}>
+                    {organized.originalTotal}
+                  </p>
+                  <span className="text-[10px] font-bold text-slate-300">/ {MAX_PAGES}</span>
+                </div>
               </div>
               <div className="text-center">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('status_label')}</p>
@@ -195,11 +221,11 @@ export function PagesList() {
 
         {organized.total === 0 ? (
           <EmptyPages 
-            onCreateClick={() => setIsModalOpen(true)} 
+            onCreateClick={() => !isLimitReached && setIsModalOpen(true)} 
             isSearching={!!searchQuery} 
           />
         ) : (
-          <div className="animate-in fade-in duration-700">
+          <div className="animate-in fade-in duration-700 space-y-10">
             {organized.conflicts.length > 0 && (
               <Section title={t('link_conflict')} icon={<AlertCircle className="text-red-500" size={18} />} count={organized.conflicts.length} variant="danger">
                 {organized.conflicts.map((p: any) => (
@@ -210,14 +236,14 @@ export function PagesList() {
 
             {organized.homePage && (
               <Section title={t('primary_infrastructure')} icon={<Home className="text-indigo-600" size={18} />}>
-                <PageRow page={organized.homePage} storeSlug={store?.slug} editingState={{editingId, setEditingId, editValue, setEditValue}} {...{setAsHome, updateSlug, deletePage}} />
+                <PageRow page={organized.homePage} storeSlug={store?.slug} isConflict={false} editingState={{editingId, setEditingId, editValue, setEditValue}} {...{setAsHome, updateSlug, deletePage}} />
               </Section>
             )}
 
             {Object.entries(organized.grouped).map(([type, items]: any) => (
               <Section key={type} title={TEMPLATES[type as keyof typeof TEMPLATES]?.label || type} icon={<div className="text-slate-400">{TEMPLATES[type as keyof typeof TEMPLATES]?.icon || <Globe size={18}/>}</div>} count={items.length}>
                 {items.map((p: any) => (
-                  <PageRow key={p.id} page={p} storeSlug={store?.slug} editingState={{editingId, setEditingId, editValue, setEditValue}} {...{setAsHome, updateSlug, deletePage}} />
+                  <PageRow key={p.id} page={p} storeSlug={store?.slug} isConflict={false} editingState={{editingId, setEditingId, editValue, setEditValue}} {...{setAsHome, updateSlug, deletePage}} />
                 ))}
               </Section>
             ))}

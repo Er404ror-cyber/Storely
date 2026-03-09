@@ -1,178 +1,187 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { UploadCloud, Loader2 } from 'lucide-react';
+import { Loader2, Globe, Shield, Store, Mail, User, Smartphone, RefreshCw } from 'lucide-react';
+import { notify } from '../utils/toast';
+import { useTranslate } from '../context/LanguageContext';
+import { TabItem, SectionInfo, EditableRow } from './settings/AdminSettingsComponents';
 
-// --- Interfaces para Type Safety ---
-
-interface StoreSettings {
-  headerTheme?: 'light' | 'dark';
-  [key: string]: unknown;
-}
-
-interface StoreData {
-  id: string;
-  name: string;
-  settings: StoreSettings;
-  logo_url?: string;
-}
-
-interface StoreUpdatePayload {
-  name?: string;
-  settings?: StoreSettings;
-  logo_url?: string;
-}
-
-export function AdminHeaderSettings() {
-  const { storeId } = useParams<{ storeId: string }>(); // Obtém o ID da URL
+export function AdminSettings() {
+  const { t } = useTranslate();
   const queryClient = useQueryClient();
-  const [isUploading, setIsUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'store' | 'account' | 'security'>('store');
+  
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
 
-  // 1. Busca as configurações atuais
-  const { data: store, isLoading } = useQuery<StoreData>({
-    queryKey: ["admin-store-settings", storeId],
+  const { data: store, isLoading } = useQuery({
+    queryKey: ["admin-full-settings"],
     queryFn: async () => {
-      if (!storeId) throw new Error("ID da loja não fornecido");
-      
-      const { data, error } = await supabase
-        .from("stores")
-        .select("*")
-        .eq("id", storeId)
-        .single();
-      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Unauthorized");
+      const { data, error } = await supabase.from("stores").select("*").eq("owner_id", user.id).single();
       if (error) throw error;
-      return data;
-    },
-    enabled: !!storeId // Só executa se houver um ID
+      return { ...data, email: user.email };
+    }
   });
 
-  // 2. Mutação para salvar dados (Sem 'any')
-  const saveMutation = useMutation({
-    mutationFn: async (newData: StoreUpdatePayload) => {
-      if (!storeId) throw new Error("ID da loja não encontrado");
-      
-      const { error } = await supabase
-        .from("stores")
-        .update(newData)
-        .eq("id", storeId);
-      
+  const updateField = useMutation({
+    mutationFn: async ({ field, value }: { field: string; value: string }) => {
+      const { error } = await supabase.from("stores").update({ [field]: value }).eq("id", store?.id);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-store-settings", storeId] });
-      queryClient.invalidateQueries({ queryKey: ["store-header-config"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-full-settings"] });
+      notify.success(t('save_success'));
     },
-    onError: (error: Error) => {
-      alert("Erro ao salvar: " + error.message);
-    }
+    onError: (err: Error) => notify.error(err.message)
   });
 
-  // 3. Lógica de Upload do Logo
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !storeId) return;
+  const updateEmailMutation = useMutation({
+    mutationFn: async () => {
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: store?.email || '',
+        password: currentPassword,
+      });
+      if (authError) throw new Error(t('label_current_password') + " incorrect");
 
-    try {
-      setIsUploading(true);
-      
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${storeId}-logo-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `logos/${fileName}`;
+      const { error } = await supabase.auth.updateUser(
+        { email: newEmail },
+        { emailRedirectTo: `${window.location.origin}/auth/callback` }
+      );
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      notify.success(t('email_sent_success'));
+      setNewEmail(''); setCurrentPassword('');
+    },
+    onError: (err: Error) => notify.error(err.message)
+  });
 
-      const { error: uploadError } = await supabase.storage
-        .from('store-assets')
-        .upload(filePath, file);
+  const updatePasswordMutation = useMutation({
+    mutationFn: async () => {
+      if (newPassword !== confirmPassword) throw new Error(t('label_repeat_password') + " mismatch");
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: store?.email || '',
+        password: currentPassword,
+      });
+      if (authError) throw new Error(t('label_current_password') + " incorrect");
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      notify.success(t('password_update_success'));
+      setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
+    },
+    onError: (err: Error) => notify.error(err.message)
+  });
 
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('store-assets')
-        .getPublicUrl(filePath);
-
-      await saveMutation.mutateAsync({ logo_url: publicUrl });
-      
-    } catch (error) {
-      console.error("Upload error:", error);
-      alert("Falha ao carregar imagem.");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  if (!storeId) return <div className="p-10 text-center text-red-500 font-bold">Erro: storeId não encontrado na URL.</div>;
-  if (isLoading) return <div className="p-10 text-center animate-pulse font-bold text-xs text-slate-400">Sincronizando...</div>;
+  if (isLoading) return (
+    <div className="h-screen flex flex-col items-center justify-center gap-6 bg-slate-50">
+      <Loader2 className="animate-spin text-indigo-600" size={50} />
+      <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">{t('loading_session')}</p>
+    </div>
+  );
 
   return (
-    <div className="max-w-2xl mx-auto p-10 bg-white rounded-[3rem] border border-slate-100 shadow-2xl space-y-10">
-      {/* HEADER */}
-      <div className="flex items-center justify-between border-b pb-6">
-        <h2 className="text-2xl font-black tracking-tighter uppercase italic text-slate-800">Visual do Site</h2>
-        {saveMutation.isPending && <Loader2 className="animate-spin text-blue-600" size={20} />}
+    <div className="max-w-5xl mx-auto pb-32 px-6 animate-in fade-in duration-700">
+      <div className="mb-12 space-y-2 pt-10">
+        <h1 className="text-4xl font-black tracking-tighter text-slate-900 uppercase italic">
+          {t('settings_title')} <span className="text-indigo-600">{t('settings_highlight')}</span>
+        </h1>
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest italic">{t('settings_subtitle')}</p>
       </div>
 
-      <div className="space-y-8">
-        {/* NOME DO SITE */}
-        <div className="space-y-3">
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">
-            Nome Exibido no Header
-          </label>
-          <input 
-            key={store?.name} 
-            defaultValue={store?.name}
-            placeholder="Ex: Minha Empresa"
-            className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-blue-600 focus:bg-white outline-none font-bold transition-all text-slate-700"
-            onBlur={(e) => {
-              if (e.target.value !== store?.name) {
-                saveMutation.mutate({ name: e.target.value });
-              }
-            }}
-          />
-        </div>
+      <div className="flex flex-wrap gap-3 mb-16 p-2 bg-slate-100/50 rounded-[2.5rem] w-fit border border-slate-200/40 shadow-inner">
+        <TabItem active={activeTab === 'store'} onClick={() => setActiveTab('store')} icon={<Store size={14}/>} label={t('tab_store')} />
+        <TabItem active={activeTab === 'account'} onClick={() => setActiveTab('account')} icon={<User size={14}/>} label={t('tab_account')} />
+        <TabItem active={activeTab === 'security'} onClick={() => setActiveTab('security')} icon={<Shield size={14}/>} label={t('tab_security')} />
+      </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* SELETOR DE TEMA */}
-          <div className="space-y-3">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Modo de Cor</label>
-            <div className="grid grid-cols-2 gap-2 p-1.5 bg-slate-100 rounded-2xl">
-              {(['light', 'dark'] as const).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => saveMutation.mutate({ 
-                    settings: { ...store?.settings, headerTheme: t } 
-                  })}
-                  className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                    (store?.settings?.headerTheme || 'light') === t 
-                    ? 'bg-white text-blue-600 shadow-sm' 
-                    : 'text-slate-400 hover:text-slate-600'
-                  }`}
-                >
-                  {t === 'light' ? 'Claro' : 'Escuro'}
-                </button>
-              ))}
+      {activeTab === 'store' && (
+        <div className="space-y-8 animate-in slide-in-from-left-4">
+          <SectionInfo title={t('section_presence_title')} subtitle={t('section_presence_subtitle')} />
+          <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl overflow-hidden divide-y divide-slate-50">
+            <EditableRow label={t('label_brand_name')} value={store?.name} onSave={(v) => updateField.mutate({ field: 'name', value: v })} />
+            <EditableRow label={t('label_slug')} value={store?.slug} icon={<Globe size={16}/>} onSave={(v) => updateField.mutate({ field: 'slug', value: v.toLowerCase().trim() })} />
+            <EditableRow label={t('label_description')} value={store?.description} isTextArea onSave={(v) => updateField.mutate({ field: 'description', value: v })} />
+            <EditableRow label={t('label_whatsapp')} value={store?.whatsapp_number} icon={<Smartphone size={16}/>} onSave={(v) => updateField.mutate({ field: 'whatsapp_number', value: v })} />
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'account' && (
+        <div className="space-y-8 animate-in fade-in">
+          <SectionInfo title={t('section_email_title')} subtitle={t('section_email_subtitle')} />
+          <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl p-10 space-y-8">
+            <div className="flex items-center gap-5 p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+              <div className="p-4 bg-white rounded-2xl shadow-sm text-indigo-600"><Mail size={24}/></div>
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase">{t('label_current_email')}</p>
+                <p className="font-bold text-slate-800">{store?.email}</p>
+              </div>
+            </div>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase ml-4 italic">{t('label_new_email')}</label>
+                <input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="ex@new.com" className="w-full p-6 bg-slate-50 rounded-[1.8rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase ml-4 italic">{t('label_confirm_password')}</label>
+                <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="••••••" className="w-full p-6 bg-slate-50 rounded-[1.8rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold" />
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <button disabled={!newEmail || !currentPassword || updateEmailMutation.isPending} onClick={() => updateEmailMutation.mutate()} className="bg-slate-900 text-white px-12 py-5 rounded-[1.5rem] text-[11px] font-black uppercase hover:bg-indigo-600 transition-all shadow-xl disabled:opacity-20">
+                {updateEmailMutation.isPending ? <Loader2 className="animate-spin" /> : t('btn_update_email')}
+              </button>
             </div>
           </div>
+        </div>
+      )}
 
-          {/* UPLOAD DO LOGO */}
-          <div className="space-y-3 flex flex-col items-center">
-             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Logotipo</label>
-             <label className={`w-full flex items-center justify-center gap-2 py-4 rounded-xl text-[9px] font-black uppercase tracking-widest cursor-pointer transition-all shadow-lg active:scale-95 ${
-               isUploading ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900 text-white hover:bg-blue-600'
-             }`}>
-               {isUploading ? <Loader2 className="animate-spin" size={14} /> : <UploadCloud size={14} />}
-               {isUploading ? 'A carregar...' : 'Mudar Logo'}
-               <input 
-                 type="file" 
-                 className="hidden" 
-                 accept="image/*" 
-                 disabled={isUploading}
-                 onChange={handleLogoUpload} 
-               />
-             </label>
+      {activeTab === 'security' && (
+        <div className="space-y-8 animate-in slide-in-from-right-4">
+          <SectionInfo title={t('section_crypto_title')} subtitle={t('section_crypto_subtitle')} />
+          <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl p-12 space-y-8">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase ml-4 italic tracking-widest">{t('label_current_password')}</label>
+              <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full p-6 bg-slate-50 rounded-[2rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase ml-4 italic">{t('label_new_password')}</label>
+                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full p-6 bg-slate-50 rounded-[2rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase ml-4 italic">{t('label_repeat_password')}</label>
+                <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full p-6 bg-slate-50 rounded-[2rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold" />
+              </div>
+            </div>
+            <div className="flex justify-between items-center">
+              <button 
+                onClick={async () => {
+                  setIsResetting(true);
+                  const { error } = await supabase.auth.resetPasswordForEmail(store?.email || '');
+                  setIsResetting(false);
+                  if (error) notify.error(error.message);
+                  else notify.success(t('email_sent_success'));
+                }}
+                className="text-[10px] font-black uppercase text-indigo-600 flex items-center gap-2"
+              >
+                {isResetting ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+                {t('btn_recovery_email')}
+              </button>
+              <button disabled={!currentPassword || !newPassword} onClick={() => updatePasswordMutation.mutate()} className="bg-slate-900 text-white px-14 py-6 rounded-[2rem] text-[11px] font-black uppercase hover:bg-indigo-600 transition-all shadow-2xl">
+                {t('btn_change_password')}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

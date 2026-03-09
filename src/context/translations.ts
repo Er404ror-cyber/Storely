@@ -366,7 +366,6 @@ required: "Required",
 blueprint_arch: "Blueprint Architecture",
 cancel: "Cancel",
 search_page: "Search Pages...",
-active_assets: "Active Assets",
 status_label: "Status",
 operational: "Operational",
 link_conflict: "Link duplicated. Please rename",
@@ -386,7 +385,49 @@ link_copied: "Link copied!",
 copy_error: "Error copying link",
 design_btn: "DESIGN",
 delete_confirm: "Are you sure you want to delete",
-delete_error: "Error removing page"
+delete_error: "Error removing page",
+
+
+
+page_deployed: "Page deployed successfully!",
+limit_reached_message: "Limit of 10 pages reached!",
+limit_error: "Maximum limit of 10 pages reached",
+slug_error: "This path is already in use",
+active_assets: "Active Pages",
+
+
+
+settings_title: "General",
+settings_highlight: "Settings",
+settings_subtitle: "Security and Brand Identity",
+tab_store: "Store",
+tab_account: "Account",
+tab_security: "Security",
+section_presence_title: "Digital Presence",
+section_presence_subtitle: "Your brand's public settings",
+label_brand_name: "Brand Name",
+label_slug: "Store URL (Slug)",
+label_description: "Public Description",
+label_whatsapp: "Contact WhatsApp",
+section_email_title: "Access Email",
+section_email_subtitle: "Manage your admin email",
+label_current_email: "Current Address",
+label_new_email: "New Email",
+label_confirm_password: "Confirm with Current Password",
+btn_update_email: "UPDATE EMAIL",
+section_crypto_title: "Cryptography",
+section_crypto_subtitle: "Protection and password change",
+label_current_password: "Current Password",
+label_new_password: "New Password",
+label_repeat_password: "Repeat New Password",
+btn_recovery_email: "RECOVER VIA EMAIL",
+btn_change_password: "CHANGE PASSWORD",
+loading_session: "Securing your session...",
+edit_label: "EDIT",
+save_success: "Change saved successfully!",
+email_sent_success: "Link sent! Check your new inbox.",
+password_update_success: "Your password has been updated successfully!"
+
 
   },
 
@@ -809,7 +850,6 @@ required: "Obrigatório",
 blueprint_arch: "Arquitectura do Blueprint",
 cancel: "Cancelar",
 search_page: "Pesquisar Páginas...",
-active_assets: "Recursos Activos",
 status_label: "Estado",
 operational: "Operacional",
 link_conflict: "Link duplicado. Por favor mude o nome",
@@ -828,11 +868,58 @@ link_copied: "Link copiado!",
 copy_error: "Erro ao copiar link",
 design_btn: "DESIGN",
 delete_confirm: "Tem certeza que deseja excluir",
-delete_error: "Erro ao remover página"
+delete_error: "Erro ao remover página",
+
+page_deployed: "Página publicada com sucesso!",
+limit_reached_message: "Limite de 10 páginas atingido!",
+limit_error: "Você atingiu o limite máximo de 10 páginas",
+slug_error: "Este caminho (URL) já está em uso",
+active_assets: "Páginas Ativas",
+
+
+store_name_label: "Nome da Loja",
+store_slug_label: "Link da Loja (URL)",
+store_desc_label: "Descrição Curta",
+whatsapp_label: "WhatsApp de Suporte",
+visual_title: "VISUAL DA LOJA",
+uploading_text: "CARREGANDO...",
+change_logo_btn: "MUDAR LOGO",
 
 
 
+
+settings_title: "Definições",
+settings_highlight: "Gerais",
+settings_subtitle: "Segurança e Identidade da Marca",
+tab_store: "Loja",
+tab_account: "Conta",
+tab_security: "Segurança",
+section_presence_title: "Presença Digital",
+section_presence_subtitle: "Configurações públicas da sua marca",
+label_brand_name: "Nome da Marca",
+label_slug: "URL da Loja (Slug)",
+label_description: "Descrição Pública",
+label_whatsapp: "WhatsApp de Contacto",
+section_email_title: "E-mail de Acesso",
+section_email_subtitle: "Gerencie seu e-mail administrativo",
+label_current_email: "Endereço Atual",
+label_new_email: "Novo E-mail",
+label_confirm_password: "Confirmar com Senha Atual",
+btn_update_email: "ATUALIZAR E-MAIL",
+section_crypto_title: "Criptografia",
+section_crypto_subtitle: "Proteção e troca de senha",
+label_current_password: "Senha Atual",
+label_new_password: "Nova Senha",
+label_repeat_password: "Repetir Nova Senha",
+btn_recovery_email: "RECUPERAR VIA E-MAIL",
+btn_change_password: "ALTERAR SENHA",
+loading_session: "Protegendo sua sessão...",
+edit_label: "ALTERAR",
+save_success: "Alteração salva com sucesso!",
+email_sent_success: "Link enviado! Verifique sua nova caixa de entrada.",
+password_update_success: "Sua senha foi atualizada com sucesso!"
   }
+
 } as const;
 
 export type Language = 'en' | 'pt';
