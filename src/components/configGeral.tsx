@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { Loader2, Globe, Shield, Store, Mail, User, Smartphone, RefreshCw } from 'lucide-react';
+import { Loader2, Globe, Shield, Store, Mail, User, Smartphone, RefreshCw, Send } from 'lucide-react';
 import { notify } from '../utils/toast';
 import { useTranslate } from '../context/LanguageContext';
 import { TabItem, SectionInfo, EditableRow } from './settings/AdminSettingsComponents';
@@ -16,15 +16,30 @@ export function AdminSettings() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [isResetting, setIsResetting] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+
+  // Efeito para gerir a contagem decrescente do timer
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendTimer]);
 
   const { data: store, isLoading } = useQuery({
     queryKey: ["admin-full-settings"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Unauthorized");
+      
       const { data, error } = await supabase.from("stores").select("*").eq("owner_id", user.id).single();
       if (error) throw error;
-      return { ...data, email: user.email };
+
+      return { 
+        ...data, 
+        email: user.email,
+        new_email_pending: user.new_email 
+      };
     }
   });
 
@@ -40,23 +55,44 @@ export function AdminSettings() {
     onError: (err: Error) => notify.error(err.message)
   });
 
+  // Mutação para Atualizar (pede senha) ou REENVIAR (não pede senha)
   const updateEmailMutation = useMutation({
-    mutationFn: async () => {
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: store?.email || '',
-        password: currentPassword,
-      });
-      if (authError) throw new Error(t('label_current_password') + " incorrect");
+    mutationFn: async (isResend: boolean = false) => {
+      const emailToTarget = isResend ? store?.new_email_pending : newEmail;
+      
+      if (!emailToTarget) throw new Error("E-mail não definido");
 
+      // Se for uma NOVA troca, validamos com a senha
+      if (!isResend) {
+        if (!currentPassword) throw new Error("Introduza a senha atual para trocar o e-mail");
+        
+        const { error: authError } = await supabase.auth.signInWithPassword({
+          email: store?.email || '',
+          password: currentPassword,
+        });
+        if (authError) throw new Error("Senha atual incorreta");
+      }
+
+      // Executa a atualização/reenvio
       const { error } = await supabase.auth.updateUser(
-        { email: newEmail },
+        { email: emailToTarget },
         { emailRedirectTo: `${window.location.origin}/auth/callback` }
       );
-      if (error) throw error;
+
+      if (error) {
+        if (error.status === 429) {
+          setResendTimer(60);
+          throw new Error("Muitas solicitações. Aguarde 1 minuto.");
+        }
+        throw error;
+      }
     },
-    onSuccess: () => {
-      notify.success(t('email_sent_success'));
-      setNewEmail(''); setCurrentPassword('');
+    onSuccess: (_, isResend) => {
+      notify.success(isResend ? "Link reenviado com sucesso!" : t('email_sent_success'));
+      setResendTimer(60); 
+      setNewEmail('');
+      setCurrentPassword('');
+      queryClient.invalidateQueries({ queryKey: ["admin-full-settings"] });
     },
     onError: (err: Error) => notify.error(err.message)
   });
@@ -64,11 +100,13 @@ export function AdminSettings() {
   const updatePasswordMutation = useMutation({
     mutationFn: async () => {
       if (newPassword !== confirmPassword) throw new Error(t('label_repeat_password') + " mismatch");
+      
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: store?.email || '',
         password: currentPassword,
       });
-      if (authError) throw new Error(t('label_current_password') + " incorrect");
+      if (authError) throw new Error("Senha atual incorreta");
+      
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
     },
@@ -117,6 +155,30 @@ export function AdminSettings() {
         <div className="space-y-8 animate-in fade-in">
           <SectionInfo title={t('section_email_title')} subtitle={t('section_email_subtitle')} />
           <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl p-10 space-y-8">
+            
+            {/* Aviso de E-mail Pendente */}
+            {store?.new_email_pending && (
+              <div className="bg-amber-50 border border-amber-100 p-6 rounded-[2rem] flex flex-wrap items-center justify-between gap-4 border-dashed">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-white rounded-full text-amber-500 shadow-sm">
+                    {resendTimer > 0 ? <Loader2 className="animate-spin" size={18}/> : <Send size={18}/>}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest italic">Confirmação Pendente</p>
+                    <p className="text-sm font-bold text-amber-900">Link enviado para: {store.new_email_pending}</p>
+                  </div>
+                </div>
+                
+                <button 
+                  disabled={updateEmailMutation.isPending || resendTimer > 0}
+                  onClick={() => updateEmailMutation.mutate(true)}
+                  className="bg-amber-500 text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase hover:bg-amber-600 transition-all disabled:opacity-50 disabled:bg-slate-300 shadow-lg active:scale-95"
+                >
+                  {resendTimer > 0 ? `Aguarde ${resendTimer}s` : "Reenviar Agora"}
+                </button>
+              </div>
+            )}
+
             <div className="flex items-center gap-5 p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
               <div className="p-4 bg-white rounded-2xl shadow-sm text-indigo-600"><Mail size={24}/></div>
               <div>
@@ -124,19 +186,25 @@ export function AdminSettings() {
                 <p className="font-bold text-slate-800">{store?.email}</p>
               </div>
             </div>
+
             <div className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase ml-4 italic">{t('label_new_email')}</label>
-                <input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="ex@new.com" className="w-full p-6 bg-slate-50 rounded-[1.8rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold" />
+                <input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="ex@novo.com" className="w-full p-6 bg-slate-50 rounded-[1.8rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold" />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase ml-4 italic">{t('label_confirm_password')}</label>
                 <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="••••••" className="w-full p-6 bg-slate-50 rounded-[1.8rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold" />
               </div>
             </div>
-            <div className="flex justify-end">
-              <button disabled={!newEmail || !currentPassword || updateEmailMutation.isPending} onClick={() => updateEmailMutation.mutate()} className="bg-slate-900 text-white px-12 py-5 rounded-[1.5rem] text-[11px] font-black uppercase hover:bg-indigo-600 transition-all shadow-xl disabled:opacity-20">
-                {updateEmailMutation.isPending ? <Loader2 className="animate-spin" /> : t('btn_update_email')}
+            
+            <div className="flex justify-end pt-4">
+              <button 
+                disabled={!newEmail || !currentPassword || updateEmailMutation.isPending} 
+                onClick={() => updateEmailMutation.mutate(false)} 
+                className="bg-slate-900 text-white px-12 py-5 rounded-[1.5rem] text-[11px] font-black uppercase hover:bg-indigo-600 transition-all shadow-xl disabled:opacity-20 active:scale-95"
+              >
+                {updateEmailMutation.isPending ? <Loader2 className="animate-spin" size={18}/> : t('btn_update_email')}
               </button>
             </div>
           </div>
@@ -149,19 +217,19 @@ export function AdminSettings() {
           <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl p-12 space-y-8">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase ml-4 italic tracking-widest">{t('label_current_password')}</label>
-              <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full p-6 bg-slate-50 rounded-[2rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold" />
+              <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full p-6 bg-slate-50 rounded-[2rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold transition-all" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase ml-4 italic">{t('label_new_password')}</label>
-                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full p-6 bg-slate-50 rounded-[2rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold" />
+                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full p-6 bg-slate-50 rounded-[2rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold transition-all" />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase ml-4 italic">{t('label_repeat_password')}</label>
-                <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full p-6 bg-slate-50 rounded-[2rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold" />
+                <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full p-6 bg-slate-50 rounded-[2rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold transition-all" />
               </div>
             </div>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center pt-6">
               <button 
                 onClick={async () => {
                   setIsResetting(true);
@@ -170,13 +238,13 @@ export function AdminSettings() {
                   if (error) notify.error(error.message);
                   else notify.success(t('email_sent_success'));
                 }}
-                className="text-[10px] font-black uppercase text-indigo-600 flex items-center gap-2"
+                className="text-[10px] font-black uppercase text-indigo-600 hover:underline flex items-center gap-2"
               >
                 {isResetting ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
                 {t('btn_recovery_email')}
               </button>
-              <button disabled={!currentPassword || !newPassword} onClick={() => updatePasswordMutation.mutate()} className="bg-slate-900 text-white px-14 py-6 rounded-[2rem] text-[11px] font-black uppercase hover:bg-indigo-600 transition-all shadow-2xl">
-                {t('btn_change_password')}
+              <button disabled={!currentPassword || !newPassword || updatePasswordMutation.isPending} onClick={() => updatePasswordMutation.mutate()} className="bg-slate-900 text-white px-14 py-6 rounded-[2rem] text-[11px] font-black uppercase hover:bg-indigo-600 transition-all shadow-2xl active:scale-95 disabled:opacity-20">
+                 {updatePasswordMutation.isPending ? <Loader2 className="animate-spin" size={18}/> : t('btn_change_password')}
               </button>
             </div>
           </div>
