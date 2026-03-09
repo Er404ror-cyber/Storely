@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Loader2, CheckCircle2, ArrowRight } from 'lucide-react';
-import { notify } from '../utils/toast';
 
 export function AuthCallback() {
   const navigate = useNavigate();
