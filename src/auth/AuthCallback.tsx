@@ -1,51 +1,46 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle2, ArrowRight } from 'lucide-react';
 import { notify } from '../utils/toast';
 
 export function AuthCallback() {
   const navigate = useNavigate();
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [message, setMessage] = useState('Validando suas credenciais...');
 
   useEffect(() => {
-    // Escuta as mudanças de estado de autenticação (disparadas pelo link do e-mail)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
       
-      // 1. Caso de Recuperação de Senha
+      // CASO 1: RECUPERAÇÃO DE SENHA
       if (event === 'PASSWORD_RECOVERY') {
-        notify.success("Link de recuperação aceito. Defina sua nova senha.");
-        // Redireciona para a aba de segurança com um parâmetro para abrir o formulário
-        navigate('/admin/configuracoes?tab=security&reset=true');
+        setStatus('success');
+        setMessage('Identidade confirmada! Vamos definir sua nova senha.');
+        setTimeout(() => navigate('/admin/configuracoes?tab=security&reset=true'), 2000);
         return;
       }
 
-      // 2. Caso de Troca de E-mail ou Login via Link (Magic Link)
+      // CASO 2: TROCA DE E-MAIL (USER_UPDATED) OU LOGIN (SIGNED_IN)
       if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-        // Se for uma troca de e-mail, o USER_UPDATED é disparado
         const isEmailChange = window.location.href.includes('type=email_change');
         
         if (isEmailChange) {
-          notify.success("E-mail atualizado com sucesso!");
+          setStatus('success');
+          setMessage('E-mail atualizado com sucesso! Sua conta está segura.');
+          // Aguarda 3 segundos para o usuário ler a confirmação e entra direto
+          setTimeout(() => navigate('/admin/configuracoes'), 3000);
         } else {
-          notify.success("Sessão validada com sucesso!");
+          navigate('/admin/dashboard');
         }
-        
-        navigate('/admin/configuracoes');
         return;
       }
 
-      // 3. Tratamento de Erros vindos na URL (Ex: Link expirado)
-      // O Supabase às vezes envia erros via Hash ou Query Params
+      // CASO 3: ERROS (Link expirado ou usado)
       const params = new URLSearchParams(window.location.search);
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      
-      const error = params.get('error') || hashParams.get('error');
-      const errorDescription = params.get('error_description') || hashParams.get('error_description');
-
-      if (error) {
-        console.error("Auth Error:", errorDescription);
-        notify.error(errorDescription || "O link é inválido ou expirou.");
-        navigate('/auth');
+      if (params.get('error')) {
+        setStatus('error');
+        setMessage(params.get('error_description') || 'Este link expirou ou já foi utilizado.');
+        setTimeout(() => navigate('/auth'), 4000);
       }
     });
 
@@ -53,17 +48,44 @@ export function AuthCallback() {
   }, [navigate]);
 
   return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50">
-      <div className="flex flex-col items-center gap-4">
-        <Loader2 className="animate-spin text-indigo-600" size={40} />
-        <div className="text-center">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 italic">
-            Autenticação
-          </p>
-          <p className="text-sm font-bold text-slate-800">
-            Processando requisição...
-          </p>
-        </div>
+    <div className="h-screen w-full flex flex-col items-center justify-center bg-white p-6">
+      <div className="max-w-sm w-full text-center space-y-6 animate-in fade-in zoom-in duration-500">
+        
+        {status === 'loading' && (
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="animate-spin text-indigo-600" size={48} />
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 italic">{message}</p>
+          </div>
+        )}
+
+        {status === 'success' && (
+          <div className="space-y-6">
+            <div className="flex justify-center">
+              <div className="bg-green-100 p-4 rounded-full text-green-600 animate-bounce">
+                <CheckCircle2 size={40} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-black tracking-tighter text-slate-900 uppercase italic">Sucesso!</h2>
+              <p className="text-sm font-bold text-slate-500 leading-relaxed">{message}</p>
+            </div>
+            <div className="pt-4">
+               <button 
+                onClick={() => navigate('/admin/configuracoes')}
+                className="flex items-center gap-2 mx-auto text-[10px] font-black uppercase text-indigo-600 border-b-2 border-indigo-600 pb-1"
+               >
+                 Entrar no painel <ArrowRight size={14} />
+               </button>
+            </div>
+          </div>
+        )}
+
+        {status === 'error' && (
+          <div className="space-y-4">
+            <p className="text-sm font-bold text-red-500">{message}</p>
+            <button onClick={() => navigate('/auth')} className="text-xs font-black uppercase text-slate-400 underline">Voltar para o Login</button>
+          </div>
+        )}
       </div>
     </div>
   );
