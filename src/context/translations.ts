@@ -356,7 +356,69 @@ modal_library_subtitle: "Select a block to build",
   no_contact: "No contact set",
   loading_engine: "Syncing Storely...",
 
+  new_page: "NEW PAGE",
+updated_status: "Updated",
+deploy_now: "Deploy now",
+new_deployment: "New Deployment",
+configuring_page: "Configuring Page",
+destination_path: "Destination Path",
+required: "Required",
+blueprint_arch: "Blueprint Architecture",
+cancel: "Cancel",
+search_page: "Search Pages...",
+active_assets: "Active Assets",
+status_label: "Status",
+operational: "Operational",
+link_conflict: "Link duplicated. Please rename",
+primary_infrastructure: "Primary Infrastructure (Home)",
+empty_store_title: "Your Store is empty",
+empty_state_desc: "Start building your digital presence. Create your first page using our professional blueprints.",
+empty_search_title: "No results found",
+empty_search_desc: "We couldn't find any page with that name.",
+first_deploy_btn: "DEPLOY FIRST PAGE",
+
+
+
+
+empty_search_description: "We couldn't find any pages with that name. Try another term or clear the search.",
+primary_tag: "Primary",
+link_copied: "Link copied!",
+copy_error: "Error copying link",
+design_btn: "DESIGN",
+delete_confirm: "Are you sure you want to delete",
+delete_error: "Error removing page"
+
   },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -732,6 +794,44 @@ modal_library_subtitle: "Selecione um bloco para construir",
 
   no_contact: "Contato não definido",
 loading_engine: "Sincronizando Storely...",
+
+
+
+
+
+new_page: "NOVA PÁGINA",
+updated_status: "Actualizado",
+deploy_now: "Publicar agora",
+new_deployment: "Nova Implementação",
+configuring_page: "Configurando Página",
+destination_path: "Caminho de Destino",
+required: "Obrigatório",
+blueprint_arch: "Arquitectura do Blueprint",
+cancel: "Cancelar",
+search_page: "Pesquisar Páginas...",
+active_assets: "Recursos Activos",
+status_label: "Estado",
+operational: "Operacional",
+link_conflict: "Link duplicado. Por favor mude o nome",
+primary_infrastructure: "Infraestrutura Principal (Home)",
+empty_store_title: "Sua Loja está vazia",
+empty_state_desc: "Comece a construir sua presença digital. Crie sua primeira página usando nossos blueprints profissionais.",
+empty_search_title: "Nenhum resultado encontrado",
+empty_search_desc: "Não encontramos nenhuma página com esse nome.",
+first_deploy_btn: "DEPLOY PRIMEIRA PÁGINA",
+
+empty_search_description: "Não encontramos nenhuma página com esse nome. Tente outro termo ou limpe a busca.",
+
+
+primary_tag: "Principal",
+link_copied: "Link copiado!",
+copy_error: "Erro ao copiar link",
+design_btn: "DESIGN",
+delete_confirm: "Tem certeza que deseja excluir",
+delete_error: "Erro ao remover página"
+
+
+
   }
 } as const;
 
