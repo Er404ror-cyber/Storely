@@ -1,0 +1,45 @@
+{
+    "id": "/",
+    "name": "Storely — Sem código / Sem limites",
+    "short_name": "Storely",
+    "description": "A plataforma definitiva para quem busca performance extrema, Sem código, Sem limites",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#030303",
+    "theme_color": "#000000",
+    "lang": "pt-BR",
+    "dir": "ltr",
+    "categories": ["business", "productivity", "shopping"],
+    "icons": [
+      {
+        "src": "/favicon-16.png",
+        "sizes": "16x16",
+        "type": "image/png"
+      },
+      {
+        "src": "/favicon-32.png",
+        "sizes": "32x32",
+        "type": "image/png"
+      },
+      {
+        "src": "/apple-touch-icon.png",
+        "sizes": "180x180",
+        "type": "image/png",
+        "purpose": "any"
+      },
+      {
+        "src": "/icon-192.png",
+        "sizes": "192x192",
+        "type": "image/png",
+        "purpose": "any maskable"
+      },
+      {
+        "src": "/icon-512.png",
+        "sizes": "512x512",
+        "type": "image/png",
+        "purpose": "any maskable"
+      }
+    ]
+  }

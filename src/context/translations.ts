@@ -462,6 +462,15 @@ nav_products: "Products",
 nav_settings: "Settings",
 update_success: "Store updated successfully!",
 error_exiting: "Error exiting",
+
+
+install_how_to: "How to install",
+install_download_app: "Download app",
+install_ios_alert: "On iPhone: Safari → Share → Add to Home Screen.",
+install_ios_helper: "Safari → Share → Home Screen",
+install_use_supported_mobile_browser: "Use Chrome, Edge, or Samsung Internet",
+install_use_supported_desktop_browser: "Use Chrome or Edge to install",
+install_interact_to_enable: "Interact with the page to enable it",
   },
 
 
@@ -987,6 +996,15 @@ nav_products: "Produtos",
 nav_settings: "Configurações",
 update_success: "Loja atualizada com sucesso!",
 error_exiting: "Erro ao sair",
+
+
+install_how_to: "Como instalar",
+install_download_app: "Baixar app",
+install_ios_alert: "No iPhone: Safari → Partilhar → Adicionar ao ecrã principal.",
+install_ios_helper: "Safari → Partilhar → Ecrã principal",
+install_use_supported_mobile_browser: "Use Chrome, Edge ou Samsung Internet",
+install_use_supported_desktop_browser: "Use Chrome ou Edge para instalar",
+install_interact_to_enable: "Interaja com a página para ativar",
 
   }
 } as const;
