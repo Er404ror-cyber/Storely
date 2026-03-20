@@ -466,11 +466,15 @@ error_exiting: "Error exiting",
 
 install_how_to: "How to install",
 install_download_app: "Download app",
-install_ios_alert: "On iPhone: Safari → Share → Add to Home Screen.",
+install_ios_alert: "On iPhone, open this in Safari and tap Share → Add to Home Screen.",
 install_ios_helper: "Safari → Share → Home Screen",
 install_use_supported_mobile_browser: "Use Chrome, Edge, or Samsung Internet",
 install_use_supported_desktop_browser: "Use Chrome or Edge to install",
 install_interact_to_enable: "Interact with the page to enable it",
+install_open_help: "Tap to see how to install",
+install_modal_title: "Install app",
+install_browser_wait_prompt: "This browser supports installation, but the install prompt is not available yet. Reload the page and interact with it a bit before trying again.",
+install_close: "Close",
   },
 
 
@@ -998,14 +1002,18 @@ update_success: "Loja atualizada com sucesso!",
 error_exiting: "Erro ao sair",
 
 
+
 install_how_to: "Como instalar",
 install_download_app: "Baixar app",
-install_ios_alert: "No iPhone: Safari → Partilhar → Adicionar ao ecrã principal.",
+install_ios_alert: "No iPhone, abra no Safari e toque em Partilhar → Adicionar ao ecrã principal.",
 install_ios_helper: "Safari → Partilhar → Ecrã principal",
 install_use_supported_mobile_browser: "Use Chrome, Edge ou Samsung Internet",
 install_use_supported_desktop_browser: "Use Chrome ou Edge para instalar",
 install_interact_to_enable: "Interaja com a página para ativar",
-
+install_open_help: "Toque para ver como instalar",
+install_modal_title: "Instalar aplicação",
+install_browser_wait_prompt: "Este navegador suporta instalação, mas o aviso ainda não apareceu. Recarregue a página e interaja um pouco antes de tentar novamente.",
+install_close: "Fechar",
   }
 } as const;
 
