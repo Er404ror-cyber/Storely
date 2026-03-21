@@ -145,3 +145,12 @@ html.view-transitioning * {
     padding-right: 0;
   }
 }
+/* Garante que o elemento em fullscreen ocupe toda a tela no mobile */
+:fullscreen {
+  width: 100vw;
+  height: 100vh;
+}
+:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+}

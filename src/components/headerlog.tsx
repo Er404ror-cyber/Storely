@@ -195,7 +195,9 @@ export const HeaderLog = () => {
           </nav>
 
           <div className="flex items-center gap-3 md:gap-5 z-[110]">
-            <div className="relative hidden lg:block group">
+          {!isOpen &&
+
+            <div className="relative group">
               <button
                 onClick={handleLangChange}
                 className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-slate-50 dark:bg-zinc-900 border border-indigo-100 dark:border-indigo-500/20 transition-all active:scale-95 hover:border-indigo-500 transform-gpu shadow-sm shadow-indigo-500/5"
@@ -216,40 +218,41 @@ export const HeaderLog = () => {
                 </span>
               </button>
             </div>
+}
+          
+<div className={`${isOpen ? 'block' : 'hidden lg:block'} relative group`}>
+  <button
+    onClick={toggleTheme}
+    className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-slate-100/80 dark:bg-slate-800/80 border border-transparent hover:border-indigo-500/30 transition-all active:scale-90 transform-gpu"
+  >
+    <div className="text-slate-600 dark:text-slate-300">
+      {themeMode === 'light' && <Sun size={18} className="text-amber-500 fill-amber-500/10" />}
+      {themeMode === 'dark' && <Moon size={18} className="text-indigo-400 fill-indigo-400/10" />}
+      {themeMode === 'auto' && <Monitor size={18} className="text-slate-500" />}
+    </div>
+    
+    <div className="text-left hidden lg:block">
+      <p className="text-[10px] font-black text-slate-900 dark:text-white leading-none uppercase tracking-tighter">
+        {getThemeLabel()}
+      </p>
+    </div>
+  </button>
 
-            <div className="relative group">
-              <button
-                onClick={toggleTheme}
-                className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-slate-100/80 dark:bg-slate-800/80 border border-transparent hover:border-indigo-500/30 transition-all active:scale-90 transform-gpu"
-              >
-                <div className="text-slate-600 dark:text-slate-300">
-                  {themeMode === 'light' && <Sun size={18} className="text-amber-500 fill-amber-500/10" />}
-                  {themeMode === 'dark' && <Moon size={18} className="text-indigo-400 fill-indigo-400/10" />}
-                  {themeMode === 'auto' && <Monitor size={18} className="text-slate-500" />}
-                </div>
-                <div className="text-left hidden lg:block">
-                  <p className="text-[10px] font-black text-slate-900 dark:text-white leading-none uppercase tracking-tighter">
-                    {getThemeLabel()}
-                  </p>
-                </div>
-              </button>
-
-              <div className="absolute top-full mt-3 right-0 w-48 p-3 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all pointer-events-none z-[120]">
-                <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1 uppercase tracking-wider">
-                  {getThemeLabel()}
-                </p>
-
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                  {themeMode === 'auto'
-                    ? `${t('theme_desc_auto_base')} ${getThemeDescription()}`
-                    : t('theme_desc_manual')}
-                </p>
-
-                <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-[9px] text-slate-400 italic">
-                  {t('theme_click_toggle')}
-                </div>
-              </div>
-            </div>
+  {/* Tooltip (Dropdown) */}
+  <div className="absolute top-full mt-3 right-0 w-48 p-3 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all pointer-events-none z-[120]">
+    <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1 uppercase tracking-wider">
+      {getThemeLabel()}
+    </p>
+    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
+      {themeMode === 'auto'
+        ? `${t('theme_desc_auto_base')} ${getThemeDescription()}`
+        : t('theme_desc_manual')}
+    </p>
+    <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-[9px] text-slate-400 italic">
+      {t('theme_click_toggle')}
+    </div>
+  </div>
+</div>
 
             <Link
               to="/auth"
@@ -288,7 +291,7 @@ export const HeaderLog = () => {
             paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)'
           }}
         >
-          <div className="flex items-center justify-between mb-12 opacity-90 gap-4">
+          <div className="flex items-center justify-between mb-6 opacity-90 gap-4">
             <div className="flex items-center gap-4 flex-1 min-w-0">
               <span className="text-[10px] font-black tracking-[0.3em] uppercase dark:text-white whitespace-nowrap">
                 {t('menu_nav')}
@@ -296,8 +299,8 @@ export const HeaderLog = () => {
               <div className="h-px w-full bg-slate-200 dark:bg-slate-700" />
             </div>
 
-            <div className="relative group shrink-0">
-              <span className="absolute -top-6 right-0 text-[7px] font-black text-indigo-500 uppercase tracking-[0.2em] animate-pulse whitespace-nowrap">
+            <div className="relative group mt-2 shrink-0">
+              <span className="absolute -top-4 right-0 text-[7px] font-black text-indigo-500 uppercase tracking-[0.2em] animate-pulse whitespace-nowrap">
                 {lang === 'pt' ? 'Switch to English' : 'Mudar para Português'}
               </span>
 

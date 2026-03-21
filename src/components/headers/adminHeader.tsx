@@ -1,16 +1,24 @@
-import React, { memo } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Store as StoreIcon, X, LogOut, Loader2, Check, Edit2, Clock, ExternalLink 
+import {
+  Store as StoreIcon,
+  X,
+  LogOut,
+  Loader2,
+  Check,
+  Edit2,
+  Clock,
+  ExternalLink,
+  Globe,
+  ChevronRight
 } from 'lucide-react';
 import type { UseMutationResult } from '@tanstack/react-query';
 
-// --- Interfaces ---
 interface Store {
   id: string;
   name: string;
   slug: string;
-  logo_url?: string; // Verifique se o seu backend envia exatamente este nome
+  logo_url?: string;
   updated_at_name: string | null;
 }
 
@@ -42,182 +50,390 @@ interface SidebarProps {
   handleLogout: () => Promise<void>;
   storeUrl: string;
   menuItems: MenuItem[];
-  t: any; 
+  t: (key: any, variables?: Record<string, any>) => string;
+  lang: 'pt' | 'en';
+  handleLangChange: () => void;
 }
 
-const NavItem = memo(({ item, isActive, onClick, badge }: { item: MenuItem; isActive: boolean; onClick: () => void; badge?: number }) => (
-  <Link
-    to={item.path}
-    onClick={onClick}
-    className={`flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-300 group ${
-      isActive 
-      ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100 scale-[1.02]' 
-      : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'
-    }`}
-  >
-    <div className="flex items-center gap-3">
-      <div className={`${isActive ? 'scale-110' : 'group-hover:rotate-12 transition-transform'}`}>
-        {item.icon}
+const NavItem = memo(function NavItem({
+  item,
+  isActive,
+  badge,
+  onClick
+}: {
+  item: MenuItem;
+  isActive: boolean;
+  badge?: number;
+  onClick: () => void;
+}) {
+  return (
+    <Link
+      to={item.path}
+      onClick={onClick}
+      className={`flex items-center justify-between rounded-2xl px-4 py-3 transition-colors ${
+        isActive
+          ? 'bg-indigo-600 text-white'
+          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+      }`}
+    >
+      <div className="flex min-w-0 items-center gap-3">
+        <div className={`shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`}>
+          {item.icon}
+        </div>
+        <span className="truncate text-[14px] font-semibold">{item.label}</span>
       </div>
-      <span className="font-bold text-[14px] tracking-tight">{item.label}</span>
+
+      {badge !== undefined && badge > 0 && (
+        <span
+          className={`rounded-lg px-2 py-0.5 text-[10px] font-bold ${
+            isActive ? 'bg-white/15 text-white' : 'bg-slate-100 text-slate-500'
+          }`}
+        >
+          {badge}
+        </span>
+      )}
+    </Link>
+  );
+});
+
+const LanguageNavButton = memo(function LanguageNavButton({
+  lang,
+  onClick,
+}: {
+  lang: 'pt' | 'en';
+  onClick: () => void;
+}) {
+  const currentLanguageLabel = lang === 'pt' ? 'Português' : 'English';
+  const currentLanguageCode = lang === 'pt' ? 'PT' : 'EN';
+  const nextLanguageHint = lang === 'pt' ? 'Switch to English' : 'Mudar para Português';
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left transition-colors hover:bg-slate-50"
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+            <Globe size={18} />
+          </div>
+
+          <div className="min-w-0">
+          
+            <div className="truncate text-[14px] font-semibold text-slate-900">
+              {currentLanguageLabel}
+            </div>
+            <div className="mt-0.5 truncate text-[9px]  text-slate-500">
+              {nextLanguageHint}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-500">
+            {currentLanguageCode}
+          </span>
+          <ChevronRight size={16} className="text-slate-300" />
+        </div>
+      </div>
+    </button>
+  );
+});
+
+const StoreLogo = memo(function StoreLogo({
+  store
+}: {
+  store: Store | undefined;
+}) {
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setFailed(false);
+  }, [store?.logo_url]);
+
+  const initial = useMemo(() => store?.name?.charAt(0)?.toUpperCase() || 'S', [store?.name]);
+
+  return (
+    <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-900 text-white">
+      {store?.logo_url && !failed ? (
+        <img
+          src={store.logo_url}
+          alt={store?.name || 'Store'}
+          className="h-full w-full object-cover"
+          loading="lazy"
+          decoding="async"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <span className="text-sm font-bold uppercase">{initial}</span>
+      )}
     </div>
-    {badge !== undefined && badge > 0 && !isActive && (
-      <span className="bg-slate-100 text-slate-500 text-[10px] font-black px-2 py-0.5 rounded-lg">{badge}</span>
-    )}
-  </Link>
-));
+  );
+});
 
-export function AdminSidebar({ 
-  isOpen, setIsOpen, store, pages, location, isEditingName, 
-  setIsEditingName, newName, setNewName, timeLeft, 
-  updateStoreMutation, confirmLogout, setConfirmLogout, handleLogout, 
-  storeUrl, menuItems, t
+export function AdminSidebar({
+  isOpen,
+  setIsOpen,
+  store,
+  pages,
+  location,
+  isEditingName,
+  setIsEditingName,
+  newName,
+  setNewName,
+  timeLeft,
+  updateStoreMutation,
+  confirmLogout,
+  setConfirmLogout,
+  handleLogout,
+  storeUrl,
+  menuItems,
+  t,
+  lang,
+  handleLangChange
 }: SidebarProps) {
-  
-  const isNameTaken = updateStoreMutation.error?.message.includes("taken");
-  const isEditorRoute = location.pathname.includes('/editor/');
+  const pathname = location.pathname;
+  const pageCount = pages?.length ?? 0;
+  const isEditorRoute = pathname.includes('/editor/');
 
-  const handleCancel = () => {
+  const isNameTaken = useMemo(() => {
+    return String(updateStoreMutation.error?.message || '').toLowerCase().includes('taken');
+  }, [updateStoreMutation.error?.message]);
+
+  const closeSidebar = useCallback(() => setIsOpen(false), [setIsOpen]);
+
+  const handleNavClick = useCallback(() => {
+    setIsOpen(false);
+    setConfirmLogout(false);
     setIsEditingName(false);
     updateStoreMutation.reset();
-  };
+  }, [setIsOpen, setConfirmLogout, setIsEditingName, updateStoreMutation]);
+
+  const handleStartEditing = useCallback(() => {
+    if (!timeLeft && store) {
+      setNewName(store.name);
+      setIsEditingName(true);
+    }
+  }, [timeLeft, store, setNewName, setIsEditingName]);
+
+  const handleCancelEdit = useCallback(() => {
+    setIsEditingName(false);
+    updateStoreMutation.reset();
+  }, [setIsEditingName, updateStoreMutation]);
+
+  const handleSaveName = useCallback(() => {
+    updateStoreMutation.mutate(newName);
+  }, [updateStoreMutation, newName]);
+
+  useEffect(() => {
+    setConfirmLogout(false);
+    setIsEditingName(false);
+    updateStoreMutation.reset();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+    document.documentElement.style.overflow = isOpen ? 'hidden' : '';
+
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [isOpen]);
 
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 z-[80]" onClick={() => setIsOpen(false)} />
+        <div
+          className="fixed inset-0 z-[80] bg-slate-900/30 lg:hidden"
+          onClick={closeSidebar}
+          aria-hidden="true"
+        />
       )}
 
-      <aside className={`
-        fixed inset-y-0 left-0 z-[90] w-[295px] bg-white border-r border-slate-100 flex flex-col transition-all duration-500 ease-in-out
-        ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
-        ${!isEditorRoute ? 'lg:relative lg:translate-x-0' : 'lg:fixed'}
-      `}>
-        
-        <div className="h-20 flex items-center justify-between px-8 shrink-0">
-          <div className="flex items-center gap-3 font-black text-lg tracking-tighter uppercase italic text-slate-900">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-lg">
-              <StoreIcon size={18} />
+      <aside
+        className={`fixed left-0 z-[90] flex w-[290px] flex-col border-r border-slate-200 bg-[#fcfcfd] transition-transform duration-300 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        } ${!isEditorRoute ? 'lg:relative lg:translate-x-0' : 'lg:fixed'}`}
+        style={{
+          top: 'env(safe-area-inset-top, 0px)',
+          bottom: 'env(safe-area-inset-bottom, 0px)',
+          height: 'calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))'
+        }}
+      >
+        <div className="flex h-full min-h-0 flex-col">
+          <div className="flex h-20 items-center justify-between border-b border-slate-200 px-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-white">
+                <StoreIcon size={18} />
+              </div>
+              <div>
+                <div className="text-[15px] font-bold text-slate-900">Storelyy</div>
+                <div className="text-[11px] text-slate-400">Admin panel</div>
+              </div>
             </div>
-            Storelyy
+
+            <button
+              type="button"
+              onClick={closeSidebar}
+              className={`${!isEditorRoute ? 'lg:hidden' : 'flex'} rounded-xl p-2 text-slate-400 hover:bg-slate-100`}
+            >
+              <X size={20} />
+            </button>
           </div>
-          <button 
-            onClick={() => setIsOpen(false)} 
-            className={`${!isEditorRoute ? 'lg:hidden' : 'flex'} p-2 text-slate-400 hover:bg-slate-50 rounded-lg transition-colors`}
-          >
-            <X size={20} />
-          </button>
-        </div>
 
-        <nav className="flex-1 px-4 py-4 space-y-1.5 overflow-y-auto">
-          {menuItems.map((item) => (
-            <NavItem 
-              key={item.path} 
-              item={item} 
-              badge={item.path === '/admin/paginas' ? pages?.length : undefined} 
-              isActive={location.pathname === item.path} 
-              onClick={() => setIsOpen(false)} 
-            />
-          ))}
-        </nav>
+          <nav className="flex-1 min-h-0 overflow-y-auto px-4 py-4" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="flex min-h-full flex-col">
+              <div className="mb-3 px-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+                {t('menu_nav')}
 
-        <div className="p-4 border-t border-slate-50 bg-slate-50/50">
-          <div className="flex flex-col gap-2">
-            <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
-              <div className="flex items-start gap-3">
-                
-                {/* Lógica de Logo Corrigida */}
-                <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white ">
-                  {store?.logo_url ? (
-                    <img 
-                      src={store.logo_url} 
-                      key={store.logo_url} // Força o React a re-renderizar se a URL mudar
-                      className="w-full h-full object-cover rounded-xl  bg-white" 
-                      alt={store.name}
-                      onError={(e) => {
-                        // Se a imagem falhar (ex: 404), remove o src para mostrar a inicial
-                        (e.target as HTMLImageElement).style.display = 'none';
-                        (e.target as HTMLImageElement).parentElement!.innerHTML = `<span class="font-black text-sm uppercase">${store?.name?.charAt(0)}</span>`;
-                      }}
-                    />
-                  ) : (
-                    <span className="font-black text-sm uppercase">
-                      {store?.name?.charAt(0) || 'S'}
-                    </span>
-                  )}
+              </div>
+
+              <div className="space-y-2">
+                {menuItems.map((item) => (
+                  <NavItem
+                    key={item.path}
+                    item={item}
+                    badge={item.path === '/admin/paginas' ? pageCount : undefined}
+                    isActive={pathname === item.path}
+                    onClick={handleNavClick}
+                  />
+                ))}
+              </div>
+                {!isEditorRoute &&
+              <div className="mt-auto pt-6">
+                <div className="mb-3 px-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+                {t('language') || 'Idioma'}
                 </div>
-                
-                <div className="flex flex-col min-w-0 flex-1">
-                  {isEditingName ? (
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1">
-                        <input 
-                          autoFocus
-                          value={newName}
-                          onChange={(e) => setNewName(e.target.value)}
-                          className={`text-[13px] font-black text-slate-900 bg-slate-50 px-2 py-1 rounded-lg w-full border outline-none ${isNameTaken ? 'border-red-500 ring-1 ring-red-500' : 'border-slate-200 focus:border-indigo-600'}`}
-                        />
-                        <button 
-                          disabled={updateStoreMutation.isPending} 
-                          onClick={() => updateStoreMutation.mutate(newName)} 
-                          className="text-emerald-500 hover:bg-emerald-50 p-1 rounded-md"
-                        >
-                          {updateStoreMutation.isPending ? <Loader2 size={16} className="animate-spin"/> : <Check size={18} strokeWidth={3}/>}
-                        </button>
-                        <button onClick={handleCancel} className="text-slate-400 hover:bg-slate-100 p-1 rounded-md">
-                          <X size={18} />
-                        </button>
-                      </div>
-                      {isNameTaken && <span className="text-[9px] text-red-600 font-black uppercase block animate-pulse">{t('name_taken')}</span>}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col">
-                      <div className="flex items-center justify-between gap-1">
-                        <div 
-                          onClick={() => { if (!timeLeft && store) { setNewName(store.name); setIsEditingName(true); } }}
-                          className={`flex items-center gap-1.5 min-w-0 group ${!timeLeft ? 'cursor-pointer' : 'cursor-not-allowed'}`}
-                        >
-                          <span className={`text-[13px] font-black uppercase italic truncate ${!timeLeft ? 'hover:text-indigo-600' : 'text-slate-400'}`}>
-                            {store?.name}
-                          </span>
-                          {!timeLeft ? <Edit2 size={10} className="text-slate-300 shrink-0" /> : <Clock size={10} className="text-slate-300" />}
+                <LanguageNavButton lang={lang} onClick={handleLangChange} />
+              </div>
+}
+            </div>
+          </nav>
+
+          <div
+            className="border-t border-slate-200 bg-white p-4"
+            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
+          >
+            <div className="space-y-3">
+              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-start gap-3">
+                  <StoreLogo store={store} />
+
+                  <div className="min-w-0 flex-1">
+                    {isEditingName ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-1">
+                          <input
+                            autoFocus
+                            value={newName}
+                            onChange={(e) => setNewName(e.target.value)}
+                            className={`w-full rounded-xl border px-3 py-2 text-[13px] font-semibold outline-none ${
+                              isNameTaken
+                                ? 'border-red-500 ring-1 ring-red-500'
+                                : 'border-slate-200 bg-white focus:border-indigo-400'
+                            }`}
+                          />
+
+                          <button
+                            type="button"
+                            disabled={updateStoreMutation.isPending}
+                            onClick={handleSaveName}
+                            className="rounded-xl p-2 text-emerald-600 hover:bg-emerald-50 disabled:opacity-50"
+                          >
+                            {updateStoreMutation.isPending ? (
+                              <Loader2 size={16} className="animate-spin" />
+                            ) : (
+                              <Check size={18} />
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handleCancelEdit}
+                            className="rounded-xl p-2 text-slate-400 hover:bg-slate-100"
+                          >
+                            <X size={18} />
+                          </button>
                         </div>
-                        <a href={storeUrl} target="_blank" rel="noreferrer" className="text-slate-300 hover:text-indigo-600 shrink-0">
-                          <ExternalLink size={14} />
+
+                        {isNameTaken && (
+                          <div className="text-[10px] font-bold uppercase tracking-wide text-red-600">
+                            {t('name_taken')}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-start justify-between gap-2">
+                        <button
+                          type="button"
+                          onClick={handleStartEditing}
+                          disabled={!!timeLeft}
+                          className="min-w-0 text-left"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <span className={`truncate text-[14px] font-bold ${timeLeft ? 'text-slate-400' : 'text-slate-900'}`}>
+                              {store?.name || 'Store'}
+                            </span>
+                            {timeLeft ? (
+                              <Clock size={12} className="text-slate-300" />
+                            ) : (
+                              <Edit2 size={12} className="text-slate-300" />
+                            )}
+                          </div>
+
+                          <div className="mt-1 truncate text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                            {timeLeft ? `${timeLeft} ${t('time_left')}` : store?.slug}
+                          </div>
+                        </button>
+
+                        <a
+                          href={storeUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:text-slate-700"
+                        >
+                          <ExternalLink size={15} />
                         </a>
                       </div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">
-                        {timeLeft ? `${timeLeft} ${t('time_left')}` : store?.slug}
-                      </span>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {!confirmLogout ? (
-              <button 
-                onClick={() => setConfirmLogout(true)} 
-                className="flex items-center justify-center gap-2 w-full p-3.5 rounded-2xl text-slate-400 font-bold text-[11px] uppercase tracking-widest hover:bg-red-50 hover:text-red-600 transition-all"
-              >
-                <LogOut size={16} /> {t('logout_btn')}
-              </button>
-            ) : (
-              <div className="flex gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <button 
-                  onClick={handleLogout} 
-                  className="flex-1 p-3.5 bg-red-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest italic"
+              {!confirmLogout ? (
+                <button
+                  type="button"
+                  onClick={() => setConfirmLogout(true)}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
                 >
-                  {t('confirm_exit')}
+                  <span className="flex items-center justify-center gap-2">
+                    <LogOut size={16} />
+                    {t('logout_btn')}
+                  </span>
                 </button>
-                <button 
-                  onClick={() => setConfirmLogout(false)} 
-                  className="p-3.5 bg-slate-200 text-slate-600 rounded-2xl font-black text-[11px] uppercase tracking-widest"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            )}
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="flex-1 rounded-2xl bg-red-600 px-4 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-white"
+                  >
+                    {t('confirm_exit')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmLogout(false)}
+                    className="rounded-2xl bg-slate-200 px-4 py-3 text-slate-600"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </aside>

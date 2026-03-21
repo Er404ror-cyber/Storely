@@ -37,14 +37,32 @@ export function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { t } = useTranslate(); 
+  const { t, lang, setLang } = useTranslate();
   
+
+
   const isEditorRoute = location.pathname.includes('/editor/');
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [confirmLogout, setConfirmLogout] = useState<boolean>(false);
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
   const [newName, setNewName] = useState<string>('');
   const [timeLeft, setTimeLeft] = useState<string>("");
+
+
+  const handleLangChange = () => {
+    const newLang = lang === 'pt' ? 'en' : 'pt';
+    setLang(newLang);
+    toast.success(newLang === 'pt' ? 'Idioma: Português' : 'Language: English', {
+      id: 'lang',
+      icon: '🌎',
+      style: {
+        borderRadius: '12px',
+        background: '#1e293b',
+        color: '#fff',
+        fontSize: '12px'
+      }
+    });
+  };
 
   useEffect(() => {
     if (isEditorRoute) setIsOpen(false);
@@ -186,6 +204,8 @@ export function AdminLayout() {
         handleLogout={handleLogout}
         storeUrl={storeUrl}
         menuItems={menuItems}
+        lang={lang}
+        handleLangChange={handleLangChange}
       />
 
       <main className="flex-1 flex flex-col min-w-0 h-full bg-white relative overflow-hidden">
