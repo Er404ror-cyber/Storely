@@ -476,6 +476,12 @@ install_open_help: "Tap to see how to install",
 install_modal_title: "Install app",
 install_browser_wait_prompt: "This browser supports installation, but the install prompt is not available yet. Reload the page and interact with it a bit before trying again.",
 install_close: "Close",
+
+  whatsappActive: "Active",
+  whatsappNotConfigured: "Number not configured",
+  goToSettingsToAddNumber: "Add the number in settings",
+  whatsappNotConfiguredDesc: "No WhatsApp number configured. Go to store settings to activate the button.",
+
   },
 
 
@@ -1016,6 +1022,12 @@ install_open_help: "Toque para ver como instalar",
 install_modal_title: "Instalar aplicação",
 install_browser_wait_prompt: "Este navegador suporta instalação, mas o aviso ainda não apareceu. Recarregue a página e interaja um pouco antes de tentar novamente.",
 install_close: "Fechar",
+
+  whatsappActive: "Ativo",
+  whatsappNotConfigured: "Número não configurado",
+  goToSettingsToAddNumber: "Adicione o número nas configurações",
+  whatsappNotConfiguredDesc: "Sem número de WhatsApp configurado. Vá às configurações da loja para ativar o botão.",
+
   }
 } as const;
 
