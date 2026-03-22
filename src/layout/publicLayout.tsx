@@ -9,6 +9,7 @@ type StorePublicData = {
   name: string;
   settings: any;
   logo_url: string | null;
+  whatsapp_number?: string | null;
 };
 
 type StoreCachePayload = {
@@ -19,7 +20,7 @@ type StoreCachePayload = {
 
 type DataSource = "cache" | "network" | "none";
 
-const STORE_CACHE_TTL = 1000 * 60 * 60; // 1 minuto
+const STORE_CACHE_TTL = 1000 * 60 * 60; // 1 hora
 
 const mascotImages = [
   "/img/Mascote.png",
@@ -140,7 +141,7 @@ export function PublicLayout() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("stores")
-        .select("id, name, settings, logo_url")
+        .select("id, name, settings, logo_url, whatsapp_number")
         .eq("slug", storeSlug)
         .single();
 
@@ -157,7 +158,6 @@ export function PublicLayout() {
       }
 
       setSource("network");
-      console.log("[API] fetching store from Supabase...");
       return data;
     },
   });
