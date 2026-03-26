@@ -10,22 +10,12 @@ import {
   Clock,
   ExternalLink,
   Globe,
-  ChevronRight
+  ChevronRight,
 } from 'lucide-react';
 import type { UseMutationResult } from '@tanstack/react-query';
-
-interface Store {
-  id: string;
-  name: string;
-  slug: string;
-  logo_url?: string;
-  updated_at_name: string | null;
-}
-
-interface Page {
-  id: string;
-  title: string;
-}
+import type { AdminPage, AdminStore } from '../../types/admin';
+import type { useTranslate } from '../../context/LanguageContext';
+type TranslateFn = ReturnType<typeof useTranslate>['t'];
 
 interface MenuItem {
   path: string;
@@ -36,21 +26,21 @@ interface MenuItem {
 interface SidebarProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  store: Store | undefined;
-  pages: Page[];
+  store: AdminStore | undefined;
+  pages: AdminPage[];
   location: { pathname: string };
   isEditingName: boolean;
   setIsEditingName: (val: boolean) => void;
   newName: string;
   setNewName: (val: string) => void;
   timeLeft: string;
-  updateStoreMutation: UseMutationResult<any, Error, string, any>;
+  updateStoreMutation: UseMutationResult<AdminStore, Error, string, unknown>;
   confirmLogout: boolean;
   setConfirmLogout: (val: boolean) => void;
   handleLogout: () => Promise<void>;
   storeUrl: string;
   menuItems: MenuItem[];
-  t: (key: any, variables?: Record<string, any>) => string;
+  t: TranslateFn;
   lang: 'pt' | 'en';
   handleLangChange: () => void;
 }
@@ -59,7 +49,7 @@ const NavItem = memo(function NavItem({
   item,
   isActive,
   badge,
-  onClick
+  onClick,
 }: {
   item: MenuItem;
   isActive: boolean;
@@ -120,11 +110,10 @@ const LanguageNavButton = memo(function LanguageNavButton({
           </div>
 
           <div className="min-w-0">
-          
             <div className="truncate text-[14px] font-semibold text-slate-900">
               {currentLanguageLabel}
             </div>
-            <div className="mt-0.5 truncate text-[9px]  text-slate-500">
+            <div className="mt-0.5 truncate text-[9px] text-slate-500">
               {nextLanguageHint}
             </div>
           </div>
@@ -142,9 +131,9 @@ const LanguageNavButton = memo(function LanguageNavButton({
 });
 
 const StoreLogo = memo(function StoreLogo({
-  store
+  store,
 }: {
-  store: Store | undefined;
+  store: AdminStore | undefined;
 }) {
   const [failed, setFailed] = useState(false);
 
@@ -191,14 +180,16 @@ export function AdminSidebar({
   menuItems,
   t,
   lang,
-  handleLangChange
+  handleLangChange,
 }: SidebarProps) {
   const pathname = location.pathname;
   const pageCount = pages?.length ?? 0;
   const isEditorRoute = pathname.includes('/editor/');
 
   const isNameTaken = useMemo(() => {
-    return String(updateStoreMutation.error?.message || '').toLowerCase().includes('taken');
+    return String(updateStoreMutation.error?.message || '')
+      .toLowerCase()
+      .includes('taken');
   }, [updateStoreMutation.error?.message]);
 
   const closeSidebar = useCallback(() => setIsOpen(false), [setIsOpen]);
@@ -230,10 +221,8 @@ export function AdminSidebar({
     setConfirmLogout(false);
     setIsEditingName(false);
     updateStoreMutation.reset();
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
-
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : '';
     document.documentElement.style.overflow = isOpen ? 'hidden' : '';
@@ -261,7 +250,8 @@ export function AdminSidebar({
         style={{
           top: 'env(safe-area-inset-top, 0px)',
           bottom: 'env(safe-area-inset-bottom, 0px)',
-          height: 'calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))'
+          height:
+            'calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
         }}
       >
         <div className="flex h-full min-h-0 flex-col">
@@ -285,11 +275,13 @@ export function AdminSidebar({
             </button>
           </div>
 
-          <nav className="flex-1 min-h-0 overflow-y-auto px-4 py-4" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <nav
+            className="flex-1 min-h-0 overflow-y-auto px-4 py-4"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
             <div className="flex min-h-full flex-col">
               <div className="mb-3 px-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
                 {t('menu_nav')}
-
               </div>
 
               <div className="space-y-2">
@@ -303,14 +295,15 @@ export function AdminSidebar({
                   />
                 ))}
               </div>
-                {!isEditorRoute &&
-              <div className="mt-auto pt-6">
-                <div className="mb-3 px-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                {t('language') || 'Idioma'}
+
+              {!isEditorRoute && (
+                <div className="mt-auto pt-6">
+                  <div className="mb-3 px-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+                    {t('language') || 'Idioma'}
+                  </div>
+                  <LanguageNavButton lang={lang} onClick={handleLangChange} />
                 </div>
-                <LanguageNavButton lang={lang} onClick={handleLangChange} />
-              </div>
-}
+              )}
             </div>
           </nav>
 
@@ -375,7 +368,11 @@ export function AdminSidebar({
                           className="min-w-0 text-left"
                         >
                           <div className="flex items-center gap-1.5">
-                            <span className={`truncate text-[14px] font-bold ${timeLeft ? 'text-slate-400' : 'text-slate-900'}`}>
+                            <span
+                              className={`truncate text-[14px] font-bold ${
+                                timeLeft ? 'text-slate-400' : 'text-slate-900'
+                              }`}
+                            >
                               {store?.name || 'Store'}
                             </span>
                             {timeLeft ? (

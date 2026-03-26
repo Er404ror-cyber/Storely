@@ -4,6 +4,8 @@ import { useTranslate } from '../../context/LanguageContext';
 import type { Section, ModalType } from '../../types/editor';
 import { memo, useMemo, useCallback } from 'react';
 
+type TranslateFn = ReturnType<typeof useTranslate>['t'];
+
 interface ModalsProps {
   sections: Section[];
   activeModal: ModalType;
@@ -20,167 +22,255 @@ interface ModalsProps {
   setShowMobileSidebar: (show: boolean) => void;
 }
 
-// BlockItem otimizado com memo e comparador estrito
-const BlockItem = memo(({ type, previewUrl, onClick, t }: any) => {
-  return (
-    <button 
-      onClick={() => onClick(type)} 
-      className="group relative flex flex-col p-2 bg-white rounded-[2.2rem] border border-slate-100 transition-all duration-200 active:scale-95 will-change-transform transform-gpu"
-    >
-      <div className="aspect-[4/3] w-full bg-slate-50 rounded-[1.7rem] mb-4 overflow-hidden flex items-center justify-center relative border border-slate-50 pointer-events-none">
-        {previewUrl ? (
-          <img 
-            src={previewUrl} 
-            alt="" 
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-            decoding="async"
-          />
-        ) : (
-          <div className="w-full h-full p-4 flex flex-col gap-2">
-            <div className="h-2 w-3/4 bg-slate-200 rounded-full" />
-            <div className="h-2 w-full bg-slate-100 rounded-full" />
-            <div className="mt-auto grid grid-cols-3 gap-1">
-              <div className="h-6 bg-slate-200 rounded-lg" />
-              <div className="h-6 bg-slate-200 rounded-lg" />
-              <div className="h-6 bg-slate-200 rounded-lg" />
-            </div>
-          </div>
-        )}
-        <div className="absolute inset-0 bg-blue-600 opacity-0 group-hover:opacity-5 transition-opacity duration-200" />
-      </div>
+interface BlockItemProps {
+  type: string;
+  previewUrl?: string;
+  onClick: (type: string) => void;
+  t: TranslateFn;
+}
 
-      <div className="px-3 pb-2 text-left pointer-events-none">
-        <span className="text-[10px] font-black uppercase tracking-tight text-slate-800 block leading-tight">
-          {t(`section_${type}`) || type.replace(/([A-Z])/g, ' $1').trim()}
-        </span>
-      </div>
-    </button>
-  );
-}, (prev, next) => prev.type === next.type && prev.previewUrl === next.previewUrl);
+type PendingLike = {
+  isTemp?: boolean;
+  size?: number;
+  name?: string;
+  url?: string;
+};
+
+function getSectionPendingItems(section: Section): PendingLike[] {
+  const content = (section.content || {}) as any;
+
+  const images = Array.isArray(content?.images) ? content.images : [];
+  const media = content?.media ? [content.media] : [];
+  const singleImagePending = content?.pendingImage ? [content.pendingImage] : [];
+
+  return [...images, ...media, ...singleImagePending].filter(Boolean);
+}
+
+function sectionHasPendingUploads(section: Section) {
+  return getSectionPendingItems(section).some((item) => item?.isTemp);
+}
+
+function getReadableSectionName(type: string, t: TranslateFn) {
+  const key = `section_${type}` as Parameters<TranslateFn>[0];
+  const translated = t(key);
+
+  if (translated && translated !== key) return translated;
+
+  return type.replace(/[_-]+/g, ' ').replace(/([A-Z])/g, ' $1').trim();
+}
+
+const BlockItem = memo(
+  ({ type, previewUrl, onClick, t }: BlockItemProps) => {
+    return (
+      <button
+        type="button"
+        onClick={() => onClick(type)}
+        className="group relative flex flex-col rounded-[2.2rem] border border-slate-100 bg-white p-2 transition-all duration-200 active:scale-95 will-change-transform transform-gpu"
+      >
+        <div className="relative mb-4 flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-[1.7rem] border border-slate-50 bg-slate-50 pointer-events-none">
+          {previewUrl ? (
+            <img
+              src={previewUrl}
+              alt=""
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <div className="flex h-full w-full flex-col gap-2 p-4">
+              <div className="h-2 w-3/4 rounded-full bg-slate-200" />
+              <div className="h-2 w-full rounded-full bg-slate-100" />
+              <div className="mt-auto grid grid-cols-3 gap-1">
+                <div className="h-6 rounded-lg bg-slate-200" />
+                <div className="h-6 rounded-lg bg-slate-200" />
+                <div className="h-6 rounded-lg bg-slate-200" />
+              </div>
+            </div>
+          )}
+          <div className="absolute inset-0 bg-blue-600 opacity-0 transition-opacity duration-200 group-hover:opacity-5" />
+        </div>
+
+        <div className="pointer-events-none px-3 pb-2 text-left">
+          <span className="block text-[10px] font-black uppercase leading-tight tracking-tight text-slate-800">
+            {getReadableSectionName(type, t)}
+          </span>
+        </div>
+      </button>
+    );
+  },
+  (prev, next) => prev.type === next.type && prev.previewUrl === next.previewUrl
+);
 
 BlockItem.displayName = 'BlockItem';
 
 const SECTION_PREVIEWS: Record<string, string> = {
-  hero_comercial: "https://png.pngtree.com/thumb_back/fh260/background/20241106/pngtree-a-captivating-image-of-small-planet-surrounded-by-dew-kissed-grass-image_16516199.jpg", 
-  galeria_grid: "",
-  vitrine_produtos: "",
-  contacto_mapa: "",
-  estatisticas_larga: "",
-  servicos_modern: "",
-  hero_minimalista: "",
-  tabela_precos: "",
-  depoimentos_clientes: "",
-  faq_acordion: "",
-  rodape_simples: ""
+  hero_comercial:
+    'https://png.pngtree.com/thumb_back/fh260/background/20241106/pngtree-a-captivating-image-of-small-planet-surrounded-by-dew-kissed-grass-image_16516199.jpg',
+  galeria_grid: '',
+  vitrine_produtos: '',
+  contacto_mapa: '',
+  estatisticas_larga: '',
+  servicos_modern: '',
+  hero_minimalista: '',
+  tabela_precos: '',
+  depoimentos_clientes: '',
+  faq_acordion: '',
+  rodape_simples: '',
 };
 
 export function EditorModals({
-  sections, activeModal, showAddModal, isSaving, hasPendingUploads,
-  setActiveModal, setShowAddModal, handleManualSave, handleDiscard, resetBlocker,
-  setSections, setEditingId
+  sections,
+  activeModal,
+  showAddModal,
+  isSaving,
+  hasPendingUploads,
+  setActiveModal,
+  setShowAddModal,
+  handleManualSave,
+  handleDiscard,
+  resetBlocker,
+  setSections,
+  setEditingId,
 }: ModalsProps) {
   const { t } = useTranslate();
 
-  // 1. Otimização de Cálculo: Filtra apenas quando as 'sections' mudam de verdade
   const pendingSections = useMemo(() => {
-    return sections.filter(s => {
-      const content = s.content as any;
-      const mediaItems = content.images || (content.media ? [content.media] : []);
-      return mediaItems.some((img: any) => img.isTemp);
-    });
+    return sections.filter(sectionHasPendingUploads);
   }, [sections]);
 
-  const hasPending = pendingSections.length > 0;
+  const hasPending = hasPendingUploads || pendingSections.length > 0;
 
-  // 2. Otimização de Funções: Impede que o BlockItem re-renderize por causa de nova referência de função
-  const handleAddSection = useCallback((selectedType: string) => {
-    const newId = crypto.randomUUID();
-    
-    // Criamos o objeto explicitamente como Section para o TS não reclamar
-    const newSection: Section = { 
-      id: newId, 
-      type: selectedType as any, // 'any' aqui se o seu tipo Section.type for um Enum específico
-      content: {}, 
-      style: { 
-        cols: '1', 
-        theme: 'light', 
-        align: 'left', 
-        fontSize: 'base' 
-      } 
-    } as Section; // <--- O segredo está aqui
+  const pendingSectionLabels = useMemo(() => {
+    return pendingSections.map((section) => ({
+      id: section.id,
+      label: getReadableSectionName(String(section.type), t),
+    }));
+  }, [pendingSections, t]);
 
-    setSections(prev => [...prev, newSection]);
-    setEditingId(newId);
-    setShowAddModal(false);
-  }, [setSections, setEditingId, setShowAddModal]);
+  const handleAddSection = useCallback(
+    (selectedType: string) => {
+      const newId = crypto.randomUUID();
+
+      const newSection: Section = {
+        id: newId,
+        type: selectedType as any,
+        content: {},
+        style: {
+          cols: '1',
+          theme: 'light',
+          align: 'left',
+          fontSize: 'base',
+        },
+      } as Section;
+
+      setSections((prev) => [...prev, newSection]);
+      setEditingId(newId);
+      setShowAddModal(false);
+    },
+    [setSections, setEditingId, setShowAddModal]
+  );
 
   return (
     <>
-      {/* MODAL DE SEGURANÇA */}
       {activeModal && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/60 animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl text-center border border-white/20">
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 ${
-              hasPending ? 'bg-amber-50 text-amber-600 animate-pulse' : 'bg-blue-50 text-blue-600'
-            }`}>
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/60 p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm rounded-[3rem] border border-white/20 bg-white p-8 text-center shadow-2xl">
+            <div
+              className={`mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full ${
+                hasPending
+                  ? 'animate-pulse bg-amber-50 text-amber-600'
+                  : 'bg-blue-50 text-blue-600'
+              }`}
+            >
               {hasPending ? <CloudUpload size={32} /> : <AlertCircle size={32} />}
             </div>
 
-            <h3 className="text-xl font-black mb-2 uppercase tracking-tight italic">
-              {hasPending ? "Sincronização Necessária" : activeModal === 'SAVE' ? t('editor_modal_save_title') : t('editor_modal_pending_changes_title')}
+            <h3 className="mb-2 text-xl font-black uppercase tracking-tight italic">
+              {hasPending
+                ? t('editor_modal_sync_required')
+                : activeModal === 'SAVE'
+                  ? t('editor_modal_save_title')
+                  : t('editor_modal_pending_changes_title')}
             </h3>
 
             {hasPending ? (
               <div className="mb-6 px-2">
-                <p className="text-slate-500 text-[11px] mb-4 leading-relaxed">
+                <p className="mb-4 text-[11px] leading-relaxed text-slate-500">
                   {t('editor_modal_sync_warning')}
                 </p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {pendingSections.map((s, idx) => (
-                    <span key={idx} className="px-3 py-1 bg-amber-50 text-amber-700 text-[9px] font-black rounded-full border border-amber-100 uppercase italic">
-                      {s.type.replace(/([A-Z])/g, ' $1').trim()}
-                    </span>
-                  ))}
-                </div>
+
+                {pendingSectionLabels.length > 0 && (
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-700">
+                      {t('sectionsNeedSaving')}
+                    </p>
+
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {pendingSectionLabels.map((section) => (
+                        <span
+                          key={section.id}
+                          className="rounded-full border border-amber-100 bg-amber-50 px-3 py-1 text-[9px] font-black uppercase italic text-amber-700"
+                        >
+                          {section.label}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
-              <p className="text-slate-500 text-[11px] mb-8 px-4 leading-relaxed">
-                {activeModal === 'SAVE' ? t('editor_modal_save_desc') : t('editor_modal_nav_changes_desc')}
+              <p className="mb-8 px-4 text-[11px] leading-relaxed text-slate-500">
+                {activeModal === 'SAVE'
+                  ? t('editor_modal_save_desc')
+                  : t('editor_modal_nav_changes_desc')}
               </p>
             )}
 
             <div className="flex flex-col gap-2">
               {(activeModal === 'SAVE' || activeModal === 'NAVIGATION') && (
-                <button 
-                  onClick={handleManualSave} 
+                <button
+                  type="button"
+                  onClick={handleManualSave}
                   disabled={hasPending || isSaving}
-                  className={`w-full p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
-                    (hasPending || isSaving) ? 'bg-slate-100 text-slate-300 cursor-not-allowed opacity-80' : 'bg-blue-600 text-white shadow-lg shadow-blue-100 hover:scale-[1.02] active:scale-95'
+                  className={`flex w-full items-center justify-center gap-2 rounded-2xl p-4 text-[12px] font-black uppercase tracking-widest transition-all ${
+                    hasPending || isSaving
+                      ? 'cursor-not-allowed bg-slate-100 text-slate-300 opacity-80'
+                      : 'bg-blue-600 text-white shadow-lg shadow-blue-100 hover:scale-[1.02] active:scale-95'
                   }`}
                 >
                   {isSaving && <Loader2 className="animate-spin" size={14} />}
-                  {isSaving ? 'A Processar...' : t('editor_modal_btn_save')}
+                  {isSaving ? t('processing') : t('editor_modal_btn_save')}
                 </button>
               )}
 
               {(activeModal === 'DISCARD' || activeModal === 'NAVIGATION') && (
-                <button 
-                  onClick={handleDiscard} 
+                <button
+                  type="button"
+                  onClick={handleDiscard}
                   disabled={isSaving}
-                  className={`w-full p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${
-                    isSaving ? 'bg-slate-50 text-slate-300 cursor-not-allowed' : 'bg-red-50 text-red-500 hover:bg-red-500 hover:text-white'
+                  className={`w-full rounded-2xl p-4 text-[12px] font-black uppercase tracking-widest transition-all ${
+                    isSaving
+                      ? 'cursor-not-allowed bg-slate-50 text-slate-300'
+                      : 'bg-red-50 text-red-500 hover:bg-red-500 hover:text-white'
                   }`}
                 >
-                  {hasPendingUploads ? t('editor_modal_btn_discard_all') : t('editor_modal_btn_discard')}
+                  {hasPendingUploads
+                    ? t('editor_modal_btn_discard_all')
+                    : t('editor_modal_btn_discard')}
                 </button>
               )}
 
-              <button 
-                onClick={() => { setActiveModal(null); resetBlocker(); }} 
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveModal(null);
+                  resetBlocker();
+                }}
                 disabled={isSaving}
-                className={`w-full p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest mt-2 transition-all ${
-                  isSaving ? 'text-slate-200 cursor-not-allowed' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                className={`mt-2 w-full rounded-2xl p-4 text-[12px] font-black uppercase tracking-widest transition-all ${
+                  isSaving
+                    ? 'cursor-not-allowed text-slate-200'
+                    : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
                 }`}
               >
                 {t('editor_modal_btn_continue')}
@@ -191,44 +281,47 @@ export function EditorModals({
       )}
 
       {showAddModal && (
-        <div className="fixed inset-0 z-[200] flex items-end md:items-center justify-center bg-slate-900/40 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[200] flex items-end justify-center bg-slate-900/40 animate-in fade-in duration-200 md:items-center">
           <div className="absolute inset-0" onClick={() => setShowAddModal(false)} />
 
-          <div className="relative bg-white w-full max-w-2xl md:rounded-[3rem] rounded-t-[2.5rem] shadow-2xl flex flex-col max-h-[85vh] overflow-hidden animate-in slide-in-from-bottom-6 duration-300">
-            <div className="px-8 pt-8 pb-4 flex justify-between items-start bg-white shrink-0">
+          <div className="relative flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[2.5rem] bg-white shadow-2xl animate-in slide-in-from-bottom-6 duration-300 md:rounded-[3rem]">
+            <div className="flex shrink-0 items-start justify-between bg-white px-8 pt-8 pb-4">
               <div>
-                <h3 className="font-black text-3xl uppercase tracking-tighter text-slate-900 italic leading-none">
+                <h3 className="leading-none font-black text-3xl uppercase tracking-tighter italic text-slate-900">
                   {t('modal_library_title')}
                 </h3>
-                <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mt-2">
+                <p className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">
                   {t('modal_library_subtitle')}
                 </p>
               </div>
-              <button onClick={() => setShowAddModal(false)} className="p-2 bg-slate-50 text-slate-400 rounded-full hover:bg-slate-100 transition-colors">
+
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                className="rounded-full bg-slate-50 p-2 text-slate-400 transition-colors hover:bg-slate-100"
+              >
                 <X size={24} />
               </button>
             </div>
 
-            {/* 3. Otimização de Layout: isola o conteúdo para evitar recalculação de layout global */}
-            <div 
-              className="flex-1 overflow-y-auto p-6 md:p-8 grid grid-cols-2 lg:grid-cols-3 gap-4 bg-white custom-scrollbar"
-              style={{ 
-                contain: 'content', 
-                contentVisibility: 'auto' 
-              } as any}
+            <div
+              className="custom-scrollbar grid flex-1 grid-cols-2 gap-4 overflow-y-auto bg-white p-6 md:grid-cols-3 md:p-8"
+              style={{ contain: 'content', contentVisibility: 'auto' } as React.CSSProperties}
             >
-              {(Object.keys(SectionLibrary) as Array<keyof typeof SectionLibrary>).map((type) => (
-                <BlockItem 
-                  key={type} 
-                  type={type} 
-                  previewUrl={SECTION_PREVIEWS[type]} 
-                  t={t}
-                  onClick={handleAddSection} 
-                />
-              ))}
+              {(Object.keys(SectionLibrary) as Array<keyof typeof SectionLibrary>).map(
+                (type) => (
+                  <BlockItem
+                    key={type}
+                    type={type}
+                    previewUrl={SECTION_PREVIEWS[type]}
+                    t={t}
+                    onClick={handleAddSection}
+                  />
+                )
+              )}
             </div>
 
-            <div className="h-8 bg-white shrink-0 md:hidden" />
+            <div className="h-8 shrink-0 bg-white md:hidden" />
           </div>
         </div>
       )}

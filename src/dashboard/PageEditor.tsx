@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useBlocker } from 'react-router-dom';
 import { Plus, Layout } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -6,7 +6,6 @@ import { SectionLibrary, type SectionContent } from '../components/sections/main
 import { toast } from 'react-hot-toast';
 import { useTranslate } from '../context/LanguageContext';
 
-// Importações dos Tipos
 import type { Section, SectionStyle, ModalType } from '../types/editor';
 import { MAX_SECTIONS } from '../utils/maxSections';
 import { DesktopSidebar } from '../components/editor/desktopSidebar';
@@ -14,7 +13,28 @@ import { EditorHeader } from '../components/editor/EditorHeader';
 import { MobileElements } from '../components/editor/MobileElements';
 import { EditorModals } from '../components/editor/SecurityModal';
 
+const MAX_TOTAL_SECTION_MEDIA_BYTES = 15 * 1024 * 1024;
 
+function getSectionPendingItems(section: Section) {
+  const content = (section.content || {}) as any;
+
+  const images = Array.isArray(content.images) ? content.images : [];
+  const media = content.media ? [content.media] : [];
+  const singleImagePending = content.pendingImage ? [content.pendingImage] : [];
+
+  return [...images, ...media, ...singleImagePending].filter(Boolean);
+}
+
+function sectionHasPendingUploads(section: Section) {
+  return getSectionPendingItems(section).some((item: any) => item?.isTemp);
+}
+
+function sectionTotalPendingBytes(section: Section) {
+  return getSectionPendingItems(section).reduce(
+    (acc: number, item: any) => acc + (item?.size || 0),
+    0
+  );
+}
 
 export function Editor() {
   const [slugs, setSlugs] = useState<{ store: string; page: string } | null>(null);
@@ -30,19 +50,19 @@ export function Editor() {
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const { t } = useTranslate();
 
-  const hasChanges = useMemo(() => 
-    JSON.stringify(sections) !== JSON.stringify(originalSections), 
-  [sections, originalSections]);
+  const hasChanges = useMemo(
+    () => JSON.stringify(sections) !== JSON.stringify(originalSections),
+    [sections, originalSections]
+  );
 
   const hasPendingUploads = useMemo(() => {
-    return sections.some(section => 
-      (section.content?.images as any[])?.some(img => img.isTemp)
-    );
+    return sections.some(sectionHasPendingUploads);
   }, [sections]);
 
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
-      (hasChanges || hasPendingUploads) && currentLocation.pathname !== nextLocation.pathname
+      (hasChanges || hasPendingUploads) &&
+      currentLocation.pathname !== nextLocation.pathname
   );
 
   useEffect(() => {
@@ -52,16 +72,18 @@ export function Editor() {
         e.returnValue = '';
       }
     };
+
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasChanges, hasPendingUploads]);
 
   useEffect(() => {
-    if (blocker.state === "blocked") setActiveModal('NAVIGATION');
+    if (blocker.state === 'blocked') setActiveModal('NAVIGATION');
   }, [blocker.state]);
 
   useEffect(() => {
     const controller = new AbortController();
+
     const loadData = async () => {
       if (!pageId) return;
 
@@ -89,7 +111,7 @@ export function Editor() {
 
           setSlugs({
             page: pageData.slug || pageId,
-            store: storeData?.slug || pageData.store_id
+            store: storeData?.slug || pageData.store_id,
           });
         }
 
@@ -103,13 +125,18 @@ export function Editor() {
         if (secErr) throw secErr;
 
         if (sectionsData) {
-          const formatted: Section[] = sectionsData.map(item => ({
+          const formatted: Section[] = sectionsData.map((item) => ({
             id: item.id,
             type: item.type as keyof typeof SectionLibrary,
             content: (item.content as SectionContent) || {},
-            style: item.style || { cols: '1', theme: 'light', align: 'left', fontSize: 'base' }
+            style: item.style || {
+              cols: '1',
+              theme: 'light',
+              align: 'left',
+              fontSize: 'base',
+            },
           }));
-          
+
           setSections(formatted);
           setOriginalSections(JSON.parse(JSON.stringify(formatted)));
           setLastSaved(new Date());
@@ -117,7 +144,7 @@ export function Editor() {
       } catch (err: unknown) {
         if (err instanceof Error) {
           if (err.name === 'AbortError' || err.message.includes('aborted')) return;
-          console.error("Erro real de carregamento:", err.message);
+          console.error('Erro real de carregamento:', err.message);
         }
       } finally {
         if (!controller.signal.aborted) setLoading(false);
@@ -128,85 +155,126 @@ export function Editor() {
     return () => controller.abort();
   }, [pageId]);
 
-  const handleManualSave = async () => {
+  useEffect(() => {
+    if (!editingId) return;
+
+    const element = document.getElementById(`section-${editingId}`);
+    if (!element) return;
+
+    const raf = window.requestAnimationFrame(() => {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    });
+
+    return () => window.cancelAnimationFrame(raf);
+  }, [editingId]);
+
+  const handleManualSave = useCallback(async () => {
     if (!pageId || isSaving) return;
-  
-    const problematicSections = sections.filter(s => {
-      const content = s.content as any;
-      const mediaItems = content.images || (content.media ? [content.media] : []);
-      const hasTemp = mediaItems.some((img: any) => img.isTemp);
-      const totalBytes = mediaItems.reduce((acc: number, curr: any) => acc + (curr.size || 0), 0);
-      const isHeavy = totalBytes > 15 * 1024 * 1024;
+
+    const problematicSections = sections.filter((section) => {
+      const hasTemp = sectionHasPendingUploads(section);
+      const totalBytes = sectionTotalPendingBytes(section);
+      const isHeavy = totalBytes > MAX_TOTAL_SECTION_MEDIA_BYTES;
+
       return hasTemp || isHeavy;
     });
-  
+
     if (problematicSections.length > 0) {
       const firstErrorType = problematicSections[0].type.toUpperCase();
+
       return toast.error(
-        `Ação Bloqueada: A seção ${firstErrorType} possui mídias pendentes ou muito grandes.`, 
-        { id: "save-blocked", duration: 5000, icon: "🚫" }
+        t('saveBlockedPendingSection', { section: firstErrorType }) ||
+          `Ação bloqueada: a secção ${firstErrorType} possui uploads pendentes ou muito grandes.`,
+        {
+          id: 'save-blocked',
+          duration: 5000,
+        }
       );
     }
-  
+
     setIsSaving(true);
-    const loadingToast = toast.loading("Salvando página...");
-  
+    const loadingToast = toast.loading(t('savingPage') || 'Salvando página...');
+
     try {
       await supabase.from('page_sections').delete().eq('page_id', pageId);
-  
+
       const toInsert = sections.map((s, i) => ({
         page_id: pageId,
         type: s.type,
         content: s.content,
         style: s.style,
-        order_index: i 
+        order_index: i,
       }));
-  
+
       const { error } = await supabase.from('page_sections').insert(toInsert);
       if (error) throw error;
-  
+
       setOriginalSections(JSON.parse(JSON.stringify(sections)));
       setLastSaved(new Date());
-  
+
       setActiveModal(null);
-      toast.success("Publicado com sucesso!", { id: loadingToast });
-  
-      if (blocker.state === "blocked") {
-        blocker.proceed();
-      }
-      
+      toast.success(t('publishedSuccess') || 'Publicado com sucesso!', {
+        id: loadingToast,
+      });
+
+      if (blocker.state === 'blocked') blocker.proceed();
     } catch (err: unknown) {
       console.error(err);
-      toast.error("Erro ao publicar.", { id: loadingToast });
+      toast.error(t('publishError') || 'Erro ao publicar.', {
+        id: loadingToast,
+      });
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [pageId, isSaving, sections, t, blocker]);
 
-  const handleDiscard = () => {
+  const handleDiscard = useCallback(() => {
     setSections(JSON.parse(JSON.stringify(originalSections)));
     setActiveModal(null);
-    if (blocker.state === "blocked") blocker.proceed();
-  };
+    if (blocker.state === 'blocked') blocker.proceed();
+  }, [originalSections, blocker]);
 
-  const updateSectionStyle = (id: string, key: keyof SectionStyle, value: string) => {
-    setSections(prev => prev.map(s => s.id === id ? { ...s, style: { ...s.style, [key]: value } } : s));
-  };
+  const updateSectionStyle = useCallback(
+    (id: string, key: keyof SectionStyle, value: string) => {
+      setSections((prev) =>
+        prev.map((s) =>
+          s.id === id ? { ...s, style: { ...s.style, [key]: value } } : s
+        )
+      );
+    },
+    []
+  );
 
-  const handlePreview = () => {
+  const updateSectionContent = useCallback((id: string, key: string, value: unknown) => {
+    setSections((prev) =>
+      prev.map((sec) =>
+        sec.id === id
+          ? {
+              ...sec,
+              content: {
+                ...sec.content,
+                [key]: value,
+              },
+            }
+          : sec
+      )
+    );
+  }, []);
+
+  const handlePreview = useCallback(() => {
     if (slugs?.store) {
       const pagePath = slugs.page === 'home' ? '' : `/${slugs.page}`;
       const url = `/${slugs.store}${pagePath}`;
       window.open(url, '_blank');
     } else {
-      alert("Aguardando carregamento dos endereços...");
+      alert(t('waitingAddressesLoad') || 'Aguardando carregamento dos endereços...');
     }
-  };
+  }, [slugs, t]);
 
-  const activeSectionInfo = sections.find(s => s.id === editingId);
-  const activeSectionName = activeSectionInfo?.type.replace(/([A-Z])/g, ' $1').trim().toUpperCase() || 'BLOCO';
-
-  const handleAddBlock = () => {
+  const handleAddBlock = useCallback(() => {
     if (sections.length >= MAX_SECTIONS) {
       toast.error(
         <div className="flex flex-col gap-0.5">
@@ -217,18 +285,42 @@ export function Editor() {
             {t('editor_limit_advice')}
           </p>
         </div>,
-        { id: 'limit-reached', duration: 5000, icon: '🚀', style: { borderRadius: '20px', padding: '12px 16px' } }
+        {
+          id: 'limit-reached',
+          duration: 5000,
+          icon: '🚀',
+          style: { borderRadius: '20px', padding: '12px 16px' },
+        }
       );
       return;
     }
-    setShowAddModal(true);
-  };
 
-  if (loading) return <div className="h-screen flex items-center justify-center bg-white italic tracking-widest text-slate-400 uppercase text-xs">A carregar editor...</div>;
+    setShowAddModal(true);
+  }, [sections.length, t]);
+
+  const activeSectionInfo = useMemo(
+    () => sections.find((s) => s.id === editingId),
+    [sections, editingId]
+  );
+
+  const activeSectionName = useMemo(() => {
+    return (
+      activeSectionInfo?.type.replace(/([A-Z])/g, ' $1').trim().toUpperCase() ||
+      t('blockDefaultName') ||
+      'BLOCO'
+    );
+  }, [activeSectionInfo, t]);
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-white italic tracking-widest text-slate-400 uppercase text-xs">
+        {t('loadingEditor')}
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen w-full bg-[#F1F5F9] flex flex-col md:flex-row overflow-hidden font-sans">
-      
       <DesktopSidebar
         sections={sections}
         hasChanges={hasChanges}
@@ -243,7 +335,6 @@ export function Editor() {
       />
 
       <main className="flex-1 flex flex-col relative overflow-hidden">
-        
         <EditorHeader
           hasChanges={hasChanges}
           isSaving={isSaving}
@@ -253,67 +344,118 @@ export function Editor() {
           setActiveModal={setActiveModal}
         />
 
-        <div className="flex-1 overflow-y-auto p-0 flex flex-col items-center bg-slate-100/50" onClick={() => { if(!showMobileSidebar) setEditingId(null); }}>
-          
-        {sections.length === 0 && (
-  <div className="flex-1 flex flex-col items-center justify-center p-6 min-h-[400px] w-full animate-in fade-in duration-700">
-    {/* Container Visual com Glassmorphism suave */}
-    <div className="relative mb-8 cursor-pointer" onClick={() => setShowAddModal(true)}>
-      <div className="absolute inset-0 bg-blue-500/10 blur-3xl rounded-full" />
-      <div className="relative w-24 h-24 md:w-32 md:h-32 bg-white rounded-3xl flex items-center justify-center shadow-xl border border-slate-100 rotate-3 hover:rotate-0 transition-transform duration-500">
-        <Layout size={48} className="text-slate-400 md:size-64" />
-        {/* Badge Flutuante de "+" para dar contexto visual */}
-        <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-white shadow-lg border-4 border-white">
-          <Plus size={20} strokeWidth={3} />
-        </div>
-      </div>
-    </div>
-
-    {/* Textos com Hierarquia Clara */}
-    <div className="max-w-md text-center space-y-3">
-      <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-800">
-        {t('empty_state_title')}
-      </h2>
-      
-      <p className="text-sm md:text-base text-slate-500 leading-relaxed px-4">
-        {t('empty_state_description')}
-      </p>
-      
-      {/* Guia Visual/Instrução */}
-      <div className="pt-4 flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
-        <span className="h-px w-8 bg-slate-200"></span>
-        <span className="flex items-center gap-1.5">
-          {t('empty_state_action')}
-        </span>
-        <span className="h-px w-8 bg-slate-200"></span>
-      </div>
-    </div>
-  </div>
-)}
-
-          <div className="bg-white min-h-full w-full transition-all duration-500 shadow-2xl relative z-10">
-            {sections.map((s) => {
-              const Comp = SectionLibrary[s.type];
-              const isActive = editingId === s.id;
-              return Comp ? (
-                <div 
-                  key={s.id} 
-                  onClick={(e) => { e.stopPropagation(); setEditingId(s.id); }}
-                  className={`relative cursor-pointer transition-all border-none outline-none ${isActive ? 'ring-4 ring-blue-500 ring-inset z-20 shadow-2xl scale-[1.002]' : 'hover:bg-blue-50/5'}`}
-                  style={{ textAlign: s.style.align, fontSize: s.style.fontSize === 'small' ? '0.85rem' : s.style.fontSize === 'large' ? '1.2rem' : '1rem' }}
-                >
-                  {isActive && !showMobileSidebar && <div className="md:hidden absolute inset-0 bg-blue-500/5 z-30 pointer-events-none" />}
-                  <div className={`w-full overflow-hidden ${s.style.theme === 'dark' ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}`}>
-                    <Comp 
-                      content={s.content} 
-                      style={s.style} 
-                      onUpdate={(k: string, v: unknown) => {
-                        setSections(prev => prev.map(sec => sec.id === s.id ? { ...sec, content: { ...sec.content, [k]: v } } : sec));
-                      }} 
-                    />
+        <div
+          className="flex-1 overflow-y-auto p-0 flex flex-col items-center bg-slate-100/50"
+          onClick={() => {
+            if (!showMobileSidebar) setEditingId(null);
+          }}
+        >
+          {sections.length === 0 && (
+            <div className="flex-1 flex flex-col items-center justify-center p-6 min-h-[400px] w-full animate-in fade-in duration-300">
+              <div className="relative mb-8 cursor-pointer" onClick={() => setShowAddModal(true)}>
+                <div className="relative w-24 h-24 md:w-32 md:h-32 bg-white rounded-3xl flex items-center justify-center shadow-sm border border-slate-200">
+                  <Layout size={48} className="text-slate-400 md:size-64" />
+                  <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-white shadow-md border-4 border-white">
+                    <Plus size={20} strokeWidth={3} />
                   </div>
                 </div>
-              ) : null;
+              </div>
+
+              <div className="max-w-md text-center space-y-3">
+                <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-800">
+                  {t('empty_state_title')}
+                </h2>
+
+                <p className="text-sm md:text-base text-slate-500 leading-relaxed px-4">
+                  {t('empty_state_description')}
+                </p>
+
+                <div className="pt-4 flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+                  <span className="h-px w-8 bg-slate-200" />
+                  <span className="flex items-center gap-1.5">{t('empty_state_action')}</span>
+                  <span className="h-px w-8 bg-slate-200" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-white min-h-full w-full relative z-10">
+            {sections.map((s) => {
+              const Comp = SectionLibrary[s.type];
+              if (!Comp) return null;
+
+              const isActive = editingId === s.id;
+              const hasActiveSelection = editingId !== null;
+              const isInactive = hasActiveSelection && !isActive;
+
+              return (
+                <section
+                  id={`section-${s.id}`}
+                  key={s.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (editingId !== s.id) setEditingId(s.id);
+                  }}
+                  className={[
+                    'group relative cursor-pointer border-b border-slate-200/80 transition-opacity duration-150',
+                    isActive
+                      ? 'z-10 opacity-100 ring-2 ring-blue-500 ring-inset border-blue-300 bg-blue-50/30'
+                      : '',
+                    isInactive ? 'opacity-60 hover:opacity-85' : '',
+                  ].join(' ')}
+                  style={{
+                    textAlign: s.style.align,
+                    fontSize:
+                      s.style.fontSize === 'small'
+                        ? '0.85rem'
+                        : s.style.fontSize === 'large'
+                          ? '1.2rem'
+                          : '1rem',
+                  }}
+                >
+                  {!isActive && (
+                    <>
+                      <div className="hidden md:flex absolute top-3 right-3 z-20 pointer-events-none">
+                        <span className="px-2.5 py-1 rounded-full bg-slate-900/80 text-white text-[10px] font-semibold shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                          {t('clickToEdit')}
+                        </span>
+                      </div>
+
+                      <div className="md:hidden absolute top-2 right-2 z-20 pointer-events-none">
+                        <span className="px-2 py-1 rounded-full bg-slate-900/75 text-white text-[9px] font-semibold shadow-sm">
+                          {t('tapToEdit')}
+                        </span>
+                      </div>
+                    </>
+                  )}
+
+                  {isActive && (
+                    <>
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 z-20" />
+
+                      <div className="absolute top-2 right-2 md:top-3 md:right-3 z-20 pointer-events-none">
+                        <span className="px-2.5 py-1 rounded-full bg-blue-600 text-white text-[9px] md:text-[10px] font-bold uppercase tracking-wide shadow-sm">
+                          {t('editingSection')}
+                        </span>
+                      </div>
+                    </>
+                  )}
+
+                  <div
+                    className={`w-full overflow-hidden ${
+                      s.style.theme === 'dark'
+                        ? 'bg-slate-900 text-white'
+                        : 'bg-white text-slate-900'
+                    }`}
+                  >
+                    <Comp
+                      content={s.content}
+                      style={s.style}
+                      onUpdate={(k: string, v: unknown) => updateSectionContent(s.id, k, v)}
+                    />
+                  </div>
+                </section>
+              );
             })}
           </div>
         </div>
@@ -332,13 +474,18 @@ export function Editor() {
           setActiveModal={setActiveModal}
         />
 
-        <button 
+        <button
           onClick={handleAddBlock}
-          className={`fixed bottom-6 right-6 md:bottom-8 md:right-8 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center z-40 active:scale-90 transition-all ${
-            sections.length >= MAX_SECTIONS ? 'bg-slate-200 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'
+          className={`fixed bottom-6 right-6 md:bottom-8 md:right-8 w-14 h-14 rounded-full shadow-lg flex items-center justify-center z-40 active:scale-95 transition-transform ${
+            sections.length >= MAX_SECTIONS
+              ? 'bg-slate-200 cursor-not-allowed'
+              : 'bg-blue-600 text-white hover:bg-blue-700'
           }`}
         >
-          <Plus size={36} className={sections.length >= MAX_SECTIONS ? 'text-slate-400' : 'text-white'} />
+          <Plus
+            size={36}
+            className={sections.length >= MAX_SECTIONS ? 'text-slate-400' : 'text-white'}
+          />
         </button>
       </main>
 

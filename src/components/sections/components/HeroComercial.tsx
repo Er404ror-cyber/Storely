@@ -283,19 +283,24 @@ const AdminControls = memo(({
         </button>
 
         <input
-          ref={fileInputRef}
-          type="file"
-          className="hidden"
-          accept="image/*,video/*"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) {
-              handleFileUpload(file, (newMedia: MediaContent) => {
-                onUpdate?.('media', newMedia);
-              });
-            }
-          }}
-        />
+  ref={fileInputRef}
+  type="file"
+  className="hidden"
+  accept="image/*,video/*"
+  onChange={(e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileUpload(file, (newMedia) => {
+        const normalizedMedia: MediaContent = {
+          ...newMedia,
+          size: newMedia.size ?? 0,
+        };
+
+        onUpdate?.('media', normalizedMedia);
+      });
+    }
+  }}
+/>
 
         {content.media?.size && (
           <div className={`flex items-center justify-between px-2 py-1.5 rounded-lg ${isOverLimit ? 'bg-red-100' : 'bg-slate-50 dark:bg-white/5'}`}>

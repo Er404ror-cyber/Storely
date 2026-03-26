@@ -129,7 +129,7 @@ export const translations = {
     videoLimit: "VIDEO: 5MB",
     whatsappLabel: "WhatsApp (Country Code + Number)",
     whatsappPlaceholder: "Enter number",
-    changeMedia: "Change Media",
+    changeMedia: "Change Photo",
     tryAnother: "Try another file",
     weight: "Size:",
     reduceSize: "Reduce Size",
@@ -482,6 +482,143 @@ install_close: "Close",
   goToSettingsToAddNumber: "Add the number in settings",
   whatsappNotConfiguredDesc: "No WhatsApp number configured. Go to store settings to activate the button.",
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  aboutBadge: "About",
+aboutTitle: "My Approach: Passion and Precision",
+aboutSubtitle: "A clear, modern vision focused on results.",
+aboutDescription: "My journey in the digital world started with curiosity and the desire to build useful solutions. Today, I combine creativity, method, and attention to detail to deliver modern, clear, and efficient experiences.",
+aboutSecondaryTitle: "Who I Am",
+aboutSecondaryDescription: "I am a professional focused on building well-structured, responsive digital solutions designed to grow with quality.",
+
+textSectionSimpleHelp: "Edit the texts. The limits already help keep the layout clean.",
+imageSectionSimpleHelp: "Edit the texts and choose a photo. Then click confirm.",
+fillBadge: "Write a short badge",
+fillMainTitle: "Write the title",
+fillSubtitle: "Write the subtitle",
+fillDescription: "Write the description",
+fillSecondaryTitle: "Write the secondary title",
+fillSecondaryDescription: "Write the secondary text",
+defaultImageAlt: "Section image",
+
+uploadPhoto: "Upload photo",
+confirmPhoto: "Confirm photo",
+savingPhoto: "Saving...",
+removePhoto: "Remove photo",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  processing: 'Processing...',
+  adjustPhoto: 'Adjust photo',
+  cropApplied: 'Crop applied successfully.',
+  imageSavedSuccess: 'Image uploaded successfully.',
+  imageUploadError: 'Failed to upload image.',
+  imageRemoved: 'Image removed successfully.',
+  imageRemoveError: 'Failed to remove image.',
+  uploadSuccess: 'Upload completed successfully.',
+  uploadError: 'Failed to upload file.',
+  fileReadError: 'Error reading file. Please try again.',
+  imageTypeError: 'Please select a valid image.',
+  imageTooLargeMustCompress: 'Image is above the limit. Compress it before uploading.',
+  compressPhotoLink: 'Compress image',
+  choosePhoto: 'Choose photo',
+  changePhoto: 'Change photo',
+ 
+  movePhoto: 'Move photo',
+  imageWeight: 'Size',
+  imageSizeLimit: 'Maximum size: {{size}} MB',
+  defaultImage: 'Default image',
+  
+  editor_modal_sync_required: 'Synchronization required',
+
+
+  imageTooLargeCropBlocked: 'Cannot apply crop to an image above the limit.',
+saveBlockedPendingSection: 'Action blocked: section {{section}} has pending or oversized uploads.',
+savingPage: 'Saving page...',
+publishedSuccess: 'Published successfully!',
+publishError: 'Error while publishing.',
+
+
+
+
+
+
+
+
+
+
+
+  cropError: "Error applying crop",
+  applyCrop: "Apply crop",
+  sectionsNeedSaving:"Sections pending to be saved",
+  imageSelectedConfirmToSave:"Image selected. Confirm to save.",
+  imageReadyConfirmHelp:"The image has been selected. Now click confirm image to save it.",
+
+  clickToEdit: "Click to edit",
+  tapToEdit: "Tap to edit",
+  editingSection: "Editing",
+  loadingEditor: "Loading editor...",
+  waitingAddressesLoad: "Waiting for addresses to load...",
+    imageSelectionCancelled: "Image selection cancelled",
+
+
+
+
+
+    cacheLabel: "cache",
+  cacheStatusLocal: "local",
+  cacheStatusNetwork: "network",
+  cacheStatusWaiting: "waiting",
+  cacheStatusSyncing: "syncing",
+
+  invalid_store_name: "Invalid store name",
+    blockDefaultName: "BLOCK",
   },
 
 
@@ -655,7 +792,7 @@ install_close: "Close",
     whatsappLabel: "WhatsApp (DDI + Número)",
     whatsappPlaceholder: "Número com DDD",
     
-    changeMedia: "Trocar Mídia",
+    changeMedia: "Trocar Foto",
     tryAnother: "Tentar outro arquivo",
     weight: "Peso:",
     reduceSize: "Reduzir Tamanho",
@@ -1028,6 +1165,124 @@ install_close: "Fechar",
   goToSettingsToAddNumber: "Adicione o número nas configurações",
   whatsappNotConfiguredDesc: "Sem número de WhatsApp configurado. Vá às configurações da loja para ativar o botão.",
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  aboutBadge: "Sobre",
+aboutTitle: "Minha Abordagem: Paixão e Precisão",
+aboutSubtitle: "Uma visão clara, moderna e focada em resultados.",
+aboutDescription: "Minha jornada no mundo digital começou com curiosidade e vontade de construir soluções úteis. Hoje, uno criatividade, método e atenção aos detalhes para entregar experiências modernas, claras e eficientes.",
+aboutSecondaryTitle: "Quem Eu Sou",
+aboutSecondaryDescription: "Sou um profissional focado em criar soluções digitais bem estruturadas, responsivas e pensadas para crescer com qualidade.",
+
+textSectionSimpleHelp: "Edite os textos. Os limites já ajudam a manter o layout bonito.",
+imageSectionSimpleHelp: "Edite os textos e escolha uma foto. Depois clique em confirmar.",
+fillBadge: "Escreva um selo curto",
+fillMainTitle: "Escreva o título",
+fillSubtitle: "Escreva o subtítulo",
+fillDescription: "Escreva a descrição",
+fillSecondaryTitle: "Escreva o título secundário",
+fillSecondaryDescription: "Escreva o texto secundário",
+defaultImageAlt: "Imagem da secção",
+
+uploadPhoto: "Carregar foto",
+confirmPhoto: "Confirmar foto",
+savingPhoto: "A guardar...",
+removePhoto: "Remover foto",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  processing: 'A processar...',
+  adjustPhoto: 'Ajuste a foto',
+  cropApplied: 'Recorte aplicado com sucesso.',
+  imageSavedSuccess: 'Imagem enviada com sucesso.',
+  imageUploadError: 'Falha ao enviar a imagem.',
+  imageRemoved: 'Imagem removida com sucesso.',
+  imageRemoveError: 'Falha ao remover a imagem.',
+  uploadSuccess: 'Upload concluído com sucesso.',
+  uploadError: 'Falha ao enviar o ficheiro.',
+  fileReadError: 'Erro ao ler o arquivo. Tente novamente.',
+  imageTypeError: 'Selecione uma imagem válida.',
+  imageTooLargeMustCompress: 'A imagem está acima do limite. Comprima antes de enviar.',
+  compressPhotoLink: 'Comprimir imagem',
+  choosePhoto: 'Escolher foto',
+  changePhoto: 'Trocar foto',
+  
+  movePhoto: 'Mova a foto',
+  imageWeight: 'Peso',
+  imageSizeLimit: 'Tamanho máximo: {{size}} MB',
+  defaultImage: 'Imagem padrão',
+  
+  editor_modal_sync_required: 'Sincronização necessária',
+
+
+
+
+
+  imageTooLargeCropBlocked: 'Não é possível aplicar o recorte numa imagem acima do limite.',
+saveBlockedPendingSection: 'Ação bloqueada: a secção {{section}} possui uploads pendentes ou muito grandes.',
+savingPage: 'Salvando página...',
+publishedSuccess: 'Publicado com sucesso!',
+publishError: 'Erro ao publicar.',
+
+
+
+
+
+
+
+  cropError: "Erro ao aplicar o recorte",
+  applyCrop: "Aplicar recorte",
+  sectionsNeedSaving:"Secções pendentes de salvar",
+  
+
+  imageReadyConfirmHelp:"A imagem já foi escolhida. Agora clique em confirmar imagem para salvar.",
+  imageSelectedConfirmToSave:"Imagem selecionada. Confirme para salvar.",
+imageSelectionCancelled: "Seleção de imagem cancelada",
+
+
+clickToEdit: "Clique para editar",
+  tapToEdit: "Toque para editar",
+  editingSection: "Editando",
+  loadingEditor: "A carregar editor...",
+  waitingAddressesLoad: "Aguardando carregamento dos endereços...",
+
+
+  cacheLabel: "cache",
+  cacheStatusLocal: "local",
+  cacheStatusNetwork: "network",
+  cacheStatusWaiting: "aguardando",
+  cacheStatusSyncing: "sincronizando",
+  invalid_store_name: "Nome da loja inválido",
+  blockDefaultName: "BLOCO",
+
+ 
   }
 } as const;
 
