@@ -116,6 +116,7 @@ const SECTION_PREVIEWS: Record<string, string> = {
   depoimentos_clientes: '',
   faq_acordion: '',
   rodape_simples: '',
+  texto_narrativo:'https://png.pngtree.com/thumb_back/fh260/background/20241106/pngtree-a-captivating-image-of-small-planet-surrounded-by-dew-kissed-grass-image_16516199.jpg',
 };
 
 export function EditorModals({

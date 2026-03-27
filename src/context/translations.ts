@@ -320,6 +320,10 @@ modal_library_add_action: "Add",
 section_hero_comercial: "Commercial Hero",
 section_galeria_grid: "Grid Gallery",
 section_vitrine_produtos: "Product Showcase",
+
+
+section_texto_imagem_showcase: "Text Mosaic",
+section_texto_narrativo: "Text Block",
 section_servicos_modern: "Modern Services",
 section_contacto_mapa: "Contact & Map",
 section_precos_moderno: "Pricing Table",
@@ -986,6 +990,12 @@ modal_library_title: "Biblioteca de Blocos",
 modal_library_add_action: "Adicionar",
 section_hero_comercial: "Banner Comercial",
 section_galeria_grid: "Galeria Grid",
+
+
+
+section_texto_imagem_showcase: "Mosaico com Texto",
+section_texto_narrativo: "Bloco de Texto",
+
 section_vitrine_produtos: "Vitrine de Produtos",
 section_servicos_modern: "Serviços Modernos",
 section_contacto_mapa: "Contacto e Mapa",
