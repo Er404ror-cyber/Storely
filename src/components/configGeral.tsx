@@ -1,177 +1,78 @@
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { UploadCloud, Loader2 } from 'lucide-react';
+import { Loader2, Shield, Store, User } from 'lucide-react';
+import { useTranslate } from '../context/LanguageContext';
+import { TabItem } from './settings/AdminSettingsComponents';
+import { StoreTab } from './settings/tabs/StoreTab';
+import { AccountTab } from './settings/tabs/AccountTab';
+import { SecurityTab } from './settings/tabs/SecurityTab';
 
-// --- Interfaces para Type Safety ---
-
-interface StoreSettings {
-  headerTheme?: 'light' | 'dark';
-  [key: string]: unknown;
-}
-
-interface StoreData {
-  id: string;
-  name: string;
-  settings: StoreSettings;
-  logo_url?: string;
-}
-
-interface StoreUpdatePayload {
-  name?: string;
-  settings?: StoreSettings;
-  logo_url?: string;
-}
-
-export function AdminHeaderSettings() {
-  const { storeId } = useParams<{ storeId: string }>(); // Obtém o ID da URL
+export function AdminSettings() {
+  const { t } = useTranslate();
   const queryClient = useQueryClient();
-  const [isUploading, setIsUploading] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  // 1. Busca as configurações atuais
-  const { data: store, isLoading } = useQuery<StoreData>({
-    queryKey: ["admin-store-settings", storeId],
+  const queryParams = new URLSearchParams(location.search);
+  const isRecoveryMode = queryParams.get('reset') === 'true';
+  const isEmailConfirm = queryParams.get('email_updated') === 'true';
+  const initialTab = queryParams.get('tab') as 'store' | 'account' | 'security' | null;
+
+  const [activeTab, setActiveTab] = useState<'store' | 'account' | 'security'>(
+    initialTab || (isRecoveryMode ? 'security' : (isEmailConfirm ? 'account' : 'store'))
+  );
+
+  // Sincroniza abas e limpa URL após sucesso
+  useEffect(() => {
+    if (isRecoveryMode || isEmailConfirm) {
+      queryClient.invalidateQueries({ queryKey: ["admin-full-settings"] });
+      // Opcional: Limpar a URL após 5 segundos para remover os parâmetros de sucesso
+      const timer = setTimeout(() => {
+        navigate('/admin/configuracoes', { replace: true });
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [isRecoveryMode, isEmailConfirm, queryClient, navigate]);
+
+  const { data: store, isLoading } = useQuery({
+    queryKey: ["admin-full-settings"],
     queryFn: async () => {
-      if (!storeId) throw new Error("ID da loja não fornecido");
-      
-      const { data, error } = await supabase
-        .from("stores")
-        .select("*")
-        .eq("id", storeId)
-        .single();
-      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Unauthorized");
+      const { data, error } = await supabase.from("stores").select("*").eq("owner_id", user.id).single();
       if (error) throw error;
-      return data;
-    },
-    enabled: !!storeId // Só executa se houver um ID
-  });
-
-  // 2. Mutação para salvar dados (Sem 'any')
-  const saveMutation = useMutation({
-    mutationFn: async (newData: StoreUpdatePayload) => {
-      if (!storeId) throw new Error("ID da loja não encontrado");
-      
-      const { error } = await supabase
-        .from("stores")
-        .update(newData)
-        .eq("id", storeId);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-store-settings", storeId] });
-      queryClient.invalidateQueries({ queryKey: ["store-header-config"] });
-    },
-    onError: (error: Error) => {
-      alert("Erro ao salvar: " + error.message);
+      return { ...data, email: user.email, new_email_pending: user.new_email };
     }
   });
 
-  // 3. Lógica de Upload do Logo
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !storeId) return;
-
-    try {
-      setIsUploading(true);
-      
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${storeId}-logo-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `logos/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('store-assets')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('store-assets')
-        .getPublicUrl(filePath);
-
-      await saveMutation.mutateAsync({ logo_url: publicUrl });
-      
-    } catch (error) {
-      console.error("Upload error:", error);
-      alert("Falha ao carregar imagem.");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  if (!storeId) return <div className="p-10 text-center text-red-500 font-bold">Erro: storeId não encontrado na URL.</div>;
-  if (isLoading) return <div className="p-10 text-center animate-pulse font-bold text-xs text-slate-400">Sincronizando...</div>;
+  if (isLoading) return (
+    <div className="h-screen flex flex-col items-center justify-center gap-6 bg-slate-50">
+      <Loader2 className="animate-spin text-indigo-600" size={50} />
+      <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">{t('loading_session')}</p>
+    </div>
+  );
 
   return (
-    <div className="max-w-2xl mx-auto p-10 bg-white rounded-[3rem] border border-slate-100 shadow-2xl space-y-10">
-      {/* HEADER */}
-      <div className="flex items-center justify-between border-b pb-6">
-        <h2 className="text-2xl font-black tracking-tighter uppercase italic text-slate-800">Visual do Site</h2>
-        {saveMutation.isPending && <Loader2 className="animate-spin text-blue-600" size={20} />}
+    <div className="max-w-5xl mx-auto pb-32 px-6 animate-in fade-in duration-700">
+      <div className="mb-12 space-y-2 pt-10">
+        <h1 className="text-4xl font-black tracking-tighter text-slate-900 uppercase italic">
+          {t('settings_title')} <span className="text-indigo-600">{t('settings_highlight')}</span>
+        </h1>
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest italic">{t('settings_subtitle')}</p>
       </div>
 
-      <div className="space-y-8">
-        {/* NOME DO SITE */}
-        <div className="space-y-3">
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">
-            Nome Exibido no Header
-          </label>
-          <input 
-            key={store?.name} 
-            defaultValue={store?.name}
-            placeholder="Ex: Minha Empresa"
-            className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-blue-600 focus:bg-white outline-none font-bold transition-all text-slate-700"
-            onBlur={(e) => {
-              if (e.target.value !== store?.name) {
-                saveMutation.mutate({ name: e.target.value });
-              }
-            }}
-          />
-        </div>
+      <div className="flex flex-wrap gap-3 mb-16 p-2 bg-slate-100/50 rounded-[2.5rem] w-fit border border-slate-200/40 shadow-inner">
+        <TabItem active={activeTab === 'store'} onClick={() => setActiveTab('store')} icon={<Store size={14}/>} label={t('tab_store')} />
+        <TabItem active={activeTab === 'account'} onClick={() => setActiveTab('account')} icon={<User size={14}/>} label={t('tab_account')} />
+        <TabItem active={activeTab === 'security'} onClick={() => setActiveTab('security')} icon={<Shield size={14}/>} label={t('tab_security')} />
+      </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* SELETOR DE TEMA */}
-          <div className="space-y-3">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Modo de Cor</label>
-            <div className="grid grid-cols-2 gap-2 p-1.5 bg-slate-100 rounded-2xl">
-              {(['light', 'dark'] as const).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => saveMutation.mutate({ 
-                    settings: { ...store?.settings, headerTheme: t } 
-                  })}
-                  className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                    (store?.settings?.headerTheme || 'light') === t 
-                    ? 'bg-white text-blue-600 shadow-sm' 
-                    : 'text-slate-400 hover:text-slate-600'
-                  }`}
-                >
-                  {t === 'light' ? 'Claro' : 'Escuro'}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* UPLOAD DO LOGO */}
-          <div className="space-y-3 flex flex-col items-center">
-             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Logotipo</label>
-             <label className={`w-full flex items-center justify-center gap-2 py-4 rounded-xl text-[9px] font-black uppercase tracking-widest cursor-pointer transition-all shadow-lg active:scale-95 ${
-               isUploading ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900 text-white hover:bg-blue-600'
-             }`}>
-               {isUploading ? <Loader2 className="animate-spin" size={14} /> : <UploadCloud size={14} />}
-               {isUploading ? 'A carregar...' : 'Mudar Logo'}
-               <input 
-                 type="file" 
-                 className="hidden" 
-                 accept="image/*" 
-                 disabled={isUploading}
-                 onChange={handleLogoUpload} 
-               />
-             </label>
-          </div>
-        </div>
+      <div className="transition-all duration-300">
+        {activeTab === 'store' && <StoreTab store={store} />}
+        {activeTab === 'account' && <AccountTab store={store} isConfirmed={isEmailConfirm} />}
+        {activeTab === 'security' && <SecurityTab store={store} isRecoveryMode={isRecoveryMode} />}
       </div>
     </div>
   );

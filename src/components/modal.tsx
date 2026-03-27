@@ -57,6 +57,20 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
     return () => cancelAnimationFrame(frameId);
   }, [isPlaying]);
 
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+  
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+  
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
   const handleShare = async (e: MouseEvent<HTMLButtonElement>): Promise<void> => {
     e.stopPropagation();
     if (!media?.url) return;
@@ -76,17 +90,27 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
     }
   };
 
-  const toggleFullscreen = (e: MouseEvent<HTMLButtonElement>): void => {
+  const toggleFullscreen = (e: React.MouseEvent<HTMLButtonElement>): void => {
     e.stopPropagation();
-    if (!containerRef.current) return;
-
+    
+    // Elemento que queremos expandir (pode ser o container ou o vídeo)
+    const elem = containerRef.current;
+    const video = videoRef.current;
+  
     if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen().catch((err: Error) => {
-        console.error(`Erro ao entrar em fullscreen: ${err.message}`);
-      });
+      // Tenta o container primeiro
+      if (elem?.requestFullscreen) {
+        elem.requestFullscreen();
+      } 
+      // Fallback específico para iOS/Safari no elemento de vídeo
+      else if (video && (video as any).webkitEnterFullscreen) {
+        (video as any).webkitEnterFullscreen();
+      }
       setIsFullscreen(true);
     } else {
-      document.exitFullscreen();
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
       setIsFullscreen(false);
     }
   };

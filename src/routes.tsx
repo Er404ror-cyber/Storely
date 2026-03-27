@@ -3,7 +3,7 @@ import { AdminLayout } from './layout/AdminLayout';
 import Dashboard from './dashboard/dashboard';
 import { PagesList } from './dashboard/PagesList';
 import { Editor } from './dashboard/PageEditor';
-import { AdminHeaderSettings } from './components/configGeral';
+import {  AdminSettings } from './components/configGeral';
 import { AuthPage } from './auth/auth';
 import { PublicLayout } from './layout/publicLayout';
 import { PageView } from './pages/user/pageview';
@@ -14,6 +14,7 @@ import { Faq } from './pages/faq';
 import { Blog } from './pages/home/blog';
 import { ProductDetails } from './dashboard/ProdutcsDetails';
 import { ProductsList } from './dashboard/Products';
+import { AuthCallback } from './auth/AuthCallback';
 
 
 export const route = createBrowserRouter([
@@ -41,6 +42,10 @@ export const route = createBrowserRouter([
     path: '/auth',
     element: <AuthPage />,
   },
+  {
+    path: '/auth/callback',
+    element: <AuthCallback />,
+  },
   // 🔐 ÁREA DO VENDEDOR (ADMIN)
   {
     path: '/admin',
@@ -51,7 +56,7 @@ export const route = createBrowserRouter([
       { path: 'editor/:pageId', element: <Editor /> },
       { path: 'produtos', element: <ProductsList /> },
       { path: 'produtos/:productId', element: <ProductDetails /> },
-            { path: 'configuracoes', element: <AdminHeaderSettings /> },
+            { path: 'configuracoes', element: <AdminSettings /> },
     ],
   },
 

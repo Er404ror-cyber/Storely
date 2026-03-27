@@ -14,6 +14,7 @@ export const translations = {
     theme_desc_night: "Active: Night (6pm-6am)",
     theme_desc_day: "Active: Day (6am-6pm)",
     menu_nav: "Navigation",
+    language: "language",
     footer_rights: "All Rights Reserved",
     theme_desc_auto_base: "Changes automatically based on time.",
     theme_desc_manual: "This mode will stay active until you switch to Auto.",
@@ -128,7 +129,7 @@ export const translations = {
     videoLimit: "VIDEO: 5MB",
     whatsappLabel: "WhatsApp (Country Code + Number)",
     whatsappPlaceholder: "Enter number",
-    changeMedia: "Change Media",
+    changeMedia: "Change Photo",
     tryAnother: "Try another file",
     weight: "Size:",
     reduceSize: "Reduce Size",
@@ -162,7 +163,7 @@ export const translations = {
   placeholder_whatsapp: "Sales number",
   btn_save_whatsapp: "Save Number",
   error_invalid_phone: "Invalid number for this country.",
-  placeholder_search: "Search by product name...",
+  placeholder_search: "Search by name, category, or price…",
   label_product: "Product",
   label_category: "Category",
   label_price: "Price",
@@ -215,8 +216,444 @@ showcase_clear_all: "Clear Filters",
     showcase_category: "Category: {{category}}",
     filter_unlimited: "Unlimited",
     showcase_searchPlaceholder: "What are you looking for?",
-    showcase_viewFull: "Browse All"
+    showcase_viewFull: "Browse All",
+    common_close: "Close",
+    common_filters: "Filters",
+
+
+    product_details_visit_store: "Visit Store",
+    product_details_details: "Details",
+    product_details_final_value: "Final Value",
+    product_details_confirm_whatsapp: "Confirm on WhatsApp",
+    product_details_no_description: "No detailed description available for this product.",
+    product_details_edit: "Edit",
+    product_details_cancel: "Cancel",
+    product_details_publish: "Publish",
+    product_details_share_success: "Link copied!",
+    common_category_general: "General",
+    editor_limit_reached: "7 section limit reached",
+  editor_limit_advice: "Remove blocks or create a new page to keep your site fast and organized.",
+
+  
+  editor_add_block: "Add Block",
+  editor_back_to_layers: "Back to Layers",
+  editor_structure_cols: "Structure (Columns)",
+  editor_col_unit: "Col",
+  editor_font_size: "Font Size",
+  editor_font_small: "Small",
+  editor_font_medium: "Medium",
+  editor_font_large: "Large",
+  editor_text_align: "Text Alignment",
+  editor_theme_light: "LIGHT",
+  editor_theme_dark: "DARK",
+  editor_delete_block: "Delete Block",
+  editor_layers_order: "Layers Order",
+        
+
+
+  templates_photography_label: "Fine Art Photography",
+templates_photography_description: "See what you can do: transform a minimalist layout into your personal gallery with just a few clicks.",
+templates_photography_hero_title: "Your Visual Narrative",
+templates_photography_hero_sub: "A lean and sophisticated space for photographers who value every detail.",
+templates_photography_gallery_empty_title: "Your New Collection",
+templates_photography_gallery_empty_sub: "This gallery is ready for your vision. Start importing your photos.",
+templates_photography_gallery_insp_title: "Inspiration and Aesthetics",
+templates_photography_gallery_insp_sub: "Example of how the layout behaves with organic tones and soft light.",
+templates_photography_contact_title: "Book a Session",
+
+templates_saas_label: "Sales & Product",
+templates_saas_description: "Results-oriented layout, highlighting products and subscription plans.",
+templates_saas_hero_title: "Sell Smarter",
+templates_saas_hero_sub: "The platform that unifies your stock, physical sales, and e-commerce in one place.",
+templates_saas_pricing_title: "Our Plans",
+templates_saas_features_title: "Enterprise Features",
+templates_saas_contact_title: "Schedule a Demo",
+
+templates_brand_label: "Personal Brand",
+templates_brand_description: "Focused on establishing authority for mentors, speakers, and coaches.",
+templates_brand_hero_title: "Turn Your Knowledge into Business",
+templates_brand_hero_sub: "Positioning strategies for professionals aiming for the next level.",
+templates_brand_stats_students: "STUDENTS",
+templates_brand_stats_lives: "LIVES",
+templates_brand_stats_countries: "COUNTRIES",
+templates_brand_stats_roi: "ROI",
+templates_brand_mentorship_title: "Mentorship Programs",
+templates_brand_contact_title: "Talk to My Team",
+
+templates_event_label: "Launch / Event",
+templates_event_description: "Dynamic layout for product launches or major events.",
+templates_event_hero_title: "The Future of Tech",
+templates_event_hero_sub: "Join the biggest innovation event of the year. 24h of networking and insights.",
+templates_event_speakers_title: "Confirmed Speakers",
+templates_event_pricing_title: "Get Your Ticket (Early Bird)",
+templates_event_contact_title: "Event Location",
+
+templates_blank_label: "Empty Canvas",
+templates_blank_description: "Start from scratch.",
+
+common_best_seller: "Best Seller",
+common_starter: "Starter",
+common_limited_vagas: "Limited Spots",
+currency_mt: "MT",
+unit_per_month: "/month",
+
+
+mobile_peek_tap_config: "Tap to configure",
+mobile_drawer_close_hint: "Swipe down to close",
+mobile_discard_changes: "Discard changes",
+
+empty_state_title: "Your page is blank",
+empty_state_description: "Turn this space into something amazing! Start by adding sections like galleries, heroes, or pricing tables.",
+empty_state_action: "Tap the + button to get started",
+editor_confirm_delete: "Are you sure you want to delete this block?",
+
+
+sidebar_title: "Editing Panel",
+sidebar_status_changed: "UNSAVED CHANGES",
+sidebar_status_synced: "SITE SYNCED",
+sidebar_button_publish: "PUBLISH NOW",
+sidebar_button_saving: "PUBLISHING...",
+sidebar_button_discard: "Discard Changes",
+
+modal_library_title: "Block Library",
+modal_library_add_action: "Add",
+section_hero_comercial: "Commercial Hero",
+section_galeria_grid: "Grid Gallery",
+section_vitrine_produtos: "Product Showcase",
+
+
+section_texto_imagem_showcase: "Text Mosaic",
+section_texto_narrativo: "Text Block",
+section_servicos_modern: "Modern Services",
+section_contacto_mapa: "Contact & Map",
+section_precos_moderno: "Pricing Table",
+section_estatisticas_larga: "Statistics",
+modal_library_subtitle: "Select a block to build",
+
+
+
+
+  action_new_product: "New Product",
+  action_new_product_sub: "Launch Catalog",
+  action_create_page: "Create Page",
+  action_create_page_sub: "Build Experience",
+  
+  // Sections & States
+  section_catalog: "Product Catalog",
+  manage_inventory: "Manage Inventory",
+  section_paused: "Paused Items",
+  page_home: "Landing Page",
+  launch_sitemap: "Sitemap Dashboard",
+
+  // Empty States
+  empty_products_title: "Your stock is empty",
+  empty_products_desc: "Add your first product to start selling.",
+  btn_start_catalog: "Start Cataloging",
+  empty_pages_title: "No pages created",
+  empty_pages_desc: "Create pages to give your store an identity.",
+
+  // Technical Footer
+  footer_master_node: "Master Node",
+  footer_uptime: "Uptime",
+  uptime_active: "Active for",
+  uptime_now: "Online Now",
+  footer_store_key: "Store Key",
+  no_contact: "No contact set",
+  loading_engine: "Syncing Storely...",
+
+  new_page: "NEW PAGE",
+updated_status: "Updated",
+deploy_now: "Deploy now",
+new_deployment: "New Deployment",
+configuring_page: "Configuring Page",
+destination_path: "Destination Path",
+required: "Required",
+blueprint_arch: "Blueprint Architecture",
+cancel: "Cancel",
+search_page: "Search Pages...",
+status_label: "Status",
+operational: "Operational",
+link_conflict: "Link duplicated. Please rename",
+primary_infrastructure: "Primary Infrastructure (Home)",
+empty_store_title: "Your Store is empty",
+empty_state_desc: "Start building your digital presence. Create your first page using our professional blueprints.",
+empty_search_title: "No results found",
+empty_search_desc: "We couldn't find any page with that name.",
+first_deploy_btn: "DEPLOY FIRST PAGE",
+
+
+
+
+empty_search_description: "We couldn't find any pages with that name. Try another term or clear the search.",
+primary_tag: "Primary",
+link_copied: "Link copied!",
+copy_error: "Error copying link",
+design_btn: "DESIGN",
+delete_confirm: "Are you sure you want to delete",
+delete_error: "Error removing page",
+
+
+
+page_deployed: "Page deployed successfully!",
+limit_reached_message: "Limit of 10 pages reached!",
+limit_error: "Maximum limit of 10 pages reached",
+slug_error: "This path is already in use",
+active_assets: "Active Pages",
+
+
+
+settings_title: "General",
+settings_highlight: "Settings",
+settings_subtitle: "Security and Brand Identity",
+tab_store: "Store",
+tab_account: "Account",
+tab_security: "Security",
+section_presence_title: "Digital Presence",
+section_presence_subtitle: "Your brand's public settings",
+label_brand_name: "Brand Name",
+label_slug: "Store URL (Slug)",
+label_description: "Public Description",
+label_whatsapp: "Contact WhatsApp",
+section_email_title: "Access Email",
+section_email_subtitle: "Manage your admin email",
+label_current_email: "Current Address",
+label_new_email: "New Email",
+label_confirm_password: "Confirm with Current Password",
+btn_update_email: "UPDATE EMAIL",
+section_crypto_title: "Cryptography",
+section_crypto_subtitle: "Protection and password change",
+label_current_password: "Current Password",
+label_new_password: "New Password",
+label_repeat_password: "Repeat New Password",
+btn_recovery_email: "RECOVER VIA EMAIL",
+btn_change_password: "CHANGE PASSWORD",
+loading_session: "Securing your session...",
+edit_label: "EDIT",
+save_success: "Change saved successfully!",
+email_sent_success: "Link sent! Check your new inbox.",
+password_update_success: "Your password has been updated successfully!",
+
+
+
+
+
+
+branding: "Branding",
+logotype: "Logotype",
+upload_cleaning: "Cleaning previous...",
+upload_ready: "Clean swap (Auto-delete)",
+change_image: "Change Image",
+sales_whatsapp: "Sales WhatsApp",
+search_country: "Search country...",
+not_defined: "Not defined",
+save: "Save",
+edit: "Edit",
+short_description: "Short Description",
+description_placeholder: "Click to add a description...",
+description_textarea_placeholder: "Ex: The best shoe store in London...",
+invalid_phone: "Invalid number for this country",
+max_size: "Max 500KB",
+file_too_large: "Image too large (Max 1MB).", 
+compress_link: "Compress image here",
+
+
+name_taken: "Name already taken!",
+time_left: "left",
+logout_btn: "Logout",
+confirm_exit: "Exit now",
+nav_dashboard: "Dashboard",
+nav_pages: "My Pages",
+nav_products: "Products",
+nav_settings: "Settings",
+update_success: "Store updated successfully!",
+error_exiting: "Error exiting",
+
+
+install_how_to: "How to install",
+install_download_app: "Download app",
+install_ios_alert: "On iPhone, open this in Safari and tap Share → Add to Home Screen.",
+install_ios_helper: "Safari → Share → Home Screen",
+install_use_supported_mobile_browser: "Use Chrome, Edge, or Samsung Internet",
+install_use_supported_desktop_browser: "Use Chrome or Edge to install",
+install_interact_to_enable: "Interact with the page to enable it",
+install_open_help: "Tap to see how to install",
+install_modal_title: "Install app",
+install_browser_wait_prompt: "This browser supports installation, but the install prompt is not available yet. Reload the page and interact with it a bit before trying again.",
+install_close: "Close",
+
+  whatsappActive: "Active",
+  whatsappNotConfigured: "Number not configured",
+  goToSettingsToAddNumber: "Add the number in settings",
+  whatsappNotConfiguredDesc: "No WhatsApp number configured. Go to store settings to activate the button.",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  aboutBadge: "About",
+aboutTitle: "My Approach: Passion and Precision",
+aboutSubtitle: "A clear, modern vision focused on results.",
+aboutDescription: "My journey in the digital world started with curiosity and the desire to build useful solutions. Today, I combine creativity, method, and attention to detail to deliver modern, clear, and efficient experiences.",
+aboutSecondaryTitle: "Who I Am",
+aboutSecondaryDescription: "I am a professional focused on building well-structured, responsive digital solutions designed to grow with quality.",
+
+textSectionSimpleHelp: "Edit the texts. The limits already help keep the layout clean.",
+imageSectionSimpleHelp: "Edit the texts and choose a photo. Then click confirm.",
+fillBadge: "Write a short badge",
+fillMainTitle: "Write the title",
+fillSubtitle: "Write the subtitle",
+fillDescription: "Write the description",
+fillSecondaryTitle: "Write the secondary title",
+fillSecondaryDescription: "Write the secondary text",
+defaultImageAlt: "Section image",
+
+uploadPhoto: "Upload photo",
+confirmPhoto: "Confirm photo",
+savingPhoto: "Saving...",
+removePhoto: "Remove photo",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  processing: 'Processing...',
+  adjustPhoto: 'Adjust photo',
+  cropApplied: 'Crop applied successfully.',
+  imageSavedSuccess: 'Image uploaded successfully.',
+  imageUploadError: 'Failed to upload image.',
+  imageRemoved: 'Image removed successfully.',
+  imageRemoveError: 'Failed to remove image.',
+  uploadSuccess: 'Upload completed successfully.',
+  uploadError: 'Failed to upload file.',
+  fileReadError: 'Error reading file. Please try again.',
+  imageTypeError: 'Please select a valid image.',
+  imageTooLargeMustCompress: 'Image is above the limit. Compress it before uploading.',
+  compressPhotoLink: 'Compress image',
+  choosePhoto: 'Choose photo',
+  changePhoto: 'Change photo',
+ 
+  movePhoto: 'Move photo',
+  imageWeight: 'Size',
+  imageSizeLimit: 'Maximum size: {{size}} MB',
+  defaultImage: 'Default image',
+  
+  editor_modal_sync_required: 'Synchronization required',
+
+
+  imageTooLargeCropBlocked: 'Cannot apply crop to an image above the limit.',
+saveBlockedPendingSection: 'Action blocked: section {{section}} has pending or oversized uploads.',
+savingPage: 'Saving page...',
+publishedSuccess: 'Published successfully!',
+publishError: 'Error while publishing.',
+
+
+
+
+
+
+
+
+
+
+
+  cropError: "Error applying crop",
+  applyCrop: "Apply crop",
+  sectionsNeedSaving:"Sections pending to be saved",
+  imageSelectedConfirmToSave:"Image selected. Confirm to save.",
+  imageReadyConfirmHelp:"The image has been selected. Now click confirm image to save it.",
+
+  clickToEdit: "Click to edit",
+  tapToEdit: "Tap to edit",
+  editingSection: "Editing",
+  loadingEditor: "Loading editor...",
+  waitingAddressesLoad: "Waiting for addresses to load...",
+    imageSelectionCancelled: "Image selection cancelled",
+
+
+
+
+
+    cacheLabel: "cache",
+  cacheStatusLocal: "local",
+  cacheStatusNetwork: "network",
+  cacheStatusWaiting: "waiting",
+  cacheStatusSyncing: "syncing",
+
+  invalid_store_name: "Invalid store name",
+    blockDefaultName: "BLOCK",
   },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -244,6 +681,7 @@ showcase_clear_all: "Clear Filters",
     theme_desc_night: "Ativado: Noite (18h-06h)",
     theme_desc_day: "Ativado: Dia (06h-18h)",
     menu_nav: "Navegação",
+    language: "Idioma",
     footer_rights: "Direitos reservados",
     theme_desc_auto_base: "Muda sozinho conforme o horário.",
     theme_desc_manual: "Este modo permanecerá ativo até que você altere para Automático.",
@@ -358,7 +796,7 @@ showcase_clear_all: "Clear Filters",
     whatsappLabel: "WhatsApp (DDI + Número)",
     whatsappPlaceholder: "Número com DDD",
     
-    changeMedia: "Trocar Mídia",
+    changeMedia: "Trocar Foto",
     tryAnother: "Tentar outro arquivo",
     weight: "Peso:",
     reduceSize: "Reduzir Tamanho",
@@ -394,7 +832,7 @@ showcase_clear_all: "Clear Filters",
   btn_save_whatsapp: "Salvar Número",
   error_invalid_phone: "Número inválido para este país.",
   
-  placeholder_search: "Pesquisar por nome do produto...",
+  placeholder_search: "Pesquisar por nome, categoria ou preço...",
   label_product: "Produto",
   label_category: "Categoria",
   label_price: "Preço",
@@ -403,6 +841,7 @@ showcase_clear_all: "Clear Filters",
   label_created_at: "Criado em",
   label_actions: "Ações",
   btn_view_product: "Ver",
+  view_product: "Ver",
   btn_edit: "Editar",
 
 
@@ -440,7 +879,419 @@ showcase_defaultCategory: "Lançamentos",
     showcase_price_up_to: "Até R$ {{price}}",
     showcase_category: "Categoria: {{category}}",
     filter_unlimited: "Ilimitado",
-    showcase_viewFull: "Ver Tudo"
+    showcase_viewFull: "Ver Tudo",
+    
+      common_close: "Fechar",
+      common_filters: "Filtros",
+
+
+
+      product_details_visit_store: "Ver Loja",
+  product_details_details: "Detalhes",
+  product_details_final_value: "Valor Final",
+  product_details_confirm_whatsapp: "Confirmar no WhatsApp",
+  product_details_no_description: "Produto sem descrição detalhada disponível no momento.",
+  product_details_edit: "Editar",
+  product_details_cancel: "Cancelar",
+  product_details_publish: "Publicar",
+  product_details_share_success: "Link copiado!",
+  common_category_general: "Geral",
+      
+    editor_limit_reached: "Limite de 7 seções atingido",
+  editor_limit_advice: "Remova blocos ou crie uma nova página para manter o site rápido e organizado.",
+
+  editor_add_block: "Adicionar Bloco",
+  editor_back_to_layers: "Voltar às Camadas",
+  editor_structure_cols: "Estrutura (Colunas)",
+  editor_col_unit: "Col",
+  editor_font_size: "Tamanho do Texto",
+  editor_font_small: "Pequeno",
+  editor_font_medium: "Médio",
+  editor_font_large: "Grande",
+  editor_text_align: "Alinhamento de Texto",
+  editor_theme_light: "CLARO",
+  editor_theme_dark: "ESCURO",
+  editor_delete_block: "Eliminar Bloco",
+  editor_layers_order: "Ordem das Camadas",
+
+
+
+  templates_photography_label: "Fine Art Photography",
+templates_photography_description: "Olha o que você pode fazer: transforme um layout minimalista na sua galeria pessoal com apenas alguns cliques.",
+templates_photography_hero_title: "A Sua Narrativa Visual",
+templates_photography_hero_sub: "Um espaço enxuto e sofisticado para fotógrafos que valorizam cada detalhe.",
+templates_photography_gallery_empty_title: "Sua Nova Coleção",
+templates_photography_gallery_empty_sub: "Esta galeria está pronta para receber seu olhar. Comece a importar suas fotos.",
+templates_photography_gallery_insp_title: "Inspiração e Estética",
+templates_photography_gallery_insp_sub: "Exemplo de como o layout se comporta com tons orgânicos e luz suave.",
+templates_photography_contact_title: "Agende um Ensaio",
+
+
+
+
+
+
+templates_saas_label: "Vendas & Produto",
+templates_saas_description: "Layout orientado a resultados, destacando produtos e planos de assinatura.",
+templates_saas_hero_title: "Venda Mais com Inteligência",
+templates_saas_hero_sub: "A plataforma que unifica seu estoque, vendas físicas e e-commerce em um só lugar.",
+templates_saas_pricing_title: "Nossos Planos",
+templates_saas_features_title: "Funcionalidades Enterprise",
+templates_saas_contact_title: "Agende uma Demonstração",
+
+templates_brand_label: "Marca Pessoal",
+templates_brand_description: "Focado em estabelecer autoridade para mentores, palestrantes e coaches.",
+templates_brand_hero_title: "Transforme seu Conhecimento em Negócio",
+templates_brand_hero_sub: "Estratégias de posicionamento para profissionais que buscam o próximo nível.",
+templates_brand_stats_students: "ALUNOS",
+templates_brand_stats_lives: "LIVES",
+templates_brand_stats_countries: "PAÍSES",
+templates_brand_stats_roi: "ROI",
+templates_brand_mentorship_title: "Programas de Mentoria",
+templates_brand_contact_title: "Fale com minha Equipe",
+
+templates_event_label: "Lançamento / Evento",
+templates_event_description: "Layout dinâmico para lançamentos de produtos ou grandes eventos.",
+templates_event_hero_title: "O Futuro da Tech em Maputo",
+templates_event_hero_sub: "Participe do maior evento de inovação do ano. 24h de networking e insights.",
+templates_event_speakers_title: "Speakers Confirmados",
+templates_event_pricing_title: "Garanta seu Ticket (Lote 1)",
+templates_event_contact_title: "Localização do Evento",
+
+templates_blank_label: "Tela em Branco",
+templates_blank_description: "Comece do zero.",
+
+common_best_seller: "Mais Vendido",
+common_starter: "Iniciante",
+common_limited_vagas: "Vagas Limitadas",
+currency_mt: "MT",
+unit_per_month: "/mês",
+
+
+
+mobile_peek_tap_config: "Tocar para configurar",
+mobile_drawer_close_hint: "Deslize para fechar",
+mobile_discard_changes: "Descartar as mudanças",
+editor_confirm_delete: "Tem certeza que deseja excluir este bloco?",
+
+empty_state_title: "Sua página está em branco",
+empty_state_description: "Transforme este espaço em algo incrível! Comece adicionando seções como galerias, cabeçalhos ou tabelas de preços.",
+empty_state_action: "Toque no botão + para começar",
+
+
+sidebar_title: "Painel de Edição",
+sidebar_status_changed: "MODIFICAÇÕES ATIVAS",
+sidebar_status_synced: "SITE SINCRONIZADO",
+sidebar_button_publish: "PUBLICAR AGORA",
+sidebar_button_saving: "PUBLICANDO...",
+sidebar_button_discard: "Descartar Mudanças",
+
+modal_library_title: "Biblioteca de Blocos",
+modal_library_add_action: "Adicionar",
+section_hero_comercial: "Banner Comercial",
+section_galeria_grid: "Galeria Grid",
+
+
+
+section_texto_imagem_showcase: "Mosaico com Texto",
+section_texto_narrativo: "Bloco de Texto",
+
+section_vitrine_produtos: "Vitrine de Produtos",
+section_servicos_modern: "Serviços Modernos",
+section_contacto_mapa: "Contacto e Mapa",
+section_precos_moderno: "Tabela de Preços",
+section_estatisticas_larga: "Estatísticas",
+modal_library_subtitle: "Selecione um bloco para construir",
+
+
+
+
+
+
+  action_new_product: "Novo Produto",
+  action_new_product_sub: "Lançar Catálogo",
+  action_create_page: "Criar Página",
+  action_create_page_sub: "Construir Experiência",
+  
+  // Seções e Estados
+  section_catalog: "Catálogo de Produtos",
+  manage_inventory: "Gerenciar Inventário",
+  section_paused: "Itens Pausados",
+  page_home: "Página Principal",
+  launch_sitemap: "Painel de Páginas",
+
+  // Empty States
+  empty_products_title: "Seu estoque está vazio",
+  empty_products_desc: "Adicione seu primeiro produto para começar a vender.",
+  btn_start_catalog: "Começar Cadastro",
+  empty_pages_title: "Nenhuma página criada",
+  empty_pages_desc: "Crie páginas para dar identidade à sua loja.",
+
+  // Footer Técnico
+  footer_master_node: "Master Node",
+  footer_uptime: "Uptime",
+  uptime_active: "Ativa há",
+  uptime_now: "Online Agora",
+  footer_store_key: "Store Key",
+
+  no_contact: "Contato não definido",
+loading_engine: "Sincronizando Storely...",
+
+
+
+
+
+new_page: "NOVA PÁGINA",
+updated_status: "Actualizado",
+deploy_now: "Publicar agora",
+new_deployment: "Nova Implementação",
+configuring_page: "Configurando Página",
+destination_path: "Caminho de Destino",
+required: "Obrigatório",
+blueprint_arch: "Arquitectura do Blueprint",
+cancel: "Cancelar",
+search_page: "Pesquisar Páginas...",
+status_label: "Estado",
+operational: "Operacional",
+link_conflict: "Link duplicado. Por favor mude o nome",
+primary_infrastructure: "Infraestrutura Principal (Home)",
+empty_store_title: "Sua Loja está vazia",
+empty_state_desc: "Comece a construir sua presença digital. Crie sua primeira página usando nossos blueprints profissionais.",
+empty_search_title: "Nenhum resultado encontrado",
+empty_search_desc: "Não encontramos nenhuma página com esse nome.",
+first_deploy_btn: "DEPLOY PRIMEIRA PÁGINA",
+
+empty_search_description: "Não encontramos nenhuma página com esse nome. Tente outro termo ou limpe a busca.",
+
+
+primary_tag: "Principal",
+link_copied: "Link copiado!",
+copy_error: "Erro ao copiar link",
+design_btn: "DESIGN",
+delete_confirm: "Tem certeza que deseja excluir",
+delete_error: "Erro ao remover página",
+
+page_deployed: "Página publicada com sucesso!",
+limit_reached_message: "Limite de 10 páginas atingido!",
+limit_error: "Você atingiu o limite máximo de 10 páginas",
+slug_error: "Este caminho (URL) já está em uso",
+active_assets: "Páginas Ativas",
+
+
+store_name_label: "Nome da Loja",
+store_slug_label: "Link da Loja (URL)",
+store_desc_label: "Descrição Curta",
+whatsapp_label: "WhatsApp de Suporte",
+visual_title: "VISUAL DA LOJA",
+uploading_text: "CARREGANDO...",
+change_logo_btn: "MUDAR LOGO",
+
+
+
+
+settings_title: "Definições",
+settings_highlight: "Gerais",
+settings_subtitle: "Segurança e Identidade da Marca",
+tab_store: "Loja",
+tab_account: "Conta",
+tab_security: "Segurança",
+section_presence_title: "Presença Digital",
+section_presence_subtitle: "Configurações públicas da sua marca",
+label_brand_name: "Nome da Marca",
+label_slug: "URL da Loja (Slug)",
+label_description: "Descrição Pública",
+label_whatsapp: "WhatsApp de Contacto",
+section_email_title: "E-mail de Acesso",
+section_email_subtitle: "Gerencie seu e-mail administrativo",
+label_current_email: "Endereço Atual",
+label_new_email: "Novo E-mail",
+label_confirm_password: "Confirmar com Senha Atual",
+btn_update_email: "ATUALIZAR E-MAIL",
+section_crypto_title: "Criptografia",
+section_crypto_subtitle: "Proteção e troca de senha",
+label_current_password: "Senha Atual",
+label_new_password: "Nova Senha",
+label_repeat_password: "Repetir Nova Senha",
+btn_recovery_email: "RECUPERAR VIA E-MAIL",
+btn_change_password: "ALTERAR SENHA",
+loading_session: "Protegendo sua sessão...",
+edit_label: "ALTERAR",
+save_success: "Alteração salva com sucesso!",
+email_sent_success: "Link enviado! Verifique sua nova caixa de entrada.",
+password_update_success: "Sua senha foi atualizada com sucesso!",
+
+
+
+
+branding: "Branding",
+logotype: "Logotipo",
+upload_cleaning: "A limpar anterior...",
+upload_ready: "Troca limpa (Auto-delete)",
+change_image: "Trocar Imagem",
+sales_whatsapp: "WhatsApp de Vendas",
+search_country: "Pesquisar país...",
+not_defined: "Não definido",
+save: "Guardar",
+edit: "Editar",
+short_description: "Descrição Curta",
+description_placeholder: "Clique para adicionar uma descrição...",
+description_textarea_placeholder: "Ex: A melhor loja de sapatos de Lisboa...",
+invalid_phone: "Número inválido para este país",
+max_size: "Máximo 500KB",
+
+file_too_large: "Imagem muito grande (Máx 1MB).", 
+compress_link: "Comprimir imagem aqui",
+
+
+
+
+name_taken: "Nome indisponível!",
+time_left: "restante",
+logout_btn: "Logout",
+confirm_exit: "Sair agora",
+nav_dashboard: "Dashboard",
+nav_pages: "Minhas Páginas",
+nav_products: "Produtos",
+nav_settings: "Configurações",
+update_success: "Loja atualizada com sucesso!",
+error_exiting: "Erro ao sair",
+
+
+
+install_how_to: "Como instalar",
+install_download_app: "Baixar app",
+install_ios_alert: "No iPhone, abra no Safari e toque em Partilhar → Adicionar ao ecrã principal.",
+install_ios_helper: "Safari → Partilhar → Ecrã principal",
+install_use_supported_mobile_browser: "Use Chrome, Edge ou Samsung Internet",
+install_use_supported_desktop_browser: "Use Chrome ou Edge para instalar",
+install_interact_to_enable: "Interaja com a página para ativar",
+install_open_help: "Toque para ver como instalar",
+install_modal_title: "Instalar aplicação",
+install_browser_wait_prompt: "Este navegador suporta instalação, mas o aviso ainda não apareceu. Recarregue a página e interaja um pouco antes de tentar novamente.",
+install_close: "Fechar",
+
+  whatsappActive: "Ativo",
+  whatsappNotConfigured: "Número não configurado",
+  goToSettingsToAddNumber: "Adicione o número nas configurações",
+  whatsappNotConfiguredDesc: "Sem número de WhatsApp configurado. Vá às configurações da loja para ativar o botão.",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  aboutBadge: "Sobre",
+aboutTitle: "Minha Abordagem: Paixão e Precisão",
+aboutSubtitle: "Uma visão clara, moderna e focada em resultados.",
+aboutDescription: "Minha jornada no mundo digital começou com curiosidade e vontade de construir soluções úteis. Hoje, uno criatividade, método e atenção aos detalhes para entregar experiências modernas, claras e eficientes.",
+aboutSecondaryTitle: "Quem Eu Sou",
+aboutSecondaryDescription: "Sou um profissional focado em criar soluções digitais bem estruturadas, responsivas e pensadas para crescer com qualidade.",
+
+textSectionSimpleHelp: "Edite os textos. Os limites já ajudam a manter o layout bonito.",
+imageSectionSimpleHelp: "Edite os textos e escolha uma foto. Depois clique em confirmar.",
+fillBadge: "Escreva um selo curto",
+fillMainTitle: "Escreva o título",
+fillSubtitle: "Escreva o subtítulo",
+fillDescription: "Escreva a descrição",
+fillSecondaryTitle: "Escreva o título secundário",
+fillSecondaryDescription: "Escreva o texto secundário",
+defaultImageAlt: "Imagem da secção",
+
+uploadPhoto: "Carregar foto",
+confirmPhoto: "Confirmar foto",
+savingPhoto: "A guardar...",
+removePhoto: "Remover foto",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  processing: 'A processar...',
+  adjustPhoto: 'Ajuste a foto',
+  cropApplied: 'Recorte aplicado com sucesso.',
+  imageSavedSuccess: 'Imagem enviada com sucesso.',
+  imageUploadError: 'Falha ao enviar a imagem.',
+  imageRemoved: 'Imagem removida com sucesso.',
+  imageRemoveError: 'Falha ao remover a imagem.',
+  uploadSuccess: 'Upload concluído com sucesso.',
+  uploadError: 'Falha ao enviar o ficheiro.',
+  fileReadError: 'Erro ao ler o arquivo. Tente novamente.',
+  imageTypeError: 'Selecione uma imagem válida.',
+  imageTooLargeMustCompress: 'A imagem está acima do limite. Comprima antes de enviar.',
+  compressPhotoLink: 'Comprimir imagem',
+  choosePhoto: 'Escolher foto',
+  changePhoto: 'Trocar foto',
+  
+  movePhoto: 'Mova a foto',
+  imageWeight: 'Peso',
+  imageSizeLimit: 'Tamanho máximo: {{size}} MB',
+  defaultImage: 'Imagem padrão',
+  
+  editor_modal_sync_required: 'Sincronização necessária',
+
+
+
+
+
+  imageTooLargeCropBlocked: 'Não é possível aplicar o recorte numa imagem acima do limite.',
+saveBlockedPendingSection: 'Ação bloqueada: a secção {{section}} possui uploads pendentes ou muito grandes.',
+savingPage: 'Salvando página...',
+publishedSuccess: 'Publicado com sucesso!',
+publishError: 'Erro ao publicar.',
+
+
+
+
+
+
+
+  cropError: "Erro ao aplicar o recorte",
+  applyCrop: "Aplicar recorte",
+  sectionsNeedSaving:"Secções pendentes de salvar",
+  
+
+  imageReadyConfirmHelp:"A imagem já foi escolhida. Agora clique em confirmar imagem para salvar.",
+  imageSelectedConfirmToSave:"Imagem selecionada. Confirme para salvar.",
+imageSelectionCancelled: "Seleção de imagem cancelada",
+
+
+clickToEdit: "Clique para editar",
+  tapToEdit: "Toque para editar",
+  editingSection: "Editando",
+  loadingEditor: "A carregar editor...",
+  waitingAddressesLoad: "Aguardando carregamento dos endereços...",
+
+
+  cacheLabel: "cache",
+  cacheStatusLocal: "local",
+  cacheStatusNetwork: "network",
+  cacheStatusWaiting: "aguardando",
+  cacheStatusSyncing: "sincronizando",
+  invalid_store_name: "Nome da loja inválido",
+  blockDefaultName: "BLOCO",
+
  
   }
 } as const;

@@ -8,7 +8,7 @@ interface AddSectionModalProps {
 
 export function AddSectionModal({ onClose, onAdd }: AddSectionModalProps) {
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60  animate-in fade-in">
       <div className="bg-white w-full max-w-lg rounded-[3rem] p-10 shadow-2xl flex flex-col max-h-[85vh]">
         <div className="flex justify-between items-center mb-8">
           <h3 className="font-black text-2xl uppercase tracking-tighter italic">Biblioteca de Blocos</h3>

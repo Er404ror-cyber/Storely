@@ -4,6 +4,7 @@ import { HeaderLog } from "../../components/headerlog";
 import { Link } from 'react-router-dom';
 import { useTranslate } from "../../context/LanguageContext"; // Importe o seu hook
 import { Helmet } from 'react-helmet-async';
+import InstallAppButton from "../../components/InstallAppButton";
 // --- INTERFACES ---
 interface FeatureProps {
     title: string;
@@ -169,20 +170,26 @@ export const StartHome: React.FC = () => {
                                 </p>
                             </div>
 
-                            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                                <Link to={"/auth"}>
-                                    <button className="w-full sm:w-auto px-8 py-4 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-black rounded-2xl transition-transform active:scale-95 shadow-lg cursor-pointer text-sm">
-                                        {t('btn_dashboard')}
-                                    </button>
-                                </Link>
-                                <Link to={"/blog"}>
-                                    <button className="w-full sm:w-auto px-8 py-4 border border-zinc-200 dark:border-zinc-800 font-bold rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors active:scale-95 text-zinc-600 dark:text-zinc-200 cursor-pointer text-sm">
-                                        {t('btn_gallery')}
-                                    </button>
-                                </Link>
-                            </div>
-                        </div>
+                            {/* 🔥 BOTÕES */}
+                {/* BOTÕES */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start">
+          <Link to="/auth" className="w-full sm:w-auto">
+            <button className="h-14 w-full rounded-2xl bg-zinc-900 px-8 text-sm font-black text-white shadow-lg transition-transform active:scale-95 dark:bg-zinc-100 dark:text-zinc-900">
+              {t('btn_dashboard')}
+            </button>
+          </Link>
 
+          <Link to="/blog" className="w-full sm:w-auto">
+            <button className="h-14 w-full rounded-2xl border border-zinc-200 px-8 text-sm font-bold text-zinc-600 transition-colors active:scale-95 hover:bg-zinc-50 dark:border-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-900">
+              {t('btn_gallery')}
+            </button>
+          </Link>
+
+          <div className="w-full sm:w-auto sm:pb-8">
+            <InstallAppButton />
+          </div>
+        </div>
+      </div>
                         <div className="relative order-2 w-full mt-4 lg:mt-0 group">
                             <div className="relative rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-1.5 shadow-xl sm:p-2">
                                 <div className="flex items-center gap-1 px-3 py-2">
