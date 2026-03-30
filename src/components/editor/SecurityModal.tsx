@@ -104,10 +104,9 @@ const BlockItem = memo(
 BlockItem.displayName = 'BlockItem';
 
 const SECTION_PREVIEWS: Record<string, string> = {
-  hero_comercial:
-    'https://png.pngtree.com/thumb_back/fh260/background/20241106/pngtree-a-captivating-image-of-small-planet-surrounded-by-dew-kissed-grass-image_16516199.jpg',
-  galeria_grid: '',
-  vitrine_produtos: '',
+  hero_comercial:'/img/hero_comercial.png',
+  galeria_grid: '/img/galeria_grid.png',
+  vitrine_produtos: '/img/vitrine_produtos.png',
   contacto_mapa: '',
   estatisticas_larga: '',
   servicos_modern: '',
@@ -116,8 +115,8 @@ const SECTION_PREVIEWS: Record<string, string> = {
   depoimentos_clientes: '',
   faq_acordion: '',
   rodape_simples: '',
-  texto_narrativo:'https://png.pngtree.com/thumb_back/fh260/background/20241106/pngtree-a-captivating-image-of-small-planet-surrounded-by-dew-kissed-grass-image_16516199.jpg',
-  texto_imagem_showcase:'https://png.pngtree.com/thumb_back/fh260/background/20241106/pngtree-a-captivating-image-of-small-planet-surrounded-by-dew-kissed-grass-image_16516199.jpg',
+  texto_narrativo:'/img/texto_narativo.png',
+  texto_imagem_showcase:'/img/texto_imagem_showcase.jpg',
 };
 
 export function EditorModals({
