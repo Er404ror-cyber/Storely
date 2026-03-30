@@ -82,15 +82,20 @@ export function AuthPage() {
       
       {/* GPU Optimization: Background with decoding async */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        <img 
-          src="/img/loginof.jpg" 
-          alt="" 
-          loading="eager"
-          decoding="async"
-          className="w-full h-full object-cover scale-105"
-          style={{ willChange: 'transform' }} 
-        />
-        <div className="absolute inset-0 bg-black/40 transition-opacity duration-700" />
+      <video
+  autoPlay
+  loop
+  muted
+  playsInline
+  preload="none"
+  poster="/img/freepik-video-upscaler-480.jpg"
+  disablePictureInPicture
+  className="w-full h-full object-cover"
+>
+  <source src="/img/freepik-video-upscaler-480.webm" type="video/webm" />
+  <source src="/img/freepik-video-upscaler-480.mp4" type="video/mp4" />
+</video>
+        <div className="absolute inset-0 bg-black/50 transition-opacity duration-700" />
       </div>
 
       {/* Header - Fixed hardware acceleration */}
@@ -151,7 +156,7 @@ export function AuthPage() {
 
         {/* Right Side: Form with Repaint Isolation */}
         <div className="w-full max-w-[440px] animate-in fade-in zoom-in duration-700" style={{ transform: 'translateZ(0)' }}>
-          <div className="bg-[#111]/0 dark:bg-[#111]/70 border border-white/10 rounded-[2.5rem] p-10 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] backdrop-blur-sm dark:backdrop-blur-none isolation-isolate">
+          <div className="bg-[#111]/0 dark:bg-[#111]/70 border border-white/10 rounded-[2.5rem] p-10 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] backdrop-blur-xs dark:backdrop-blur-none isolation-isolate">
           
             
             <div className="flex items-center gap-3 mb-4 lg:hidden">
