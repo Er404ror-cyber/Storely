@@ -623,6 +623,159 @@ publishError: 'Error while publishing.',
 
   invalid_store_name: "Invalid store name",
     blockDefaultName: "BLOCK",
+
+
+
+  marketplace_product_fallback: "Product",
+marketplace_general: "General",
+marketplace_store_fallback: "Store",
+marketplace_store_default_description: "Discover products and updates from this store.",
+marketplace_all_categories: "All categories",
+marketplace_all_stores: "All stores",
+marketplace_new_products: "New products",
+marketplace_more_new_products: "More new products",
+marketplace_available_stores: "Available stores",
+marketplace_more_stores: "More stores to explore",
+marketplace_start_selling_title: "Start selling on Storely",
+marketplace_start_selling_subtitle: "Create your account and start publishing products in a fast, modern, professional marketplace.",
+marketplace_start_selling_cta: "Create account",
+marketplace_search_placeholder: "Search marketplace",
+marketplace_suggestions: "Suggestions",
+marketplace_recent_searches: "Recent searches",
+marketplace_explore: "Explore",
+marketplace_sell_now: "Sell now",
+marketplace_clear_filters: "Clear filters",
+marketplace_view_store: "View store",
+marketplace_main_feed: "Main feed",
+marketplace_hero_title_line_1: "Discover products,",
+marketplace_hero_title_line_2: "stores, and smart suggestions",
+marketplace_hero_explore: "Explore marketplace",
+marketplace_hero_sell: "I want to sell",
+marketplace_hero_smart_block: "Smart search and recommendations",
+marketplace_showcase_title: "Community marketplace",
+marketplace_showcase_subtitle: "Products, stores, and suggestions.",
+
+
+
+
+
+
+marketplace_related_products: "Related products",
+marketplace_related_stores: "Related stores",
+marketplace_search_products: "Found products",
+marketplace_search_stores: "Found stores",
+
+
+marketplace_search_exact: "Exact result",
+marketplace_search_approximate: "Approximate result",
+marketplace_search_related: "Related results",
+marketplace_search_fallback: "Marketplace suggestions",
+marketplace_cache: "cache",
+marketplace_cache_expired: "expired",
+marketplace_syncing: "syncing",
+marketplace_refresh_cache: "refresh cache",
+marketplace_not_found_title: "Nothing very close was found",
+marketplace_not_found_subtitle: "Try another name, category, or store. You can also choose one of the suggestions below.",
+marketplace_try_these: "Try these",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+storely_product_fallback: "Product",
+storely_general: "General",
+storely_store_fallback: "Store",
+storely_store_default_description: "Discover products and updates from this store.",
+storely_all_categories: "All categories",
+storely_all_stores: "All stores",
+storely_new_products: "New on Storely",
+storely_more_new_products: "More new finds",
+storely_available_stores: "Stores on Storely",
+storely_more_stores: "More stores to explore",
+storely_related_products: "Related products",
+storely_related_stores: "Related stores",
+storely_matching_stores: "Matching stores",
+storely_similar_stores: "Similar stores",
+storely_more_like_this: "More like this",
+storely_exact_matches: "Exact matches",
+storely_close_matches: "Close matches",
+storely_suggestions_for_you: "Suggestions for you",
+storely_start_selling_title: "Start selling on Storely",
+storely_start_selling_subtitle: "Create your account and publish products in a fast, beautiful, smart way.",
+storely_start_selling_cta: "Create account",
+storely_search_placeholder: "Search Storely",
+storely_suggestions: "Suggestions",
+storely_recent_searches: "Recent searches",
+storely_explore: "Explore",
+storely_sell_now: "Sell now",
+storely_clear_filters: "Clear filters",
+storely_view_store: "View store",
+storely_main_feed: "Main feed",
+storely_search_exact: "Exact result",
+storely_search_approximate: "Approximate result",
+storely_search_related: "Related results",
+storely_search_fallback: "Storely suggestions",
+storely_cache: "cache",
+storely_cache_expired: "expired",
+storely_syncing: "syncing",
+storely_refresh_cache: "refresh",
+storely_not_found_title: "Nothing very close was found",
+storely_not_found_subtitle: "Try another name, category, or store. You can also choose one of the suggestions below.",
+
+
+
+
+
+
+
+
+
+
+
+storely_search_no_exact_but_close: "No exact result, but there are close matches",
+storely_search_no_exact_but_related: "No exact result, but there are related results",
+storely_search_nothing_close: "Nothing very close, but there are suggestions for you",
+storely_search_message_close: "I could not find an exact name, but here are the closest matches that may help you.",
+storely_search_message_related: "I could not find an exact result, but I selected related things you may like.",
+
+
+
+storely_search_empty_title: "No results found",
+storely_search_empty_subtitle: "We couldn't find anything matching your search. Try a different word or explore other products below.",
+storely_search_message_fallback: "We didn't find anything close, but here are some suggestions you might like.",
+storely_other_products_we_have: "Other products we have",
+storely_try_these: "Try searching for:",
+
+
+
+
+
+
+marketplace_hero_badge: "Discover more in one place",
+marketplace_hero_subtitle: "Explore a marketplace with multiple types of products and shops in one simple, fast and organized experience.",
+marketplace_hero_point_products: "Different product types",
+marketplace_hero_point_stores: "Multiple stores",
+marketplace_hero_point_discover: "Easy to explore",
+storely_cta_title: "Start selling your products today",
+storely_cta_subtitle: "Create your store, showcase your products and reach more customers in one simple platform."
   },
 
 
@@ -1292,8 +1445,145 @@ clickToEdit: "Clique para editar",
   invalid_store_name: "Nome da loja inválido",
   blockDefaultName: "BLOCO",
 
+
+
+
+
+
+
+
+
+  marketplace_product_fallback: "Produto",
+  marketplace_general: "Geral",
+  marketplace_store_fallback: "Loja",
+  marketplace_store_default_description: "Descobre produtos e novidades desta loja.",
+  marketplace_all_categories: "Todas as categorias",
+  marketplace_all_stores: "Todas as lojas",
+  marketplace_new_products: "Novos produtos",
+  marketplace_more_new_products: "Mais novos produtos",
+  marketplace_available_stores: "Lojas disponíveis",
+  marketplace_more_stores: "Mais lojas para explorar",
+  marketplace_start_selling_title: "Começa a vender na Storely",
+  marketplace_start_selling_subtitle: "Cria a tua conta e começa a publicar produtos num marketplace rápido, moderno e profissional.",
+  marketplace_start_selling_cta: "Criar conta",
+  marketplace_search_placeholder: "Pesquisar no marketplace",
+  marketplace_suggestions: "Sugestões",
+  marketplace_recent_searches: "Pesquisas recentes",
+  marketplace_explore: "Explorar",
+  marketplace_sell_now: "Vender agora",
+  marketplace_clear_filters: "Limpar filtros",
+  marketplace_view_store: "Ver loja",
+  marketplace_main_feed: "Feed principal",
+  marketplace_hero_title_line_1: "Descobre produtos,",
+  marketplace_hero_title_line_2: "lojas e sugestões inteligentes",
+  marketplace_hero_explore: "Explorar marketplace",
+  marketplace_hero_sell: "Quero vender",
+  marketplace_hero_smart_block: "Pesquisa e recomendações inteligentes",
+  marketplace_showcase_title: "Marketplace da comunidade",
+  marketplace_showcase_subtitle: "Produtos, lojas e sugestões.",
+
+
+
+
+
+
+  
+  marketplace_search_exact: "Resultado exato",
+  marketplace_search_approximate: "Resultado aproximado",
+  marketplace_search_related: "Resultados relacionados",
+  marketplace_search_fallback: "Sugestões do marketplace",
+  marketplace_cache: "cache",
+  marketplace_cache_expired: "expirado",
+  marketplace_syncing: "a sincronizar",
+  marketplace_refresh_cache: "atualizar cache",
+  marketplace_not_found_title: "Nada muito próximo foi encontrado",
+  marketplace_not_found_subtitle: "Tenta outro nome, categoria ou loja. Também podes escolher uma das sugestões abaixo.",
+  marketplace_try_these: "Experimenta isto",
+
+
  
-  }
+marketplace_related_products: "Produtos relacionados",
+marketplace_related_stores: "Lojas relacionadas",
+marketplace_search_products: "Produtos encontrados",
+marketplace_search_stores: "Lojas encontradas",
+
+
+
+
+
+
+storely_product_fallback: "Produto",
+storely_general: "Geral",
+storely_store_fallback: "Loja",
+storely_store_default_description: "Descobre produtos e novidades desta loja.",
+storely_all_categories: "Todas as categorias",
+storely_all_stores: "Todas as lojas",
+storely_new_products: "Novidades na Storely",
+storely_more_new_products: "Mais novidades",
+storely_available_stores: "Lojas na Storely",
+storely_more_stores: "Mais lojas para explorar",
+storely_related_products: "Produtos relacionados",
+storely_related_stores: "Lojas relacionadas",
+storely_matching_stores: "Lojas encontradas",
+storely_similar_stores: "Lojas parecidas",
+storely_more_like_this: "Mais como isto",
+storely_exact_matches: "Resultados exatos",
+storely_close_matches: "Resultados parecidos",
+storely_suggestions_for_you: "Sugestões para ti",
+storely_start_selling_title: "Começa a vender na Storely",
+storely_start_selling_subtitle: "Cria a tua conta e publica produtos de forma rápida, bonita e inteligente.",
+storely_start_selling_cta: "Criar conta",
+storely_search_placeholder: "Pesquisar na Storely",
+storely_suggestions: "Sugestões",
+storely_recent_searches: "Pesquisas recentes",
+storely_explore: "Explorar",
+storely_sell_now: "Vender agora",
+storely_clear_filters: "Limpar filtros",
+storely_view_store: "Ver loja",
+storely_main_feed: "Feed principal",
+storely_search_exact: "Resultado exato",
+storely_search_approximate: "Resultado aproximado",
+storely_search_related: "Resultados relacionados",
+storely_search_fallback: "Sugestões da Storely",
+storely_cache: "cache",
+storely_cache_expired: "expirado",
+storely_syncing: "a sincronizar",
+storely_refresh_cache: "atualizar",
+storely_not_found_title: "Nada muito próximo foi encontrado",
+storely_not_found_subtitle: "Tenta outro nome, categoria ou loja. Também podes escolher uma das sugestões abaixo.",
+storely_try_these: "Experimenta isto",
+
+
+
+
+
+
+
+
+
+storely_search_no_exact_but_close: "Sem resultado exato, mas há resultados parecidos",
+storely_search_no_exact_but_related: "Sem resultado exato, mas há resultados relacionados",
+storely_search_nothing_close: "Nada muito próximo, mas há sugestões para ti",
+storely_search_message_close: "Não encontrei um nome exatamente igual, mas aqui estão os resultados mais parecidos que podem te ajudar.",
+storely_search_message_related: "Não encontrei um resultado exato, mas selecionei coisas relacionadas que possas gostar.",
+
+
+
+storely_search_empty_title: "Nenhum resultado encontrado",
+storely_search_empty_subtitle: "Não encontramos nada que corresponda à sua pesquisa. Tente outra palavra ou explore outros produtos abaixo.",
+storely_search_message_fallback: "Não encontramos nada semelhante, mas aqui estão algumas sugestões que podem interessar.",
+storely_other_products_we_have: "Outros produtos que temos",
+
+marketplace_hero_badge: "Descubra mais num só lugar",
+marketplace_hero_subtitle: "Explore um marketplace com vários tipos de produtos e lojas numa experiência simples, rápida e organizada.",
+marketplace_hero_point_products: "Vários tipos de produtos",
+marketplace_hero_point_stores: "Múltiplas lojas",
+marketplace_hero_point_discover: "Fácil de explorar",
+storely_cta_title: "Comece a vender os seus produtos hoje",
+storely_cta_subtitle: "Crie a sua loja, mostre os seus produtos e alcance mais clientes numa plataforma simples."
+
+
+}
 } as const;
 
 export type Language = 'en' | 'pt';

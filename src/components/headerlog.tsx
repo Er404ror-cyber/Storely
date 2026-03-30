@@ -128,7 +128,7 @@ export const HeaderLog = () => {
 
   const navLinks = [
     { name: t('nav_home'), path: '/' },
-    { name: t('nav_blog'), path: '/blog' },
+    { name: t('nav_blog'), path: '/start' },
     { name: t('nav_support'), path: '/duvidas' },
   ];
 
