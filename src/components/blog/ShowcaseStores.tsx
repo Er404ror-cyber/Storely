@@ -20,8 +20,6 @@ import {
   X,
   RefreshCw,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { pt, enUS } from "date-fns/locale";
 import { supabase } from "../../lib/supabase";
 import { useTranslate } from "../../context/LanguageContext";
 
@@ -35,6 +33,7 @@ type ProductStore = {
   description?: string | null;
   logo_url?: string | null;
   settings?: Record<string, any> | null;
+  currency?: string | null;
 };
 
 type ProductRow = {
@@ -43,6 +42,7 @@ type ProductRow = {
   category: string | null;
   main_image: string | null;
   created_at: string;
+  price?: number | string | null;
   stores: ProductStore | ProductStore[] | null;
 };
 
@@ -52,11 +52,13 @@ type ProductItem = {
   category: string;
   image: string;
   createdAt: string;
-  timeAgo: string;
+  timeAgoShort: string;
   storeSlug: string;
   storeName: string;
   storeDescription: string;
   storeLogo: string;
+  price: number | null;
+  currency: string;
 };
 
 type StoreItem = {
@@ -88,6 +90,14 @@ type StorelyCachePayload = {
   expiresAt: number;
 };
 
+type ShowcaseViewState = {
+  query: string;
+  selectedCategory: string;
+  selectedStore: string;
+  showFilters: boolean;
+  scrollY: number;
+};
+
 type FeedSection =
   | { id: string; type: "products-grid"; items: ProductItem[]; title?: string }
   | { id: string; type: "products-strip"; title: string; items: ProductItem[] }
@@ -113,15 +123,18 @@ const FALLBACK_PRODUCT =
 const FALLBACK_STORE =
   "https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=900&q=80";
 
-const LS_PREFS = "storely-prefs-v8";
-const LS_HISTORY = "storely-history-v8";
+const LS_PREFS = "storely-prefs-v9";
+const LS_HISTORY = "storely-history-v9";
 const LS_AUTH_HINT = "storely-auth-user";
 
-const STORELY_CACHE_KEY = "storely-public-cache-v4";
-const STORELY_CACHE_VERSION = 4;
-const STORELY_CACHE_TTL = 1000 * 60 * 20;
+const STORELY_CACHE_KEY = "storely-public-cache-v5";
+const STORELY_CACHE_VERSION = 5;
+const STORELY_CACHE_TTL = 1000 * 60 * 60 * 1; // 1h
+const STORELY_STATE_KEY = "storely-showcase-ui-v1";
+
+const MAX_PRODUCTS_FETCH = 120;
 const MAX_RECENT_SEARCHES = 3;
-const MAX_SEARCH_SUGGESTIONS = 6;
+const MAX_SEARCH_SUGGESTIONS = 4;
 const MAX_FALLBACK_PRODUCTS = 8;
 
 /* =========================
@@ -205,6 +218,15 @@ function seededHash(str: string, seed: number) {
   return Math.abs(h >>> 0);
 }
 
+function stableShuffle<T>(items: T[], seed: number) {
+  const arr = [...items];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = seededHash(`${seed}-${i}`, seed) % (i + 1);
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function rotate<T>(arr: T[], offset: number) {
   if (!arr.length) return arr;
   const n = ((offset % arr.length) + arr.length) % arr.length;
@@ -238,25 +260,130 @@ function useDebouncedValue<T>(value: T, delay = 180) {
   return debounced;
 }
 
-function formatRemainingTime(ms: number, expiredLabel: string) {
+function formatRemainingShort(ms: number, expiredLabel: string) {
   if (ms <= 0) return expiredLabel;
+  const totalMinutes = Math.ceil(ms / 60000);
+  if (totalMinutes < 60) return `${totalMinutes}m`;
+  const hours = Math.floor(totalMinutes / 60);
+  const mins = totalMinutes % 60;
+  return mins ? `${hours}h ${mins}m` : `${hours}h`;
+}
 
-  const totalSeconds = Math.floor(ms / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
+function parsePrice(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const n = Number(value.replace(",", "."));
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
 
-  if (hours > 0) {
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
-      2,
-      "0"
-    )}:${String(seconds).padStart(2, "0")}`;
+function resolveStoreCurrency(store: ProductStore | null | undefined, fallback = "USD") {
+  const direct = typeof store?.currency === "string" ? store.currency.trim() : "";
+  const fromSettings =
+    typeof store?.settings?.currency === "string"
+      ? String(store.settings.currency).trim()
+      : "";
+
+  return direct || fromSettings || fallback;
+}
+
+function formatProductPrice(value: number | null, currency: string, locale: string) {
+  if (value == null) return "";
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency,
+      maximumFractionDigits: value % 1 === 0 ? 0 : 2,
+    }).format(value);
+  } catch {
+    return `${currency} ${value.toFixed(value % 1 === 0 ? 0 : 2)}`;
+  }
+}
+
+function getShortRelativeTime(date: string, locale: "pt" | "en") {
+  const now = Date.now();
+  const value = new Date(date).getTime();
+  const diffMs = value - now;
+
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+  const week = 7 * day;
+
+  const abs = Math.abs(diffMs);
+
+  if (abs < hour) {
+    const v = Math.round(diffMs / minute) || -1;
+    return rtf.format(v, "minute");
   }
 
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
-    2,
-    "0"
-  )}`;
+  if (abs < day) {
+    const v = Math.round(diffMs / hour);
+    return rtf.format(v, "hour");
+  }
+
+  if (abs < week) {
+    const v = Math.round(diffMs / day);
+    return rtf.format(v, "day");
+  }
+
+  const v = Math.round(diffMs / week);
+  return rtf.format(v, "week");
+}
+
+function compactRelativeLabel(label: string) {
+  return label
+    .replace(/\s+/g, " ")
+    .replace("minutes ago", "m")
+    .replace("minute ago", "m")
+    .replace("hours ago", "h")
+    .replace("hour ago", "h")
+    .replace("days ago", "d")
+    .replace("day ago", "d")
+    .replace("weeks ago", "w")
+    .replace("week ago", "w")
+    .replace("há ", "")
+    .replace(" minutos", "m")
+    .replace(" minuto", "m")
+    .replace(" horas", "h")
+    .replace(" hora", "h")
+    .replace(" dias", "d")
+    .replace(" dia", "d")
+    .replace(" semanas", "w")
+    .replace(" semana", "w")
+    .trim();
+}
+
+function interleaveByStore(items: ProductItem[]) {
+  const byStore = new Map<string, ProductItem[]>();
+
+  for (const item of items) {
+    if (!byStore.has(item.storeSlug)) byStore.set(item.storeSlug, []);
+    byStore.get(item.storeSlug)!.push(item);
+  }
+
+  const buckets = Array.from(byStore.values());
+  const result: ProductItem[] = [];
+
+  let hasItems = true;
+  let index = 0;
+
+  while (hasItems) {
+    hasItems = false;
+    for (const bucket of buckets) {
+      const item = bucket[index];
+      if (item) {
+        result.push(item);
+        hasItems = true;
+      }
+    }
+    index++;
+  }
+
+  return result;
 }
 
 function hasStorelyAccount() {
@@ -320,6 +447,24 @@ function pushHistory(value: string) {
 
   next.unshift({ value: cleaned, ts: Date.now() });
   setHistory(next.slice(0, MAX_RECENT_SEARCHES));
+}
+
+function readShowcaseState(): ShowcaseViewState | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(STORELY_STATE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as ShowcaseViewState;
+  } catch {
+    return null;
+  }
+}
+
+function writeShowcaseState(state: ShowcaseViewState) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(STORELY_STATE_KEY, JSON.stringify(state));
+  } catch {}
 }
 
 /* =========================
@@ -429,11 +574,15 @@ const ProductCard = memo(function ProductCard({
   item,
   onClick,
   compact = false,
+  locale = "en-US",
 }: {
   item: ProductItem;
   onClick: (item: ProductItem) => void;
   compact?: boolean;
+  locale?: string;
 }) {
+  const localizedPrice = formatProductPrice(item.price, item.currency, locale);
+
   return (
     <article
       onClick={() => onClick(item)}
@@ -447,6 +596,12 @@ const ProductCard = memo(function ProductCard({
           alt={item.name}
           loading="lazy"
           decoding="async"
+          draggable={false}
+          sizes={
+            compact
+              ? "190px"
+              : "(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
+          }
           className="h-full w-full object-cover"
         />
         <div className="absolute left-2.5 top-2.5 max-w-[78%] rounded-full bg-white/92 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-zinc-900">
@@ -454,19 +609,27 @@ const ProductCard = memo(function ProductCard({
         </div>
       </div>
 
-      <div className="space-y-1.5 p-3">
+      <div className="space-y-2 p-3">
         <h4 className="line-clamp-2 text-[13px] font-black leading-tight tracking-tight text-zinc-950 dark:text-zinc-50">
           {item.name}
         </h4>
 
-        <div className="flex items-center gap-2 text-[10px]">
-          <span className="truncate font-black uppercase tracking-wide text-blue-600">
-            {item.category}
-          </span>
-          <span className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-          <span className="truncate text-zinc-500 dark:text-zinc-400">
-            {item.timeAgo}
-          </span>
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0 flex items-center gap-2 text-[10px]">
+            <span className="truncate font-black uppercase tracking-wide text-blue-600">
+              {item.category}
+            </span>
+            <span className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+            <span className="truncate text-zinc-500 dark:text-zinc-400">
+              {item.timeAgoShort}
+            </span>
+          </div>
+
+          {localizedPrice ? (
+            <span className="shrink-0 text-[12px] font-black tracking-tight text-zinc-950 dark:text-zinc-50">
+              {localizedPrice}
+            </span>
+          ) : null}
         </div>
       </div>
     </article>
@@ -585,11 +748,13 @@ function ProductsStrip({
   items,
   onProductClick,
   playful = false,
+  locale,
 }: {
   title: string;
   items: ProductItem[];
   onProductClick: (item: ProductItem) => void;
   playful?: boolean;
+  locale: string;
 }) {
   return (
     <section>
@@ -602,7 +767,7 @@ function ProductsStrip({
       <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 scrollbar-hide">
         {items.map((item) => (
           <div key={item.id} className="snap-start">
-            <ProductCard item={item} onClick={onProductClick} compact />
+            <ProductCard item={item} onClick={onProductClick} compact locale={locale} />
           </div>
         ))}
       </div>
@@ -698,22 +863,26 @@ export const ShowcaseStores = () => {
 
   const navigate = useNavigate();
   const searchRef = useRef<HTMLDivElement | null>(null);
-  const refreshSeed = useRef(
-    Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 100000)
-  ).current;
+  const expiryTimeoutRef = useRef<number | null>(null);
 
   const initialCache = useMemo(() => readStorelyCache(), []);
-  const dateLocale = lang === "en" ? enUS : pt;
+  const initialUiState = useMemo(() => readShowcaseState(), []);
+  const localeCode: "pt" | "en" = lang === "en" ? "en" : "pt";
+  const localeForPrice = lang === "en" ? "en-US" : "pt-PT";
   const userHasAccount = useMemo(() => hasStorelyAccount(), []);
 
   const [prefs, setPrefsState] = useState<PreferenceState>(() => getPrefs());
   const [history, setHistoryState] = useState<SearchHistoryItem[]>(() => getHistory());
 
-  const [query, setQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedStore, setSelectedStore] = useState("all");
+  const [query, setQuery] = useState(initialUiState?.query ?? "");
+  const [selectedCategory, setSelectedCategory] = useState(
+    initialUiState?.selectedCategory ?? "all"
+  );
+  const [selectedStore, setSelectedStore] = useState(
+    initialUiState?.selectedStore ?? "all"
+  );
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(initialUiState?.showFilters ?? false);
   const [expiresAt, setExpiresAt] = useState<number>(initialCache?.expiresAt ?? 0);
   const [remainingMs, setRemainingMs] = useState<number>(
     initialCache ? Math.max(initialCache.expiresAt - Date.now(), 0) : 0
@@ -721,14 +890,36 @@ export const ShowcaseStores = () => {
   const [isCompact, setIsCompact] = useState(false);
 
   const debouncedQuery = useDebouncedValue(query, 180);
-  const expiryTimeoutRef = useRef<number | null>(null);
 
- 
+  const refreshSeed = useRef(
+    seededHash(
+      String(initialCache?.savedAt ?? Date.now()),
+      initialCache?.savedAt ?? Date.now()
+    )
+  ).current;
 
   const limitedHistory = useMemo(
     () => history.slice(0, MAX_RECENT_SEARCHES),
     [history]
   );
+
+  useEffect(() => {
+    writeShowcaseState({
+      query,
+      selectedCategory,
+      selectedStore,
+      showFilters,
+      scrollY: window.scrollY,
+    });
+  }, [query, selectedCategory, selectedStore, showFilters]);
+
+  useEffect(() => {
+    if (!initialUiState?.scrollY) return;
+    const id = window.setTimeout(() => {
+      window.scrollTo({ top: initialUiState.scrollY, behavior: "auto" });
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, [initialUiState]);
 
   useEffect(() => {
     const handleOutside = (e: MouseEvent) => {
@@ -764,9 +955,11 @@ export const ShowcaseStores = () => {
       return;
     }
 
+    setRemainingMs(Math.max(expiresAt - Date.now(), 0));
+
     const interval = window.setInterval(() => {
       setRemainingMs(Math.max(expiresAt - Date.now(), 0));
-    }, 1000);
+    }, 60_000);
 
     return () => window.clearInterval(interval);
   }, [expiresAt]);
@@ -777,12 +970,13 @@ export const ShowcaseStores = () => {
     isFetching,
     refetch,
   } = useQuery<ProductRow[]>({
-    queryKey: ["storely-public-smart-v5"],
+    queryKey: ["storely-public-smart-v6"],
     initialData: initialCache?.data,
-    staleTime: Number.POSITIVE_INFINITY,
-    gcTime: STORELY_CACHE_TTL * 3,
+    staleTime: STORELY_CACHE_TTL,
+    gcTime: STORELY_CACHE_TTL * 2,
+    refetchOnMount: false,
     refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
     retry: 1,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -793,17 +987,20 @@ export const ShowcaseStores = () => {
           category,
           main_image,
           created_at,
+          price,
           stores!inner (
             slug,
             name,
             description,
             logo_url,
-            settings
+            settings,
+            currency
           )
         `)
         .eq("is_active", true)
         .not("main_image", "is", null)
-        .limit(160);
+        .order("created_at", { ascending: false })
+        .limit(MAX_PRODUCTS_FETCH);
 
       if (error) throw error;
 
@@ -827,11 +1024,10 @@ export const ShowcaseStores = () => {
 
     const delay = Math.max(expiresAt - Date.now(), 0);
 
-    expiryTimeoutRef.current = window.setTimeout(async () => {
+    expiryTimeoutRef.current = window.setTimeout(() => {
       clearStorelyCache();
       setExpiresAt(0);
       setRemainingMs(0);
-      await refetch();
     }, delay + 50);
 
     return () => {
@@ -840,12 +1036,15 @@ export const ShowcaseStores = () => {
         expiryTimeoutRef.current = null;
       }
     };
-  }, [expiresAt, refetch]);
+  }, [expiresAt]);
 
   const products = useMemo<ProductItem[]>(() => {
     return rows
       .map((row) => {
         const store = Array.isArray(row.stores) ? row.stores[0] : row.stores;
+        const shortLabel = compactRelativeLabel(
+          getShortRelativeTime(row.created_at, localeCode)
+        );
 
         return {
           id: row.id,
@@ -853,19 +1052,18 @@ export const ShowcaseStores = () => {
           category: row.category?.trim() || t("storely_general"),
           image: row.main_image || FALLBACK_PRODUCT,
           createdAt: row.created_at,
-          timeAgo: formatDistanceToNow(new Date(row.created_at), {
-            addSuffix: true,
-            locale: dateLocale,
-          }),
+          timeAgoShort: shortLabel,
           storeSlug: store?.slug || "store",
           storeName: store?.name || t("storely_store_fallback"),
           storeDescription:
             store?.description?.trim() || t("storely_store_default_description"),
           storeLogo: store?.logo_url || "",
+          price: parsePrice(row.price),
+          currency: resolveStoreCurrency(store, "USD"),
         };
       })
       .filter((item) => item.id && item.storeSlug);
-  }, [rows, t, dateLocale]);
+  }, [rows, t, localeCode]);
 
   const stores = useMemo<StoreItem[]>(() => {
     const grouped = new Map<string, StoreItem>();
@@ -909,7 +1107,10 @@ export const ShowcaseStores = () => {
   const quickCategoryChips = useMemo(() => {
     return [
       "all",
-      ...rotate(allCategories, refreshSeed % Math.max(allCategories.length, 1)).slice(0, 6),
+      ...rotate(allCategories, refreshSeed % Math.max(allCategories.length, 1)).slice(
+        0,
+        6
+      ),
     ];
   }, [allCategories, refreshSeed]);
 
@@ -955,7 +1156,7 @@ export const ShowcaseStores = () => {
 
   const searchAnalysis = useMemo(() => {
     const q = debouncedQuery.trim();
-  
+
     if (!q) {
       return {
         mode: "default" as SearchMode,
@@ -968,7 +1169,7 @@ export const ShowcaseStores = () => {
         suggestionTerms: [] as string[],
       };
     }
-  
+
     const productScored = products.map((p) => {
       const exactScore = exactLikeScore(q, p.name);
       const nameScore = similarityScore(q, p.name);
@@ -978,14 +1179,14 @@ export const ShowcaseStores = () => {
         q,
         `${p.name} ${p.category} ${p.storeName} ${p.storeDescription}`
       );
-  
+
       return {
         item: p,
         exactScore,
         score: Math.max(nameScore, fullScore, categoryScore * 0.8, storeScore * 0.7),
       };
     });
-  
+
     const storeScored = stores.map((s) => {
       const exactScore = exactLikeScore(q, s.name);
       const nameScore = similarityScore(q, s.name);
@@ -994,47 +1195,47 @@ export const ShowcaseStores = () => {
         ...s.categories.map((cat) => similarityScore(q, cat)),
         0
       );
-  
+
       return {
         item: s,
         exactScore,
         score: Math.max(nameScore, descScore * 0.5, categoryScore * 0.8),
       };
     });
-  
+
     const topExactProducts = productScored
       .filter((x) => x.exactScore >= 150)
       .sort((a, b) => b.exactScore - a.exactScore || b.score - a.score)
       .map((x) => x.item);
-  
+
     const topApproxProducts = productScored
       .filter((x) => x.score >= 26 && !topExactProducts.some((p) => p.id === x.item.id))
       .sort((a, b) => b.score - a.score)
       .map((x) => x.item);
-  
+
     const topExactStores = storeScored
       .filter((x) => x.exactScore >= 150)
       .sort((a, b) => b.exactScore - a.exactScore || b.score - a.score)
       .map((x) => x.item);
-  
+
     const topApproxStores = storeScored
       .filter((x) => x.score >= 24 && !topExactStores.some((s) => s.slug === x.item.slug))
       .sort((a, b) => b.score - a.score)
       .map((x) => x.item);
-  
+
     const relatedCategories = new Set<string>();
     const relatedStoreSlugs = new Set<string>();
-  
+
     [...topExactProducts, ...topApproxProducts].slice(0, 10).forEach((p) => {
       relatedCategories.add(p.category);
       relatedStoreSlugs.add(p.storeSlug);
     });
-  
+
     [...topExactStores, ...topApproxStores].slice(0, 6).forEach((s) => {
       relatedStoreSlugs.add(s.slug);
       s.categories.forEach((cat) => relatedCategories.add(cat));
     });
-  
+
     const topRelatedProducts = products
       .filter(
         (p) =>
@@ -1043,7 +1244,7 @@ export const ShowcaseStores = () => {
           !topApproxProducts.some((x) => x.id === p.id)
       )
       .slice(0, 24);
-  
+
     const topRelatedStores = stores
       .filter(
         (s) =>
@@ -1053,9 +1254,9 @@ export const ShowcaseStores = () => {
           !topApproxStores.some((x) => x.slug === s.slug)
       )
       .slice(0, 12);
-  
+
     let mode: SearchMode = "none";
-  
+
     if (topExactProducts.length || topExactStores.length) {
       mode = "exact";
     } else if (topApproxProducts.length || topApproxStores.length) {
@@ -1065,7 +1266,7 @@ export const ShowcaseStores = () => {
     } else {
       mode = "fallback";
     }
-  
+
     const suggestionTerms = [
       ...new Set([
         ...allCategories.slice(0, 4),
@@ -1073,7 +1274,7 @@ export const ShowcaseStores = () => {
         ...products.slice(0, 3).map((p) => p.category),
       ]),
     ].slice(0, 8);
-  
+
     return {
       mode,
       topExactProducts,
@@ -1085,7 +1286,7 @@ export const ShowcaseStores = () => {
       suggestionTerms,
     };
   }, [debouncedQuery, products, stores, allCategories]);
-  
+
   const isExactSearch = useMemo(
     () => Boolean(debouncedQuery.trim()) && searchAnalysis.mode === "exact",
     [debouncedQuery, searchAnalysis.mode]
@@ -1164,53 +1365,17 @@ export const ShowcaseStores = () => {
         (prefs.searches[normalizeText(p.storeName)] || 0) * 2;
 
       const freshnessScore = new Date(p.createdAt).getTime() / 1000000000;
-      const randomScore = seededHash(`${p.id}-${refreshSeed}`, refreshSeed) % 2000;
 
       return {
         ...p,
-        rank: interestScore * 100000 + freshnessScore + randomScore,
+        rank: interestScore * 100000 + freshnessScore,
       };
     });
 
-    const grouped = new Map<string, typeof scored>();
+    const sorted = [...scored].sort((a, b) => b.rank - a.rank);
+    const shuffled = stableShuffle(sorted, refreshSeed);
 
-    for (const item of scored) {
-      if (!grouped.has(item.storeSlug)) grouped.set(item.storeSlug, []);
-      grouped.get(item.storeSlug)!.push(item);
-    }
-
-    const buckets = Array.from(grouped.entries())
-      .map(([slug, items]) => ({
-        slug,
-        items: [...items].sort((a, b) => b.rank - a.rank),
-        storeRank:
-          (prefs.stores[slug] || 0) * 1000 +
-          (seededHash(`${slug}-${refreshSeed}`, refreshSeed) % 500),
-      }))
-      .sort((a, b) => b.storeRank - a.storeRank);
-
-    const rotatedBuckets = rotate(
-      buckets,
-      refreshSeed % Math.max(buckets.length, 1)
-    );
-
-    const result: ProductItem[] = [];
-    let i = 0;
-    let added = true;
-
-    while (added) {
-      added = false;
-      for (const bucket of rotatedBuckets) {
-        const item = bucket.items[i];
-        if (item) {
-          result.push(item);
-          added = true;
-        }
-      }
-      i++;
-    }
-
-    return result;
+    return interleaveByStore(shuffled);
   }, [scopedProducts, prefs, refreshSeed]);
 
   const fallbackProducts = useMemo(() => {
@@ -1226,27 +1391,18 @@ export const ShowcaseStores = () => {
     const recent = [...scopedProducts].sort(
       (a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)
     );
-    const groups = chunk(recent, 4);
-    return rotate(
-      groups,
-      seededHash(`recent-${refreshSeed}`, refreshSeed) %
-        Math.max(groups.length || 1, 1)
-    );
+
+    const shuffled = stableShuffle(recent, seededHash(`recent-${refreshSeed}`, refreshSeed));
+    return chunk(shuffled, 4);
   }, [scopedProducts, refreshSeed]);
 
   const storeGroups = useMemo(() => {
-    const randomized = [...scopedStores].sort((a, b) => {
-      const sa = seededHash(`${a.slug}-${refreshSeed}`, refreshSeed);
-      const sb = seededHash(`${b.slug}-${refreshSeed}`, refreshSeed);
-      return sa - sb;
-    });
-
-    const groups = chunk(randomized, 4);
-    return rotate(
-      groups,
-      seededHash(`stores-${refreshSeed}`, refreshSeed) %
-        Math.max(groups.length || 1, 1)
+    const shuffled = stableShuffle(
+      scopedStores,
+      seededHash(`stores-${refreshSeed}`, refreshSeed)
     );
+
+    return chunk(shuffled, 4);
   }, [scopedStores, refreshSeed]);
 
   const mainGroups = useMemo(() => chunk(recommendedFeed, 8), [recommendedFeed]);
@@ -1313,10 +1469,10 @@ export const ShowcaseStores = () => {
             searchAnalysis.mode === "exact"
               ? t("storely_matching_stores")
               : t("storely_similar_stores"),
-          items: [
-            ...searchAnalysis.topExactStores,
-            ...searchAnalysis.topApproxStores,
-          ].slice(0, 8),
+          items: [...searchAnalysis.topExactStores, ...searchAnalysis.topApproxStores].slice(
+            0,
+            8
+          ),
         });
       }
 
@@ -1550,72 +1706,72 @@ export const ShowcaseStores = () => {
     );
   }
 
-  if (!products.length) return null;
-
   return (
-    <section className="w-full px-0  py-4">
-      <div className="space-y-8">
+    <section className="w-full px-0 py-4">
+      <div className="space-y-5">
         <div
-          className={`sticky  z-20 transition-all duration-200 ${
-            isCompact ? "top-[68px] md:top-[64px]" : "top-[92px]"
+          ref={searchRef}
+          className={`sticky top-2 z-20 rounded-[1.75rem] border border-zinc-200 bg-white/90 p-3 shadow-sm  dark:border-zinc-800 dark:bg-zinc-950/85 ${
+            isCompact ? "lg:px-4" : "lg:px-6"
           }`}
         >
-          <div
-            className={`w-full   border-zinc-200 bg-white/95 shadow-xs  dark:border-zinc-800 dark:bg-zinc-950/95 ${
-              isCompact ? "p-3 md:px-8" : "p-3 md:px-8"
-            }`}
-          >
-            <div className="flex items-center gap-2" ref={searchRef}>
-              <div className="relative min-w-0 flex-1">
-                <div
-                  className={`flex items-center gap-3 rounded-full bg-zinc-100 px-4 transition-all dark:bg-zinc-900 ${
-                    isCompact ? "h-9" : "h-11"
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
+                />
+                <input
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    setShowDropdown(true);
+                  }}
+                  onFocus={() => setShowDropdown(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") submitSearch();
+                  }}
+                  placeholder={t("storely_search_placeholder")}
+                  className={`w-full rounded-full border border-zinc-200 bg-zinc-50 pl-10 pr-24 font-semibold text-zinc-900 outline-none transition dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 ${
+                    isCompact ? "h-10 text-[13px]" : "h-12 text-sm"
                   }`}
-                >
-                  <Search
-                    size={isCompact ? 14 : 16}
-                    className="shrink-0 text-zinc-400"
-                  />
-                  <input
-                    value={query}
-                    onChange={(e) => {
-                      setQuery(e.target.value);
-                      setShowDropdown(true);
-                    }}
-                    onFocus={() => setShowDropdown(true)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") submitSearch();
-                    }}
-                    placeholder={t("storely_search_placeholder")}
-                    className={`h-full w-full bg-transparent font-medium outline-none placeholder:text-zinc-400 dark:text-white ${
-                      isCompact ? "text-[13px]" : "text-sm"
-                    }`}
-                  />
+                />
+
+                <div className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center gap-1">
                   {query ? (
                     <button
                       type="button"
                       onClick={() => setQuery("")}
-                      className="text-zinc-400"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-200/70 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
                     >
                       <X size={14} />
                     </button>
                   ) : null}
+
+                  <button
+                    type="button"
+                    onClick={() => submitSearch()}
+                    className="inline-flex h-8 items-center justify-center rounded-full bg-zinc-950 px-3 text-[10px] font-black uppercase tracking-[0.12em] text-white dark:bg-white dark:text-zinc-900"
+                  >
+                    {t("storely_search")}
+                  </button>
                 </div>
 
                 {showDropdown && (searchSuggestions.length > 0 || limitedHistory.length > 0) ? (
-                  <div className="absolute left-0 right-0 top-[calc(100%+8px)] overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-950">
-                    {query.trim() ? (
-                      <div className="border-b border-zinc-100 p-2.5 dark:border-zinc-900">
-                        <div className="mb-1.5 px-2 text-[10px] font-black uppercase tracking-[0.14em] text-zinc-400">
+                  <div className="absolute left-0 right-0 top-[calc(100%+10px)] overflow-hidden rounded-[1.35rem] border border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-950">
+                    {searchSuggestions.length > 0 ? (
+                      <div className="p-2">
+                        <p className="px-2 pb-1 text-[10px] font-black uppercase tracking-[0.12em] text-zinc-400">
                           {t("storely_suggestions")}
-                        </div>
+                        </p>
                         <div className="space-y-1">
                           {searchSuggestions.map((item, idx) => (
                             <button
                               key={`${item.type}-${item.value}-${idx}`}
                               type="button"
                               onClick={() => submitSearch(item.value)}
-                              className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-200 dark:hover:bg-zinc-900"
+                              className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-900"
                             >
                               <span className="truncate">{item.value}</span>
                               <span className="ml-3 text-[10px] font-black uppercase tracking-[0.12em] text-zinc-400">
@@ -1627,21 +1783,21 @@ export const ShowcaseStores = () => {
                       </div>
                     ) : null}
 
-                    {limitedHistory.length > 0 ? (
-                      <div className="p-2.5">
-                        <div className="mb-1.5 px-2 text-[10px] font-black uppercase tracking-[0.14em] text-zinc-400">
+                    {!query && limitedHistory.length > 0 ? (
+                      <div className="border-t border-zinc-100 p-2 dark:border-zinc-900">
+                        <p className="px-2 pb-1 text-[10px] font-black uppercase tracking-[0.12em] text-zinc-400">
                           {t("storely_recent_searches")}
-                        </div>
+                        </p>
                         <div className="space-y-1">
                           {limitedHistory.map((item) => (
                             <button
                               key={`${item.value}-${item.ts}`}
                               type="button"
                               onClick={() => submitSearch(item.value)}
-                              className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-200 dark:hover:bg-zinc-900"
+                              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-900"
                             >
+                              <Clock3 size={14} className="text-zinc-400" />
                               <span className="truncate">{item.value}</span>
-                              <Clock3 size={13} className="text-zinc-400" />
                             </button>
                           ))}
                         </div>
@@ -1653,114 +1809,116 @@ export const ShowcaseStores = () => {
 
               <button
                 type="button"
-                onClick={() => setShowFilters((v) => !v)}
-                className={`inline-flex items-center justify-center rounded-full bg-zinc-100 text-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 ${
-                  isCompact ? "h-9 w-9" : "h-11 w-11"
+                onClick={() => setShowFilters((prev) => !prev)}
+                className={`inline-flex shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 ${
+                  isCompact ? "h-10 w-10" : "h-12 w-12"
                 }`}
               >
-                <SlidersHorizontal size={isCompact ? 14 : 16} />
+                <SlidersHorizontal size={16} />
               </button>
-
-              {!userHasAccount && !isCompact ? (
-                <button
-                  type="button"
-                  onClick={() => navigate("/auth")}
-                  className={`hidden items-center justify-center rounded-full bg-zinc-950 px-4 font-black uppercase tracking-[0.12em] text-white dark:bg-white dark:text-zinc-900 md:inline-flex ${
-                    isCompact ? "h-9 text-[10px]" : "h-11 text-[11px]"
-                  }`}
-                >
-                  {t("storely_sell_now")}
-                </button>
-              ) : null}
             </div>
 
-            <div className="mt-2 flex items-center gap-2 overflow-x-auto scrollbar-hide">
-              {quickCategoryChips.map((chip) => {
-                const active =
-                  chip === "all"
-                    ? selectedCategory === "all"
-                    : selectedCategory === chip;
+            <div className="flex flex-wrap items-center gap-2">
+              {quickCategoryChips.map((cat) => {
+                const active = selectedCategory === cat;
+                const label = cat === "all" ? t("storely_all") : cat;
 
                 return (
                   <button
-                    key={chip}
+                    key={cat}
                     type="button"
-                    onClick={() => setSelectedCategory(chip)}
-                    className={`whitespace-nowrap rounded-full px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] transition-transform hover:scale-[1.01] ${
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] transition ${
                       active
-                        ? "bg-gradient-to-r from-blue-600 to-fuchsia-600 text-white"
-                        : "bg-zinc-100 text-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+                        ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-900"
+                        : "bg-zinc-100 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300"
                     }`}
                   >
-                    {chip === "all" ? t("storely_explore") : chip}
+                    {label}
                   </button>
                 );
               })}
-            </div>
 
-            {showFilters ? (
-              <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-3">
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="h-10 rounded-xl border border-zinc-200 bg-white px-3 text-xs font-semibold outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-white"
-                >
-                  <option value="all">{t("storely_all_categories")}</option>
-                  {allCategories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={selectedStore}
-                  onChange={(e) => setSelectedStore(e.target.value)}
-                  className="h-10 rounded-xl border border-zinc-200 bg-white px-3 text-xs font-semibold outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-white"
-                >
-                  <option value="all">{t("storely_all_stores")}</option>
-                  {stores.map((store) => (
-                    <option key={store.slug} value={store.slug}>
-                      {store.name}
-                    </option>
-                  ))}
-                </select>
-
+              {(query || selectedCategory !== "all" || selectedStore !== "all") && (
                 <button
                   type="button"
                   onClick={clearSearchAndFilters}
-                  className="h-10 rounded-xl bg-zinc-100 px-4 text-xs font-black uppercase tracking-[0.12em] text-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+                  className="rounded-full bg-rose-50 px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-rose-600 dark:bg-rose-950/30 dark:text-rose-300"
                 >
-                  {t("storely_clear_filters")}
+                  {t("storely_clear")}
                 </button>
+              )}
+            </div>
+
+            {showFilters ? (
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="block">
+                  <span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.12em] text-zinc-400">
+                    {t("storely_category")}
+                  </span>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="h-11 w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3 text-sm font-semibold text-zinc-900 outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100"
+                  >
+                    <option value="all">{t("storely_all")}</option>
+                    {allCategories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.12em] text-zinc-400">
+                    {t("storely_store")}
+                  </span>
+                  <select
+                    value={selectedStore}
+                    onChange={(e) => setSelectedStore(e.target.value)}
+                    className="h-11 w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3 text-sm font-semibold text-zinc-900 outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100"
+                  >
+                    <option value="all">{t("storely_all")}</option>
+                    {stores.map((store) => (
+                      <option key={store.slug} value={store.slug}>
+                        {store.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               </div>
             ) : null}
 
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                {searchStatusText ? (
+                  <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">
+                    {searchStatusText}
+                  </span>
+                ) : null}
 
-{ !isCompact &&
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              {debouncedQuery.trim() ? (
-                <span className="rounded-full bg-zinc-100 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
-                  {searchStatusText}
+                <span
+                  className={`rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] ${
+                    remainingMs > 0
+                      ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400"
+                      : "bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400"
+                  }`}
+                >
+                  {remainingMs > 0
+                    ? `${t("storely_cache")} ${formatRemainingShort(
+                        remainingMs,
+                        t("storely_cache_expired")
+                      )}`
+                    : t("storely_cache_expired")}
                 </span>
-              ) : null}
 
-              <span
-                className={`rounded-full px-2.5 py-1 text-[6px] font-black uppercase tracking-[0.12em] ${
-                  remainingMs > 0
-                    ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400"
-                    : "bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400"
-                }`}
-              >
-                {t("storely_cache")}{" "}
-                {formatRemainingTime(remainingMs, t("storely_cache_expired"))}
-              </span>
-
-              {isFetching ? (
-                <span className="rounded-full bg-zinc-100 px-2.5 py-1 text-[6px] font-black uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
-                  {t("storely_syncing")}
-                </span>
-              ) : null}
+                {isFetching ? (
+                  <span className="rounded-full bg-zinc-100 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
+                    {t("storely_syncing")}
+                  </span>
+                ) : null}
+              </div>
 
               <button
                 type="button"
@@ -1770,15 +1928,15 @@ export const ShowcaseStores = () => {
                   setRemainingMs(0);
                   await refetch();
                 }}
-                className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-1 text-[6px] font-black uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400"
+                className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400"
               >
                 <RefreshCw size={10} />
                 {t("storely_refresh_cache")}
               </button>
-            </div>}
+            </div>
 
             {debouncedQuery.trim() && searchAnalysis.mode !== "exact" ? (
-              <div className="mt-2 rounded-2xl hidden border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-300">
+              <div className="mt-1 hidden rounded-2xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-300">
                 {searchAnalysis.mode === "approximate"
                   ? t("storely_search_message_close")
                   : searchAnalysis.mode === "related"
@@ -1789,7 +1947,7 @@ export const ShowcaseStores = () => {
           </div>
         </div>
 
-        <div className="space-y-7 px-2 lg:px-8">
+        <div className="space-y-7 px-2 lg:px-8 [content-visibility:auto] [contain-intrinsic-size:1px_1200px]">
           {sections.map((section) => {
             if (section.type === "products-strip") {
               return (
@@ -1799,6 +1957,7 @@ export const ShowcaseStores = () => {
                   items={section.items}
                   onProductClick={handleProductClick}
                   playful={isExactSearch}
+                  locale={localeForPrice}
                 />
               );
             }
@@ -1827,12 +1986,13 @@ export const ShowcaseStores = () => {
                     />
                   ) : null}
 
-                  <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4 [content-visibility:auto]">
                     {section.items.map((item) => (
                       <ProductCard
                         key={item.id}
                         item={item}
                         onClick={handleProductClick}
+                        locale={localeForPrice}
                       />
                     ))}
                   </div>

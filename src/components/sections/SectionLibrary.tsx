@@ -306,7 +306,7 @@ export const SectionLibrary: Record<string, React.FC<SectionProps>> = {
 
         {/* Modal de Escolha */}
         {showModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/80 ">
             <div className="bg-white p-8 rounded-[32px] max-w-sm w-full shadow-2xl text-slate-900 scale-in-center">
               <h4 className="text-2xl font-black mb-6 text-center tracking-tight">Como prefere falar?</h4>
               <div className="grid gap-4">

@@ -775,7 +775,163 @@ marketplace_hero_point_products: "Different product types",
 marketplace_hero_point_stores: "Multiple stores",
 marketplace_hero_point_discover: "Easy to explore",
 storely_cta_title: "Start selling your products today",
-storely_cta_subtitle: "Create your store, showcase your products and reach more customers in one simple platform."
+storely_cta_subtitle: "Create your store, showcase your products and reach more customers in one simple platform.",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+product_form_create_title: "Create product",
+product_form_edit_title: "Edit product",
+product_form_intro: "Fill in the essentials without getting lost. First images, then price, category, and description.",
+product_form_cover: "COVER",
+product_form_add_cover: "Add cover",
+product_form_add_image: "Add image",
+product_form_image_help: "Use up to 4 images. The first one is the cover. Each image must be 1MB or less.",
+product_form_image_too_large: "Image is too large. Use 1MB or less.",
+product_form_name_label: "Name",
+product_form_name_placeholder: "What are you selling?",
+product_form_price_label: "Price",
+product_form_price_whole: "Value",
+product_form_price_cents: "Cents",
+product_form_price_help: "The value is separated from the cents to avoid confusion. Example: 4 and 00 becomes 4.00.",
+product_form_category_label: "Category",
+product_form_category_placeholder: "Example: Furniture",
+product_form_unit_label: "Unit of measure",
+product_form_unit_un: "Unit",
+product_form_unit_par: "Pair",
+product_form_unit_kit: "Kit",
+product_form_unit_pacote: "Pack",
+product_form_unit_caixa: "Box",
+product_form_unit_kg: "Kilogram",
+product_form_unit_g: "Gram",
+product_form_unit_l: "Liter",
+product_form_unit_ml: "Milliliter",
+product_form_unit_m: "Meter",
+product_form_unit_cm: "Centimeter",
+product_form_unit_m2: "Square meter",
+product_form_unit_m3: "Cubic meter",
+product_form_unit_hora: "Hour",
+product_form_unit_dia: "Day",
+product_form_unit_semana: "Week",
+product_form_unit_mes: "Month",
+product_form_unit_servico: "Service",
+product_form_description_label: "Description",
+product_form_description_placeholder: "Explain the product in a simple, clear, and useful way.",
+product_form_description_help: "Focus on what helps the customer decide: size, material, color, usage, or condition.",
+product_form_pending_title: "Still incomplete",
+product_form_ready_title: "Ready to save",
+product_form_ready_subtitle: "The main data has been filled in correctly.",
+product_form_pending_name: "Name",
+product_form_pending_category: "Category",
+product_form_pending_price: "Price",
+product_form_pending_cover: "Cover",
+product_form_pending_images: "Images",
+product_form_create_action: "Publish",
+product_form_save_action: "Save",
+product_form_created_success: "Product created successfully.",
+product_form_updated_success: "Product updated successfully.",
+product_form_save_error: "Could not save the product.",
+product_form_store_not_found: "Admin store not found.",
+product_form_product_not_found: "Product not found.",
+product_form_error_name_required: "Add a name for the product.",
+product_form_error_name_short: "The name is still too short.",
+product_form_error_category_required: "Choose or type a category.",
+product_form_error_price_required: "Set a price for the product.",
+product_form_error_price_invalid: "The price must be greater than zero.",
+product_form_error_cover_required: "Add a cover image.",
+product_form_error_images_invalid: "Some images have size issues.",
+product_form_image_delete_error: "Could not delete the temporary image.",
+storely_search: "Search",
+storely_all: "All",
+storely_clear: "Clear",
+
+store_currency_section_title: "Store currency",
+store_currency_section_desc: "On the first time, we automatically detect the most likely currency based on the device and save it if the store does not have one yet.",
+store_currency_detected_label: "Detected",
+store_currency_save_success: "Currency saved successfully.",
+store_currency_save_error: "Error saving currency.",
+store_products_empty: "No products found.",
+
+
+
+
+
+
+currency_section_title : "Store currency",
+currency_section_desc : "If the store does not have a saved currency yet, the system tries to detect and save it automatically only once.",
+currency_label : "Currency",
+currency_placeholder : "Search by currency code or currency name",
+currency_save_success : "Currency saved successfully.",
+currency_save_error : "Error saving currency.",
+save_currency : "Save",
+currency_detected_prefix : "Detected:",
+currency_source_prefix : "Source:",
+
+product_form_image_removed_cloud: "Image removed from the cloud and the form.",
+product_form_image_removed_local: "Image removed from the form.",
+product_form_image_removed_local_only_after_cloud_fail: "Image removed only from the form. Cloud deletion failed.",
+
+
+
+
+
+
+
+
+
+
+
+
+currency_required_badge : "Required",
+currency_geo_used : "Location used",
+currency_required_text : "We used your location to suggest an initial currency. Confirm and save it to display prices correctly.",
+currency_saved_badge : "Set",
+currency_saved_text : "This currency will be used to display your store prices.",
+currency_current_prefix : "Current:",
+currency_suggested_prefix : "Suggested:",
+currency_confirm_label : "Confirm currency",
+currency_change_label : "Change currency",
+currency_save_hint : "Setting the currency is important to display correct prices to customers.",
+
+
+
+product_form_image_replaced_cloud: "Previous image deleted from the cloud and replaced in the form.",
+product_form_image_replaced_local: "Image replaced in the form.",
+product_form_image_replaced_local_only_after_cloud_fail: "Image replaced in the form, but the previous one could not be deleted from the cloud.",
+product_form_image_replace_error: "Could not replace the image.",
+
+
+clearCache : "Clear cache",
+cacheClearedSuccess : "Cache cleared successfully.",
+cacheClearedError : "Error clearing cache.",
+cache_refresh_success : "Cache refreshed successfully.",
+cache_refresh_error : "Error refreshing cache.",
+
+
+
+
+
+new_product: "New product",
+  product_details_share_text: "Check out this product:",
+  product_details_whatsapp_unavailable: "The store WhatsApp number is not available.",
+  product_details_order_message_intro: "Hello, I want to order this product:",
+  product_details_quantity: "Quantity",
+  product_details_total: "Total",
+ 
   },
 
 
@@ -1580,8 +1736,180 @@ marketplace_hero_point_products: "Vários tipos de produtos",
 marketplace_hero_point_stores: "Múltiplas lojas",
 marketplace_hero_point_discover: "Fácil de explorar",
 storely_cta_title: "Comece a vender os seus produtos hoje",
-storely_cta_subtitle: "Crie a sua loja, mostre os seus produtos e alcance mais clientes numa plataforma simples."
+storely_cta_subtitle: "Crie a sua loja, mostre os seus produtos e alcance mais clientes numa plataforma simples.",
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+product_form_create_title: "Criar produto",
+product_form_edit_title: "Editar produto",
+product_form_intro: "Preencha o essencial sem se perder. Primeiro imagens, depois preço, categoria e descrição.",
+product_form_cover: "CAPA",
+product_form_add_cover: "Adicionar capa",
+product_form_add_image: "Adicionar imagem",
+product_form_image_help: "Use até 4 imagens. A primeira é a capa. Cada imagem deve ter no máximo 1MB.",
+product_form_image_too_large: "Imagem muito grande. Use até 1MB.",
+product_form_name_label: "Nome",
+product_form_name_placeholder: "O que estás a vender?",
+product_form_price_label: "Preço",
+product_form_price_whole: "Valor",
+product_form_price_cents: "Centavos",
+product_form_price_help: "O valor fica separado dos centavos para evitar confusão. Exemplo: 4 e 00 vira 4.00.",
+product_form_category_label: "Categoria",
+product_form_category_placeholder: "Ex: Mobília",
+product_form_unit_label: "Unidade de medida",
+product_form_unit_un: "Unidade",
+product_form_unit_par: "Par",
+product_form_unit_kit: "Kit",
+product_form_unit_pacote: "Pacote",
+product_form_unit_caixa: "Caixa",
+product_form_unit_kg: "Quilograma",
+product_form_unit_g: "Grama",
+product_form_unit_l: "Litro",
+product_form_unit_ml: "Mililitro",
+product_form_unit_m: "Metro",
+product_form_unit_cm: "Centímetro",
+product_form_unit_m2: "Metro quadrado",
+product_form_unit_m3: "Metro cúbico",
+product_form_unit_hora: "Hora",
+product_form_unit_dia: "Dia",
+product_form_unit_semana: "Semana",
+product_form_unit_mes: "Mês",
+product_form_unit_servico: "Serviço",
+product_form_description_label: "Descrição",
+product_form_description_placeholder: "Explique o produto de forma simples, clara e útil.",
+product_form_description_help: "Foque no que ajuda o cliente a decidir: tamanho, material, cor, uso ou estado.",
+product_form_pending_title: "Falta concluir",
+product_form_ready_title: "Pronto para guardar",
+product_form_ready_subtitle: "Os dados principais estão preenchidos corretamente.",
+product_form_pending_name: "Nome",
+product_form_pending_category: "Categoria",
+product_form_pending_price: "Preço",
+product_form_pending_cover: "Capa",
+product_form_pending_images: "Imagens",
+product_form_create_action: "Publicar",
+product_form_save_action: "Guardar",
+product_form_created_success: "Produto criado com sucesso.",
+product_form_updated_success: "Produto atualizado com sucesso.",
+product_form_save_error: "Não foi possível guardar o produto.",
+product_form_store_not_found: "Loja do administrador não encontrada.",
+product_form_product_not_found: "Produto não encontrado.",
+product_form_error_name_required: "Adicione um nome para o produto.",
+product_form_error_name_short: "O nome ainda está muito curto.",
+product_form_error_category_required: "Escolha ou escreva uma categoria.",
+product_form_error_price_required: "Defina o preço do produto.",
+product_form_error_price_invalid: "O preço deve ser maior que zero.",
+product_form_error_cover_required: "Adicione uma imagem de capa.",
+product_form_error_images_invalid: "Há imagens com problema de tamanho.",
+product_form_image_delete_error: "Não foi possível apagar a imagem temporária.",
+
+
+storely_all: "Todos",
+storely_clear: "Limpar",
+storely_search: "Pesquisar",
+
+
+
+
+
+
+
+
+
+store_currency_section_title: "Moeda da loja",
+store_currency_section_desc: "Na primeira vez, detectamos automaticamente a moeda mais provável com base no dispositivo e salvamos se a loja ainda não tiver uma moeda definida.",
+store_currency_detected_label: "Detectado",
+store_currency_save_success: "Moeda salva com sucesso.",
+store_currency_save_error: "Erro ao salvar a moeda.",
+store_products_empty: "Nenhum produto encontrado.",
+
+
+
+currency_section_title : "Moeda da loja",
+currency_section_desc : "Se a loja ainda não tiver moeda guardada, o sistema tenta detectar e guardar automaticamente apenas uma vez.",
+currency_label : "Moeda",
+currency_placeholder : "Pesquisar por código ou nome da moeda",
+currency_save_success : "Moeda guardada com sucesso.",
+currency_save_error : "Erro ao guardar a moeda.",
+save_currency : "Guardar",
+currency_detected_prefix : "Detectada:",
+currency_source_prefix : "Fonte:",
+
+currency_required_badge : "Obrigatório",
+currency_geo_used : "Localização usada",
+currency_required_text : "Usamos a sua localização para sugerir uma moeda inicial. Confirme e guarde para mostrar os preços corretamente.",
+currency_saved_badge : "Definida",
+currency_saved_text : "Esta moeda será usada para mostrar os preços da sua loja.",
+currency_current_prefix : "Atual:",
+currency_suggested_prefix : "Sugestão:",
+currency_confirm_label : "Confirmar moeda",
+currency_change_label : "Alterar moeda",
+currency_save_hint : "Definir a moeda é importante para mostrar preços corretos aos clientes.",
+
+
+product_form_image_removed_cloud: "Imagem apagada da nuvem e do formulário.",
+product_form_image_removed_local: "Imagem removida do formulário.",
+product_form_image_removed_local_only_after_cloud_fail: "Imagem removida só do formulário. A remoção na nuvem falhou.",
+
+
+
+
+
+
+
+
+product_form_image_replaced_cloud: "Imagem anterior apagada da nuvem e substituída no formulário.",
+product_form_image_replaced_local: "Imagem substituída no formulário.",
+product_form_image_replaced_local_only_after_cloud_fail: "Imagem substituída no formulário, mas não foi possível apagar a anterior da nuvem.",
+product_form_image_replace_error: "Não foi possível substituir a imagem.",
+
+clearCache : "Limpar cache",
+cacheClearedSuccess : "Cache limpo com sucesso.",
+cacheClearedError : "Erro ao limpar o cache.",
+cache_refresh_success : "Cache atualizado com sucesso.",
+cache_refresh_error : "Erro ao atualizar o cache.",
+
+
+
+
+new_product: "Novo produto",
+product_details_share_text: "Veja este produto:",
+product_details_whatsapp_unavailable: "O número de WhatsApp da loja não está disponível.",
+product_details_order_message_intro: "Olá, quero encomendar este produto:",
+product_details_quantity: "Quantidade",
+product_details_total: "Total",
 
 }
 } as const;
