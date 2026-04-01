@@ -12,8 +12,12 @@ export interface Store {
   }
 
 
-
-
+  export interface CachePayload<T> {
+    data: T;
+    savedAt: number;
+    expiresAt: number;
+  }
+  
   export interface AdminStore {
     id: string;
     name: string;
@@ -22,8 +26,15 @@ export interface Store {
     logo_url: string | null;
     updated_at_name: string | null;
     created_at: string;
+    currency: string | null;
   }
   
+ 
+
+
+
+
+ 
   export interface AdminPage {
     id: string;
     store_id: string;

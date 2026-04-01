@@ -19,12 +19,12 @@ import { AuthCallback } from './auth/AuthCallback';
 
 export const route = createBrowserRouter([
   {
-  path: '/',
+  path: '/blog',
   element: <StartHome />,
   },
 
   {
-  path: '/blog',
+  path: '/',
   element: <Blog />,
   },
 
