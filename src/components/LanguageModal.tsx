@@ -20,7 +20,7 @@ export function LanguageModal({ isOpen, onClose }: LanguageModalProps) {
     <div className="fixed inset-0 z-[200] flex items-end md:items-center justify-center p-4 transform-gpu">
       {/* Backdrop Otimizado */}
       <div 
-        className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm animate-in fade-in duration-300" 
+        className="absolute inset-0 bg-slate-950/40  animate-in fade-in duration-300" 
         onClick={onClose} 
       />
 

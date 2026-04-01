@@ -2,7 +2,7 @@
 export const translations = {
   en: {
     // Navigation & UI
-    nav_home: "Home",
+    nav_home: "Explore",
     nav_blog: "Blog",
     nav_support: "Support",
     nav_privacy: "Privacy",
@@ -623,6 +623,329 @@ publishError: 'Error while publishing.',
 
   invalid_store_name: "Invalid store name",
     blockDefaultName: "BLOCK",
+
+
+
+  marketplace_product_fallback: "Product",
+marketplace_general: "General",
+marketplace_store_fallback: "Store",
+marketplace_store_default_description: "Discover products and updates from this store.",
+marketplace_all_categories: "All categories",
+marketplace_all_stores: "All stores",
+marketplace_new_products: "New products",
+marketplace_more_new_products: "More new products",
+marketplace_available_stores: "Available stores",
+marketplace_more_stores: "More stores to explore",
+marketplace_start_selling_title: "Start selling on Storely",
+marketplace_start_selling_subtitle: "Create your account and start publishing products in a fast, modern, professional marketplace.",
+marketplace_start_selling_cta: "Create account",
+marketplace_search_placeholder: "Search marketplace",
+marketplace_suggestions: "Suggestions",
+marketplace_recent_searches: "Recent searches",
+marketplace_explore: "Explore",
+marketplace_sell_now: "Sell now",
+marketplace_clear_filters: "Clear filters",
+marketplace_view_store: "View store",
+marketplace_main_feed: "Main feed",
+marketplace_hero_title_line_1: "Discover products,",
+marketplace_hero_title_line_2: "stores, and smart suggestions",
+marketplace_hero_explore: "Explore marketplace",
+marketplace_hero_sell: "I want to sell",
+marketplace_hero_smart_block: "Smart search and recommendations",
+marketplace_showcase_title: "Community marketplace",
+marketplace_showcase_subtitle: "Products, stores, and suggestions.",
+
+
+
+
+
+
+marketplace_related_products: "Related products",
+marketplace_related_stores: "Related stores",
+marketplace_search_products: "Found products",
+marketplace_search_stores: "Found stores",
+
+
+marketplace_search_exact: "Exact result",
+marketplace_search_approximate: "Approximate result",
+marketplace_search_related: "Related results",
+marketplace_search_fallback: "Marketplace suggestions",
+marketplace_cache: "cache",
+marketplace_cache_expired: "expired",
+marketplace_syncing: "syncing",
+marketplace_refresh_cache: "refresh cache",
+marketplace_not_found_title: "Nothing very close was found",
+marketplace_not_found_subtitle: "Try another name, category, or store. You can also choose one of the suggestions below.",
+marketplace_try_these: "Try these",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+storely_product_fallback: "Product",
+storely_general: "General",
+storely_store_fallback: "Store",
+storely_store_default_description: "Discover products and updates from this store.",
+storely_all_categories: "All categories",
+storely_all_stores: "All stores",
+storely_new_products: "New on Storely",
+storely_more_new_products: "More new finds",
+storely_available_stores: "Stores on Storely",
+storely_more_stores: "More stores to explore",
+storely_related_products: "Related products",
+storely_related_stores: "Related stores",
+storely_matching_stores: "Matching stores",
+storely_similar_stores: "Similar stores",
+storely_more_like_this: "More like this",
+storely_exact_matches: "Exact matches",
+storely_close_matches: "Close matches",
+storely_suggestions_for_you: "Suggestions for you",
+storely_start_selling_title: "Start selling on Storely",
+storely_start_selling_subtitle: "Create your account and publish products in a fast, beautiful, smart way.",
+storely_start_selling_cta: "Create account",
+storely_search_placeholder: "Search Storely",
+storely_suggestions: "Suggestions",
+storely_recent_searches: "Recent searches",
+storely_explore: "Explore",
+storely_sell_now: "Sell now",
+storely_clear_filters: "Clear filters",
+storely_view_store: "View store",
+storely_main_feed: "Main feed",
+storely_search_exact: "Exact result",
+storely_search_approximate: "Approximate result",
+storely_search_related: "Related results",
+storely_search_fallback: "Storely suggestions",
+storely_cache: "cache",
+storely_cache_expired: "expired",
+storely_syncing: "syncing",
+storely_refresh_cache: "refresh",
+storely_not_found_title: "Nothing very close was found",
+storely_not_found_subtitle: "Try another name, category, or store. You can also choose one of the suggestions below.",
+
+
+
+
+
+
+
+
+
+
+
+storely_search_no_exact_but_close: "No exact result, but there are close matches",
+storely_search_no_exact_but_related: "No exact result, but there are related results",
+storely_search_nothing_close: "Nothing very close, but there are suggestions for you",
+storely_search_message_close: "I could not find an exact name, but here are the closest matches that may help you.",
+storely_search_message_related: "I could not find an exact result, but I selected related things you may like.",
+
+
+
+storely_search_empty_title: "No results found",
+storely_search_empty_subtitle: "We couldn't find anything matching your search. Try a different word or explore other products below.",
+storely_search_message_fallback: "We didn't find anything close, but here are some suggestions you might like.",
+storely_other_products_we_have: "Other products we have",
+storely_try_these: "Try searching for:",
+
+
+
+
+
+
+marketplace_hero_badge: "Discover more in one place",
+marketplace_hero_subtitle: "Explore a marketplace with multiple types of products and shops in one simple, fast and organized experience.",
+marketplace_hero_point_products: "Different product types",
+marketplace_hero_point_stores: "Multiple stores",
+marketplace_hero_point_discover: "Easy to explore",
+storely_cta_title: "Start selling your products today",
+storely_cta_subtitle: "Create your store, showcase your products and reach more customers in one simple platform.",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+product_form_create_title: "Create product",
+product_form_edit_title: "Edit product",
+product_form_intro: "Fill in the essentials without getting lost. First images, then price, category, and description.",
+product_form_cover: "COVER",
+product_form_add_cover: "Add cover",
+product_form_add_image: "Add image",
+product_form_image_help: "Use up to 4 images. The first one is the cover. Each image must be 1MB or less.",
+product_form_image_too_large: "Image is too large. Use 1MB or less.",
+product_form_name_label: "Name",
+product_form_name_placeholder: "What are you selling?",
+product_form_price_label: "Price",
+product_form_price_whole: "Value",
+product_form_price_cents: "Cents",
+product_form_price_help: "The value is separated from the cents to avoid confusion. Example: 4 and 00 becomes 4.00.",
+product_form_category_label: "Category",
+product_form_category_placeholder: "Example: Furniture",
+product_form_unit_label: "Unit of measure",
+product_form_unit_un: "Unit",
+product_form_unit_par: "Pair",
+product_form_unit_kit: "Kit",
+product_form_unit_pacote: "Pack",
+product_form_unit_caixa: "Box",
+product_form_unit_kg: "Kilogram",
+product_form_unit_g: "Gram",
+product_form_unit_l: "Liter",
+product_form_unit_ml: "Milliliter",
+product_form_unit_m: "Meter",
+product_form_unit_cm: "Centimeter",
+product_form_unit_m2: "Square meter",
+product_form_unit_m3: "Cubic meter",
+product_form_unit_hora: "Hour",
+product_form_unit_dia: "Day",
+product_form_unit_semana: "Week",
+product_form_unit_mes: "Month",
+product_form_unit_servico: "Service",
+product_form_description_label: "Description",
+product_form_description_placeholder: "Explain the product in a simple, clear, and useful way.",
+product_form_description_help: "Focus on what helps the customer decide: size, material, color, usage, or condition.",
+product_form_pending_title: "Still incomplete",
+product_form_ready_title: "Ready to save",
+product_form_ready_subtitle: "The main data has been filled in correctly.",
+product_form_pending_name: "Name",
+product_form_pending_category: "Category",
+product_form_pending_price: "Price",
+product_form_pending_cover: "Cover",
+product_form_pending_images: "Images",
+product_form_create_action: "Publish",
+product_form_save_action: "Save",
+product_form_created_success: "Product created successfully.",
+product_form_updated_success: "Product updated successfully.",
+product_form_save_error: "Could not save the product.",
+product_form_store_not_found: "Admin store not found.",
+product_form_product_not_found: "Product not found.",
+product_form_error_name_required: "Add a name for the product.",
+product_form_error_name_short: "The name is still too short.",
+product_form_error_category_required: "Choose or type a category.",
+product_form_error_price_required: "Set a price for the product.",
+product_form_error_price_invalid: "The price must be greater than zero.",
+product_form_error_cover_required: "Add a cover image.",
+product_form_error_images_invalid: "Some images have size issues.",
+product_form_image_delete_error: "Could not delete the temporary image.",
+storely_search: "Search",
+storely_all: "All",
+storely_clear: "Clear",
+
+store_currency_section_title: "Store currency",
+store_currency_section_desc: "On the first time, we automatically detect the most likely currency based on the device and save it if the store does not have one yet.",
+store_currency_detected_label: "Detected",
+store_currency_save_success: "Currency saved successfully.",
+store_currency_save_error: "Error saving currency.",
+store_products_empty: "No products found.",
+
+
+
+
+
+
+currency_section_title : "Store currency",
+currency_section_desc : "If the store does not have a saved currency yet, the system tries to detect and save it automatically only once.",
+currency_label : "Currency",
+currency_placeholder : "Search by currency code or currency name",
+currency_save_success : "Currency saved successfully.",
+currency_save_error : "Error saving currency.",
+save_currency : "Save",
+currency_detected_prefix : "Detected:",
+currency_source_prefix : "Source:",
+
+product_form_image_removed_cloud: "Image removed from the cloud and the form.",
+product_form_image_removed_local: "Image removed from the form.",
+product_form_image_removed_local_only_after_cloud_fail: "Image removed only from the form. Cloud deletion failed.",
+
+
+
+
+
+
+
+
+
+
+
+
+currency_required_badge : "Required",
+currency_geo_used : "Location used",
+currency_required_text : "We used your location to suggest an initial currency. Confirm and save it to display prices correctly.",
+currency_saved_badge : "Set",
+currency_saved_text : "This currency will be used to display your store prices.",
+currency_current_prefix : "Current:",
+currency_suggested_prefix : "Suggested:",
+currency_confirm_label : "Confirm currency",
+currency_change_label : "Change currency",
+currency_save_hint : "Setting the currency is important to display correct prices to customers.",
+
+
+
+product_form_image_replaced_cloud: "Previous image deleted from the cloud and replaced in the form.",
+product_form_image_replaced_local: "Image replaced in the form.",
+product_form_image_replaced_local_only_after_cloud_fail: "Image replaced in the form, but the previous one could not be deleted from the cloud.",
+product_form_image_replace_error: "Could not replace the image.",
+
+
+clearCache : "Clear cache",
+cacheClearedSuccess : "Cache cleared successfully.",
+cacheClearedError : "Error clearing cache.",
+cache_refresh_success : "Cache refreshed successfully.",
+cache_refresh_error : "Error refreshing cache.",
+
+
+
+
+
+new_product: "New product",
+  product_details_share_text: "Check out this product:",
+  product_details_whatsapp_unavailable: "The store WhatsApp number is not available.",
+  product_details_order_message_intro: "Hello, I want to order this product:",
+  product_details_quantity: "Quantity",
+  product_details_total: "Total",
+ 
+
+
+  storely_found_products: "Products found",
+
+
+storely_categories: "Categories",
+
+storely_products: "products",
+storely_stores: "stores",
+
+storely_sell_cta_title: "Start selling with your own store",
+storely_sell_cta_subtitle: "Create your store, showcase your products, and reach more people beautifully.",
+storely_no_results_title: "No results found",
+storely_no_results_subtitle: "Try another name, category, or store to discover more products.",
   },
 
 
@@ -669,7 +992,7 @@ publishError: 'Error while publishing.',
 
   pt: {
     // Navegação & UI
-    nav_home: "Início",
+    nav_home: "Explorar",
     nav_blog: "Blog",
     nav_support: "Suporte",
     nav_privacy: "Privacidade",
@@ -1292,8 +1615,335 @@ clickToEdit: "Clique para editar",
   invalid_store_name: "Nome da loja inválido",
   blockDefaultName: "BLOCO",
 
+
+
+
+
+
+
+
+
+  marketplace_product_fallback: "Produto",
+  marketplace_general: "Geral",
+  marketplace_store_fallback: "Loja",
+  marketplace_store_default_description: "Descobre produtos e novidades desta loja.",
+  marketplace_all_categories: "Todas as categorias",
+  marketplace_all_stores: "Todas as lojas",
+  marketplace_new_products: "Novos produtos",
+  marketplace_more_new_products: "Mais novos produtos",
+  marketplace_available_stores: "Lojas disponíveis",
+  marketplace_more_stores: "Mais lojas para explorar",
+  marketplace_start_selling_title: "Começa a vender na Storely",
+  marketplace_start_selling_subtitle: "Cria a tua conta e começa a publicar produtos num marketplace rápido, moderno e profissional.",
+  marketplace_start_selling_cta: "Criar conta",
+  marketplace_search_placeholder: "Pesquisar no marketplace",
+  marketplace_suggestions: "Sugestões",
+  marketplace_recent_searches: "Pesquisas recentes",
+  marketplace_explore: "Explorar",
+  marketplace_sell_now: "Vender agora",
+  marketplace_clear_filters: "Limpar filtros",
+  marketplace_view_store: "Ver loja",
+  marketplace_main_feed: "Feed principal",
+  marketplace_hero_title_line_1: "Descobre produtos,",
+  marketplace_hero_title_line_2: "lojas e sugestões inteligentes",
+  marketplace_hero_explore: "Explorar marketplace",
+  marketplace_hero_sell: "Quero vender",
+  marketplace_hero_smart_block: "Pesquisa e recomendações inteligentes",
+  marketplace_showcase_title: "Marketplace da comunidade",
+  marketplace_showcase_subtitle: "Produtos, lojas e sugestões.",
+
+
+
+
+
+
+  
+  marketplace_search_exact: "Resultado exato",
+  marketplace_search_approximate: "Resultado aproximado",
+  marketplace_search_related: "Resultados relacionados",
+  marketplace_search_fallback: "Sugestões do marketplace",
+  marketplace_cache: "cache",
+  marketplace_cache_expired: "expirado",
+  marketplace_syncing: "a sincronizar",
+  marketplace_refresh_cache: "atualizar cache",
+  marketplace_not_found_title: "Nada muito próximo foi encontrado",
+  marketplace_not_found_subtitle: "Tenta outro nome, categoria ou loja. Também podes escolher uma das sugestões abaixo.",
+  marketplace_try_these: "Experimenta isto",
+
+
  
-  }
+marketplace_related_products: "Produtos relacionados",
+marketplace_related_stores: "Lojas relacionadas",
+marketplace_search_products: "Produtos encontrados",
+marketplace_search_stores: "Lojas encontradas",
+
+
+
+
+
+
+storely_product_fallback: "Produto",
+storely_general: "Geral",
+storely_store_fallback: "Loja",
+storely_store_default_description: "Descobre produtos e novidades desta loja.",
+storely_all_categories: "Todas as categorias",
+storely_all_stores: "Todas as lojas",
+storely_new_products: "Novidades na Storely",
+storely_more_new_products: "Mais novidades",
+storely_available_stores: "Lojas na Storely",
+storely_more_stores: "Mais lojas para explorar",
+storely_related_products: "Produtos relacionados",
+storely_related_stores: "Lojas relacionadas",
+storely_matching_stores: "Lojas encontradas",
+storely_similar_stores: "Lojas parecidas",
+storely_more_like_this: "Mais como isto",
+storely_exact_matches: "Resultados exatos",
+storely_close_matches: "Resultados parecidos",
+storely_suggestions_for_you: "Sugestões para ti",
+storely_start_selling_title: "Começa a vender na Storely",
+storely_start_selling_subtitle: "Cria a tua conta e publica produtos de forma rápida, bonita e inteligente.",
+storely_start_selling_cta: "Criar conta",
+storely_search_placeholder: "Pesquisar na Storely",
+storely_suggestions: "Sugestões",
+storely_recent_searches: "Pesquisas recentes",
+storely_explore: "Explorar",
+storely_sell_now: "Vender agora",
+storely_clear_filters: "Limpar filtros",
+storely_view_store: "Ver loja",
+storely_main_feed: "Feed principal",
+storely_search_exact: "Resultado exato",
+storely_search_approximate: "Resultado aproximado",
+storely_search_related: "Resultados relacionados",
+storely_search_fallback: "Sugestões da Storely",
+storely_cache: "cache",
+storely_cache_expired: "expirado",
+storely_syncing: "a sincronizar",
+storely_refresh_cache: "atualizar",
+storely_not_found_title: "Nada muito próximo foi encontrado",
+storely_not_found_subtitle: "Tenta outro nome, categoria ou loja. Também podes escolher uma das sugestões abaixo.",
+storely_try_these: "Experimenta isto",
+
+
+
+
+
+
+
+
+
+storely_search_no_exact_but_close: "Sem resultado exato, mas há resultados parecidos",
+storely_search_no_exact_but_related: "Sem resultado exato, mas há resultados relacionados",
+storely_search_nothing_close: "Nada muito próximo, mas há sugestões para ti",
+storely_search_message_close: "Não encontrei um nome exatamente igual, mas aqui estão os resultados mais parecidos que podem te ajudar.",
+storely_search_message_related: "Não encontrei um resultado exato, mas selecionei coisas relacionadas que possas gostar.",
+
+
+
+storely_search_empty_title: "Nenhum resultado encontrado",
+storely_search_empty_subtitle: "Não encontramos nada que corresponda à sua pesquisa. Tente outra palavra ou explore outros produtos abaixo.",
+storely_search_message_fallback: "Não encontramos nada semelhante, mas aqui estão algumas sugestões que podem interessar.",
+storely_other_products_we_have: "Outros produtos que temos",
+
+marketplace_hero_badge: "Descubra mais num só lugar",
+marketplace_hero_subtitle: "Explore um marketplace com vários tipos de produtos e lojas numa experiência simples, rápida e organizada.",
+marketplace_hero_point_products: "Vários tipos de produtos",
+marketplace_hero_point_stores: "Múltiplas lojas",
+marketplace_hero_point_discover: "Fácil de explorar",
+storely_cta_title: "Comece a vender os seus produtos hoje",
+storely_cta_subtitle: "Crie a sua loja, mostre os seus produtos e alcance mais clientes numa plataforma simples.",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+product_form_create_title: "Criar produto",
+product_form_edit_title: "Editar produto",
+product_form_intro: "Preencha o essencial sem se perder. Primeiro imagens, depois preço, categoria e descrição.",
+product_form_cover: "CAPA",
+product_form_add_cover: "Adicionar capa",
+product_form_add_image: "Adicionar imagem",
+product_form_image_help: "Use até 4 imagens. A primeira é a capa. Cada imagem deve ter no máximo 1MB.",
+product_form_image_too_large: "Imagem muito grande. Use até 1MB.",
+product_form_name_label: "Nome",
+product_form_name_placeholder: "O que estás a vender?",
+product_form_price_label: "Preço",
+product_form_price_whole: "Valor",
+product_form_price_cents: "Centavos",
+product_form_price_help: "O valor fica separado dos centavos para evitar confusão. Exemplo: 4 e 00 vira 4.00.",
+product_form_category_label: "Categoria",
+product_form_category_placeholder: "Ex: Mobília",
+product_form_unit_label: "Unidade de medida",
+product_form_unit_un: "Unidade",
+product_form_unit_par: "Par",
+product_form_unit_kit: "Kit",
+product_form_unit_pacote: "Pacote",
+product_form_unit_caixa: "Caixa",
+product_form_unit_kg: "Quilograma",
+product_form_unit_g: "Grama",
+product_form_unit_l: "Litro",
+product_form_unit_ml: "Mililitro",
+product_form_unit_m: "Metro",
+product_form_unit_cm: "Centímetro",
+product_form_unit_m2: "Metro quadrado",
+product_form_unit_m3: "Metro cúbico",
+product_form_unit_hora: "Hora",
+product_form_unit_dia: "Dia",
+product_form_unit_semana: "Semana",
+product_form_unit_mes: "Mês",
+product_form_unit_servico: "Serviço",
+product_form_description_label: "Descrição",
+product_form_description_placeholder: "Explique o produto de forma simples, clara e útil.",
+product_form_description_help: "Foque no que ajuda o cliente a decidir: tamanho, material, cor, uso ou estado.",
+product_form_pending_title: "Falta concluir",
+product_form_ready_title: "Pronto para guardar",
+product_form_ready_subtitle: "Os dados principais estão preenchidos corretamente.",
+product_form_pending_name: "Nome",
+product_form_pending_category: "Categoria",
+product_form_pending_price: "Preço",
+product_form_pending_cover: "Capa",
+product_form_pending_images: "Imagens",
+product_form_create_action: "Publicar",
+product_form_save_action: "Guardar",
+product_form_created_success: "Produto criado com sucesso.",
+product_form_updated_success: "Produto atualizado com sucesso.",
+product_form_save_error: "Não foi possível guardar o produto.",
+product_form_store_not_found: "Loja do administrador não encontrada.",
+product_form_product_not_found: "Produto não encontrado.",
+product_form_error_name_required: "Adicione um nome para o produto.",
+product_form_error_name_short: "O nome ainda está muito curto.",
+product_form_error_category_required: "Escolha ou escreva uma categoria.",
+product_form_error_price_required: "Defina o preço do produto.",
+product_form_error_price_invalid: "O preço deve ser maior que zero.",
+product_form_error_cover_required: "Adicione uma imagem de capa.",
+product_form_error_images_invalid: "Há imagens com problema de tamanho.",
+product_form_image_delete_error: "Não foi possível apagar a imagem temporária.",
+
+
+storely_all: "Todos",
+storely_clear: "Limpar",
+storely_search: "Pesquisar",
+
+
+
+
+
+
+
+
+
+store_currency_section_title: "Moeda da loja",
+store_currency_section_desc: "Na primeira vez, detectamos automaticamente a moeda mais provável com base no dispositivo e salvamos se a loja ainda não tiver uma moeda definida.",
+store_currency_detected_label: "Detectado",
+store_currency_save_success: "Moeda salva com sucesso.",
+store_currency_save_error: "Erro ao salvar a moeda.",
+store_products_empty: "Nenhum produto encontrado.",
+
+
+
+currency_section_title : "Moeda da loja",
+currency_section_desc : "Se a loja ainda não tiver moeda guardada, o sistema tenta detectar e guardar automaticamente apenas uma vez.",
+currency_label : "Moeda",
+currency_placeholder : "Pesquisar por código ou nome da moeda",
+currency_save_success : "Moeda guardada com sucesso.",
+currency_save_error : "Erro ao guardar a moeda.",
+save_currency : "Guardar",
+currency_detected_prefix : "Detectada:",
+currency_source_prefix : "Fonte:",
+
+currency_required_badge : "Obrigatório",
+currency_geo_used : "Localização usada",
+currency_required_text : "Usamos a sua localização para sugerir uma moeda inicial. Confirme e guarde para mostrar os preços corretamente.",
+currency_saved_badge : "Definida",
+currency_saved_text : "Esta moeda será usada para mostrar os preços da sua loja.",
+currency_current_prefix : "Atual:",
+currency_suggested_prefix : "Sugestão:",
+currency_confirm_label : "Confirmar moeda",
+currency_change_label : "Alterar moeda",
+currency_save_hint : "Definir a moeda é importante para mostrar preços corretos aos clientes.",
+
+
+product_form_image_removed_cloud: "Imagem apagada da nuvem e do formulário.",
+product_form_image_removed_local: "Imagem removida do formulário.",
+product_form_image_removed_local_only_after_cloud_fail: "Imagem removida só do formulário. A remoção na nuvem falhou.",
+
+
+
+
+
+
+
+
+product_form_image_replaced_cloud: "Imagem anterior apagada da nuvem e substituída no formulário.",
+product_form_image_replaced_local: "Imagem substituída no formulário.",
+product_form_image_replaced_local_only_after_cloud_fail: "Imagem substituída no formulário, mas não foi possível apagar a anterior da nuvem.",
+product_form_image_replace_error: "Não foi possível substituir a imagem.",
+
+clearCache : "Limpar cache",
+cacheClearedSuccess : "Cache limpo com sucesso.",
+cacheClearedError : "Erro ao limpar o cache.",
+cache_refresh_success : "Cache atualizado com sucesso.",
+cache_refresh_error : "Erro ao atualizar o cache.",
+
+
+
+
+new_product: "Novo produto",
+product_details_share_text: "Veja este produto:",
+product_details_whatsapp_unavailable: "O número de WhatsApp da loja não está disponível.",
+product_details_order_message_intro: "Olá, quero encomendar este produto:",
+product_details_quantity: "Quantidade",
+product_details_total: "Total",
+
+
+
+
+storely_categories: "Categorias",
+
+storely_products: "produtos",
+storely_stores: "lojas",
+
+storely_sell_cta_title: "Comece a vender com a sua própria loja",
+storely_sell_cta_subtitle: "Crie a sua loja, mostre os seus produtos e alcance mais pessoas de forma bonita.",
+storely_no_results_title: "Nenhum resultado encontrado",
+storely_no_results_subtitle: "Tente outro nome, categoria ou loja para descobrir mais produtos.",
+
+storely_found_products: "Productos Encontrados",
+
+
+
+
+}
 } as const;
 
 export type Language = 'en' | 'pt';

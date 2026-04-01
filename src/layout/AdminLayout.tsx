@@ -18,8 +18,8 @@ import type { AdminPage, AdminStore, CachePayload } from '../types/admin';
 
 const BASE_DOMAIN = 'https://storelyy.vercel.app';
 
-const ADMIN_STORE_CACHE_TTL = 1000 * 60 * 5; // 5 min
-const ADMIN_PAGES_CACHE_TTL = 1000 * 60 * 2; // 2 min
+const ADMIN_STORE_CACHE_TTL = 1000 * 60 * 5;
+const ADMIN_PAGES_CACHE_TTL = 1000 * 60 * 2;
 
 const ADMIN_STORE_CACHE_KEY = 'storelyy_admin_store_cache';
 
@@ -173,7 +173,7 @@ export function AdminLayout() {
     initialDataUpdatedAt: initialStoreCache?.savedAt,
     staleTime: ADMIN_STORE_CACHE_TTL,
     gcTime: ADMIN_STORE_CACHE_TTL * 6,
-    refetchOnMount: false,
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
     retry: 1,
@@ -188,7 +188,7 @@ export function AdminLayout() {
 
       const { data, error } = await supabase
         .from('stores')
-        .select('id, name, slug, owner_id, logo_url, updated_at_name, created_at')
+        .select('id, name, slug, owner_id, logo_url, updated_at_name, created_at, currency')
         .eq('owner_id', user.id)
         .single();
 
@@ -202,6 +202,7 @@ export function AdminLayout() {
         logo_url: data.logo_url ?? null,
         updated_at_name: data.updated_at_name ?? null,
         created_at: data.created_at ?? '',
+        currency: data.currency ?? null,
       };
 
       const payload = writeCache(ADMIN_STORE_CACHE_KEY, safeStore, ADMIN_STORE_CACHE_TTL);
@@ -213,17 +214,19 @@ export function AdminLayout() {
     },
   });
 
+  const storeId = store?.id ?? '';
+
   const initialPagesCache = useMemo(() => {
-    if (!store?.id) return null;
-    return readCache<AdminPage[]>(getAdminPagesCacheKey(store.id));
-  }, [store?.id]);
+    if (!storeId) return null;
+    return readCache<AdminPage[]>(getAdminPagesCacheKey(storeId));
+  }, [storeId]);
 
   const {
     data: pages = [],
     isLoading: pagesLoading,
   } = useQuery<AdminPage[]>({
-    queryKey: ['admin-pages', store?.id],
-    enabled: !!store?.id,
+    queryKey: ['admin-pages', storeId],
+    enabled: !!storeId,
     initialData: initialPagesCache?.data,
     initialDataUpdatedAt: initialPagesCache?.savedAt,
     staleTime: ADMIN_PAGES_CACHE_TTL,
@@ -233,10 +236,14 @@ export function AdminLayout() {
     refetchOnReconnect: true,
     retry: 1,
     queryFn: async () => {
+      if (!storeId) {
+        throw new Error('Store not found');
+      }
+
       const { data, error } = await supabase
         .from('pages')
         .select('id, store_id, title, slug, type, is_home, created_at')
-        .eq('store_id', store!.id)
+        .eq('store_id', storeId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -251,10 +258,16 @@ export function AdminLayout() {
         created_at: page.created_at ?? '',
       }));
 
-      writeCache(getAdminPagesCacheKey(store!.id), safePages, ADMIN_PAGES_CACHE_TTL);
+      writeCache(getAdminPagesCacheKey(storeId), safePages, ADMIN_PAGES_CACHE_TTL);
       return safePages;
     },
   });
+
+  useEffect(() => {
+    if (store?.name) {
+      setNewName(store.name);
+    }
+  }, [store?.name]);
 
   const updateStoreMutation = useMutation({
     mutationFn: async (name: string) => {
@@ -291,7 +304,7 @@ export function AdminLayout() {
           updated_at_name: new Date().toISOString(),
         })
         .eq('id', store.id)
-        .select('id, name, slug, owner_id, logo_url, updated_at_name, created_at')
+        .select('id, name, slug, owner_id, logo_url, updated_at_name, created_at, currency')
         .single();
 
       if (error) {
@@ -306,6 +319,7 @@ export function AdminLayout() {
         logo_url: data.logo_url ?? null,
         updated_at_name: data.updated_at_name ?? null,
         created_at: data.created_at ?? '',
+        currency: data.currency ?? null,
       };
 
       return safeStore;
@@ -336,8 +350,8 @@ export function AdminLayout() {
       await supabase.auth.signOut();
 
       clearCache(ADMIN_STORE_CACHE_KEY);
-      if (store?.id) {
-        clearCache(getAdminPagesCacheKey(store.id));
+      if (storeId) {
+        clearCache(getAdminPagesCacheKey(storeId));
       }
 
       queryClient.clear();
@@ -345,7 +359,7 @@ export function AdminLayout() {
     } catch {
       toast.error(t('error_exiting'));
     }
-  }, [navigate, queryClient, store?.id, t]);
+  }, [navigate, queryClient, storeId, t]);
 
   useEffect(() => {
     if (!store?.updated_at_name) {
@@ -396,10 +410,10 @@ export function AdminLayout() {
   const statusText = storeFetching
     ? t('cacheStatusSyncing')
     : source === 'cache'
-    ? t('cacheStatusLocal')
-    : source === 'network'
-    ? t('cacheStatusNetwork')
-    : t('cacheStatusWaiting');
+      ? t('cacheStatusLocal')
+      : source === 'network'
+        ? t('cacheStatusNetwork')
+        : t('cacheStatusWaiting');
 
   if (storeLoading && !store) {
     return (
@@ -453,7 +467,7 @@ export function AdminLayout() {
         )}
 
         {!isEditorRoute && (
-          <header className="h-16 flex items-center justify-between px-4 md:px-6 border-b border-slate-100 bg-white/90 sticky top-0 z-50 shrink-0 backdrop-blur-sm">
+          <header className="h-16 flex items-center justify-between px-4 md:px-6 border-b border-slate-100 bg-white/90 sticky top-0 z-50 shrink-0 ">
             <div className="flex items-center gap-2 min-w-0">
               <button
                 onClick={() => setIsOpen(true)}
@@ -462,7 +476,6 @@ export function AdminLayout() {
                 <Menu size={24} />
               </button>
 
-            </div>
               <div className="min-w-0">
                 <div className="font-black text-[12px] md:text-[13px] uppercase italic truncate max-w-[160px] md:max-w-[240px]">
                   {store?.name}
@@ -470,8 +483,10 @@ export function AdminLayout() {
 
                 <div className="text-[9px] md:text-[10px] text-slate-400 truncate">
                   {t('cacheLabel')} · {formatCacheRemaining(storeCacheLeft)} · {statusText}
+                  {store?.currency ? ` · ${store.currency}` : ''}
                 </div>
               </div>
+            </div>
 
             <a
               href={storeUrl}

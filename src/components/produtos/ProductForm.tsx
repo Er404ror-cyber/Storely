@@ -1,310 +1,993 @@
-import { memo, useMemo, useCallback } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
-import Select from 'react-select';
-import type { StylesConfig } from 'react-select'; 
-import currencyCodes from 'currency-codes';
-import { 
-  X, UploadCloud, AlignLeft, ImagePlus, Star, Edit3, ExternalLink, 
-  Coins
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  AlignLeft,
+  Check,
+  Info,
+  Loader2,
+  Package2,
+  PencilLine,
+  Trash2,
+  UploadCloud,
+  X,
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { supabase } from '../../lib/supabase';
+import {
+  deleteFromCloudinary,
+  uploadToCloudinary,
+  type CloudinaryDeleteResult,
+} from '../../utils/cloud';
+import { useAdminStore } from '../../hooks/useAdminStore';
+import { useTranslate } from '../../context/LanguageContext';
+import {
+  composePrice,
+  createProductSlug,
+  formatBytes,
+  normalizeCategory,
+  normalizePriceString,
+  PRODUCT_IMAGE_LIMIT,
+  PRODUCT_IMAGE_SLOTS,
+  PRODUCT_LIMITS,
+  PRODUCT_UNIT_OPTIONS,
+  sanitizeCents,
+  sanitizeMajor,
+  splitPrice,
+} from './productForm.utils';
 
-// --- TIPOS ---
-// Altere a interface no ProductForm.tsx para incluir todos os campos
-interface FormData {
+export interface ProductFormData {
   name: string;
   category: string;
-  currency: string;
   price: string;
   unit: string;
   full_description: string;
-  main_image: string; // Adicionado
-  gallery: string[];  // Adicionado
+  main_image: string;
+  gallery: string[];
+  currency?: string;
 }
 
 interface ProductFormProps {
-  formData: FormData;
-  setFormData: (data: FormData) => void;
-  existingCategories?: string[];
-  onFileSelect: (e: ChangeEvent<HTMLInputElement>, index: number) => void;
-  uploadErrors: (string | null)[];
-  setUploadErrors: (errors: string[]) => void; 
-  previews: string[];
-  removePhoto: (index: number) => void;
-  fileSizes: number[];
+  productId?: string;
+  isCreating?: boolean;
+  initialData: ProductFormData;
+  onCancel?: () => void;
+  onSuccess?: () => void;
 }
 
-interface CurrencyOption {
-  value: string;
-  label: string;
-}
-
-const LIMITS = {
-  name: 45,
-  category: 25,
-  description: 600,
-  maxFileSize: 1024 * 1024, // 1MB
-  maxBreaks: 4
+type PersistedSlotToken = {
+  slot: number;
+  token: string;
+  savedAt: number;
 };
 
-const SELECT_STYLES: StylesConfig<CurrencyOption, false> = {
-  control: (base) => ({
-    ...base,
-    borderRadius: '1.25rem',
-    border: 'none',
-    backgroundColor: '#f8fafc',
-    padding: '8px',
-    fontSize: '14px',
-    fontWeight: '900',
-    boxShadow: 'none',
-  }),
-  option: (base, state) => ({
-    ...base,
-    fontSize: '13px',
-    fontWeight: '600',
-    backgroundColor: state.isSelected ? '#2563eb' : state.isFocused ? '#eff6ff' : 'white',
-    color: state.isSelected ? 'white' : '#1e293b',
-  })
-};
+const TOKEN_TTL_MS = 10 * 60 * 1000;
 
-export const ProductForm = memo(({ 
-  formData, setFormData, onFileSelect, 
-   previews, removePhoto, fileSizes,
-  existingCategories = [] 
-}: ProductFormProps) => {
+export const ProductForm = memo(function ProductForm({
+  productId,
+  isCreating = false,
+  initialData,
+  onCancel,
+  onSuccess,
+}: ProductFormProps) {
+  const { t } = useTranslate();
+  const { data: adminStore } = useAdminStore();
+  const queryClient = useQueryClient();
 
-  const currencyOptions = useMemo(() => 
-    currencyCodes.codes().map(code => ({
-      value: code,
-      label: `${code} - ${currencyCodes.code(code)?.currency}`
-    })), []);
+  const [formData, setFormData] = useState<ProductFormData>({
+    name: '',
+    category: '',
+    price: '',
+    unit: 'un',
+    full_description: '',
+    main_image: '',
+    gallery: [],
+    currency: initialData.currency,
+  });
 
-  const recentCats = useMemo(() => existingCategories.slice(0, 3), [existingCategories]);
+  const [priceMajor, setPriceMajor] = useState('');
+  const [priceCents, setPriceCents] = useState('');
 
-  const handleDescriptionChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    const breaks = (value.match(/\n/g) || []).length;
-    if (breaks <= LIMITS.maxBreaks) {
-      setFormData({ ...formData, full_description: value });
+  const [previews, setPreviews] = useState<string[]>(
+    Array(PRODUCT_IMAGE_SLOTS).fill('')
+  );
+  const [tempFiles, setTempFiles] = useState<(File | null)[]>(
+    Array(PRODUCT_IMAGE_SLOTS).fill(null)
+  );
+  const [tempDeleteTokens, setTempDeleteTokens] = useState<(string | null)[]>(
+    Array(PRODUCT_IMAGE_SLOTS).fill(null)
+  );
+  const [fileSizes, setFileSizes] = useState<number[]>(
+    Array(PRODUCT_IMAGE_SLOTS).fill(0)
+  );
+  const [uploadErrors, setUploadErrors] = useState<string[]>(
+    Array(PRODUCT_IMAGE_SLOTS).fill('')
+  );
+  const [processingSlots, setProcessingSlots] = useState<boolean[]>(
+    Array(PRODUCT_IMAGE_SLOTS).fill(false)
+  );
+
+  const storageKey = useMemo(() => {
+    const storePart = adminStore?.id || 'no-store';
+    const productPart = productId || (isCreating ? 'new-product' : 'unknown-product');
+    return `product-form-delete-tokens:${storePart}:${productPart}`;
+  }, [adminStore?.id, productId, isCreating]);
+
+  const loadPersistedTokens = useCallback((): (string | null)[] => {
+    if (typeof window === 'undefined') {
+      return Array(PRODUCT_IMAGE_SLOTS).fill(null);
     }
-  }, [formData, setFormData]);
 
-  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter") {
+    try {
+      const raw = window.localStorage.getItem(storageKey);
+      if (!raw) return Array(PRODUCT_IMAGE_SLOTS).fill(null);
+
+      const parsed = JSON.parse(raw) as PersistedSlotToken[];
+      const now = Date.now();
+      const result = Array(PRODUCT_IMAGE_SLOTS).fill(null) as (string | null)[];
+      const stillValid: PersistedSlotToken[] = [];
+
+      for (const item of parsed || []) {
+        if (
+          typeof item?.slot !== 'number' ||
+          typeof item?.token !== 'string' ||
+          typeof item?.savedAt !== 'number'
+        ) {
+          continue;
+        }
+
+        if (item.slot < 0 || item.slot >= PRODUCT_IMAGE_SLOTS) continue;
+        if (now - item.savedAt > TOKEN_TTL_MS) continue;
+
+        result[item.slot] = item.token;
+        stillValid.push(item);
+      }
+
+      window.localStorage.setItem(storageKey, JSON.stringify(stillValid));
+      return result;
+    } catch (error) {
+      console.error('[ProductForm] failed to restore delete tokens:', error);
+      return Array(PRODUCT_IMAGE_SLOTS).fill(null);
+    }
+  }, [storageKey]);
+
+  const persistTokens = useCallback(
+    (tokens: (string | null)[]) => {
+      if (typeof window === 'undefined') return;
+
+      try {
+        const now = Date.now();
+        const payload: PersistedSlotToken[] = tokens
+          .map((token, slot) =>
+            token
+              ? {
+                  slot,
+                  token,
+                  savedAt: now,
+                }
+              : null
+          )
+          .filter(Boolean) as PersistedSlotToken[];
+
+        window.localStorage.setItem(storageKey, JSON.stringify(payload));
+      } catch (error) {
+        console.error('[ProductForm] failed to persist delete tokens:', error);
+      }
+    },
+    [storageKey]
+  );
+
+  const updateDeleteTokens = useCallback(
+    (updater: (prev: (string | null)[]) => (string | null)[]) => {
+      setTempDeleteTokens((prev) => {
+        const next = updater(prev);
+        persistTokens(next);
+        return next;
+      });
+    },
+    [persistTokens]
+  );
+
+  const clearPersistedSlotToken = useCallback(
+    (index: number) => {
+      updateDeleteTokens((prev) => {
+        const next = [...prev];
+        next[index] = null;
+        return next;
+      });
+    },
+    [updateDeleteTokens]
+  );
+
+  useEffect(() => {
+    const mergedImages = [
+      initialData.main_image || '',
+      ...(initialData.gallery || []).slice(0, PRODUCT_IMAGE_SLOTS - 1),
+    ];
+
+    const parsed = splitPrice(initialData.price);
+    const restoredTokens = loadPersistedTokens();
+
+    setFormData({
+      name: initialData.name || '',
+      category: initialData.category || '',
+      price: initialData.price ? normalizePriceString(initialData.price) : '',
+      unit: initialData.unit || 'un',
+      full_description: initialData.full_description || '',
+      main_image: initialData.main_image || '',
+      gallery: initialData.gallery || [],
+      currency: initialData.currency,
+    });
+
+    setPriceMajor(parsed.major || '');
+    setPriceCents(parsed.cents === '00' ? '' : parsed.cents);
+
+    setPreviews(
+      [
+        ...mergedImages,
+        ...Array(Math.max(0, PRODUCT_IMAGE_SLOTS - mergedImages.length)).fill(''),
+      ].slice(0, PRODUCT_IMAGE_SLOTS)
+    );
+
+    setTempFiles(Array(PRODUCT_IMAGE_SLOTS).fill(null));
+    setTempDeleteTokens(restoredTokens);
+    setFileSizes(Array(PRODUCT_IMAGE_SLOTS).fill(0));
+    setUploadErrors(Array(PRODUCT_IMAGE_SLOTS).fill(''));
+    setProcessingSlots(Array(PRODUCT_IMAGE_SLOTS).fill(false));
+  }, [initialData, loadPersistedTokens]);
+
+  useEffect(() => {
+    const centsForSave =
+      priceCents === '' ? '00' : priceCents.padEnd(2, '0').slice(0, 2);
+
+    setFormData((prev) => ({
+      ...prev,
+      price: composePrice(priceMajor, centsForSave),
+    }));
+  }, [priceMajor, priceCents]);
+
+  const { data: recentStoreCategories = [] } = useQuery({
+    queryKey: ['store-recent-product-categories', adminStore?.id],
+    enabled: !!adminStore?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('category, created_at')
+        .eq('store_id', adminStore!.id)
+        .not('category', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+
+      const unique = new Set<string>();
+      const ordered: string[] = [];
+
+      for (const item of data || []) {
+        const category = normalizeCategory(item.category || '');
+        if (!category) continue;
+        if (unique.has(category.toLowerCase())) continue;
+        unique.add(category.toLowerCase());
+        ordered.push(category);
+        if (ordered.length >= 6) break;
+      }
+
+      return ordered;
+    },
+  });
+
+  const setSlotProcessing = useCallback((index: number, value: boolean) => {
+    setProcessingSlots((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+  }, []);
+
+  const handleFieldChange = useCallback(
+    (field: keyof ProductFormData, value: string | string[]) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
+
+  const handlePriceMajorChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setPriceMajor(sanitizeMajor(e.target.value));
+  }, []);
+
+  const handlePriceMajorBlur = useCallback(() => {
+    setPriceMajor((prev) => sanitizeMajor(prev));
+  }, []);
+
+  const handlePriceCentsChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setPriceCents(sanitizeCents(e.target.value).slice(0, 2));
+  }, []);
+
+  const handlePriceCentsBlur = useCallback(() => {
+    if (!priceMajor) {
+      setPriceCents('');
+      return;
+    }
+
+    setPriceCents((prev) => {
+      const clean = sanitizeCents(prev).slice(0, 2);
+      if (clean === '') return '00';
+      return clean.padEnd(2, '0');
+    });
+  }, [priceMajor]);
+
+  const handleCategoryBlur = useCallback(() => {
+    setFormData((prev) => ({
+      ...prev,
+      category: normalizeCategory(prev.category),
+    }));
+  }, []);
+
+  const handleDescriptionChange = useCallback(
+    (e: ChangeEvent<HTMLTextAreaElement>) => {
+      const value = e.target.value.slice(0, PRODUCT_LIMITS.description);
+      const breaks = (value.match(/\n/g) || []).length;
+
+      if (breaks <= PRODUCT_LIMITS.maxBreaks) {
+        setFormData((prev) => ({ ...prev, full_description: value }));
+      }
+    },
+    []
+  );
+
+  const handleDescriptionKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key !== 'Enter') return;
       const breaks = (formData.full_description.match(/\n/g) || []).length;
-      if (breaks >= LIMITS.maxBreaks) e.preventDefault();
-    }
-  }, [formData.full_description]);
+      if (breaks >= PRODUCT_LIMITS.maxBreaks) {
+        e.preventDefault();
+      }
+    },
+    [formData.full_description]
+  );
 
-  const pending = useMemo(() => {
-    const list = [];
-    if (!formData.name.trim()) list.push("Nome");
-    if (!formData.price || formData.price === '0') list.push("Preço");
-    if (!formData.category.trim()) list.push("Categoria");
-    if (!previews[0]) list.push("Capa");
-    const hasSizeIssue = previews.some((p, i) => p && fileSizes[i] > LIMITS.maxFileSize);
-    if (hasSizeIssue) list.push("Reduzir Fotos");
-    return list;
-  }, [formData, previews, fileSizes]);
+  const clearPhotoSlot = useCallback(
+    (index: number) => {
+      setPreviews((prev) => {
+        const next = [...prev];
+        next[index] = '';
+        return next;
+      });
 
-  const formatSize = (bytes: number) => {
-    if (!bytes || bytes === 0) return '0 B';
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${['B', 'KB', 'MB'][i]}`;
-  };
+      setTempFiles((prev) => {
+        const next = [...prev];
+        next[index] = null;
+        return next;
+      });
+
+      clearPersistedSlotToken(index);
+
+      setFileSizes((prev) => {
+        const next = [...prev];
+        next[index] = 0;
+        return next;
+      });
+
+      setUploadErrors((prev) => {
+        const next = [...prev];
+        next[index] = '';
+        return next;
+      });
+
+      setFormData((prev) => {
+        if (index === 0) {
+          return {
+            ...prev,
+            main_image: '',
+          };
+        }
+
+        const nextGallery = [...(prev.gallery || [])];
+        nextGallery[index - 1] = '';
+        return {
+          ...prev,
+          gallery: nextGallery.filter(Boolean),
+        };
+      });
+    },
+    [clearPersistedSlotToken]
+  );
+
+  const replaceSlotWithNewFile = useCallback(
+    async (index: number, file: File) => {
+      const previousToken = tempDeleteTokens[index];
+      let cloudDeleteResult: CloudinaryDeleteResult | null = null;
+
+      if (previousToken) {
+        console.log(
+          `[Cloudinary] replacing slot ${index}, deleting previous image with token`
+        );
+        cloudDeleteResult = await deleteFromCloudinary(previousToken);
+      }
+
+      clearPersistedSlotToken(index);
+
+      setFileSizes((prev) => {
+        const next = [...prev];
+        next[index] = file.size;
+        return next;
+      });
+
+      const tooLarge = file.size > PRODUCT_IMAGE_LIMIT;
+
+      setUploadErrors((prev) => {
+        const next = [...prev];
+        next[index] = tooLarge ? t('product_form_image_too_large') : '';
+        return next;
+      });
+
+      setTempFiles((prev) => {
+        const next = [...prev];
+        next[index] = tooLarge ? null : file;
+        return next;
+      });
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviews((prev) => {
+          const next = [...prev];
+          next[index] = String(reader.result || '');
+          return next;
+        });
+      };
+      reader.readAsDataURL(file);
+
+      if (previousToken) {
+        if (cloudDeleteResult?.ok) {
+          toast.success(t('product_form_image_replaced_cloud'));
+        } else {
+          toast(t('product_form_image_replaced_local_only_after_cloud_fail'), {
+            icon: '⚠️',
+          });
+        }
+      } else {
+        toast.success(t('product_form_image_replaced_local'));
+      }
+    },
+    [clearPersistedSlotToken, t, tempDeleteTokens]
+  );
+
+  const handleFileSelect = useCallback(
+    async (e: ChangeEvent<HTMLInputElement>, index: number) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (processingSlots[index]) {
+        e.target.value = '';
+        return;
+      }
+
+      setSlotProcessing(index, true);
+
+      try {
+        await replaceSlotWithNewFile(index, file);
+      } catch (error) {
+        console.error(`[ProductForm] failed to replace slot ${index}:`, error);
+        toast.error(t('product_form_image_replace_error'));
+      } finally {
+        setSlotProcessing(index, false);
+        e.target.value = '';
+      }
+    },
+    [processingSlots, replaceSlotWithNewFile, setSlotProcessing, t]
+  );
+
+  const removePhoto = useCallback(
+    async (index: number) => {
+      if (processingSlots[index]) return;
+
+      const token = tempDeleteTokens[index];
+      setSlotProcessing(index, true);
+
+      try {
+        if (token) {
+          console.log(`[Cloudinary] removing image at slot ${index} using delete token`);
+
+          const result = await deleteFromCloudinary(token);
+
+          if (result.ok) {
+            console.log(`[Cloudinary] image at slot ${index} removed successfully`);
+            clearPhotoSlot(index);
+            toast.success(t('product_form_image_removed_cloud'));
+          } else {
+            console.warn(
+              `[Cloudinary] slot ${index} token expired or deletion failed:`,
+              result.message
+            );
+            clearPhotoSlot(index);
+            toast(t('product_form_image_removed_local_only_after_cloud_fail'), {
+              icon: '⚠️',
+            });
+          }
+        } else {
+          console.log(
+            `[Cloudinary] slot ${index} has no delete token. Local state will be cleared only`
+          );
+          clearPhotoSlot(index);
+          toast.success(t('product_form_image_removed_local'));
+        }
+      } catch (error) {
+        console.error(`[Cloudinary] failed to remove image at slot ${index}:`, error);
+        clearPhotoSlot(index);
+        toast(t('product_form_image_removed_local_only_after_cloud_fail'), {
+          icon: '⚠️',
+        });
+      } finally {
+        setSlotProcessing(index, false);
+      }
+    },
+    [clearPhotoSlot, processingSlots, setSlotProcessing, t, tempDeleteTokens]
+  );
+
+  const fieldErrors = useMemo(() => {
+    const name =
+      formData.name.trim().length === 0
+        ? t('product_form_error_name_required')
+        : formData.name.trim().length < 2
+        ? t('product_form_error_name_short')
+        : '';
+
+    const category =
+      formData.category.trim().length === 0
+        ? t('product_form_error_category_required')
+        : '';
+
+    const price =
+      !formData.price
+        ? t('product_form_error_price_required')
+        : Number(formData.price) <= 0
+        ? t('product_form_error_price_invalid')
+        : '';
+
+    const cover = !previews[0] ? t('product_form_error_cover_required') : '';
+
+    const images = uploadErrors.some(Boolean)
+      ? t('product_form_error_images_invalid')
+      : '';
+
+    return { name, category, price, cover, images };
+  }, [formData.name, formData.category, formData.price, previews, uploadErrors, t]);
+
+  const pendingItems = useMemo(() => {
+    const items: string[] = [];
+    if (fieldErrors.name) items.push(t('product_form_pending_name'));
+    if (fieldErrors.category) items.push(t('product_form_pending_category'));
+    if (fieldErrors.price) items.push(t('product_form_pending_price'));
+    if (fieldErrors.cover) items.push(t('product_form_pending_cover'));
+    if (fieldErrors.images) items.push(t('product_form_pending_images'));
+    return items;
+  }, [fieldErrors, t]);
+
+  const canSave = useMemo(() => {
+    return (
+      !fieldErrors.name &&
+      !fieldErrors.category &&
+      !fieldErrors.price &&
+      !fieldErrors.cover &&
+      !fieldErrors.images
+    );
+  }, [fieldErrors]);
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!adminStore?.id) {
+        throw new Error(t('product_form_store_not_found'));
+      }
+
+      const uploads = await Promise.all(
+        tempFiles.map(async (file, index) => {
+          if (!file) return null;
+
+          const uploaded = await uploadToCloudinary(file);
+          console.log(`[Cloudinary] uploaded slot ${index}:`, uploaded);
+
+          return {
+            index,
+            url: uploaded.url,
+            delete_token: uploaded.delete_token ?? null,
+          };
+        })
+      );
+
+      updateDeleteTokens((prev) => {
+        const next = [...prev];
+        uploads.forEach((item) => {
+          if (!item) return;
+          next[item.index] = item.delete_token;
+        });
+        return next;
+      });
+
+      const uploadedMain = uploads.find((item) => item?.index === 0)?.url;
+      const finalMainImage = uploadedMain || formData.main_image || previews[0] || '';
+
+      const nextGallery = [...(formData.gallery || [])];
+      uploads.forEach((item) => {
+        if (!item || item.index === 0) return;
+        nextGallery[item.index - 1] = item.url;
+      });
+
+      const payload = {
+        name: formData.name.trim(),
+        slug: createProductSlug(formData.name),
+        category: normalizeCategory(formData.category),
+        price: Number(normalizePriceString(formData.price)),
+        unit: formData.unit.trim() || 'un',
+        full_description: formData.full_description.trim(),
+        main_image: finalMainImage,
+        gallery: nextGallery.filter(Boolean),
+        store_id: adminStore.id,
+        currency: initialData.currency || adminStore?.settings?.currency || 'MZN',
+      };
+
+      if (isCreating) {
+        const { error } = await supabase.from('products').insert([payload]);
+        if (error) throw error;
+        return;
+      }
+
+      if (!productId) {
+        throw new Error(t('product_form_product_not_found'));
+      }
+
+      const { error } = await supabase
+        .from('products')
+        .update(payload)
+        .eq('id', productId);
+
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['products'] }),
+        queryClient.invalidateQueries({ queryKey: ['product', productId] }),
+        queryClient.invalidateQueries({
+          queryKey: ['store-recent-product-categories', adminStore?.id],
+        }),
+      ]);
+
+      toast.success(
+        isCreating ? t('product_form_created_success') : t('product_form_updated_success')
+      );
+      onSuccess?.();
+    },
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error ? error.message : t('product_form_save_error');
+      toast.error(message);
+    },
+  });
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-8 animate-in fade-in duration-500">
-      
-      {/* SEÇÃO GALERIA */}
-      <section className="bg-slate-50 p-6 md:p-8 rounded-[2.5rem] border border-slate-200 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 px-2">
-          <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-            <ImagePlus size={16} className="text-blue-600"/> Galeria de Fotos
-          </h3>
-          <div className="bg-white px-4 py-2 rounded-full border border-slate-200">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Limite: 1MB por foto</span>
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 pb-40">
+      <section className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+        <div className="mb-5 flex items-start gap-3">
+          <div className="rounded-2xl bg-blue-50 p-3 text-blue-600">
+            <Package2 size={18} />
+          </div>
+
+          <div className="min-w-0">
+            <h2 className="text-base font-black uppercase tracking-wide text-slate-900">
+              {isCreating ? t('product_form_create_title') : t('product_form_edit_title')}
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">{t('product_form_intro')}</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-          {[0, 1, 2, 3].map((i) => {
-            const currentSize = fileSizes[i] || 0;
-            const isTooLarge = previews[i] && currentSize > LIMITS.maxFileSize;
-            const isFirst = i === 0;
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {Array.from({ length: PRODUCT_IMAGE_SLOTS }).map((_, index) => {
+            const preview = previews[index];
+            const isCover = index === 0;
+            const hasError = Boolean(uploadErrors[index]);
+            const isProcessing = processingSlots[index];
 
             return (
-              <div key={i} className="flex flex-col gap-2">
-                <div className={`relative aspect-square rounded-[2.2rem] overflow-hidden border-2 transition-all duration-300 
-                  ${previews[i] ? (isFirst ? 'border-blue-500 ring-4 ring-blue-50' : 'border-white shadow-sm') : 'border-dashed border-slate-200 bg-white/50'}
-                  ${isTooLarge ? 'border-red-500 bg-red-50' : 'bg-white'}`}>
-                  
-                  {previews[i] ? (
-                    <div className="w-full h-full group">
-                      <img src={previews[i]} className="w-full h-full object-cover" alt="" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 ">
-                        <label className="p-2 bg-white rounded-xl text-blue-600 cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-xl">
-                          <Edit3 size={18} />
-                          <input type="file" className="hidden" accept="image/*" onChange={(e) => onFileSelect(e, i)} />
+              <div key={index} className="flex flex-col gap-2">
+                <div
+                  className={`relative aspect-square overflow-hidden rounded-[1.25rem] border ${
+                    preview
+                      ? hasError
+                        ? 'border-red-300 bg-red-50'
+                        : isCover
+                        ? 'border-blue-300 bg-slate-50'
+                        : 'border-slate-200 bg-slate-50'
+                      : 'border-dashed border-slate-300 bg-slate-50'
+                  }`}
+                >
+                  {preview ? (
+                    <>
+                      <img
+                        src={preview}
+                        alt=""
+                        loading="lazy"
+                        className={`h-full w-full object-cover ${isProcessing ? 'opacity-50' : ''}`}
+                      />
+
+                      <div className="absolute right-2 top-2 flex gap-2">
+                        <label className="cursor-pointer rounded-xl bg-white p-2 text-slate-700 shadow-sm">
+                          <PencilLine size={14} />
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => void handleFileSelect(e, index)}
+                            disabled={isProcessing}
+                          />
                         </label>
-                        <button type="button" onClick={() => removePhoto(i)} className="p-2 bg-white rounded-xl text-red-500 hover:scale-110 active:scale-95 transition-all shadow-xl">
-                          <X size={18} />
+
+                        <button
+                          type="button"
+                          onClick={() => void removePhoto(index)}
+                          disabled={isProcessing}
+                          className="rounded-xl bg-white p-2 text-red-500 shadow-sm disabled:opacity-50"
+                        >
+                          {isProcessing ? (
+                            <Loader2 size={14} className="animate-spin" />
+                          ) : (
+                            <Trash2 size={14} />
+                          )}
                         </button>
                       </div>
-                      
-                      {isFirst && (
-                        <div className="absolute top-3 left-3 bg-blue-600 text-white text-[9px] font-black px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-lg">
-                          <Star size={10} fill="currentColor" /> CAPA
+
+                      {isCover ? (
+                        <div className="absolute left-2 top-2 rounded-xl bg-blue-600 px-2 py-1 text-[10px] font-black text-white">
+                          {t('product_form_cover')}
                         </div>
-                      )}
-                      
-                      <div className={`absolute bottom-3 left-3 px-2 py-1 rounded-md  ${isTooLarge ? 'bg-red-600' : 'bg-black/60'}`}>
-                        <p className="text-[8px] font-black text-white uppercase">{formatSize(currentSize)}</p>
+                      ) : null}
+
+                      <div className="absolute bottom-2 left-2 rounded-lg bg-black/70 px-2 py-1 text-[10px] font-bold text-white">
+                        {formatBytes(fileSizes[index])}
                       </div>
-                    </div>
+                    </>
                   ) : (
-                    <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-white transition-colors">
-                      <UploadCloud size={24} className="text-slate-300 mb-1" />
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">{isFirst ? 'Capa' : 'Adicionar'}</span>
-                      <input type="file" className="hidden" accept="image/*" onChange={(e) => onFileSelect(e, i)} />
+                    <label className="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-2 p-3 text-center">
+                      <UploadCloud size={20} className="text-slate-400" />
+                      <span className="text-[11px] font-black uppercase tracking-wide text-slate-500">
+                        {isCover ? t('product_form_add_cover') : t('product_form_add_image')}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => void handleFileSelect(e, index)}
+                        disabled={isProcessing}
+                      />
                     </label>
                   )}
                 </div>
 
-                {/* LINK PARA COMPRIMIR */}
-                {isTooLarge && (
-                  <a 
-                    href="https://tinypng.com" 
-                    target="_blank" 
-                    rel="noreferrer" 
-                    className="flex items-center justify-center gap-1.5 bg-red-100 text-red-600 py-2 rounded-xl text-[8px] font-black uppercase hover:bg-red-200 transition-colors"
-                  >
-                    Comprimir <ExternalLink size={10} />
-                  </a>
-                )}
+                {uploadErrors[index] ? (
+                  <p className="text-[11px] font-semibold text-red-500">
+                    {uploadErrors[index]}
+                  </p>
+                ) : null}
               </div>
             );
           })}
         </div>
+
+        <p className="mt-4 text-xs text-slate-500">{t('product_form_image_help')}</p>
       </section>
 
-      {/* FORMULÁRIO */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="md:col-span-2 space-y-2">
-          <div className="flex justify-between px-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome *</label>
-            <span className={`text-[9px] font-black px-2 py-0.5 rounded ${formData.name.length >= LIMITS.name ? 'bg-red-500 text-white' : 'text-slate-300'}`}>
-              {formData.name.length} / {LIMITS.name}
-            </span>
-          </div>
-          <input 
-            className="w-full p-6 rounded-[1.8rem] font-bold text-xl outline-none border-2 border-transparent bg-slate-50 focus:border-blue-500 focus:bg-white transition-all shadow-inner"
-            value={formData.name} 
-            maxLength={LIMITS.name}
-            onChange={e => setFormData({ ...formData, name: e.target.value })}
-            placeholder="O que estás a vender?"
-          />
-        </div>
+      <section className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <div className="md:col-span-2">
+            <div className="mb-2 flex items-center justify-between">
+              <label className="text-[11px] font-black uppercase tracking-wider text-slate-500">
+                {t('product_form_name_label')}
+              </label>
+              <span className="text-[10px] font-bold text-slate-400">
+                {formData.name.length}/{PRODUCT_LIMITS.name}
+              </span>
+            </div>
 
-        {/* Preço */}
-        <div className="md:col-span-2">
-          <div className={`bg-white border-2 p-5 rounded-[2rem] transition-all shadow-sm ${formData.price && formData.price !== '0' ? 'border-green-100' : 'border-slate-100'}`}>
-            <div className="grid grid-cols-12 gap-4 items-end">
-              <div className="col-span-12 flex items-center gap-2 px-1">
-                <Coins size={16} className="text-blue-600" />
-                <h4 className="text-slate-900 font-black text-[11px] uppercase tracking-wider">Preço de Venda *</h4>
-              </div>
-              <div className="col-span-5 md:col-span-4 space-y-1">
-                <label className="text-[9px] font-bold text-slate-400 uppercase ml-2">Moeda</label>
-                <Select
-                  options={currencyOptions}
-                  styles={SELECT_STYLES}
-                  value={currencyOptions.find(opt => opt.value === formData.currency)}
-                  
-                  onChange={(val) => val && setFormData({ ...formData, currency: val.value })}
-                />
-              </div>
-              <div className="col-span-7 md:col-span-8 space-y-1">
-                <label className="text-[9px] font-bold text-slate-400 uppercase ml-2">Valor</label>
-                <div className="relative">
-                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-sm font-black text-slate-300">{formData.currency}</span>
+            <input
+              type="text"
+              maxLength={PRODUCT_LIMITS.name}
+              value={formData.name}
+              onChange={(e) => handleFieldChange('name', e.target.value)}
+              placeholder={t('product_form_name_placeholder')}
+              className="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 font-bold outline-none focus:border-blue-500 focus:bg-white"
+            />
+            {fieldErrors.name ? (
+              <p className="mt-2 text-xs font-semibold text-amber-600">{fieldErrors.name}</p>
+            ) : null}
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="mb-2 block text-[11px] font-black uppercase tracking-wider text-slate-500">
+              {t('product_form_price_label')}
+            </label>
+
+            <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-3">
+              <div className="flex items-end gap-3">
+                <div className="min-w-0 flex-1">
+                  <span className="mb-2 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                    {t('product_form_price_whole')}
+                  </span>
                   <input
                     type="text"
                     inputMode="numeric"
-                    className="w-full bg-slate-50 border-2 border-slate-100 focus:border-blue-500 focus:bg-white h-14 pl-16 pr-6 rounded-2xl font-black text-xl outline-none transition-all"
-                    value={formData.price}
-                    onChange={e => setFormData({ ...formData, price: e.target.value.replace(/\D/g, '') })}
+                    value={priceMajor}
+                    onChange={handlePriceMajorChange}
+                    onBlur={handlePriceMajorBlur}
                     placeholder="0"
+                    className="h-14 w-full rounded-2xl border border-slate-200 bg-white px-4 text-2xl font-black outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="pb-3 text-2xl font-black text-slate-300">.</div>
+
+                <div className="w-24">
+                  <span className="mb-2 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                    {t('product_form_price_cents')}
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={priceCents}
+                    onChange={handlePriceCentsChange}
+                    onBlur={handlePriceCentsBlur}
+                    placeholder="00"
+                    className={`h-14 w-full rounded-2xl border border-slate-200 bg-white px-4 text-center text-xl font-black outline-none focus:border-blue-500 ${
+                      priceCents === '' || priceCents === '00'
+                        ? 'text-slate-300'
+                        : 'text-slate-700'
+                    }`}
                   />
                 </div>
               </div>
+
+              <p className="mt-3 text-xs text-slate-500">{t('product_form_price_help')}</p>
             </div>
+
+            {fieldErrors.price ? (
+              <p className="mt-2 text-xs font-semibold text-amber-600">{fieldErrors.price}</p>
+            ) : null}
           </div>
-        </div>
 
-
-        <div className="space-y-3">
-          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Categoria *</label>
-          <input 
-            className="w-full p-5 rounded-2xl font-bold bg-slate-50 border-2 border-transparent focus:border-blue-500 outline-none transition-all shadow-inner"
-            value={formData.category}
-            onChange={e => setFormData({ ...formData, category: e.target.value })}
-            placeholder="Ex: Mobília"
-          />
-          <div className="flex flex-wrap gap-2">
-            {recentCats.map(cat => (
-              <button key={cat} type="button" onClick={() => setFormData({ ...formData, category: cat })} className="text-[9px] font-black text-slate-400 bg-slate-100 px-3 py-1.5 rounded-xl hover:bg-blue-600 hover:text-white transition-all">
-                + {cat}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Unidade *</label>
-          <select 
-            className="w-full bg-slate-50 p-5 h-[62px] rounded-2xl font-bold border-2 border-transparent focus:border-blue-500 outline-none appearance-none cursor-pointer shadow-inner"
-            value={formData.unit}
-            onChange={e => setFormData({ ...formData, unit: e.target.value })}
-          >
-            <option value="un">Unidade</option>
-            <option value="par">Par</option>
-            <option value="kg">Quilograma</option>
-            <option value="hora">Por Hora</option>
-          </select>
-        </div>
-
-        <div className="md:col-span-2 space-y-3">
-          <div className="flex justify-between px-4">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-              <AlignLeft size={14} className="text-blue-500"/> Descrição
+          <div>
+            <label className="mb-2 block text-[11px] font-black uppercase tracking-wider text-slate-500">
+              {t('product_form_category_label')}
             </label>
-            <span className="text-[9px] font-black text-slate-300">{formData.full_description.length}/{LIMITS.description}</span>
-          </div>
-          <textarea
-            className="w-full p-8 rounded-[2.5rem] min-h-[200px] font-medium text-slate-700 bg-slate-50 border-2 border-transparent focus:border-blue-500 focus:bg-white transition-all resize-none shadow-inner"
-            value={formData.full_description}
-            onChange={handleDescriptionChange}
-            onKeyDown={handleKeyDown}
-          />
-        </div>
-      </div>
 
-      {/* BARRA DE PENDÊNCIAS */}
-      {pending.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-fit min-w-[300px] bg-slate-900/95  px-6 py-3 rounded-full shadow-2xl flex items-center justify-between gap-6 z-50 border border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-            <p className="text-[10px] font-black text-white uppercase tracking-widest leading-none">
-              Pendente: <span className="text-slate-400 ml-1 font-bold">{pending.join(" • ")}</span>
+            <input
+              type="text"
+              maxLength={PRODUCT_LIMITS.category}
+              value={formData.category}
+              onChange={(e) => handleFieldChange('category', e.target.value)}
+              onBlur={handleCategoryBlur}
+              placeholder={t('product_form_category_placeholder')}
+              className="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 font-bold outline-none focus:border-blue-500 focus:bg-white"
+            />
+
+            {recentStoreCategories.length > 0 ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {recentStoreCategories.map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => handleFieldChange('category', category)}
+                    className="rounded-xl bg-slate-100 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-slate-600"
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
+            {fieldErrors.category ? (
+              <p className="mt-2 text-xs font-semibold text-amber-600">{fieldErrors.category}</p>
+            ) : null}
+          </div>
+
+          <div>
+            <label className="mb-2 block text-[11px] font-black uppercase tracking-wider text-slate-500">
+              {t('product_form_unit_label')}
+            </label>
+
+            <select
+              value={formData.unit}
+              onChange={(e) => handleFieldChange('unit', e.target.value)}
+              className="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 font-bold outline-none focus:border-blue-500 focus:bg-white"
+            >
+              {PRODUCT_UNIT_OPTIONS.map((unit) => (
+                <option key={unit} value={unit}>
+                  {t(`product_form_unit_${unit}`)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="md:col-span-2">
+            <div className="mb-2 flex items-center justify-between">
+              <label className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                <AlignLeft size={14} className="text-blue-500" />
+                {t('product_form_description_label')}
+              </label>
+              <span className="text-[10px] font-bold text-slate-400">
+                {formData.full_description.length}/{PRODUCT_LIMITS.description}
+              </span>
+            </div>
+
+            <textarea
+              value={formData.full_description}
+              onChange={handleDescriptionChange}
+              onKeyDown={handleDescriptionKeyDown}
+              placeholder={t('product_form_description_placeholder')}
+              className="min-h-[180px] w-full resize-none rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4 text-sm font-medium text-slate-700 outline-none focus:border-blue-500 focus:bg-white"
+            />
+
+            <p className="mt-2 text-xs text-slate-500">
+              {t('product_form_description_help')}
             </p>
           </div>
-          <div className="h-6 w-6 bg-white/10 rounded-full flex items-center justify-center border border-white/5">
-            <span className="text-white font-black text-[10px]">{pending.length}</span>
-          </div>
         </div>
-      )}
+      </section>
+
+      <div className="pointer-events-none fixed bottom-4 left-0 right-0 z-50 px-3 md:px-6">
+        <div className="mx-auto w-full max-w-xl md:max-w-md xl:max-w-2xl">
+          <section className="pointer-events-auto rounded-[1.25rem] border border-slate-200 bg-white p-4 shadow-lg">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <Info size={14} className="text-blue-500" />
+                  <p className="text-[11px] font-black uppercase tracking-wider text-slate-900">
+                    {pendingItems.length > 0
+                      ? t('product_form_pending_title')
+                      : t('product_form_ready_title')}
+                  </p>
+                </div>
+
+                <p className="mt-1 text-xs text-slate-500">
+                  {pendingItems.length > 0
+                    ? pendingItems.join(' • ')
+                    : t('product_form_ready_subtitle')}
+                </p>
+
+                {fieldErrors.cover ? (
+                  <p className="mt-2 text-xs font-semibold text-amber-600">{fieldErrors.cover}</p>
+                ) : null}
+                {fieldErrors.images ? (
+                  <p className="mt-1 text-xs font-semibold text-amber-600">{fieldErrors.images}</p>
+                ) : null}
+              </div>
+
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className="rounded-2xl border border-slate-200 px-4 py-3 text-[11px] font-black uppercase tracking-wider text-slate-600"
+                >
+                  <X size={14} />
+                </button>
+
+                <button
+                  type="button"
+                  disabled={!canSave || saveMutation.isPending}
+                  onClick={() => saveMutation.mutate()}
+                  className={`flex items-center gap-2 rounded-2xl px-5 py-3 text-[11px] font-black uppercase tracking-wider ${
+                    canSave
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-slate-200 text-slate-400'
+                  }`}
+                >
+                  {saveMutation.isPending ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Check size={14} />
+                  )}
+                  {isCreating ? t('product_form_create_action') : t('product_form_save_action')}
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
     </div>
   );
 });
-
-ProductForm.displayName = 'ProductForm';
