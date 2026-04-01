@@ -116,7 +116,7 @@ const SECTION_PREVIEWS: Record<string, string> = {
   faq_acordion: '',
   rodape_simples: '',
   texto_narrativo:'/img/texto_narativo.png',
-  texto_imagem_showcase:'/img/texto_imagem_showcase.jpg',
+  texto_imagem_showcase:'/img/texto_imagem_showcase.png',
 };
 
 export function EditorModals({
