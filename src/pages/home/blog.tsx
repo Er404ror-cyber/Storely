@@ -16,11 +16,11 @@ export const Blog = () => {
 
       <main className="mx-auto max-w-[1440px] pb-16">
         <section className="px-0 pt-20 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden border border-zinc-200/80 bg-white sm:rounded-[2rem] dark:border-zinc-800/80 dark:bg-zinc-950">
+          <div className="relative overflow-hidden  border-zinc-200/80 bg-white sm:rounded-[2rem] dark:border-zinc-800/80 dark:bg-zinc-950">
             <div className="pointer-events-none absolute inset-0">
               <HeroBackgroundMedia
-                videoSrc="/img/329674_tiny.mp4"
-                posterSrc="/img/marketplace-hero-poster.webp"
+                videoSrc="/img/freepik-video-upscaler-480.webm"
+                posterSrc="/img/Mascote.png"
               />
             </div>
 
@@ -31,14 +31,14 @@ export const Blog = () => {
                   {t("marketplace_hero_badge")}
                 </div>
 
-                <h1 className="max-w-3xl text-[2rem] font-black leading-[0.96] tracking-tight text-zinc-950 dark:text-zinc-50 sm:text-[2.45rem] lg:text-[3.05rem]">
+                <h1 className="max-w-3xl text-[2rem] font-black leading-[0.96] tracking-tight text-zinc-100 dark:text-zinc-50 sm:text-[2.45rem] lg:text-[3.05rem]">
                   {t("marketplace_hero_title_line_1")}{" "}
-                  <span className="bg-gradient-to-r from-blue-700 via-cyan-600 to-fuchsia-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-cyan-300 dark:to-fuchsia-400">
+                  <span className="bg-gradient-to-r from-blue-600 via-cyan-400 to-fuchsia-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-cyan-300 dark:to-fuchsia-400">
                     {t("marketplace_hero_title_line_2")}
                   </span>
                 </h1>
 
-                <p className="mt-4 max-w-2xl text-sm leading-relaxed text-zinc-700 dark:text-zinc-300 sm:text-[15px]">
+                <p className="mt-4 max-w-2xl text-sm leading-relaxed text-zinc-100 dark:text-zinc-300 sm:text-[15px]">
                   {t("marketplace_hero_subtitle")}
                 </p>
 

@@ -172,7 +172,7 @@ export const HeroBackgroundMedia = memo(function HeroBackgroundMedia({
       ) : null}
 
       {/* overlay estável e leve para legibilidade */}
-      <div className="absolute inset-0 bg-white/76 dark:bg-zinc-950/72" />
+      <div className="absolute inset-0 bg-black/72 dark:bg-zinc-950/72" />
 
       {/* leve reforço de contraste sem blur */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/28 via-white/12 to-transparent dark:from-zinc-950/22 dark:via-zinc-950/8 dark:to-transparent" />
