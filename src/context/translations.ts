@@ -2,7 +2,7 @@
 export const translations = {
   en: {
     // Navigation & UI
-    nav_home: "Home",
+    nav_home: "Explore",
     nav_blog: "Blog",
     nav_support: "Support",
     nav_privacy: "Privacy",
@@ -932,6 +932,20 @@ new_product: "New product",
   product_details_quantity: "Quantity",
   product_details_total: "Total",
  
+
+
+  storely_found_products: "Products found",
+
+
+storely_categories: "Categories",
+
+storely_products: "products",
+storely_stores: "stores",
+
+storely_sell_cta_title: "Start selling with your own store",
+storely_sell_cta_subtitle: "Create your store, showcase your products, and reach more people beautifully.",
+storely_no_results_title: "No results found",
+storely_no_results_subtitle: "Try another name, category, or store to discover more products.",
   },
 
 
@@ -978,7 +992,7 @@ new_product: "New product",
 
   pt: {
     // Navegação & UI
-    nav_home: "Início",
+    nav_home: "Explorar",
     nav_blog: "Blog",
     nav_support: "Suporte",
     nav_privacy: "Privacidade",
@@ -1910,6 +1924,24 @@ product_details_whatsapp_unavailable: "O número de WhatsApp da loja não está 
 product_details_order_message_intro: "Olá, quero encomendar este produto:",
 product_details_quantity: "Quantidade",
 product_details_total: "Total",
+
+
+
+
+storely_categories: "Categorias",
+
+storely_products: "produtos",
+storely_stores: "lojas",
+
+storely_sell_cta_title: "Comece a vender com a sua própria loja",
+storely_sell_cta_subtitle: "Crie a sua loja, mostre os seus produtos e alcance mais pessoas de forma bonita.",
+storely_no_results_title: "Nenhum resultado encontrado",
+storely_no_results_subtitle: "Tente outro nome, categoria ou loja para descobrir mais produtos.",
+
+storely_found_products: "Productos Encontrados",
+
+
+
 
 }
 } as const;
