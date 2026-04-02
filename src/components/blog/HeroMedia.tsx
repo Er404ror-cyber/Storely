@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef, useState } from 'react';
 
 type HeroBackgroundMediaProps = {
-  videoSrc: string;
+  videoSrc: string; 
   posterSrc: string;
   className?: string;
 };
@@ -157,19 +157,24 @@ export const HeroBackgroundMedia = memo(function HeroBackgroundMedia({
       />
 
       {!disableVideo && hasMountedVideo ? (
-        <video
-          ref={videoRef}
-          className="absolute inset-0 h-full w-full object-cover"
-          muted
-          loop
-          playsInline
-          preload="none"
-          poster={posterSrc}
-          disablePictureInPicture
-        >
-          <source src={videoSrc} type="video/mp4" />
-        </video>
-      ) : null}
+  <video
+    ref={videoRef}
+    className="absolute inset-0 h-full w-full object-cover"
+    muted
+    loop
+    autoPlay
+    playsInline
+    preload="none"
+    poster={posterSrc}
+    disablePictureInPicture
+  >
+    {/* MP4 primeiro — Safari / iPhone */}
+    <source src={`${videoSrc}.mp4`} type="video/mp4" />
+
+    {/* WebM depois — Chrome / Android */}
+    <source src={`${videoSrc}.webm`} type="video/webm" />
+  </video>
+) : null}
 
       {/* overlay estável e leve para legibilidade */}
       <div className="absolute inset-0 bg-black/72 dark:bg-zinc-950/72" />

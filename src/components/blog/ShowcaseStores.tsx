@@ -28,23 +28,30 @@ import { useTranslate } from "../../context/LanguageContext";
    Types
 ========================= */
 
+
 type ProductStore = {
-  slug: string;
-  name: string;
+  id?: string;
+  slug?: string;
+  name?: string | null;
   description?: string | null;
   logo_url?: string | null;
+  whatsapp_number?: string | null;
   settings?: Record<string, unknown> | null;
   currency?: string | null;
 };
 
 type ProductRow = {
   id: string;
-  name: string;
+  name: string | null;
   category: string | null;
   main_image: string | null;
+  gallery?: string[] | null;
+  full_description?: string | null;
+  unit?: string | null;
   created_at: string;
-  price?: number | string | null;
-  stores: ProductStore | ProductStore[] | null;
+  price: number | string | null;
+  currency?: string | null;
+  stores?: ProductStore | ProductStore[] | null;
 };
 
 type ProductItem = {
@@ -52,6 +59,9 @@ type ProductItem = {
   name: string;
   category: string;
   image: string;
+  gallery: string[];
+  description: string;
+  unit: string;
   createdAt: string;
   createdAtValue: number;
   timeAgoShort: string;
@@ -59,6 +69,7 @@ type ProductItem = {
   storeName: string;
   storeDescription: string;
   storeLogo: string;
+  storeWhatsApp?: string | null;
   price: number | null;
   currency: string;
 
@@ -70,18 +81,23 @@ type ProductItem = {
 };
 
 type StoreItem = {
+  id: string;
   slug: string;
   name: string;
   description: string;
   logoUrl: string;
-  heroImage: string;
+  heroImage?: string;
+  whatsapp_number?: string | null;
+  settings?: Record<string, unknown> | null;
+
   total: number;
   categories: string[];
-
   searchName: string;
   searchDescription: string;
   searchCategories: string;
 };
+
+
 
 type PreferenceState = {
   categories: Record<string, number>;
@@ -139,8 +155,8 @@ const LS_PREFS = "storely-prefs-v12";
 const LS_HISTORY = "storely-history-v12";
 const LS_AUTH_HINT = "storely-auth-user";
 
-const STORELY_CACHE_KEY = "storely-public-cache-v8";
-const STORELY_CACHE_VERSION = 8;
+const STORELY_CACHE_KEY = "storely-public-cache-v9";
+const STORELY_CACHE_VERSION = 9;
 const STORELY_CACHE_TTL = 1000 * 60 * 60 * 2;
 const STORELY_STATE_KEY = "storely-showcase-ui-v4";
 
@@ -153,7 +169,11 @@ const STRIP_SIZE = 10;
 const STORES_STRIP_SIZE = 8;
 const CATEGORY_SCROLL_STEP = 260;
 const STRIP_SCROLL_STEP = 320;
+const FALLBACK_CURRENCY = "USD";
 
+const EMPTY_PRODUCTS: ProductItem[] = [];
+const EMPTY_STORES: StoreItem[] = [];
+const EMPTY_CATEGORIES: string[] = [];
 /* =========================
    Utils
 ========================= */
@@ -644,7 +664,7 @@ const RailControls = memo(function RailControls({
   ariaLabel: string;
 }) {
   return (
-    <div className="flex items-center gap-1">
+    <div className="sm:flex hidden items-center gap-1">
       <button
         type="button"
         aria-label={`${ariaLabel} left`}
@@ -832,15 +852,15 @@ const StoreCard = memo(function StoreCard({
         </p>
 
         <div className="flex flex-wrap gap-1.5">
-          {item.categories.slice(0, 2).map((cat) => (
-            <span
-              key={cat}
-              className="rounded-full bg-white px-2 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-zinc-600 shadow-sm dark:bg-zinc-900 dark:text-zinc-300"
-            >
-              {cat}
-            </span>
-          ))}
-        </div>
+  {item.categories.slice(0, 2).map((cat, index) => (
+    <span
+      key={`${item.slug}-${cat}-${index}`}
+      className="rounded-full bg-white px-2 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-zinc-600 shadow-sm dark:bg-zinc-900 dark:text-zinc-300"
+    >
+      {cat}
+    </span>
+  ))}
+</div>
 
         <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.12em] text-blue-600">
           {viewStore}
@@ -1032,7 +1052,9 @@ export const ShowcaseStores = () => {
     t: (key: string, vars?: Record<string, unknown>) => string;
     lang?: string;
   };
+  const { pathname } = location;
 
+  const isEditorRoute = pathname.includes("admin");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -1155,14 +1177,14 @@ export const ShowcaseStores = () => {
     retry: 1,
     queryFn: async () => {
       const cache = readStorelyCache();
-
+  
       if (cache) {
         setExpiresAt(cache.expiresAt);
         setRemainingMs(Math.max(cache.expiresAt - Date.now(), 0));
         setCacheSeed(seededHash(String(cache.savedAt), cache.savedAt));
         return cache.data;
       }
-
+  
       const { data, error } = await supabase
         .from("products")
         .select(`
@@ -1170,13 +1192,19 @@ export const ShowcaseStores = () => {
           name,
           category,
           main_image,
+          gallery,
+          full_description,
+          unit,
           created_at,
           price,
+          currency,
           stores!inner (
+            id,
             slug,
             name,
             description,
             logo_url,
+            whatsapp_number,
             settings,
             currency
           )
@@ -1185,20 +1213,20 @@ export const ShowcaseStores = () => {
         .not("main_image", "is", null)
         .order("created_at", { ascending: false })
         .limit(MAX_PRODUCTS_FETCH);
-
+  
       if (error) throw error;
-
+  
       const safeData = ((data || []) as ProductRow[]).filter(
         (item) => item?.id && item?.name && item?.created_at
       );
-
+  
       const payload = writeStorelyCache(safeData);
       if (payload) {
         setExpiresAt(payload.expiresAt);
         setRemainingMs(Math.max(payload.expiresAt - Date.now(), 0));
         setCacheSeed(seededHash(String(payload.savedAt), payload.savedAt));
       }
-
+  
       return safeData;
     },
   });
@@ -1237,23 +1265,30 @@ export const ShowcaseStores = () => {
         const storeName = store?.name?.trim() || t("storely_store_fallback");
         const storeDescription =
           store?.description?.trim() || t("storely_store_default_description");
-
+  
         const createdAtValue = new Date(row.created_at).getTime();
-
+  
         const shortLabel = compactRelativeLabel(
           getShortRelativeTime(row.created_at, localeCode)
         );
-
+  
         const searchName = normalizeText(name);
         const searchCategory = normalizeText(category);
         const searchStore = normalizeText(storeName);
         const searchDescription = normalizeText(storeDescription);
-
+  
         return {
           id: row.id,
           name,
           category,
           image: row.main_image || FALLBACK_PRODUCT,
+          gallery: Array.isArray(row.gallery)
+            ? row.gallery.filter(Boolean)
+            : row.main_image
+              ? [row.main_image]
+              : [],
+          description: row.full_description?.trim() || "",
+          unit: row.unit?.trim() || "un",
           createdAt: row.created_at,
           createdAtValue,
           timeAgoShort: shortLabel,
@@ -1261,9 +1296,12 @@ export const ShowcaseStores = () => {
           storeName,
           storeDescription,
           storeLogo: store?.logo_url || "",
+          storeWhatsApp: store?.whatsapp_number || null,
           price: parsePrice(row.price),
-          currency: resolveStoreCurrency(store, "USD"),
-
+          currency:
+            resolveStoreCurrency(store, row.currency || FALLBACK_CURRENCY) ||
+            FALLBACK_CURRENCY,
+  
           searchName,
           searchCategory,
           searchStore,
@@ -1272,55 +1310,79 @@ export const ShowcaseStores = () => {
         };
       })
       .filter((item) => item.id && item.storeSlug);
-
+  
     const storeMap = new Map<string, StoreItem>();
-
+  
     for (const p of products) {
+      const row = rows.find((r) => r.id === p.id);
+      const store = Array.isArray(row?.stores) ? row?.stores[0] : row?.stores;
+  
       const existing = storeMap.get(p.storeSlug);
+  
       if (existing) {
         existing.total += 1;
+  
         if (!existing.categories.includes(p.category)) {
           existing.categories.push(p.category);
-          existing.searchCategories = normalizeText(existing.categories.join(" "));
+          existing.searchCategories = normalizeText(
+            existing.categories.join(" ")
+          );
         }
-        if (!existing.heroImage && p.image) existing.heroImage = p.image;
-      } else {
-        storeMap.set(p.storeSlug, {
-          slug: p.storeSlug,
-          name: p.storeName,
-          description: p.storeDescription,
-          logoUrl: p.storeLogo || "",
-          heroImage: p.image || FALLBACK_STORE,
-          total: 1,
-          categories: [p.category],
-          searchName: normalizeText(p.storeName),
-          searchDescription: normalizeText(p.storeDescription),
-          searchCategories: normalizeText(p.category),
-        });
+  
+        if (!existing.heroImage && p.image) {
+          existing.heroImage = p.image;
+        }
+  
+        continue;
       }
+  
+      storeMap.set(p.storeSlug, {
+        id: store?.id || p.storeSlug,
+        slug: p.storeSlug,
+        name: p.storeName,
+        description: p.storeDescription,
+        logoUrl: p.storeLogo || "",
+        heroImage: p.image || FALLBACK_STORE,
+        whatsapp_number: store?.whatsapp_number || null,
+        settings:
+          typeof store?.settings === "object" && store?.settings !== null
+            ? (store.settings as Record<string, unknown>)
+            : { currency: p.currency || FALLBACK_CURRENCY },
+  
+        total: 1,
+        categories: [p.category],
+        searchName: normalizeText(p.storeName),
+        searchDescription: normalizeText(p.storeDescription),
+        searchCategories: normalizeText(p.category),
+      });
     }
-
+  
     const stores = Array.from(storeMap.values());
-
-    const categories = Array.from(new Set(products.map((p) => p.category))).sort((a, b) =>
-      a.localeCompare(b)
-    );
-
+  
+    const categories = Array.from(
+      new Set(
+        products
+          .map((p) => p.category)
+          .filter((value): value is string => Boolean(value))
+      )
+    ).sort((a, b) => a.localeCompare(b));
+  
     return { products, stores, categories };
   }, [rows, t, localeCode]);
 
-  const products = catalog.products;
-  const stores = catalog.stores;
+  const products = catalog?.products ?? EMPTY_PRODUCTS;
+  const stores = catalog?.stores ?? EMPTY_STORES;
+  const catalogCategories = catalog?.categories ?? EMPTY_CATEGORIES;
 
-  const allCategories = useMemo(() => {
-    const ordered = [...catalog.categories].sort((a, b) => {
-      const aSeed = seededHash(a, cacheSeed || 1);
-      const bSeed = seededHash(b, cacheSeed || 1);
-      return aSeed - bSeed || a.localeCompare(b);
-    });
+const allCategories = useMemo(() => {
+  const ordered = [...catalogCategories].sort((a, b) => {
+    const aSeed = seededHash(a, cacheSeed || 1);
+    const bSeed = seededHash(b, cacheSeed || 1);
+    return aSeed - bSeed || a.localeCompare(b);
+  });
 
-    return ordered;
-  }, [catalog.categories, cacheSeed]);
+  return ordered;
+}, [catalogCategories, cacheSeed]);
 
   const horizontalCategories = useMemo(() => {
     return ["all", ...allCategories];
@@ -1848,42 +1910,108 @@ export const ShowcaseStores = () => {
         products: bumpScore(prefs.products, item.id, 2),
         searches: prefs.searches,
       };
-
-      savePrefsState(next);
-
+  
+      setPrefsState(next);
+      idle(() => setPrefs(next));
+  
+      const matchedStore = stores.find((s) => s.slug === item.storeSlug);
+  
+      const productState = {
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        price: item.price,
+        currency: item.currency,
+        main_image: item.image || "",
+        gallery: item.gallery?.length ? item.gallery : item.image ? [item.image] : [],
+        full_description: item.description || "",
+        unit: item.unit || "un",
+        store_id: matchedStore?.id || item.storeSlug,
+      };
+  
+      const storeState = matchedStore
+        ? {
+            id: matchedStore.id,
+            slug: matchedStore.slug,
+            name: matchedStore.name,
+            whatsapp_number: matchedStore.whatsapp_number || null,
+            settings:
+              matchedStore.settings || { currency: item.currency || FALLBACK_CURRENCY },
+            logo_url: matchedStore.logoUrl || "",
+            heroImage: matchedStore.heroImage || "",
+            description: matchedStore.description || "",
+          }
+        : {
+            id: item.storeSlug,
+            slug: item.storeSlug,
+            name: item.storeName,
+            whatsapp_number: item.storeWhatsApp || null,
+            settings: { currency: item.currency || FALLBACK_CURRENCY },
+            logo_url: item.storeLogo || "",
+            heroImage: item.image || "",
+            description: item.storeDescription || "",
+          };
+  
+      console.log("[ShowcaseStores] product click state =>", {
+        product: productState,
+        store: storeState,
+        source: debouncedQuery.trim() ? "search" : "feed",
+        searchMode: searchAnalysis.mode,
+      });
+  
       navigate(`/${item.storeSlug}/blog/${item.id}`, {
         state: {
-          product: item,
+          product: productState,
+          store: storeState,
           source: debouncedQuery.trim() ? "search" : "feed",
           searchMode: searchAnalysis.mode,
         },
       });
     },
-    [navigate, prefs, savePrefsState, debouncedQuery, searchAnalysis.mode]
+    [navigate, prefs, stores, debouncedQuery, searchAnalysis.mode]
   );
-
   const handleStoreClick = useCallback(
     (slug: string) => {
       const store = stores.find((s) => s.slug === slug);
-
+  
       const next: PreferenceState = {
         categories: prefs.categories,
         stores: bumpScore(prefs.stores, slug, 5),
         products: prefs.products,
         searches: prefs.searches,
       };
-
-      savePrefsState(next);
-
+  
+      setPrefsState(next);
+      idle(() => setPrefs(next));
+  
+      const storeState = store
+        ? {
+            id: store.id,
+            slug: store.slug,
+            name: store.name,
+            whatsapp_number: store.whatsapp_number || null,
+            settings: store.settings || { currency: FALLBACK_CURRENCY },
+            logo_url: store.logoUrl || "",
+            heroImage: store.heroImage || "",
+            description: store.description || "",
+          }
+        : undefined;
+  
+      console.log("[ShowcaseStores] store click state =>", {
+        store: storeState,
+        source: debouncedQuery.trim() ? "search" : "feed",
+        searchMode: searchAnalysis.mode,
+      });
+  
       navigate(`/${slug}`, {
         state: {
-          store,
+          store: storeState,
           source: debouncedQuery.trim() ? "search" : "feed",
           searchMode: searchAnalysis.mode,
         },
       });
     },
-    [navigate, prefs, savePrefsState, stores, debouncedQuery, searchAnalysis.mode]
+    [navigate, prefs, stores, debouncedQuery, searchAnalysis.mode]
   );
 
   const submitSearch = useCallback(
@@ -1913,13 +2041,37 @@ export const ShowcaseStores = () => {
     setSelectedStore("all");
   }, []);
 
-  const handleManualRefresh = useCallback(async () => {
+{/*  const handleManualRefresh = useCallback(async () => {
     clearStorelyCache();
     setExpiresAt(0);
     setRemainingMs(0);
     setCacheSeed(0);
     await queryClient.invalidateQueries({ queryKey: ["storely-public-smart-v9"] });
     await refetch();
+  }, [queryClient, refetch]);
+*/}
+
+  const refreshShowcaseCache = useCallback(async () => {
+    clearStorelyCache();
+  
+    queryClient.removeQueries({ queryKey: ["storely-public-smart-v9"] });
+  
+    const result = await refetch();
+  
+    const freshRows = result.data ?? [];
+  
+    if (freshRows.length) {
+      const payload = writeStorelyCache(freshRows);
+      if (payload) {
+        setExpiresAt(payload.expiresAt);
+        setRemainingMs(Math.max(payload.expiresAt - Date.now(), 0));
+        setCacheSeed(seededHash(String(payload.savedAt), payload.savedAt));
+      }
+    } else {
+      setExpiresAt(0);
+      setRemainingMs(0);
+      setCacheSeed(0);
+    }
   }, [queryClient, refetch]);
 
   const handleCategoryRailLeft = useCallback(() => {
@@ -1960,9 +2112,10 @@ export const ShowcaseStores = () => {
       <div ref={stickySentinelRef} className="h-px w-full" />
 
       <div className="space-y-5">
+        {!isEditorRoute &&
         <div
           ref={searchRef}
-          className={`sticky top-16 z-20   border-zinc-200 bg-white/90 p-3  dark:border-zinc-800 shadow-sm dark:bg-zinc-950/85 ${
+          className={`sticky top-17 lg:top-16 z-20   border-zinc-200 bg-white/90 p-3  dark:border-zinc-800 shadow-sm dark:bg-zinc-950/85 ${
             isCompact ? " lg:px-4" : "mx-2 rounded-[1.75rem] lg:px-6"
           }`}
         >
@@ -2109,7 +2262,7 @@ export const ShowcaseStores = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="md:flex hidden flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                   <div className="flex flex-wrap items-center gap-2">
                     <select
                       value={selectedCategory}
@@ -2149,7 +2302,7 @@ export const ShowcaseStores = () => {
 
                     <button
                       type="button"
-                      onClick={handleManualRefresh}
+                      onClick={refreshShowcaseCache}
                       disabled={isFetching}
                       className="inline-flex h-10 items-center justify-center rounded-full border border-zinc-200 px-4 text-[11px] font-black uppercase tracking-[0.12em] text-zinc-600 disabled:opacity-60 dark:border-zinc-800 dark:text-zinc-300"
                     >
@@ -2180,7 +2333,7 @@ export const ShowcaseStores = () => {
               </div>
             ) : null}
           </div>
-        </div>
+        </div>}
 
         {sections.map((section) => {
           if (section.type === "products-grid") {
@@ -2224,32 +2377,30 @@ export const ShowcaseStores = () => {
             );
           }
 
-          if (section.type === "stores-strip") {
-            return (
-              <section
-              className="px-2 md:px-4"
-              >
-              <HorizontalStoresStrip
-                key={section.id}
-                title={section.title}
-                items={section.items}
-                onStoreClick={handleStoreClick}
-                viewStore={t("storely_view_store")}
-              />
-              </section>
-            );
-          }
-
+if (section.type === "stores-strip") {
+  return (
+    <section
+      key={section.id}
+      className="px-2 md:px-4"
+    >
+      <HorizontalStoresStrip
+        title={section.title}
+        items={section.items}
+        onStoreClick={handleStoreClick}
+        viewStore={t("storely_view_store")}
+      />
+    </section>
+  );
+}
           if (section.type === "cta") {
-            return (
-              <section className="px-2 md:px-4">
-              <SellerCTA
-                key={section.id}
-                title={t("storely_sell_cta_title")}
-                subtitle={t("storely_sell_cta_subtitle")}
-                cta={t("storely_sell_now")}
-                onClick={() => navigate("/register")}
-              />
+            return !isEditorRoute && (
+              <section className="px-2 md:px-4" key={section.id}>
+                <SellerCTA
+                  title={t("storely_sell_cta_title")}
+                  subtitle={t("storely_sell_cta_subtitle")}
+                  cta={t("storely_sell_now")}
+                  onClick={() => navigate("/auth")}
+                />
               </section>
             );
           }

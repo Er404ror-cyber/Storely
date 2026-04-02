@@ -9,6 +9,7 @@ import {
   Loader2,
   Menu,
   ExternalLink,
+  Compass,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
@@ -430,7 +431,7 @@ export function AdminLayout() {
     { path: '/admin/paginas', label: t('nav_pages'), icon: <FileText size={20} /> },
     { path: '/admin/produtos', label: t('nav_products'), icon: <ShoppingBag size={20} /> },
     { path: '/admin/configuracoes', label: t('nav_settings'), icon: <Settings size={20} /> },
-  ];
+    { path: '/admin/explore', label: t('nav_home'), icon: <Compass size={20} /> },  ];
 
   return (
     <div className="flex h-screen bg-white font-sans text-slate-900 overflow-hidden relative">

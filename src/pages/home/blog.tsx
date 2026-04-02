@@ -9,19 +9,25 @@ import { HeroBackgroundMedia } from '../../components/blog/HeroMedia';
 export const Blog = () => {
   const navigate = useNavigate();
   const { t } = useTranslate();
+  const { pathname } = location;
+
+  const isEditorRoute = pathname.includes("admin");
 
   return (
     <div className="min-h-screen bg-white font-sans text-zinc-900 antialiased transition-colors duration-300 dark:bg-zinc-950 dark:text-zinc-100">
+      {!isEditorRoute &&
       <HeaderLog />
+}
+
 
       <main className="mx-auto max-w-[1440px] pb-16">
-        <section className="px-0 pt-20 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden  border-zinc-200/80 bg-white sm:rounded-[2rem] dark:border-zinc-800/80 dark:bg-zinc-950">
+      <section className={`px-0 sm:px-6 lg:px-8 ${!isEditorRoute ? "pt-20" : "sm:pt-10"}`}>
+                  <div className="relative overflow-hidden  border-zinc-200/80 bg-white sm:rounded-[2rem] dark:border-zinc-800/80 dark:bg-zinc-950">
             <div className="pointer-events-none absolute inset-0">
-              <HeroBackgroundMedia
-                videoSrc="/img/freepik-video-upscaler-480.webm"
-                posterSrc="/img/Mascote.png"
-              />
+            <HeroBackgroundMedia
+  videoSrc="/img/freepik-video-upscaler-480"
+  posterSrc="/img/Mascote.png"
+/>
             </div>
 
             <div className="relative z-10 px-5 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-5">
@@ -72,7 +78,7 @@ export const Blog = () => {
                     <ShoppingBag size={15} className="mr-2" />
                     {t("marketplace_showcase_title")}
                   </button>
-
+{!isEditorRoute &&
                   <button
                     type="button"
                     onClick={() => navigate("/auth")}
@@ -81,6 +87,7 @@ export const Blog = () => {
                     <UserPlus size={15} className="mr-2" />
                     {t("storely_sell_now")}
                   </button>
+}
                 </div>
               </div>
             </div>
@@ -94,8 +101,9 @@ export const Blog = () => {
           <ShowcaseStores />
         </section>
       </main>
-
+{!isEditorRoute &&
       <Footer />
+}
     </div>
   );
 };

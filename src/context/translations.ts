@@ -946,6 +946,31 @@ storely_sell_cta_title: "Start selling with your own store",
 storely_sell_cta_subtitle: "Create your store, showcase your products, and reach more people beautifully.",
 storely_no_results_title: "No results found",
 storely_no_results_subtitle: "Try another name, category, or store to discover more products.",
+
+
+
+
+
+
+
+    product_details_order_message_buyer_hint: "I would like more details and current availability.",
+    product_details_order_message_product: "Product",
+    product_details_order_message_unit_price: "Unit price",
+    product_details_order_message_quantity: "Quantity",
+    product_details_order_message_total: "Total",
+    product_details_order_message_store: "Store",
+    product_details_order_message_closing: "Can you confirm whether it is still available?",
+    product_details_cta_badge: "Quick purchase",
+    product_details_cta_title: "Liked this product?",
+    product_details_cta_subtitle: "Talk to the store now and confirm availability, price, and delivery in seconds.",
+    product_details_price_label: "Price per unit",
+    product_details_quantity_label: "Choose quantity",
+    product_details_gallery_open: "Open image",
+    product_details_image_counter: "{{current}} of {{total}}",
+    product_details_about_product: "About this product",
+
+    product_form_unit_rosas:"Unit of measure format",
+
   },
 
 
@@ -1941,6 +1966,29 @@ storely_no_results_subtitle: "Tente outro nome, categoria ou loja para descobrir
 storely_found_products: "Productos Encontrados",
 
 
+
+
+
+
+
+
+    
+    product_details_order_message_buyer_hint: "Gostaria de mais detalhes e disponibilidade atual.",
+    product_details_order_message_product: "Produto",
+    product_details_order_message_unit_price: "Preço unitário",
+    product_details_order_message_quantity: "Quantidade",
+    product_details_order_message_total: "Total",
+    product_details_order_message_store: "Loja",
+    product_details_order_message_closing: "Pode confirmar se ainda está disponível?",
+    product_details_cta_badge: "Compra rápida",
+    product_details_cta_title: "Gostou deste produto?",
+    product_details_cta_subtitle: "Fale com a loja agora e confirme disponibilidade, preço e entrega em segundos.",
+    product_details_price_label: "Preço por unidade",
+    product_details_quantity_label: "Escolha a quantidade",
+    product_details_gallery_open: "Abrir imagem",
+    product_details_image_counter: "{{current}} de {{total}}",
+    product_details_about_product: "Sobre este produto",
+    product_form_unit_:"Formato da unidade do produto",
 
 
 }
