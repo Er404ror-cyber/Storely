@@ -1091,6 +1091,51 @@ storely_no_results_subtitle: "Try another name, category, or store to discover m
 
 
         auth_store_name_length_invalid: "Store name must be between 2 and 40 characters.",
+
+
+
+
+
+
+
+
+        security_recovery_title: "Reset Password",
+security_recovery_subtitle: "Create a new secure password for your account.",
+security_recovery_mode_active: "Recovery Mode Active",
+security_current_password: "Current Password",
+security_new_password: "New Password",
+security_confirm_password: "Repeat Password",
+security_password_min_error: "Password must be at least 6 characters.",
+security_password_min_hint: "Minimum 6 characters.",
+security_passwords_not_match: "Passwords do not match.",
+security_current_password_required: "Enter your current password.",
+security_current_password_incorrect: "Current password is incorrect.",
+security_email_missing: "No email found for this account.",
+security_reset_success: "Password reset successfully!",
+security_reset_email_sent: "Reset email sent successfully!",
+security_reset_email_error: "Failed to send reset email.",
+security_sending_email: "Sending...",
+security_forgot_password: "Forgot my password",
+security_save_new_password: "Save New Password",
+
+
+
+
+
+
+
+store_header_page_fallback: "Page",
+store_header_store_fallback: "Store",
+store_header_menu: "Menu",
+store_header_open_menu: "Open menu",
+store_header_close_menu: "Close menu",
+store_header_back_admin: "Back to Dashboard",
+store_header_create_account: "Start selling",
+store_header_account_area: "Your account",
+store_header_navigation: "Pages",
+store_header_new_here: "New here?",
+store_header_explore_stores: "Other stores",
+store_header_discover_more: "Discover more",
   },
 
 
@@ -2218,7 +2263,53 @@ storely_found_products: "Productos Encontrados",
     auth_side_title_2: "Recuperação segura",
     auth_side_text_2: "A recuperação de palavra-passe leva o utilizador diretamente de volta à Storely para criar uma nova palavra-passe com segurança.",
 
-        auth_store_name_length_invalid: "O nome da loja deve ter entre 2 e 40 caracteres."
+        auth_store_name_length_invalid: "O nome da loja deve ter entre 2 e 40 caracteres.",
+
+
+
+
+
+        security_recovery_title: "Redefinir Palavra-passe",
+security_recovery_subtitle: "Crie uma nova palavra-passe segura para a sua conta.",
+security_recovery_mode_active: "Modo de Recuperação Ativo",
+security_current_password: "Palavra-passe Atual",
+security_new_password: "Nova Palavra-passe",
+security_confirm_password: "Repetir Palavra-passe",
+security_password_min_error: "A palavra-passe deve ter pelo menos 6 caracteres.",
+security_password_min_hint: "Mínimo de 6 caracteres.",
+security_passwords_not_match: "As palavras-passe não coincidem.",
+security_current_password_required: "Digite a sua palavra-passe atual.",
+security_current_password_incorrect: "A palavra-passe atual está incorreta.",
+security_email_missing: "Nenhum email encontrado para esta conta.",
+security_reset_success: "Palavra-passe redefinida com sucesso!",
+security_reset_email_sent: "Email de redefinição enviado com sucesso!",
+security_reset_email_error: "Falha ao enviar o email de redefinição.",
+security_sending_email: "A enviar...",
+security_forgot_password: "Esqueci a minha palavra-passe",
+security_save_new_password: "Guardar Nova Palavra-passe",
+
+
+
+
+
+
+
+
+
+
+
+store_header_page_fallback: "Página",
+store_header_store_fallback: "Loja",
+store_header_menu: "Menu",
+store_header_open_menu: "Abrir menu",
+store_header_close_menu: "Fechar menu",
+store_header_back_admin: "Voltar ao Dashboard",
+store_header_create_account: "Começa a vender",
+store_header_account_area: "Sua conta",
+store_header_navigation: "Páginas",
+store_header_new_here: "Novo por aqui?",
+store_header_explore_stores: "Mais lojas",
+store_header_discover_more: "Descobrir mais",
 }
 } as const;
 
