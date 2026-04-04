@@ -15,6 +15,7 @@ import { Blog } from './pages/home/blog';
 import { ProductDetails } from './dashboard/ProdutcsDetails';
 import { ProductsList } from './dashboard/Products';
 import { AuthCallback } from './auth/AuthCallback';
+import { ResetPasswordPage } from './auth/ResetPasswordPage';
 
 
 export const route = createBrowserRouter([
@@ -41,6 +42,14 @@ export const route = createBrowserRouter([
   {
     path: '/auth',
     element: <AuthPage />,
+  },
+  {
+    path: '/auth/callback',
+    element: <AuthPage />,
+  },
+  {
+    path: '/auth/reset-password',
+    element: <ResetPasswordPage />,
   },
   {
     path: '/auth/callback',

@@ -1,108 +1,226 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
-import { Loader2, CheckCircle2 } from 'lucide-react';
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabase";
+import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { useTranslate } from "../context/LanguageContext";
+
+type CallbackStatus = "loading" | "success" | "error";
 
 export function AuthCallback() {
+  const { t } = useTranslate();
   const navigate = useNavigate();
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [message, setMessage] = useState('Validando suas credenciais...');
+
+  const [status, setStatus] = useState<CallbackStatus>("loading");
+  const [message, setMessage] = useState(
+    t("auth_callback_loading_message")
+  );
+
+  const redirectTimeoutRef = useRef<number | null>(null);
+  const handledRef = useRef(false);
 
   useEffect(() => {
-    // Escuta as mudanças de autenticação do Supabase
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
-      const params = new URLSearchParams(window.location.search);
-      
-      // Identifica se o link clicado foi de troca de e-mail
-      const isEmailChange = window.location.href.includes('type=email_change') || params.get('type') === 'email_change';
-      // Identifica se é recuperação de senha
-      const isPasswordRecovery = event === 'PASSWORD_RECOVERY';
+    let mounted = true;
 
-      // --- CASO 1: SUCESSO (SENHA OU E-MAIL) ---
-      if (isPasswordRecovery || (isEmailChange && (event === 'SIGNED_IN' || event === 'USER_UPDATED'))) {
-        setStatus('success');
-        
-        if (isPasswordRecovery) {
-          setMessage('Identidade confirmada! Vamos definir sua nova senha.');
-          setTimeout(() => navigate('/admin/configuracoes?tab=security&reset=true'), 2000);
-        } else {
-          setMessage('E-mail verificado com sucesso! Sua conta foi atualizada.');
-          setTimeout(() => navigate('/admin/configuracoes?tab=account&email_updated=true'), 2000);
+    function clearRedirectTimer() {
+      if (redirectTimeoutRef.current) {
+        window.clearTimeout(redirectTimeoutRef.current);
+        redirectTimeoutRef.current = null;
+      }
+    }
+
+    function safeSetState(nextStatus: CallbackStatus, nextMessage: string) {
+      if (!mounted) return;
+      setStatus(nextStatus);
+      setMessage(nextMessage);
+    }
+
+    function scheduleRedirect(path: string, delay = 1800) {
+      clearRedirectTimer();
+      redirectTimeoutRef.current = window.setTimeout(() => {
+        navigate(path, { replace: true });
+      }, delay);
+    }
+
+    async function handleCallback() {
+      if (handledRef.current) return;
+      handledRef.current = true;
+
+      try {
+        const url = new URL(window.location.href);
+
+        const queryParams = url.searchParams;
+        const hashParams = new URLSearchParams(url.hash.replace(/^#/, ""));
+
+        const accessToken =
+          hashParams.get("access_token") || queryParams.get("access_token");
+        const refreshToken =
+          hashParams.get("refresh_token") || queryParams.get("refresh_token");
+        const type = hashParams.get("type") || queryParams.get("type");
+
+        const errorCode = queryParams.get("error") || hashParams.get("error");
+        const errorDescription =
+          queryParams.get("error_description") ||
+          hashParams.get("error_description");
+
+        if (errorCode) {
+          safeSetState(
+            "error",
+            errorDescription || t("auth_callback_link_error")
+          );
+          scheduleRedirect("/auth", 3000);
+          return;
         }
-        return;
-      }
 
-      // --- CASO 2: LOGIN PADRÃO ---
-      if (event === 'SIGNED_IN') {
-        navigate('/admin/dashboard');
-        return;
-      }
+        if (accessToken && refreshToken) {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
 
-      // --- CASO 3: TRATAMENTO DE ERROS ---
-      const errorCode = params.get('error');
-      if (errorCode) {
-        setStatus('error');
-        setMessage(params.get('error_description') || 'Este link expirou ou já foi utilizado.');
-        setTimeout(() => navigate('/auth'), 4000);
-      }
-    });
+          if (error) throw error;
+        }
 
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+        const { data: sessionData, error: sessionError } =
+          await supabase.auth.getSession();
+
+        if (sessionError) throw sessionError;
+
+        const hasSession = !!sessionData.session;
+
+        // CASO 1: RECUPERAÇÃO DE SENHA -> NOVA LÓGICA
+        if (type === "recovery") {
+          safeSetState("success", t("auth_callback_recovery_success"));
+          scheduleRedirect("/auth/reset-password", 1400);
+          return;
+        }
+
+        // CASO 2: TROCA DE EMAIL -> MANTER LÓGICA ANTIGA
+        if (type === "email_change") {
+          safeSetState("success", t("auth_callback_email_change_success"));
+          scheduleRedirect(
+            "/admin/configuracoes?tab=account&email_updated=true",
+            1800
+          );
+          return;
+        }
+
+        // CASO 3: LOGIN PADRÃO
+        if (hasSession) {
+          safeSetState("success", t("auth_callback_login_success"));
+          scheduleRedirect("/admin/dashboard", 900);
+          return;
+        }
+
+        // CASO 4: SEM SESSÃO
+        safeSetState("error", t("auth_callback_no_session"));
+        scheduleRedirect("/auth", 2600);
+      } catch (error: any) {
+        safeSetState(
+          "error",
+          error?.message || t("auth_callback_generic_error")
+        );
+        scheduleRedirect("/auth", 3000);
+      }
+    }
+
+    void handleCallback();
+
+    return () => {
+      mounted = false;
+      clearRedirectTimer();
+    };
+  }, [navigate, t]);
 
   return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-white p-6">
-      <div className="max-w-sm w-full text-center space-y-6 animate-in fade-in zoom-in duration-500">
-        
-        {/* ESTADO: CARREGANDO */}
-        {status === 'loading' && (
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="animate-spin text-indigo-600" size={48} />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 italic">
-              {message}
-            </p>
-          </div>
-        )}
+    <div className="relative min-h-screen overflow-hidden bg-[#09131b] text-white">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          poster="/img/freepik-video-upscaler-480.jpg"
+          className="absolute inset-0 h-full w-full object-cover"
+        >
+          <source src="/img/freepik-video-upscaler-480.webm" type="video/webm" />
+          <source src="/img/freepik-video-upscaler-480.mp4" type="video/mp4" />
+        </video>
 
-        {/* ESTADO: SUCESSO (BANNER VERDE) */}
-        {status === 'success' && (
-          <div className="space-y-6">
-            <div className="flex justify-center">
-              <div className="bg-green-100 p-5 rounded-full text-green-600 animate-bounce shadow-sm">
-                <CheckCircle2 size={44} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-2xl font-black tracking-tighter text-slate-900 uppercase italic">
-                Verificado!
-              </h2>
-              <p className="text-sm font-bold text-slate-500 leading-relaxed italic">
-                {message}
-              </p>
-            </div>
-            <div className="pt-4 animate-pulse">
-               <p className="text-[9px] font-black uppercase text-slate-300 tracking-widest">
-                 Redirecionando para o painel...
-               </p>
-            </div>
-          </div>
-        )}
-
-        {/* ESTADO: ERRO */}
-        {status === 'error' && (
-          <div className="space-y-4">
-            <div className="bg-red-50 text-red-500 p-6 rounded-[2rem] border border-red-100 font-bold text-sm italic">
-              {message}
-            </div>
-            <button 
-              onClick={() => navigate('/auth')} 
-              className="text-[10px] font-black uppercase text-slate-400 underline decoration-2 underline-offset-4 hover:text-indigo-600 transition-colors"
-            >
-              Voltar para o Login
-            </button>
-          </div>
-        )}
+        <div className="absolute inset-0 bg-slate-950/78" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(103,232,249,0.16),transparent_28%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/20 via-slate-950/50 to-slate-950/88" />
       </div>
+
+      <main className="relative z-10 flex min-h-screen items-center justify-center px-4 py-8">
+        <div className="w-full max-w-md">
+          <div className="rounded-[32px] border border-white/10 bg-black/28 p-6 shadow-[0_25px_90px_rgba(0,0,0,0.38)] backdrop-blur-xl sm:p-8">
+            <p className="text-center text-[11px] font-black uppercase tracking-[0.28em] text-cyan-300">
+              Storely
+            </p>
+
+            {status === "loading" ? (
+              <div className="flex flex-col items-center py-8 text-center">
+                <div className="mb-5 rounded-2xl bg-cyan-400/15 p-4 text-cyan-300">
+                  <Loader2 className="animate-spin" size={32} />
+                </div>
+
+                <h1 className="text-2xl font-black tracking-tight">
+                  {t("auth_callback_loading_title")}
+                </h1>
+
+                <p className="mt-2 max-w-sm text-sm leading-6 text-white/70">
+                  {message}
+                </p>
+              </div>
+            ) : null}
+
+            {status === "success" ? (
+              <div className="flex flex-col items-center py-8 text-center">
+                <div className="mb-5 rounded-full bg-emerald-500/15 p-4 text-emerald-300">
+                  <CheckCircle2 size={34} />
+                </div>
+
+                <h1 className="text-2xl font-black tracking-tight">
+                  {t("auth_callback_success_title")}
+                </h1>
+
+                <p className="mt-2 max-w-sm text-sm leading-6 text-white/72">
+                  {message}
+                </p>
+
+                <p className="mt-5 text-[10px] font-black uppercase tracking-[0.24em] text-white/38">
+                  {t("auth_callback_redirecting")}
+                </p>
+              </div>
+            ) : null}
+
+            {status === "error" ? (
+              <div className="flex flex-col items-center py-8 text-center">
+                <div className="mb-5 rounded-full bg-red-500/15 p-4 text-red-300">
+                  <XCircle size={34} />
+                </div>
+
+                <h1 className="text-2xl font-black tracking-tight">
+                  {t("auth_callback_error_title")}
+                </h1>
+
+                <p className="mt-2 max-w-sm text-sm leading-6 text-white/72">
+                  {message}
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => navigate("/auth", { replace: true })}
+                  className="mt-6 rounded-2xl border border-white/10 bg-white/10 px-5 py-3 text-sm font-black uppercase tracking-[0.18em] text-white transition hover:bg-white/15"
+                >
+                  {t("auth_callback_back_login")}
+                </button>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
