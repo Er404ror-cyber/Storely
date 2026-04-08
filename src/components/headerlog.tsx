@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useTranslate } from '../context/LanguageContext';
+import { supabase } from '../lib/supabase';
 
 export const HeaderLog = () => {
   const { t, lang, setLang } = useTranslate();
@@ -21,6 +22,7 @@ export const HeaderLog = () => {
   const [scrolled, setScrolled] = useState(false);
   const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'auto'>('auto');
   const location = useLocation();
+  const [hasSession, setHasSession] = useState(false);
 
   const getThemeLabel = () => {
     if (themeMode === 'light') return t('theme_light');
@@ -135,6 +137,33 @@ export const HeaderLog = () => {
   const currentPage =
     navLinks.find((link) => link.path === location.pathname)?.name || 'Menu';
 
+
+    useEffect(() => {
+      let mounted = true;
+    
+      async function loadSession() {
+        const { data } = await supabase.auth.getSession();
+    
+        if (!mounted) return;
+    
+        setHasSession(!!data.session?.user);
+      }
+    
+      void loadSession();
+    
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (!mounted) return;
+    
+        setHasSession(!!session?.user);
+      });
+    
+      return () => {
+        mounted = false;
+        subscription.unsubscribe();
+      };
+    }, []);
   return (
     <>
       <header
@@ -254,13 +283,16 @@ export const HeaderLog = () => {
   </div>
 </div>
 
-            <Link
-              to="/auth"
-              className="hidden lg:flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl hover:opacity-90 transition-all shadow-sm"
-            >
-              <LayoutDashboard size={14} />
-              {t('btn_dashboard')}
-            </Link>
+<Link
+  to={hasSession ? "/admin" : "/auth"}
+  className="hidden lg:flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl hover:opacity-90 transition-all shadow-sm"
+>
+  <LayoutDashboard size={14} />
+
+  {hasSession
+    ? t("store_header_back_admin") 
+    : t("btn_dashboard")}
+</Link>
 
             <button
               className="lg:hidden p-2 text-slate-900 dark:text-white"

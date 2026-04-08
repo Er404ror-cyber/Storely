@@ -1136,6 +1136,81 @@ store_header_navigation: "Pages",
 store_header_new_here: "New here?",
 store_header_explore_stores: "Other stores",
 store_header_discover_more: "Discover more",
+
+btn_create_product: "Launch Product",
+
+dashboard_store_default_name : "My Store",
+dashboard_syncing : "Syncing",
+
+dashboard_welcome_new : "Let’s set up your store in a simple way.",
+dashboard_welcome_incomplete : "Your store is started. Complete the missing steps below.",
+dashboard_welcome_ready : "Your store is ready. You can manage everything quickly.",
+
+dashboard_stat_products : "Products",
+dashboard_stat_pages : "Pages",
+dashboard_stat_setup : "Setup",
+
+dashboard_progress_label : "Progress",
+dashboard_progress_completed : "completed",
+
+dashboard_setup_label : "Setup",
+dashboard_setup_title : "Complete your store",
+dashboard_setup_desc : "Follow these simple steps so customers can see and contact your store.",
+
+dashboard_quick_label : "Quick actions",
+dashboard_quick_title : "Manage faster",
+
+dashboard_quick_products_title : "Products",
+dashboard_quick_products_desc : "Add and manage your catalog.",
+
+dashboard_quick_pages_title : "Pages",
+dashboard_quick_pages_desc : "Create and edit your store pages.",
+
+dashboard_quick_settings_title : "Settings",
+dashboard_quick_settings_desc : "Set phone number, currency and more.",
+
+dashboard_next_label : "Next step",
+
+dashboard_step_phone_title : "Add phone number",
+dashboard_step_phone_desc : "Set your WhatsApp or contact number.",
+dashboard_step_phone_action : "Open settings",
+
+dashboard_step_currency_title : "Set currency",
+dashboard_step_currency_desc : "Choose the currency for your prices.",
+dashboard_step_currency_action : "Set currency",
+
+dashboard_step_product_title : "Create first product",
+dashboard_step_product_desc : "Add a product to start your catalog.",
+dashboard_step_product_action : "Add product",
+
+dashboard_step_page_title : "Create home page",
+dashboard_step_page_desc : "Make the main page for your store.",
+dashboard_step_page_action : "Create page",
+
+dashboard_error_title : "Something went wrong",
+dashboard_error_desc : "We could not load your dashboard.",
+dashboard_error_action : "Reload",
+dashboard_products_label : "Products",
+dashboard_products_title : "Your products",
+dashboard_products_manage : "Manage products",
+dashboard_products_empty : "No products yet",
+
+dashboard_pages_label : "Pages",
+dashboard_pages_title : "Your pages",
+dashboard_pages_manage : "Manage pages",
+dashboard_pages_empty : "No pages yet",
+
+
+dashboard_currency_missing : "No currency",
+
+dashboard_paused_title : "Paused products",
+dashboard_page_label : "Page",
+
+
+
+dashboard_quick_hint : "Use these anytime to keep building your store.",
+dashboard_setup_focus_title : "Complete the next step",
+dashboard_setup_focus_desc : "Finish the missing setup items so your store is fully ready.",
   },
 
 
@@ -2310,6 +2385,80 @@ store_header_navigation: "Páginas",
 store_header_new_here: "Novo por aqui?",
 store_header_explore_stores: "Mais lojas",
 store_header_discover_more: "Descobrir mais",
+btn_create_product: "Lançar Produto",
+
+
+
+dashboard_store_default_name : "Minha Loja",
+dashboard_syncing : "A atualizar",
+
+dashboard_welcome_new : "Vamos configurar a sua loja de forma simples.",
+dashboard_welcome_incomplete : "A sua loja já começou. Complete os passos em falta abaixo.",
+dashboard_welcome_ready : "A sua loja está pronta. Já pode gerir tudo rapidamente.",
+
+dashboard_stat_products : "Produtos",
+dashboard_stat_pages : "Páginas",
+dashboard_stat_setup : "Configuração",
+
+dashboard_progress_label : "Progresso",
+dashboard_progress_completed : "concluído",
+
+dashboard_setup_label : "Configuração",
+dashboard_setup_title : "Complete a sua loja",
+dashboard_setup_desc : "Siga estes passos simples para que os clientes possam ver e contactar a sua loja.",
+
+dashboard_quick_label : "Ações rápidas",
+dashboard_quick_title : "Gerir mais rápido",
+
+dashboard_quick_products_title : "Produtos",
+dashboard_quick_products_desc : "Adicione e gerencie o seu catálogo.",
+
+dashboard_quick_pages_title : "Páginas",
+dashboard_quick_pages_desc : "Crie e edite as páginas da sua loja.",
+
+dashboard_quick_settings_title : "Configurações",
+dashboard_quick_settings_desc : "Defina número, moeda e mais.",
+
+dashboard_next_label : "Próximo passo",
+
+dashboard_step_phone_title : "Adicionar número",
+dashboard_step_phone_desc : "Defina o seu WhatsApp ou número de contacto.",
+dashboard_step_phone_action : "Abrir configurações",
+
+dashboard_step_currency_title : "Definir moeda",
+dashboard_step_currency_desc : "Escolha a moeda dos seus preços.",
+dashboard_step_currency_action : "Definir moeda",
+
+dashboard_step_product_title : "Criar primeiro produto",
+dashboard_step_product_desc : "Adicione um produto para começar o catálogo.",
+dashboard_step_product_action : "Adicionar produto",
+
+dashboard_step_page_title : "Criar página inicial",
+dashboard_step_page_desc : "Crie a página principal da sua loja.",
+dashboard_step_page_action : "Criar página",
+
+dashboard_error_title : "Algo correu mal",
+dashboard_error_desc : "Não foi possível carregar o dashboard.",
+dashboard_error_action : "Recarregar",
+
+dashboard_products_label : "Produtos",
+dashboard_products_title : "Seus produtos",
+dashboard_products_manage : "Gerir produtos",
+dashboard_products_empty : "Ainda não há produtos",
+
+dashboard_pages_label : "Páginas",
+dashboard_pages_title : "Suas páginas",
+dashboard_pages_manage : "Gerir páginas",
+dashboard_pages_empty : "Ainda não há páginas",
+
+dashboard_currency_missing : "Sem moeda",
+
+dashboard_paused_title : "Produtos pausados",
+dashboard_page_label : "Página",
+
+dashboard_quick_hint : "Use estas ações a qualquer momento para continuar a construir a sua loja.",
+dashboard_setup_focus_title : "Complete o próximo passo",
+dashboard_setup_focus_desc : "Finalize os itens em falta para que a sua loja fique totalmente pronta.",
 }
 } as const;
 

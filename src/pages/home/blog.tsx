@@ -1,17 +1,45 @@
+import { useEffect, useState } from 'react';
 import { HeaderLog } from '../../components/headerlog';
 import Footer from '../../components/footer2';
 import { ShowcaseStores } from '../../components/blog/ShowcaseStores';
 import { useNavigate } from 'react-router-dom';
-import { Store, ShoppingBag, Sparkles, UserPlus, Search } from 'lucide-react';
+import { Store, ShoppingBag, Sparkles, UserPlus, Search, PlusCircle } from 'lucide-react';
 import { useTranslate } from "../../context/LanguageContext";
 import { HeroBackgroundMedia } from '../../components/blog/HeroMedia';
+import { supabase } from '../../lib/supabase';
+
+
 
 export const Blog = () => {
   const navigate = useNavigate();
   const { t } = useTranslate();
   const { pathname } = location;
-
+  const [hasSession, setHasSession] = useState(false);
   const isEditorRoute = pathname.includes("admin");
+
+  useEffect(() => {
+    let mounted = true;
+  
+    async function loadSession() {
+      const { data } = await supabase.auth.getSession();
+      if (!mounted) return;
+      setHasSession(!!data.session?.user);
+    }
+  
+    void loadSession();
+  
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      setHasSession(!!session?.user);
+    });
+  
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-white font-sans text-zinc-900 antialiased transition-colors duration-300 dark:bg-zinc-950 dark:text-zinc-100">
@@ -78,16 +106,19 @@ export const Blog = () => {
                     <ShoppingBag size={15} className="mr-2" />
                     {t("marketplace_showcase_title")}
                   </button>
-{!isEditorRoute &&
                   <button
-                    type="button"
-                    onClick={() => navigate("/auth")}
-                    className="inline-flex h-11 items-center justify-center rounded-2xl border border-zinc-200 bg-white/92 px-5 text-[11px] font-black uppercase tracking-[0.14em] text-zinc-800 transition-transform duration-200 hover:scale-[1.01] dark:border-zinc-800 dark:bg-zinc-900/84 dark:text-zinc-100"
-                  >
-                    <UserPlus size={15} className="mr-2" />
-                    {t("storely_sell_now")}
-                  </button>
-}
+  type="button"
+  onClick={() => navigate(hasSession ? "/admin/produtos" : "/auth")}
+  className="inline-flex h-11 items-center justify-center rounded-2xl border border-zinc-200 bg-white/92 px-5 text-[11px] font-black uppercase tracking-[0.14em] text-zinc-800 transition-transform duration-200 hover:scale-[1.01] dark:border-zinc-800 dark:bg-zinc-900/84 dark:text-zinc-100"
+>
+  {hasSession ? (
+    <PlusCircle size={15} className="mr-2" />
+  ) : (
+    <UserPlus size={15} className="mr-2" />
+  )}
+
+  {t(hasSession ? "btn_create_product" : "storely_sell_now")}
+</button>
                 </div>
               </div>
             </div>

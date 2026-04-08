@@ -1053,6 +1053,7 @@ export const ShowcaseStores = () => {
     lang?: string;
   };
   const { pathname } = location;
+  const [hasSession, setHasSession] = useState(false);
 
   const isEditorRoute = pathname.includes("admin");
   const navigate = useNavigate();
@@ -1112,6 +1113,29 @@ export const ShowcaseStores = () => {
       scrollY: window.scrollY,
     });
   }, [debouncedUiState]);
+  useEffect(() => {
+    let mounted = true;
+  
+    async function loadSession() {
+      const { data } = await supabase.auth.getSession();
+      if (!mounted) return;
+      setHasSession(!!data.session?.user);
+    }
+  
+    void loadSession();
+  
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      setHasSession(!!session?.user);
+    });
+  
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     if (!initialUiState?.scrollY) return;
@@ -2115,8 +2139,8 @@ const allCategories = useMemo(() => {
         {!isEditorRoute &&
         <div
           ref={searchRef}
-          className={`sticky top-17 lg:top-16 z-20   border-zinc-200 bg-white/90 p-3  dark:border-zinc-800 shadow-sm dark:bg-zinc-950/85 ${
-            isCompact ? " lg:px-4" : "mx-2 rounded-[1.75rem] lg:px-6"
+          className={`sticky top-17 lg:top-16 z-20   border-zinc-200 bg-white/90 p-3 pb-2  dark:border-zinc-800  dark:bg-zinc-950/85 ${
+            isCompact ? " lg:px-4 shadow-sm" : " lg:px-4"
           }`}
         >
           <div className="flex flex-col ">
@@ -2138,7 +2162,9 @@ const allCategories = useMemo(() => {
                   }}
                   placeholder={t("storely_search_placeholder")}
                   className={`w-full rounded-full border border-zinc-200 bg-zinc-50 pl-10 pr-24 font-semibold text-zinc-900 outline-none transition dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 ${
-                    isCompact ? "h-10 text-[13px]" : "h-12 text-sm"
+                    isCompact
+                      ? "h-10 text-base md:text-[12px]"
+                      : "h-10 text-base md:text-[12px]"
                   }`}
                 />
 
@@ -2215,7 +2241,7 @@ const allCategories = useMemo(() => {
                 type="button"
                 onClick={() => setShowFilters((prev) => !prev)}
                 className={`inline-flex shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 ${
-                  isCompact ? "h-10 w-10" : "h-12 w-12"
+                  isCompact ? "h-10 w-10" : "h-10 w-10"
                 }`}
               >
                 <SlidersHorizontal size={16} />
@@ -2225,7 +2251,7 @@ const allCategories = useMemo(() => {
             {showFilters ? (
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="text-[10px] font-black uppercase tracking-[0.12em] text-zinc-400">
+                  <div className="text-[10px] mt-1 md:mt-0 font-black uppercase tracking-[0.12em] text-zinc-400">
                     {t("storely_categories")}
                   </div>
                   <RailControls
@@ -2267,7 +2293,7 @@ const allCategories = useMemo(() => {
                     <select
                       value={selectedCategory}
                       onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="h-10 rounded-full border border-zinc-200 bg-white px-4 text-xs font-semibold text-zinc-700 outline-none dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200"
+                      className="h-10 rounded-full border border-zinc-200 bg-white px-3 text-[10px] font-semibold text-zinc-700 outline-none dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200"
                     >
                       <option value="all">{t("storely_all_categories")}</option>
                       {allCategories.map((category) => (
@@ -2280,7 +2306,7 @@ const allCategories = useMemo(() => {
                     <select
                       value={selectedStore}
                       onChange={(e) => setSelectedStore(e.target.value)}
-                      className="h-10 rounded-full border border-zinc-200 bg-white px-4 text-xs font-semibold text-zinc-700 outline-none dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200"
+                      className="h-10 rounded-full border border-zinc-200 bg-white px-3 text-[10px] font-semibold text-zinc-700 outline-none dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200"
                     >
                       <option value="all">{t("storely_all_stores")}</option>
                       {stores.map((store) => (
@@ -2294,7 +2320,7 @@ const allCategories = useMemo(() => {
                       <button
                         type="button"
                         onClick={clearSearchAndFilters}
-                        className="inline-flex h-10 items-center justify-center rounded-full border border-zinc-200 px-4 text-[8px] font-black uppercase bg-red-200 dark:bg-red-800 tracking-[0.12em] text-zinc-800 dark:border-zinc-800 dark:text-zinc-50"
+                        className="inline-flex h-10 items-center justify-center rounded-full border border-zinc-200 px-3 text-[8px] font-black uppercase bg-red-200 dark:bg-red-800 tracking-[0.12em] text-zinc-800 dark:border-zinc-800 dark:text-zinc-50"
                       >
                         {t("storely_clear")}
                       </button>
@@ -2304,9 +2330,9 @@ const allCategories = useMemo(() => {
                       type="button"
                       onClick={refreshShowcaseCache}
                       disabled={isFetching}
-                      className="inline-flex h-10 items-center justify-center rounded-full border border-zinc-200 px-4 text-[11px] font-black uppercase tracking-[0.12em] text-zinc-600 disabled:opacity-60 dark:border-zinc-800 dark:text-zinc-300"
+                      className="inline-flex h-10 items-center justify-center rounded-full border border-zinc-200 px-4 text-[10px] font-black uppercase tracking-[0.12em] text-zinc-600 disabled:opacity-60 dark:border-zinc-800 dark:text-zinc-300"
                     >
-                      <RefreshCw size={12} className={isFetching ? "animate-spin" : ""} />
+                      <RefreshCw size={10} className={isFetching ? "animate-spin" : ""} />
                     </button>
                   </div>
 
@@ -2393,7 +2419,7 @@ if (section.type === "stores-strip") {
   );
 }
           if (section.type === "cta") {
-            return !isEditorRoute && (
+            return !hasSession && (
               <section className="px-2 md:px-4" key={section.id}>
                 <SellerCTA
                   title={t("storely_sell_cta_title")}
