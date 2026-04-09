@@ -172,7 +172,6 @@ export const translations = {
   label_created_at: "Created at",
   label_actions: "Actions",
   view_product: "View",
-  btn_edit: "Edit",
 
 
 
@@ -871,15 +870,7 @@ store_products_empty: "No products found.",
 
 
 
-currency_section_title : "Store currency",
-currency_section_desc : "If the store does not have a saved currency yet, the system tries to detect and save it automatically only once.",
-currency_label : "Currency",
-currency_placeholder : "Search by currency code or currency name",
-currency_save_success : "Currency saved successfully.",
-currency_save_error : "Error saving currency.",
-save_currency : "Save",
-currency_detected_prefix : "Detected:",
-currency_source_prefix : "Source:",
+
 
 product_form_image_removed_cloud: "Image removed from the cloud and the form.",
 product_form_image_removed_local: "Image removed from the form.",
@@ -896,16 +887,7 @@ product_form_image_removed_local_only_after_cloud_fail: "Image removed only from
 
 
 
-currency_required_badge : "Required",
-currency_geo_used : "Location used",
-currency_required_text : "We used your location to suggest an initial currency. Confirm and save it to display prices correctly.",
-currency_saved_badge : "Set",
-currency_saved_text : "This currency will be used to display your store prices.",
-currency_current_prefix : "Current:",
-currency_suggested_prefix : "Suggested:",
-currency_confirm_label : "Confirm currency",
-currency_change_label : "Change currency",
-currency_save_hint : "Setting the currency is important to display correct prices to customers.",
+
 
 
 
@@ -1211,6 +1193,102 @@ dashboard_page_label : "Page",
 dashboard_quick_hint : "Use these anytime to keep building your store.",
 dashboard_setup_focus_title : "Complete the next step",
 dashboard_setup_focus_desc : "Finish the missing setup items so your store is fully ready.",
+
+delete_product_confirm_title: "Delete product?",
+delete_product_confirm_text: "This action cannot be undone. You are about to remove",
+btn_cancel: "Cancel",
+btn_delete: "Delete",
+product_delete_success: "Product deleted successfully",
+product_delete_error: "Could not delete the product",
+product_status_update_error: "Could not update product status",
+products_empty_title: "No products yet",
+products_empty_description: "Start by adding your first product so your store can show items to visitors.",
+products_empty_step_1_title: "Add product",
+products_empty_step_1_text: "Create your first product with image, name and price.",
+products_empty_step_2_title: "Organize details",
+products_empty_step_2_text: "Use category and status to keep everything clear.",
+products_empty_step_3_title: "Set currency",
+products_empty_step_3_text: "Choose your store currency so prices stay consistent.",
+no_products_found_description: "Try another search term or clear the search to see all products.",
+pause_product: "Pause",
+activate_product: "Activate",
+inventory_description: "Manage your products, prices and visibility in one simple place.",
+quick_actions: "Quick actions",
+manage_pages: "Manage pages",
+currency: "Currency",
+
+
+
+
+
+
+
+products_tutorial_title: "Quick guide",
+products_tutorial_description: "Complete the basics so your store stays ready.",
+products_tutorial_step_1_title: "Set currency",
+products_tutorial_step_2_title: "Add products",
+products_tutorial_step_3_title: "Review status",
+
+
+
+
+
+
+
+
+
+
+
+
+active_products_title: "Active products",
+paused_products_title: "Paused products",
+no_active_products: "No active products",
+product_activated_success: "Product activated successfully",
+product_paused_success: "Product paused successfully",
+
+
+
+
+
+
+
+
+
+
+currency_section_description_saved: "This is the main currency used to show prices in your store.",
+currency_section_description_required: "Choose and save the main currency before using product prices.",
+currency_current_label: "Current status",
+currency_action_label: "Action",
+currency_select_label: "Select currency",
+currency_edit_hint: "You can change the store currency here if needed.",
+
+
+
+currency_section_title: "Store currency",
+currency_section_help_text: "Choose the currency used in your product prices.",
+currency_suggested_prefix: "Suggested:",
+currency_must_save_notice: "Choose and save the currency.",
+btn_edit: "Edit",
+save_currency: "Save",
+
+currency_section_desc : "If the store does not have a saved currency yet, the system tries to detect and save it automatically only once.",
+currency_label : "Currency",
+currency_placeholder : "Search by currency code or currency name",
+currency_save_success : "Currency saved successfully.",
+currency_save_error : "Error saving currency.",
+currency_detected_prefix : "Detected:",
+currency_source_prefix : "Source:",
+
+
+currency_required_badge : "Required",
+currency_geo_used : "Location used",
+currency_required_text : "We used your location to suggest an initial currency. Confirm and save it to display prices correctly.",
+currency_saved_badge : "Set",
+currency_saved_text : "This currency will be used to display your store prices.",
+currency_current_prefix : "Current:",
+currency_confirm_label : "Confirm currency",
+currency_change_label : "Change currency",
+currency_save_hint : "Setting the currency is important to display correct prices to customers.",
   },
 
 
@@ -2459,6 +2537,68 @@ dashboard_page_label : "Página",
 dashboard_quick_hint : "Use estas ações a qualquer momento para continuar a construir a sua loja.",
 dashboard_setup_focus_title : "Complete o próximo passo",
 dashboard_setup_focus_desc : "Finalize os itens em falta para que a sua loja fique totalmente pronta.",
+
+inventory_description: "Gerencie os seus produtos de forma simples e organizada.",
+
+
+currency: "Moeda",
+
+
+btn_cancel: "Cancelar",
+btn_delete: "Eliminar",
+
+
+
+pause_product: "Pausar",
+activate_product: "Ativar",
+
+
+
+delete_product_confirm_title: "Eliminar produto?",
+delete_product_confirm_text: "Esta ação não pode ser desfeita. Está prestes a remover",
+product_delete_success: "Produto eliminado com sucesso",
+product_delete_error: "Não foi possível eliminar o produto",
+product_status_update_error: "Não foi possível atualizar o estado do produto",
+
+products_empty_title: "Ainda não existem produtos",
+products_empty_description: "Comece por adicionar o seu primeiro produto para o mostrar na sua loja.",
+
+no_products_found_description: "Tente outro termo de pesquisa ou limpe a pesquisa.",
+
+products_tutorial_title: "Guia rápido",
+products_tutorial_description: "Complete o básico para manter a sua loja pronta.",
+products_tutorial_step_1_title: "Definir moeda",
+products_tutorial_step_2_title: "Adicionar produtos",
+products_tutorial_step_3_title: "Rever estado",
+
+
+
+active_products_title: "Produtos ativos",
+paused_products_title: "Produtos em pausa",
+no_active_products: "Não existem produtos ativos",
+product_activated_success: "Produto ativado com sucesso",
+product_paused_success: "Produto pausado com sucesso",
+
+
+
+currency_section_description_saved: "Esta é a moeda principal usada para mostrar os preços na sua loja.",
+currency_section_description_required: "Escolha e guarde a moeda principal antes de usar preços nos produtos.",
+currency_current_label: "Estado atual",
+currency_action_label: "Ação",
+currency_select_label: "Selecionar moeda",
+currency_edit_hint: "Pode alterar aqui a moeda da loja, se for necessário.",
+
+
+
+
+
+
+
+
+currency_section_help_text: "Escolha a moeda usada nos preços dos seus produtos.",
+currency_must_save_notice: "Escolha e guarde a moeda.",
+
+
 }
 } as const;
 

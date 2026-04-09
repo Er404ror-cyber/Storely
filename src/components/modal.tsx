@@ -157,7 +157,7 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
         <div className="flex items-center gap-3 pointer-events-auto">
           <button 
             onClick={handleShare} 
-            className="p-3 md:px-6 bg-zinc-900/80 border border-white/10 rounded-xl text-white backdrop-none"
+            className="p-3 md:px-6 bg-zinc-900/80 border border-white/10 rounded-xl text-white "
           >
             {copied ? <Check size={18} className="text-green-500" /> : <Share2 size={18} />}
           </button>

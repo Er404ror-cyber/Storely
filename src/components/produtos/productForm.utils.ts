@@ -2,8 +2,8 @@ export const PRODUCT_IMAGE_LIMIT = 1024 * 1024;
 export const PRODUCT_IMAGE_SLOTS = 4;
 
 export const PRODUCT_LIMITS = {
-  name: 45,
-  category: 30,
+  name: 30,
+  category: 15,
   description: 600,
   maxBreaks: 4,
 };
@@ -15,6 +15,11 @@ export const PRODUCT_UNIT_OPTIONS = [
   'pacote',
   'caixa',
   'kg',
+  'hora',
+  'dia',
+  'semana',
+  'mes',
+  'servico',
   'g',
   'l',
   'ml',
@@ -22,11 +27,6 @@ export const PRODUCT_UNIT_OPTIONS = [
   'cm',
   'm2',
   'm3',
-  'hora',
-  'dia',
-  'semana',
-  'mes',
-  'servico',
 ] as const;
 
 export function sanitizeMajor(value: string): string {

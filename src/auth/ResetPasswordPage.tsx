@@ -123,7 +123,7 @@ export function ResetPasswordPage() {
       </div>
 
       <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl items-center justify-center px-4 py-10">
-        <div className="w-full max-w-[470px] px-0 py-2 sm:py-4 lg:rounded-[34px] lg:border lg:border-white/10 lg:bg-black/30 lg:p-6 lg:backdrop-blur-xl">
+        <div className="w-full max-w-[470px] px-0 py-2 sm:py-4 lg:rounded-[34px] lg:border lg:border-white/10 lg:bg-black/30 lg:p-6 ">
           <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">
             {t("auth_brand")}
           </p>

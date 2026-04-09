@@ -42,6 +42,7 @@ type PublicStoreData = {
   slug: string;
   name?: string;
   whatsapp_number?: string | null;
+  currency?: string | null;
   settings?: {
     currency?: string;
     [key: string]: unknown;
@@ -49,7 +50,6 @@ type PublicStoreData = {
   logo_url?: string | null;
   description?: string | null;
 };
-
 type ProductRow = {
   id: string;
   name?: string | null;
@@ -96,18 +96,20 @@ const FALLBACK_CURRENCY = "USD";
 const PLACEHOLDER_IMAGE =
   "https://via.placeholder.com/1400x1200/f4f4f5/18181b?text=Product";
 
-function normalizeCurrency(
-  storeCurrency?: string | null,
-  productCurrency?: string | null,
-  adminCurrency?: string | null
-) {
-  return (
-    storeCurrency?.trim() ||
-    productCurrency?.trim() ||
-    adminCurrency?.trim() ||
-    FALLBACK_CURRENCY
-  );
-}
+  function normalizeCurrency(
+    storeCurrency?: string | null,
+    storeSettingsCurrency?: string | null,
+    productCurrency?: string | null,
+    adminCurrency?: string | null
+  ) {
+    return (
+      storeCurrency?.trim()?.toUpperCase() ||
+      storeSettingsCurrency?.trim()?.toUpperCase() ||
+      productCurrency?.trim()?.toUpperCase() ||
+      adminCurrency?.trim()?.toUpperCase() ||
+      FALLBACK_CURRENCY
+    );
+  }
 
 function toMoneyValue(price: string | number | null | undefined) {
   const value = typeof price === "number" ? price : Number(price || 0);
@@ -212,12 +214,13 @@ export function ProductDetails({
       main_image: "",
       gallery: [],
       currency: normalizeCurrency(
+        adminStore?.currency,
+        adminStore?.settings?.currency,
         undefined,
-        undefined,
-        adminStore?.settings?.currency
+        undefined
       ),
     }),
-    [adminStore?.settings?.currency]
+    [adminStore?.currency, adminStore?.settings?.currency]
   );
 
   const [initialData, setInitialData] = useState<ProductFormData>(emptyFormData);
@@ -226,13 +229,13 @@ export function ProductDetails({
     queryKey: ["public-store", storeSlug],
     queryFn: async (): Promise<PublicStoreData | null> => {
       if (!storeSlug) return null;
-
+  
       const { data, error } = await supabase
         .from("stores")
-        .select("id, whatsapp_number, slug, settings, name, logo_url, description")
+        .select("id, whatsapp_number, slug, currency, settings, name, logo_url, description")
         .eq("slug", storeSlug)
         .single();
-
+  
       if (error) return null;
       return data as PublicStoreData;
     },
@@ -264,32 +267,34 @@ export function ProductDetails({
 
   const resolvedStore = stateStore || publicStore || null;
   const resolvedProduct = stateProduct || product || null;
-
   useEffect(() => {
     if (isCreating) {
       setInitialData(emptyFormData);
       return;
     }
-
+  
     if (!resolvedProduct) return;
-
+  
     const resolvedCurrency = normalizeCurrency(
+      resolvedStore?.currency,
       resolvedStore?.settings?.currency,
       resolvedProduct.currency,
-      adminStore?.settings?.currency
+      adminStore?.currency || adminStore?.settings?.currency
     );
-
+  
     const normalizedMainImage =
       resolvedProduct.main_image ||
-      (Array.isArray(resolvedProduct.gallery) ? resolvedProduct.gallery[0] : "") ||
+      (Array.isArray(resolvedProduct.gallery)
+        ? resolvedProduct.gallery[0]
+        : "") ||
       "";
-
+  
     const normalizedGallery = Array.isArray(resolvedProduct.gallery)
       ? resolvedProduct.gallery.filter(Boolean)
       : normalizedMainImage
-        ? [normalizedMainImage]
-        : [];
-
+      ? [normalizedMainImage]
+      : [];
+  
     setInitialData({
       name: resolvedProduct.name ?? "",
       category: resolvedProduct.category ?? "",
@@ -303,17 +308,22 @@ export function ProductDetails({
       gallery: normalizedGallery,
       currency: resolvedCurrency,
     });
-
+  
     setActiveIndex(0);
-
+  
     if (scrollRef.current) {
       scrollRef.current.scrollTop = 0;
       setShowScrollHint(true);
     }
   }, [
     resolvedProduct,
+  
+    resolvedStore?.currency,
     resolvedStore?.settings?.currency,
+  
+    adminStore?.currency,
     adminStore?.settings?.currency,
+  
     isCreating,
     emptyFormData,
   ]);
@@ -345,13 +355,16 @@ export function ProductDetails({
 
   const currency = useMemo(() => {
     return normalizeCurrency(
+      resolvedStore?.currency,
       resolvedStore?.settings?.currency,
       initialData.currency,
-      adminStore?.settings?.currency
+      adminStore?.currency || adminStore?.settings?.currency
     );
   }, [
+    resolvedStore?.currency,
     resolvedStore?.settings?.currency,
     initialData.currency,
+    adminStore?.currency,
     adminStore?.settings?.currency,
   ]);
 
@@ -628,7 +641,7 @@ export function ProductDetails({
                       <button
                         type="button"
                         onClick={openImagePreview}
-                        className="absolute right-4 top-4 z-20 rounded-full bg-black/40 p-2 text-white backdrop-blur transition hover:bg-black/60"
+                        className="absolute right-4 top-4 z-20 rounded-full bg-black/40 p-2 text-white  transition hover:bg-black/60"
                         aria-label={t("product_details_gallery_open")}
                       >
                         <Maximize2 size={18} />

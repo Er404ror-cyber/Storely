@@ -154,7 +154,7 @@ export function AuthCallback() {
 
       <main className="relative z-10 flex min-h-screen items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">
-          <div className="rounded-[32px] border border-white/10 bg-black/28 p-6 shadow-[0_25px_90px_rgba(0,0,0,0.38)] backdrop-blur-xl sm:p-8">
+          <div className="rounded-[32px] border border-white/10 bg-black/28 p-6 shadow-[0_25px_90px_rgba(0,0,0,0.38)]  sm:p-8">
             <p className="text-center text-[11px] font-black uppercase tracking-[0.28em] text-cyan-300">
               Storely
             </p>
