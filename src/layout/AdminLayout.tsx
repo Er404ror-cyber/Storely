@@ -501,8 +501,10 @@ export function AdminLayout() {
           </header>
         )}
 
-        <div className="flex-1 overflow-y-auto overflow-x-hidden">
-          <Outlet
+<div
+  data-scroll-container="admin"
+  className="flex-1 overflow-y-auto overflow-x-hidden"
+>          <Outlet
             context={{
               store,
               pages,

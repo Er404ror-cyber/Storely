@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useNavigationType } from "react-router-dom";
 import {
   Search,
   Store,
@@ -124,6 +124,8 @@ type ShowcaseViewState = {
   selectedStore: string;
   showFilters: boolean;
   scrollY: number;
+  savedAt: number;
+  pathname: string;
 };
 
 type FeedSection =
@@ -587,6 +589,26 @@ function writeShowcaseState(state: ShowcaseViewState) {
   } catch {}
 }
 
+
+function saveShowcaseStateNow(state: {
+  query: string;
+  selectedCategory: string;
+  selectedStore: string;
+  showFilters: boolean;
+  pathname: string;
+}) {
+  if (typeof window === "undefined") return;
+
+  writeShowcaseState({
+    query: state.query,
+    selectedCategory: state.selectedCategory,
+    selectedStore: state.selectedStore,
+    showFilters: state.showFilters,
+    scrollY: window.scrollY || window.pageYOffset || 0,
+    savedAt: Date.now(),
+    pathname: state.pathname,
+  });
+}
 /* =========================
    Cache helpers
 ========================= */
@@ -1052,6 +1074,11 @@ export const ShowcaseStores = () => {
     t: (key: string, vars?: Record<string, unknown>) => string;
     lang?: string;
   };
+
+
+
+  const location = useLocation();
+  const navigationType = useNavigationType();
   const { pathname } = location;
   const [hasSession, setHasSession] = useState(false);
 
@@ -1107,12 +1134,7 @@ export const ShowcaseStores = () => {
     [history]
   );
 
-  useEffect(() => {
-    writeShowcaseState({
-      ...debouncedUiState,
-      scrollY: window.scrollY,
-    });
-  }, [debouncedUiState]);
+
   useEffect(() => {
     let mounted = true;
   
@@ -1138,12 +1160,67 @@ export const ShowcaseStores = () => {
   }, []);
 
   useEffect(() => {
-    if (!initialUiState?.scrollY) return;
-    const id = window.setTimeout(() => {
-      window.scrollTo({ top: initialUiState.scrollY, behavior: "auto" });
-    }, 0);
-    return () => window.clearTimeout(id);
-  }, [initialUiState]);
+    const save = () => {
+      saveShowcaseStateNow({
+        query,
+        selectedCategory,
+        selectedStore,
+        showFilters,
+        pathname,
+      });
+    };
+  
+    const onScroll = () => save();
+  
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("pagehide", save);
+  
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("pagehide", save);
+      save();
+    };
+  }, [query, selectedCategory, selectedStore, showFilters, pathname]);
+
+
+  useEffect(() => {
+    if (navigationType !== "POP") return;
+    if (!initialUiState) return;
+    if (initialUiState.pathname !== pathname) return;
+  
+    let cancelled = false;
+  
+    const restore = () => {
+      if (cancelled) return;
+  
+      const top = Number.isFinite(initialUiState.scrollY)
+        ? initialUiState.scrollY
+        : 0;
+  
+      window.scrollTo({ top, behavior: "auto" });
+  
+      const t2 = window.setTimeout(() => {
+        if (!cancelled) window.scrollTo({ top, behavior: "auto" });
+      }, 120);
+  
+      const t3 = window.setTimeout(() => {
+        if (!cancelled) window.scrollTo({ top, behavior: "auto" });
+      }, 260);
+  
+      return () => {
+        window.clearTimeout(t2);
+        window.clearTimeout(t3);
+      };
+    };
+  
+    const t1 = window.setTimeout(restore, 120);
+  
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t1);
+    };
+  }, [initialUiState, navigationType, pathname]);
+
 
   useEffect(() => {
     const handleOutside = (e: MouseEvent) => {
@@ -1221,7 +1298,6 @@ export const ShowcaseStores = () => {
           unit,
           created_at,
           price,
-          currency,
           stores!inner (
             id,
             slug,
@@ -1322,9 +1398,7 @@ export const ShowcaseStores = () => {
           storeLogo: store?.logo_url || "",
           storeWhatsApp: store?.whatsapp_number || null,
           price: parsePrice(row.price),
-          currency:
-            resolveStoreCurrency(store, row.currency || FALLBACK_CURRENCY) ||
-            FALLBACK_CURRENCY,
+          currency: resolveStoreCurrency(store, FALLBACK_CURRENCY),
   
           searchName,
           searchCategory,
@@ -1369,9 +1443,9 @@ export const ShowcaseStores = () => {
         heroImage: p.image || FALLBACK_STORE,
         whatsapp_number: store?.whatsapp_number || null,
         settings:
-          typeof store?.settings === "object" && store?.settings !== null
-            ? (store.settings as Record<string, unknown>)
-            : { currency: p.currency || FALLBACK_CURRENCY },
+  typeof store?.settings === "object" && store?.settings !== null
+    ? (store.settings as Record<string, unknown>)
+    : { currency: resolveStoreCurrency(store, FALLBACK_CURRENCY) },
   
         total: 1,
         categories: [p.category],
@@ -1938,6 +2012,14 @@ const allCategories = useMemo(() => {
       setPrefsState(next);
       idle(() => setPrefs(next));
   
+      saveShowcaseStateNow({
+        query,
+        selectedCategory,
+        selectedStore,
+        showFilters,
+        pathname,
+      });
+  
       const matchedStore = stores.find((s) => s.slug === item.storeSlug);
   
       const productState = {
@@ -1992,8 +2074,20 @@ const allCategories = useMemo(() => {
         },
       });
     },
-    [navigate, prefs, stores, debouncedQuery, searchAnalysis.mode]
+    [
+      navigate,
+      prefs,
+      stores,
+      debouncedQuery,
+      searchAnalysis.mode,
+      query,
+      selectedCategory,
+      selectedStore,
+      showFilters,
+      pathname,
+    ]
   );
+  
   const handleStoreClick = useCallback(
     (slug: string) => {
       const store = stores.find((s) => s.slug === slug);
@@ -2007,6 +2101,14 @@ const allCategories = useMemo(() => {
   
       setPrefsState(next);
       idle(() => setPrefs(next));
+  
+      saveShowcaseStateNow({
+        query,
+        selectedCategory,
+        selectedStore,
+        showFilters,
+        pathname,
+      });
   
       const storeState = store
         ? {
@@ -2035,7 +2137,18 @@ const allCategories = useMemo(() => {
         },
       });
     },
-    [navigate, prefs, stores, debouncedQuery, searchAnalysis.mode]
+    [
+      navigate,
+      prefs,
+      stores,
+      debouncedQuery,
+      searchAnalysis.mode,
+      query,
+      selectedCategory,
+      selectedStore,
+      showFilters,
+      pathname,
+    ]
   );
 
   const submitSearch = useCallback(

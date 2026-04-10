@@ -1023,7 +1023,7 @@ break-words
                 <input
                   type="text"
                   placeholder={t('placeholder_search')}
-                  className="h-10 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm font-semibold outline-none transition focus:border-blue-500 focus:bg-white"
+                  className="h-10 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-base md:text-sm font-semibold outline-none transition focus:border-blue-500 focus:bg-white"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
