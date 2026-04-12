@@ -11,12 +11,17 @@ const REQUIRED_STABLE_PASSES = 3;
 type ScrollPositions = Record<string, number>;
 type ScrollTarget = Window | HTMLElement;
 
+function isWindowTarget(target: ScrollTarget): target is Window {
+  return target === window;
+}
+
 function readPositions(): ScrollPositions {
   if (typeof window === 'undefined') return {};
 
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
     if (!raw) return {};
+
     const parsed = JSON.parse(raw) as ScrollPositions;
     return parsed && typeof parsed === 'object' ? parsed : {};
   } catch {
@@ -29,11 +34,17 @@ function writePositions(positions: ScrollPositions) {
 
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(positions));
-  } catch {}
+  } catch {
+    // ignore storage errors
+  }
 }
 
 function getScrollTarget(pathname: string): ScrollTarget {
-  if (typeof window === 'undefined') return window;
+  if (typeof window === 'undefined') {
+    // This branch will never really be used during rendering because
+    // scroll helpers are only called in effects, but it keeps typing safe.
+    return {} as Window;
+  }
 
   if (pathname.startsWith('/admin')) {
     const adminScroller = document.querySelector<HTMLElement>(
@@ -46,8 +57,8 @@ function getScrollTarget(pathname: string): ScrollTarget {
   return window;
 }
 
-function getScrollTop(target: ScrollTarget) {
-  if (target === window) {
+function getScrollTop(target: ScrollTarget): number {
+  if (isWindowTarget(target)) {
     return window.scrollY || window.pageYOffset || 0;
   }
 
@@ -55,7 +66,7 @@ function getScrollTop(target: ScrollTarget) {
 }
 
 function setScrollTop(target: ScrollTarget, top: number) {
-  if (target === window) {
+  if (isWindowTarget(target)) {
     window.scrollTo(0, top);
     document.documentElement.scrollTop = top;
     document.body.scrollTop = top;
@@ -65,8 +76,8 @@ function setScrollTop(target: ScrollTarget, top: number) {
   target.scrollTop = top;
 }
 
-function getScrollHeight(target: ScrollTarget) {
-  if (target === window) {
+function getScrollHeight(target: ScrollTarget): number {
+  if (isWindowTarget(target)) {
     return Math.max(
       document.documentElement.scrollHeight,
       document.body.scrollHeight,
@@ -79,15 +90,15 @@ function getScrollHeight(target: ScrollTarget) {
   return target.scrollHeight;
 }
 
-function getViewportHeight(target: ScrollTarget) {
-  if (target === window) {
+function getViewportHeight(target: ScrollTarget): number {
+  if (isWindowTarget(target)) {
     return window.innerHeight || document.documentElement.clientHeight || 0;
   }
 
   return target.clientHeight;
 }
 
-function clampScrollTop(target: ScrollTarget, top: number) {
+function clampScrollTop(target: ScrollTarget, top: number): number {
   const max = Math.max(getScrollHeight(target) - getViewportHeight(target), 0);
   return Math.min(Math.max(top, 0), max);
 }
@@ -97,15 +108,17 @@ function saveScroll(locationKey: string, pathname: string) {
 
   const positions = readPositions();
   const target = getScrollTarget(pathname);
+
   positions[locationKey] = getScrollTop(target);
   writePositions(positions);
 }
 
-function readScroll(locationKey: string) {
+function readScroll(locationKey: string): number {
   if (typeof window === 'undefined' || !locationKey) return 0;
 
   const positions = readPositions();
   const value = positions[locationKey];
+
   return Number.isFinite(value) ? value : 0;
 }
 
@@ -124,7 +137,12 @@ export const ScrollToTop = () => {
   const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !('scrollRestoration' in window.history)) return;
+    if (
+      typeof window === 'undefined' ||
+      !('scrollRestoration' in window.history)
+    ) {
+      return;
+    }
 
     const previous = window.history.scrollRestoration;
     window.history.scrollRestoration = 'manual';
@@ -135,13 +153,15 @@ export const ScrollToTop = () => {
   }, []);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const target = getScrollTarget(location.pathname);
 
     const onScroll = () => {
       saveScroll(location.key, location.pathname);
     };
 
-    if (target === window) {
+    if (isWindowTarget(target)) {
       window.addEventListener('scroll', onScroll, { passive: true });
       window.addEventListener('pagehide', onScroll);
 
@@ -163,6 +183,8 @@ export const ScrollToTop = () => {
   }, [location.key, location.pathname]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const previous = previousLocationRef.current;
 
     if (previous.key !== location.key) {
@@ -176,32 +198,45 @@ export const ScrollToTop = () => {
   }, [location.key, location.pathname]);
 
   useLayoutEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const shouldRestore = navigationType === 'POP';
     const savedY = readScroll(location.key);
 
-    if (initialTimeoutRef.current) window.clearTimeout(initialTimeoutRef.current);
-    if (intervalRef.current) window.clearInterval(intervalRef.current);
-    if (hardStopTimeoutRef.current) window.clearTimeout(hardStopTimeoutRef.current);
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    if (initialTimeoutRef.current !== null) {
+      window.clearTimeout(initialTimeoutRef.current);
+    }
+
+    if (intervalRef.current !== null) {
+      window.clearInterval(intervalRef.current);
+    }
+
+    if (hardStopTimeoutRef.current !== null) {
+      window.clearTimeout(hardStopTimeoutRef.current);
+    }
+
+    if (rafRef.current !== null) {
+      window.cancelAnimationFrame(rafRef.current);
+    }
 
     const stopAll = () => {
-      if (initialTimeoutRef.current) {
+      if (initialTimeoutRef.current !== null) {
         window.clearTimeout(initialTimeoutRef.current);
         initialTimeoutRef.current = null;
       }
 
-      if (intervalRef.current) {
+      if (intervalRef.current !== null) {
         window.clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
 
-      if (hardStopTimeoutRef.current) {
+      if (hardStopTimeoutRef.current !== null) {
         window.clearTimeout(hardStopTimeoutRef.current);
         hardStopTimeoutRef.current = null;
       }
 
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
+      if (rafRef.current !== null) {
+        window.cancelAnimationFrame(rafRef.current);
         rafRef.current = null;
       }
     };
@@ -237,7 +272,7 @@ export const ScrollToTop = () => {
         }
       };
 
-      rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = window.requestAnimationFrame(() => {
         run();
 
         intervalRef.current = window.setInterval(run, STABILITY_INTERVAL_MS);
@@ -250,7 +285,10 @@ export const ScrollToTop = () => {
       });
     };
 
-    initialTimeoutRef.current = window.setTimeout(startRestore, INITIAL_DELAY_MS);
+    initialTimeoutRef.current = window.setTimeout(
+      startRestore,
+      INITIAL_DELAY_MS
+    );
 
     return stopAll;
   }, [location.key, location.pathname, navigationType]);

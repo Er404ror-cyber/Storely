@@ -1119,15 +1119,7 @@ export const ShowcaseStores = () => {
   );
 
   const debouncedQuery = useDebouncedValue(query, 220);
-  const debouncedUiState = useDebouncedValue(
-    {
-      query,
-      selectedCategory,
-      selectedStore,
-      showFilters,
-    },
-    350
-  );
+
 
   const limitedHistory = useMemo(
     () => history.slice(0, MAX_RECENT_SEARCHES),
