@@ -1289,6 +1289,53 @@ currency_current_prefix : "Current:",
 currency_confirm_label : "Confirm currency",
 currency_change_label : "Change currency",
 currency_save_hint : "Setting the currency is important to display correct prices to customers.",
+
+
+
+
+
+
+
+contact_title: "Contact us",
+contact_subtitle: "Send us a message, view our location, or use the contact details below.",
+contact_title_placeholder: "Contact us",
+contact_subtitle_placeholder: "Send us a message, view our location, or use the contact details below.",
+contact_label_phone: "WhatsApp",
+contact_label_email: "Email",
+contact_label_location: "Location",
+contact_form_title: "Message",
+contact_form_card_title: "Send your message",
+contact_form_card_desc: "Use the form below to contact us by WhatsApp or email.",
+contact_form_name: "Name",
+contact_form_message: "Message",
+contact_form_name_placeholder: "Your name",
+contact_form_message_placeholder: "Write your message...",
+contact_send_now: "Send now",
+contact_open_maps: "Open map",
+contact_route_now: "View route",
+contact_close: "Close",
+contact_modal_title: "How would you like to send it?",
+contact_email_subject: "New contact message",
+contact_message_hello: "Hello!",
+contact_missing_value: "Not set",
+contact_loading_contact: "Loading contact...",
+contact_missing_settings_title: "Missing contact details",
+contact_missing_settings_desc: "Set the account WhatsApp number and email in settings so visitors can contact you.",
+contact_go_settings: "Go to settings",
+contact_unavailable_title: "Contact not available yet",
+contact_unavailable_desc: "This store has not set a WhatsApp number or email to receive messages yet.",
+contact_location_field_placeholder: "Example: Avenida 24 de Julho, Maputo, Mozambique",
+contact_location_missing_public: "Location not set yet",
+contact_location_format_hint: "Use a clear address. Example: Avenida 24 de Julho, Maputo, Mozambique or CT University, Ludhiana, Punjab, India",
+contact_title_limit: "title up to {{count}} characters",
+contact_subtitle_limit: "description up to {{count}} characters",
+contact_location_limit: "location up to {{count}} characters",
+contact_form_name_limit: "name up to {{count}} characters",
+contact_form_message_limit: "message up to {{count}} characters",
+contact_admin_help_title: "Edit directly in this section",
+contact_admin_help_desc: "Click the dashed fields to update the title, description, and location without leaving this area.",
+contact_map_hidden_admin: "The map appears only outside the admin panel.",
+contact_default_location: "Maputo",
   },
 
 
@@ -2598,6 +2645,60 @@ currency_edit_hint: "Pode alterar aqui a moeda da loja, se for necessário.",
 currency_section_help_text: "Escolha a moeda usada nos preços dos seus produtos.",
 currency_must_save_notice: "Escolha e guarde a moeda.",
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+contact_title: "Fale connosco",
+contact_subtitle: "Envie uma mensagem, veja a nossa localização ou use os contactos abaixo.",
+contact_title_placeholder: "Fale connosco",
+contact_subtitle_placeholder: "Envie uma mensagem, veja a nossa localização ou use os contactos abaixo.",
+contact_label_phone: "WhatsApp",
+contact_label_email: "E-mail",
+contact_label_location: "Localização",
+contact_form_title: "Mensagem",
+contact_form_card_title: "Envie a sua mensagem",
+contact_form_card_desc: "Use o formulário abaixo para falar connosco por WhatsApp ou e-mail.",
+contact_form_name: "Nome",
+contact_form_message: "Mensagem",
+contact_form_name_placeholder: "O seu nome",
+contact_form_message_placeholder: "Escreva a sua mensagem...",
+contact_send_now: "Enviar agora",
+contact_open_maps: "Abrir mapa",
+contact_route_now: "Ver rota",
+contact_close: "Fechar",
+contact_modal_title: "Como deseja enviar?",
+contact_email_subject: "Nova mensagem de contacto",
+contact_message_hello: "Olá!",
+contact_missing_value: "Não definido",
+contact_loading_contact: "A carregar contacto...",
+contact_missing_settings_title: "Dados de contacto em falta",
+contact_missing_settings_desc: "Defina o WhatsApp e o e-mail da conta nas configurações para os visitantes poderem entrar em contacto.",
+contact_go_settings: "Ir para configurações",
+contact_unavailable_title: "Contacto ainda não disponível",
+contact_unavailable_desc: "Esta loja ainda não definiu WhatsApp ou e-mail para receber mensagens.",
+contact_location_field_placeholder: "Ex.: Avenida 24 de Julho, Maputo, Mozambique",
+contact_location_missing_public: "Localização ainda não definida",
+contact_location_format_hint: "Use um endereço claro. Ex.: Avenida 24 de Julho, Maputo, Mozambique ou CT University, Ludhiana, Punjab, India",
+contact_title_limit: "título até {{count}} caracteres",
+contact_subtitle_limit: "descrição até {{count}} caracteres",
+contact_location_limit: "localização até {{count}} caracteres",
+contact_form_name_limit: "nome até {{count}} caracteres",
+contact_form_message_limit: "mensagem até {{count}} caracteres",
+contact_admin_help_title: "Edite diretamente nesta secção",
+contact_admin_help_desc: "Clique nos campos com borda tracejada para atualizar título, descrição e localização sem sair desta área.",
+contact_map_hidden_admin: "O mapa aparece apenas fora do painel de administração.",
+contact_default_location: "Maputo"
 
 }
 } as const;
