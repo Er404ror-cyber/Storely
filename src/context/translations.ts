@@ -1359,7 +1359,23 @@ contact_location_smart_help: "smart location help",
 contact_location_final_search: "Final search: {{value}}",
 contact_location_dropdown_hint: "Suggestion from your saved locations list",
 contact_location_final_help: "Showing the final Google Maps search without removing the original name.",
-contact_add_location_here: "Add a location here."
+contact_add_location_here: "Add a location here.",
+
+
+
+
+
+
+
+
+
+
+
+
+product_form_add_more_images: "Add more images",
+product_form_compress_image_link: "Image is too large. Click here to compress it",
+product_form_extra_image_label: "Extra image {{number}}",
+
   },
 
 
@@ -2745,7 +2761,19 @@ contact_location_smart_help: "ajuda inteligente de localização",
 contact_location_final_search: "Pesquisa final: {{value}}",
 contact_location_dropdown_hint: "Sugestão da sua lista de localizações",
 contact_location_final_help: "A mostrar a pesquisa final do Google Maps sem remover o nome original.",
-contact_add_location_here: "Adicione uma localização aqui."
+contact_add_location_here: "Adicione uma localização aqui.",
+
+
+
+
+
+
+
+
+product_form_add_more_images: "Adicionar mais imagens",
+product_form_compress_image_link: "Imagem muito grande. Clique aqui para comprimir",
+product_form_extra_image_label: "Imagem extra {{number}}",
+
 
 }
 } as const;

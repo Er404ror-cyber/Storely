@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlignLeft,
   Check,
+  ImagePlus,
   Info,
   Loader2,
   Package2,
@@ -44,7 +45,6 @@ export interface ProductFormData {
   full_description: string;
   main_image: string;
   gallery: string[];
-  currency?: string;
 }
 
 interface ProductFormProps {
@@ -62,6 +62,7 @@ type PersistedSlotToken = {
 };
 
 const TOKEN_TTL_MS = 10 * 60 * 1000;
+const IMAGE_COMPRESS_URL = 'https://imagecompressor.com/';
 
 export const ProductForm = memo(function ProductForm({
   productId,
@@ -82,7 +83,6 @@ export const ProductForm = memo(function ProductForm({
     full_description: '',
     main_image: '',
     gallery: [],
-    currency: initialData.currency,
   });
 
   const [priceMajor, setPriceMajor] = useState('');
@@ -106,6 +106,7 @@ export const ProductForm = memo(function ProductForm({
   const [processingSlots, setProcessingSlots] = useState<boolean[]>(
     Array(PRODUCT_IMAGE_SLOTS).fill(false)
   );
+  const [visibleExtraSlots, setVisibleExtraSlots] = useState(0);
 
   const storageKey = useMemo(() => {
     const storePart = adminStore?.id || 'no-store';
@@ -216,24 +217,25 @@ export const ProductForm = memo(function ProductForm({
       full_description: initialData.full_description || '',
       main_image: initialData.main_image || '',
       gallery: initialData.gallery || [],
-      currency: initialData.currency,
     });
 
     setPriceMajor(parsed.major || '');
     setPriceCents(parsed.cents === '00' ? '' : parsed.cents);
 
-    setPreviews(
-      [
-        ...mergedImages,
-        ...Array(Math.max(0, PRODUCT_IMAGE_SLOTS - mergedImages.length)).fill(''),
-      ].slice(0, PRODUCT_IMAGE_SLOTS)
-    );
+    const nextPreviews = [
+      ...mergedImages,
+      ...Array(Math.max(0, PRODUCT_IMAGE_SLOTS - mergedImages.length)).fill(''),
+    ].slice(0, PRODUCT_IMAGE_SLOTS);
 
+    setPreviews(nextPreviews);
     setTempFiles(Array(PRODUCT_IMAGE_SLOTS).fill(null));
     setTempDeleteTokens(restoredTokens);
     setFileSizes(Array(PRODUCT_IMAGE_SLOTS).fill(0));
     setUploadErrors(Array(PRODUCT_IMAGE_SLOTS).fill(''));
     setProcessingSlots(Array(PRODUCT_IMAGE_SLOTS).fill(false));
+
+    const existingExtras = nextPreviews.slice(1).filter(Boolean).length;
+    setVisibleExtraSlots(existingExtras);
   }, [initialData, loadPersistedTokens]);
 
   useEffect(() => {
@@ -389,8 +391,18 @@ export const ProductForm = memo(function ProductForm({
           gallery: nextGallery.filter(Boolean),
         };
       });
+
+      if (index > 0) {
+        setVisibleExtraSlots((prev) => {
+          const lastFilledExtraIndex = previews
+            .slice(1)
+            .reduce((acc, value, extraIndex) => (value ? extraIndex + 1 : acc), 0);
+
+          return Math.max(0, Math.max(prev, lastFilledExtraIndex) - 1);
+        });
+      }
     },
-    [clearPersistedSlotToken]
+    [clearPersistedSlotToken, previews]
   );
 
   const replaceSlotWithNewFile = useCallback(
@@ -399,9 +411,6 @@ export const ProductForm = memo(function ProductForm({
       let cloudDeleteResult: CloudinaryDeleteResult | null = null;
 
       if (previousToken) {
-        console.log(
-          `[Cloudinary] replacing slot ${index}, deleting previous image with token`
-        );
         cloudDeleteResult = await deleteFromCloudinary(previousToken);
       }
 
@@ -436,6 +445,10 @@ export const ProductForm = memo(function ProductForm({
         });
       };
       reader.readAsDataURL(file);
+
+      if (index > 0) {
+        setVisibleExtraSlots((prev) => Math.max(prev, index));
+      }
 
       if (previousToken) {
         if (cloudDeleteResult?.ok) {
@@ -485,28 +498,18 @@ export const ProductForm = memo(function ProductForm({
 
       try {
         if (token) {
-          console.log(`[Cloudinary] removing image at slot ${index} using delete token`);
-
           const result = await deleteFromCloudinary(token);
 
           if (result.ok) {
-            console.log(`[Cloudinary] image at slot ${index} removed successfully`);
             clearPhotoSlot(index);
             toast.success(t('product_form_image_removed_cloud'));
           } else {
-            console.warn(
-              `[Cloudinary] slot ${index} token expired or deletion failed:`,
-              result.message
-            );
             clearPhotoSlot(index);
             toast(t('product_form_image_removed_local_only_after_cloud_fail'), {
               icon: '⚠️',
             });
           }
         } else {
-          console.log(
-            `[Cloudinary] slot ${index} has no delete token. Local state will be cleared only`
-          );
           clearPhotoSlot(index);
           toast.success(t('product_form_image_removed_local'));
         }
@@ -572,6 +575,14 @@ export const ProductForm = memo(function ProductForm({
     );
   }, [fieldErrors]);
 
+  const visibleSlots = useMemo(() => {
+    const total = 1 + visibleExtraSlots;
+    return Array.from({ length: Math.min(PRODUCT_IMAGE_SLOTS, total) }, (_, i) => i);
+  }, [visibleExtraSlots]);
+
+  const canAddMoreImages = visibleSlots.length < PRODUCT_IMAGE_SLOTS;
+  const hasLargeImageError = uploadErrors.some((error) => error === t('product_form_image_too_large'));
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!adminStore?.id) {
@@ -583,7 +594,6 @@ export const ProductForm = memo(function ProductForm({
           if (!file) return null;
 
           const uploaded = await uploadToCloudinary(file);
-          console.log(`[Cloudinary] uploaded slot ${index}:`, uploaded);
 
           return {
             index,
@@ -621,7 +631,6 @@ export const ProductForm = memo(function ProductForm({
         main_image: finalMainImage,
         gallery: nextGallery.filter(Boolean),
         store_id: adminStore.id,
-        currency: initialData.currency || adminStore?.settings?.currency || 'MZN',
       };
 
       if (isCreating) {
@@ -678,99 +687,127 @@ export const ProductForm = memo(function ProductForm({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {Array.from({ length: PRODUCT_IMAGE_SLOTS }).map((_, index) => {
-            const preview = previews[index];
-            const isCover = index === 0;
-            const hasError = Boolean(uploadErrors[index]);
-            const isProcessing = processingSlots[index];
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {visibleSlots.map((index) => {
+              const preview = previews[index];
+              const isCover = index === 0;
+              const hasError = Boolean(uploadErrors[index]);
+              const isProcessing = processingSlots[index];
 
-            return (
-              <div key={index} className="flex flex-col gap-2">
-                <div
-                  className={`relative aspect-square overflow-hidden rounded-[1.25rem] border ${
-                    preview
-                      ? hasError
-                        ? 'border-red-300 bg-red-50'
-                        : isCover
-                        ? 'border-blue-300 bg-slate-50'
-                        : 'border-slate-200 bg-slate-50'
-                      : 'border-dashed border-slate-300 bg-slate-50'
-                  }`}
-                >
-                  {preview ? (
-                    <>
-                      <img
-                        src={preview}
-                        alt=""
-                        loading="lazy"
-                        className={`h-full w-full object-cover ${isProcessing ? 'opacity-50' : ''}`}
-                      />
+              return (
+                <div key={index} className="flex flex-col gap-2">
+                  <div
+                    className={`relative aspect-square overflow-hidden rounded-[1.25rem] border ${
+                      preview
+                        ? hasError
+                          ? 'border-red-300 bg-red-50'
+                          : isCover
+                          ? 'border-blue-300 bg-slate-50'
+                          : 'border-slate-200 bg-slate-50'
+                        : 'border-dashed border-slate-300 bg-slate-50'
+                    }`}
+                  >
+                    {preview ? (
+                      <>
+                        <img
+                          src={preview}
+                          alt=""
+                          loading="lazy"
+                          className={`h-full w-full object-cover ${isProcessing ? 'opacity-50' : ''}`}
+                        />
 
-                      <div className="absolute right-2 top-2 flex gap-2">
-                        <label className="cursor-pointer rounded-xl bg-white p-2 text-slate-700 shadow-sm">
-                          <PencilLine size={14} />
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => void handleFileSelect(e, index)}
+                        <div className="absolute right-2 top-2 flex gap-2">
+                          <label className="cursor-pointer rounded-xl bg-white p-2 text-slate-700 shadow-sm">
+                            <PencilLine size={14} />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => void handleFileSelect(e, index)}
+                              disabled={isProcessing}
+                            />
+                          </label>
+
+                          <button
+                            type="button"
+                            onClick={() => void removePhoto(index)}
                             disabled={isProcessing}
-                          />
-                        </label>
-
-                        <button
-                          type="button"
-                          onClick={() => void removePhoto(index)}
-                          disabled={isProcessing}
-                          className="rounded-xl bg-white p-2 text-red-500 shadow-sm disabled:opacity-50"
-                        >
-                          {isProcessing ? (
-                            <Loader2 size={14} className="animate-spin" />
-                          ) : (
-                            <Trash2 size={14} />
-                          )}
-                        </button>
-                      </div>
-
-                      {isCover ? (
-                        <div className="absolute left-2 top-2 rounded-xl bg-blue-600 px-2 py-1 text-[10px] font-black text-white">
-                          {t('product_form_cover')}
+                            className="rounded-xl bg-white p-2 text-red-500 shadow-sm disabled:opacity-50"
+                          >
+                            {isProcessing ? (
+                              <Loader2 size={14} className="animate-spin" />
+                            ) : (
+                              <Trash2 size={14} />
+                            )}
+                          </button>
                         </div>
-                      ) : null}
 
-                      <div className="absolute bottom-2 left-2 rounded-lg bg-black/70 px-2 py-1 text-[10px] font-bold text-white">
-                        {formatBytes(fileSizes[index])}
-                      </div>
-                    </>
-                  ) : (
-                    <label className="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-2 p-3 text-center">
-                      <UploadCloud size={20} className="text-slate-400" />
-                      <span className="text-[11px] font-black uppercase tracking-wide text-slate-500">
-                        {isCover ? t('product_form_add_cover') : t('product_form_add_image')}
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => void handleFileSelect(e, index)}
-                        disabled={isProcessing}
-                      />
-                    </label>
-                  )}
+                        <div className="absolute left-2 top-2 rounded-xl bg-slate-950/85 px-2 py-1 text-[10px] font-black text-white">
+                          {isCover ? t('product_form_cover') : t('product_form_extra_image_label', { number: index })}
+                        </div>
+
+                        {!!fileSizes[index] && (
+                          <div className="absolute bottom-2 left-2 rounded-lg bg-black/70 px-2 py-1 text-[10px] font-bold text-white">
+                            {formatBytes(fileSizes[index])}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <label className="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-2 p-3 text-center">
+                        <UploadCloud size={20} className="text-slate-400" />
+                        <span className="text-[11px] font-black uppercase tracking-wide text-slate-500">
+                          {isCover ? t('product_form_add_cover') : t('product_form_add_image')}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => void handleFileSelect(e, index)}
+                          disabled={isProcessing}
+                        />
+                      </label>
+                    )}
+                  </div>
+
+                  {uploadErrors[index] ? (
+                    <p className="text-[11px] font-semibold text-red-500">
+                      {uploadErrors[index]}
+                    </p>
+                  ) : null}
                 </div>
+              );
+            })}
+          </div>
 
-                {uploadErrors[index] ? (
-                  <p className="text-[11px] font-semibold text-red-500">
-                    {uploadErrors[index]}
-                  </p>
-                ) : null}
-              </div>
-            );
-          })}
+          {canAddMoreImages ? (
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => setVisibleExtraSlots((prev) => Math.min(PRODUCT_IMAGE_SLOTS - 1, prev + 1))}
+                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-[11px] font-black uppercase tracking-wider text-slate-700 transition hover:bg-slate-100"
+              >
+                <ImagePlus size={15} />
+                {t('product_form_add_more_images')}
+              </button>
+            </div>
+          ) : null}
+
+          <div className="space-y-2">
+            <p className="text-xs text-slate-500">{t('product_form_image_help')}</p>
+
+            {hasLargeImageError ? (
+              <a
+                href={IMAGE_COMPRESS_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700 transition hover:bg-amber-100"
+              >
+                {t('product_form_compress_image_link')}
+              </a>
+            ) : null}
+          </div>
         </div>
-
-        <p className="mt-4 text-xs text-slate-500">{t('product_form_image_help')}</p>
       </section>
 
       <section className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm md:p-6">

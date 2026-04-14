@@ -29,7 +29,6 @@ export interface ProductFormData {
   full_description: string;
   main_image: string;
   gallery: string[];
-  currency?: string;
 }
 
 interface ProductDetailsProps {
@@ -50,6 +49,7 @@ type PublicStoreData = {
   logo_url?: string | null;
   description?: string | null;
 };
+
 type ProductRow = {
   id: string;
   name?: string | null;
@@ -59,7 +59,6 @@ type ProductRow = {
   full_description?: string | null;
   main_image?: string | null;
   gallery?: string[] | null;
-  currency?: string | null;
   store_id?: string | null;
 };
 
@@ -96,20 +95,18 @@ const FALLBACK_CURRENCY = "USD";
 const PLACEHOLDER_IMAGE =
   "https://via.placeholder.com/1400x1200/f4f4f5/18181b?text=Product";
 
-  function normalizeCurrency(
-    storeCurrency?: string | null,
-    storeSettingsCurrency?: string | null,
-    productCurrency?: string | null,
-    adminCurrency?: string | null
-  ) {
-    return (
-      storeCurrency?.trim()?.toUpperCase() ||
-      storeSettingsCurrency?.trim()?.toUpperCase() ||
-      productCurrency?.trim()?.toUpperCase() ||
-      adminCurrency?.trim()?.toUpperCase() ||
-      FALLBACK_CURRENCY
-    );
-  }
+function normalizeCurrency(
+  storeCurrency?: string | null,
+  storeSettingsCurrency?: string | null,
+  adminCurrency?: string | null
+) {
+  return (
+    storeCurrency?.trim()?.toUpperCase() ||
+    storeSettingsCurrency?.trim()?.toUpperCase() ||
+    adminCurrency?.trim()?.toUpperCase() ||
+    FALLBACK_CURRENCY
+  );
+}
 
 function toMoneyValue(price: string | number | null | undefined) {
   const value = typeof price === "number" ? price : Number(price || 0);
@@ -213,14 +210,8 @@ export function ProductDetails({
       full_description: "",
       main_image: "",
       gallery: [],
-      currency: normalizeCurrency(
-        adminStore?.currency,
-        adminStore?.settings?.currency,
-        undefined,
-        undefined
-      ),
     }),
-    [adminStore?.currency, adminStore?.settings?.currency]
+    []
   );
 
   const [initialData, setInitialData] = useState<ProductFormData>(emptyFormData);
@@ -229,13 +220,13 @@ export function ProductDetails({
     queryKey: ["public-store", storeSlug],
     queryFn: async (): Promise<PublicStoreData | null> => {
       if (!storeSlug) return null;
-  
+
       const { data, error } = await supabase
         .from("stores")
         .select("id, whatsapp_number, slug, currency, settings, name, logo_url, description")
         .eq("slug", storeSlug)
         .single();
-  
+
       if (error) return null;
       return data as PublicStoreData;
     },
@@ -267,34 +258,28 @@ export function ProductDetails({
 
   const resolvedStore = stateStore || publicStore || null;
   const resolvedProduct = stateProduct || product || null;
+
   useEffect(() => {
     if (isCreating) {
       setInitialData(emptyFormData);
       return;
     }
-  
+
     if (!resolvedProduct) return;
-  
-    const resolvedCurrency = normalizeCurrency(
-      resolvedStore?.currency,
-      resolvedStore?.settings?.currency,
-      resolvedProduct.currency,
-      adminStore?.currency || adminStore?.settings?.currency
-    );
-  
+
     const normalizedMainImage =
       resolvedProduct.main_image ||
       (Array.isArray(resolvedProduct.gallery)
         ? resolvedProduct.gallery[0]
         : "") ||
       "";
-  
+
     const normalizedGallery = Array.isArray(resolvedProduct.gallery)
       ? resolvedProduct.gallery.filter(Boolean)
       : normalizedMainImage
       ? [normalizedMainImage]
       : [];
-  
+
     setInitialData({
       name: resolvedProduct.name ?? "",
       category: resolvedProduct.category ?? "",
@@ -306,27 +291,15 @@ export function ProductDetails({
       full_description: resolvedProduct.full_description ?? "",
       main_image: normalizedMainImage,
       gallery: normalizedGallery,
-      currency: resolvedCurrency,
     });
-  
+
     setActiveIndex(0);
-  
+
     if (scrollRef.current) {
       scrollRef.current.scrollTop = 0;
       setShowScrollHint(true);
     }
-  }, [
-    resolvedProduct,
-  
-    resolvedStore?.currency,
-    resolvedStore?.settings?.currency,
-  
-    adminStore?.currency,
-    adminStore?.settings?.currency,
-  
-    isCreating,
-    emptyFormData,
-  ]);
+  }, [resolvedProduct, isCreating, emptyFormData]);
 
   const previews = useMemo(() => {
     const merged = [initialData.main_image, ...(initialData.gallery || [])]
@@ -357,13 +330,11 @@ export function ProductDetails({
     return normalizeCurrency(
       resolvedStore?.currency,
       resolvedStore?.settings?.currency,
-      initialData.currency,
       adminStore?.currency || adminStore?.settings?.currency
     );
   }, [
     resolvedStore?.currency,
     resolvedStore?.settings?.currency,
-    initialData.currency,
     adminStore?.currency,
     adminStore?.settings?.currency,
   ]);
@@ -373,7 +344,7 @@ export function ProductDetails({
       UNIT_TRANSLATION_KEY_MAP[
         initialData.unit as keyof typeof UNIT_TRANSLATION_KEY_MAP
       ];
-  
+
     return key ? t(key) : initialData.unit;
   }, [initialData.unit, t]);
 
@@ -476,16 +447,16 @@ export function ProductDetails({
   const handleWhatsAppOrder = useCallback(() => {
     const whatsapp =
       resolvedStore?.whatsapp_number || adminStore?.whatsapp_number;
-  
+
     if (!whatsapp) {
       toast.error(t("product_details_whatsapp_unavailable"));
       return;
     }
-  
+
     const cleanNumber = whatsapp.replace(/\D/g, "");
     const platformName = "Storely";
     const platformUrl = window.location.origin;
-  
+
     const lines = [
       `*${platformName}*`,
       "",
@@ -509,7 +480,7 @@ export function ProductDetails({
       "",
       `— ${platformName}`,
     ].filter(Boolean);
-  
+
     const message = encodeURIComponent(lines.join("\n"));
     window.open(`https://wa.me/${cleanNumber}?text=${message}`, "_blank");
   }, [
@@ -526,6 +497,7 @@ export function ProductDetails({
     productPageUrl,
     t,
   ]);
+
   if (isLoading && !isCreating && !resolvedProduct) {
     return (
       <div className={`flex min-h-screen items-center justify-center ${pageBgClass}`}>
@@ -545,7 +517,7 @@ export function ProductDetails({
       ) : null}
 
       <nav
-        className={`fixed left-0 right-0 top-0 z-[120] flex h-16 items-center justify-between border-b px-4  md:px-6 ${navClass}`}
+        className={`fixed left-0 right-0 top-0 z-[120] flex h-16 items-center justify-between border-b px-4 md:px-6 ${navClass}`}
       >
         <div className="flex min-w-0 items-center gap-2">
           <button
@@ -598,7 +570,7 @@ export function ProductDetails({
         </div>
       </nav>
 
-      <main className="mx-auto w-full max-w-7xl px-0 pb-16 md:pt-12 md:px-4 lg:px-6">
+      <main className="mx-auto w-full max-w-7xl px-0 pb-16 md:px-4 md:pt-12 lg:px-6">
         {isEditing && isEditorRoute ? (
           <div className="px-4 pt-6 md:px-0">
             <ProductForm
@@ -617,12 +589,18 @@ export function ProductDetails({
           </div>
         ) : (
           <>
-            <section className={`border-b pb-2 ${forceLightUI ? "border-slate-200 bg-white" : "border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-950"}`}>
+            <section
+              className={`border-b pb-2 ${
+                forceLightUI
+                  ? "border-slate-200 bg-white"
+                  : "border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-950"
+              }`}
+            >
               <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-4 px-0 md:px-4 lg:grid-cols-[1.1fr_0.9fr] lg:gap-6 lg:px-6">
                 <div className="min-w-0">
                   <div className={`overflow-hidden rounded-none shadow-none md:rounded-[2rem] ${imageWrapClass}`}>
                     <div
-                      className="relative aspect-[1/0.92] min-h-[420px] w-full sm:aspect-[1.15/0.86] xl:min-h-[520px] lg:aspect-[1.12/1]"
+                      className="relative aspect-[1/0.92] min-h-[420px] w-full sm:aspect-[1.15/0.86] lg:aspect-[1.12/1] xl:min-h-[520px]"
                       onMouseEnter={() => setPauseCarousel(true)}
                       onMouseLeave={() => setPauseCarousel(false)}
                     >
@@ -641,7 +619,7 @@ export function ProductDetails({
                       <button
                         type="button"
                         onClick={openImagePreview}
-                        className="absolute right-4 top-4 z-20 rounded-full bg-black/40 p-2 text-white  transition hover:bg-black/60"
+                        className="absolute right-4 top-4 z-20 rounded-full bg-black/40 p-2 text-white transition hover:bg-black/60"
                         aria-label={t("product_details_gallery_open")}
                       >
                         <Maximize2 size={18} />

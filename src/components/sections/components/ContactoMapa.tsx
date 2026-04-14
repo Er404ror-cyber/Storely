@@ -58,8 +58,8 @@ type ResolvedLocation = {
   confidence: 'high' | 'medium' | 'low';
 };
 
-const TITLE_MAX = 60;
-const SUBTITLE_MAX = 160;
+const TITLE_MAX = 30;
+const SUBTITLE_MAX = 100;
 const LOCATION_MAX = 160;
 const NAME_MAX = 60;
 const MESSAGE_MAX = 300;
@@ -139,33 +139,6 @@ function getTitleSize(fontSize?: SectionStyles['fontSize']) {
     default:
       return 'text-2xl md:text-3xl';
   }
-}
-
-function createEditableHandlers(
-  field: keyof ContactoMapaContent,
-  max: number,
-  onUpdate?: (field: string, value: string) => void
-) {
-  return {
-    contentEditable: true,
-    suppressContentEditableWarning: true,
-    onInput: (e: React.FormEvent<HTMLElement>) => {
-      const el = e.currentTarget;
-      const raw = el.textContent || '';
-      const next = clampText(raw, max);
-      if (raw !== next) el.textContent = next;
-      onUpdate?.(field, next);
-    },
-    onPaste: (e: React.ClipboardEvent<HTMLElement>) => {
-      e.preventDefault();
-      const text = e.clipboardData.getData('text/plain');
-      const el = e.currentTarget;
-      const current = el.textContent || '';
-      const allowed = clampText(text, Math.max(0, max - current.length));
-      document.execCommand('insertText', false, allowed);
-      onUpdate?.(field, clampText(current + allowed, max));
-    },
-  };
 }
 
 function normalizeLooseText(value?: string | null) {
@@ -604,6 +577,114 @@ function EmailField({
   );
 }
 
+function AdminTextField({
+  value,
+  fallback,
+  max,
+  theme,
+  multiline = false,
+  align = 'left',
+  title = false,
+  onCommit,
+}: {
+  value: string;
+  fallback: string;
+  max: number;
+  theme: 'dark' | 'light';
+  multiline?: boolean;
+  align?: 'center' | 'left' | 'justify';
+  title?: boolean;
+  onCommit?: (value: string) => void;
+}) {
+  const [draft, setDraft] = useState(value || '');
+  const debounceRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    setDraft(value || '');
+  }, [value]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) window.clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  const pushCommit = useCallback(
+    (next: string) => {
+      if (debounceRef.current) window.clearTimeout(debounceRef.current);
+      debounceRef.current = window.setTimeout(() => {
+        onCommit?.(next);
+      }, 180);
+    },
+    [onCommit]
+  );
+
+  const baseClass = [
+    'w-full min-w-0 rounded-xl border outline-none transition',
+    theme === 'dark'
+      ? 'border-white/15 bg-white/5 text-white placeholder:text-white/35'
+      : 'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400',
+    align === 'center' ? 'text-center' : 'text-left',
+    title
+      ? 'px-3 py-2 text-2xl md:text-3xl font-black tracking-tight'
+      : 'px-3 py-2 text-sm leading-relaxed',
+  ].join(' ');
+
+  if (multiline) {
+    return (
+      <textarea
+        value={draft}
+        dir="ltr"
+        autoComplete="off"
+        spellCheck={false}
+        rows={3}
+        maxLength={max}
+        placeholder={fallback}
+        className={`${baseClass} resize-none`}
+        style={{
+          overflowWrap: 'anywhere',
+          whiteSpace: 'pre-wrap',
+          unicodeBidi: 'plaintext',
+        }}
+        onChange={(e) => {
+          const next = clampText(e.target.value, max);
+          setDraft(next);
+          pushCommit(next);
+        }}
+        onBlur={(e) => {
+          const finalValue = clampText(e.target.value, max).trim();
+          setDraft(finalValue);
+          onCommit?.(finalValue);
+        }}
+      />
+    );
+  }
+
+  return (
+    <input
+      type="text"
+      value={draft}
+      dir="ltr"
+      autoComplete="off"
+      spellCheck={false}
+      maxLength={max}
+      placeholder={fallback}
+      className={baseClass}
+      style={{ unicodeBidi: 'plaintext' }}
+      onChange={(e) => {
+        const next = clampText(e.target.value, max);
+        setDraft(next);
+        pushCommit(next);
+      }}
+      onBlur={(e) => {
+        const finalValue = clampText(e.target.value, max).trim();
+        setDraft(finalValue);
+        onCommit?.(finalValue);
+      }}
+    />
+  );
+}
+
 function LocationAssistField({
   theme,
   value,
@@ -720,6 +801,9 @@ function LocationAssistField({
 
           <input
             value={value}
+            dir="ltr"
+            autoComplete="off"
+            spellCheck={false}
             onChange={(e) => {
               const next = clampText(e.target.value, LOCATION_MAX);
               onChange(next);
@@ -736,8 +820,7 @@ function LocationAssistField({
             }}
             placeholder={t('contact_location_placeholder')}
             className={`w-full rounded-xl border pl-10 pr-3 py-3 text-base outline-none focus:border-blue-500 transition ${inputClass}`}
-            style={{ fontSize: 16 }}
-            autoComplete="off"
+            style={{ fontSize: 16, unicodeBidi: 'plaintext' }}
           />
         </div>
 
@@ -773,9 +856,10 @@ function LocationAssistField({
 
       {shouldShowDropdown ? (
         <div
-          className={`absolute left-0 right-0 top-full mt- z-[999] overflow-hidden rounded-xl border shadow-2xl ${suggestionSurface}`}
+          className={`absolute left-0 right-0 top-full mt-2 z-[999] overflow-hidden rounded-xl border shadow-2xl ${suggestionSurface}`}
         >
-<div className="max-h-52 overflow-y-auto overscroll-contain">            {suggestions.map((item) => (
+          <div className="max-h-52 overflow-y-auto overscroll-contain">
+            {suggestions.map((item) => (
               <button
                 key={item}
                 type="button"
@@ -911,6 +995,9 @@ function FormCard({
           <div className="grid gap-2.5">
             <input
               value={visitorName}
+              dir="ltr"
+              autoComplete="off"
+              spellCheck={false}
               onChange={(e) =>
                 setVisitorName(clampText(e.target.value, NAME_MAX))
               }
@@ -920,11 +1007,14 @@ function FormCard({
               className={`w-full min-w-0 rounded-xl border px-3 py-3 text-base outline-none focus:border-blue-400 transition ${inputClass} ${
                 formDisabled ? 'opacity-60 cursor-not-allowed' : ''
               }`}
-              style={{ fontSize: 16 }}
+              style={{ fontSize: 16, unicodeBidi: 'plaintext' }}
             />
 
             <textarea
               value={visitorMessage}
+              dir="ltr"
+              autoComplete="off"
+              spellCheck={false}
               onChange={(e) =>
                 setVisitorMessage(clampText(e.target.value, MESSAGE_MAX))
               }
@@ -935,7 +1025,7 @@ function FormCard({
               className={`w-full min-w-0 rounded-xl border px-3 py-3 text-base outline-none focus:border-blue-400 transition resize-none ${inputClass} ${
                 formDisabled ? 'opacity-60 cursor-not-allowed' : ''
               }`}
-              style={{ fontSize: 16 }}
+              style={{ fontSize: 16, unicodeBidi: 'plaintext' }}
             />
 
             <FieldHint theme="dark">
@@ -1032,11 +1122,11 @@ function ContactoMapaComponent({
     [store?.owner_email]
   );
 
-  const resolvedTitle = clampText(content.title || t('contact_title'), TITLE_MAX);
-  const resolvedSubtitle = clampText(
-    content.subtitle || t('contact_subtitle'),
-    SUBTITLE_MAX
-  );
+  const resolvedTitle = clampText(content.title || '', TITLE_MAX);
+  const resolvedSubtitle = clampText(content.subtitle || '', SUBTITLE_MAX);
+
+  const visibleTitle = resolvedTitle || t('contact_title');
+  const visibleSubtitle = resolvedSubtitle || t('contact_subtitle');
 
   const effectiveLocationValue = isAdminRoute
     ? adminLocationInput
@@ -1069,14 +1159,6 @@ function ContactoMapaComponent({
       ? 'bg-white/5 border-white/10 text-white placeholder-white/35'
       : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400';
 
-  const editableTitleProps = isAdminRoute
-    ? createEditableHandlers('title', TITLE_MAX, onUpdate)
-    : {};
-
-  const editableSubtitleProps = isAdminRoute
-    ? createEditableHandlers('subtitle', SUBTITLE_MAX, onUpdate)
-    : {};
-
   const formDisabled = isAdminRoute;
 
   const commitLocation = useCallback(
@@ -1096,8 +1178,9 @@ function ContactoMapaComponent({
   const handleAction = useCallback(
     (type: 'wa' | 'mail') => {
       if (type === 'wa' && hasWhatsapp) {
+        const titleForMessage = resolvedTitle || t('contact_title');
         const text = [
-          resolvedTitle,
+          titleForMessage,
           '',
           visitorName ? `${t('contact_form_name')}: ${visitorName}` : '',
           visitorMessage ? `${t('contact_form_message')}: ${visitorMessage}` : '',
@@ -1112,10 +1195,11 @@ function ContactoMapaComponent({
       }
 
       if (type === 'mail' && hasEmail) {
-        const subject = encodeURIComponent(resolvedTitle);
+        const titleForMessage = resolvedTitle || t('contact_title');
+        const subject = encodeURIComponent(titleForMessage);
         const body = encodeURIComponent(
           [
-            resolvedTitle,
+            titleForMessage,
             '',
             visitorName ? `${t('contact_form_name')}: ${visitorName}` : '',
             visitorMessage ? `${t('contact_form_message')}: ${visitorMessage}` : '',
@@ -1183,37 +1267,47 @@ function ContactoMapaComponent({
               style.align === 'center' ? 'max-w-2xl mx-auto' : 'max-w-3xl'
             } min-w-0`}
           >
-            <h2
-              {...editableTitleProps}
-              suppressContentEditableWarning
-              className={[
-                `${titleSize} font-black tracking-tight outline-none break-words max-w-full min-w-0`,
-                isAdminRoute
-                  ? theme === 'dark'
-                    ? 'rounded-xl border border-dashed border-white/15 bg-white/5 px-3 py-2'
-                    : 'rounded-xl border border-dashed border-slate-300 bg-white px-3 py-2'
-                  : '',
-              ].join(' ')}
-              style={{ overflowWrap: 'anywhere' }}
-            >
-              {resolvedTitle || t('contact_title_placeholder')}
-            </h2>
+            {isAdminRoute ? (
+              <>
+                <AdminTextField
+                  value={resolvedTitle}
+                  fallback={t('contact_title_placeholder')}
+                  max={TITLE_MAX}
+                  theme={theme}
+                  align={style.align}
+                  title
+                  onCommit={(value) => onUpdate?.('title', value)}
+                />
 
-            <p
-              {...editableSubtitleProps}
-              suppressContentEditableWarning
-              className={[
-                'mt-2 text-sm opacity-75 outline-none break-words max-w-full min-w-0',
-                isAdminRoute
-                  ? theme === 'dark'
-                    ? 'rounded-xl border border-dashed border-white/15 bg-white/5 px-3 py-2'
-                    : 'rounded-xl border border-dashed border-slate-300 bg-white px-3 py-2'
-                  : '',
-              ].join(' ')}
-              style={{ overflowWrap: 'anywhere' }}
-            >
-              {resolvedSubtitle || t('contact_subtitle_placeholder')}
-            </p>
+                <div className="mt-2">
+                  <AdminTextField
+                    value={resolvedSubtitle}
+                    fallback={t('contact_subtitle_placeholder')}
+                    max={SUBTITLE_MAX}
+                    theme={theme}
+                    align={style.align}
+                    multiline
+                    onCommit={(value) => onUpdate?.('subtitle', value)}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <h2
+                  className={`${titleSize} font-black tracking-tight break-words max-w-full min-w-0`}
+                  style={{ overflowWrap: 'anywhere' }}
+                >
+                  {visibleTitle}
+                </h2>
+
+                <p
+                  className="mt-2 text-sm opacity-75 break-words max-w-full min-w-0"
+                  style={{ overflowWrap: 'anywhere' }}
+                >
+                  {visibleSubtitle}
+                </p>
+              </>
+            )}
           </div>
         </div>
 
@@ -1383,6 +1477,9 @@ function ContactoMapaComponent({
                 <div className="grid gap-2.5">
                   <input
                     value={visitorName}
+                    dir="ltr"
+                    autoComplete="off"
+                    spellCheck={false}
                     onChange={(e) =>
                       setVisitorName(clampText(e.target.value, NAME_MAX))
                     }
@@ -1392,11 +1489,14 @@ function ContactoMapaComponent({
                     className={`w-full rounded-xl border px-3 py-3 text-base outline-none focus:border-blue-500 transition ${inputClass} ${
                       formDisabled ? 'opacity-60 cursor-not-allowed' : ''
                     }`}
-                    style={{ fontSize: 16 }}
+                    style={{ fontSize: 16, unicodeBidi: 'plaintext' }}
                   />
 
                   <textarea
                     value={visitorMessage}
+                    dir="ltr"
+                    autoComplete="off"
+                    spellCheck={false}
                     onChange={(e) =>
                       setVisitorMessage(clampText(e.target.value, MESSAGE_MAX))
                     }
@@ -1407,7 +1507,7 @@ function ContactoMapaComponent({
                     className={`w-full rounded-xl border px-3 py-3 text-base outline-none focus:border-blue-500 transition resize-none ${inputClass} ${
                       formDisabled ? 'opacity-60 cursor-not-allowed' : ''
                     }`}
-                    style={{ fontSize: 16 }}
+                    style={{ fontSize: 16, unicodeBidi: 'plaintext' }}
                   />
 
                   <button
