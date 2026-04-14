@@ -1,4 +1,11 @@
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   AlertCircle,
   CheckCircle2,
@@ -6,20 +13,20 @@ import {
   Mail,
   MapPin,
   MessageCircle,
-  Navigation,
-  Phone,
   Search,
   Send,
   Settings2,
   Sparkles,
-  Store,
+  Phone,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+
 import { supabase } from '../../../lib/supabase';
 import type { SectionProps } from '../../../types/library';
 import { useTranslate } from '../../../context/LanguageContext';
 import { LOCATION_SUGGESTIONS } from '../../../context/locationSuggestions';
+
 export type SectionStyles = {
   theme?: 'dark' | 'light';
   align?: 'center' | 'left' | 'justify';
@@ -44,13 +51,56 @@ type ContactoMapaProps = SectionProps & {
   style: SectionStyles;
 };
 
+type ResolvedLocation = {
+  raw: string;
+  finalQuery: string;
+  label: string;
+  confidence: 'high' | 'medium' | 'low';
+};
+
 const TITLE_MAX = 60;
 const SUBTITLE_MAX = 160;
 const LOCATION_MAX = 160;
 const NAME_MAX = 60;
 const MESSAGE_MAX = 300;
 
-const LOCAL_LOCATION_SUGGESTIONS = LOCATION_SUGGESTIONS;
+const SMART_LOCATION_HELPERS: Array<{
+  keys: string[];
+  append?: string;
+}> = [
+  { keys: ['zimpeto', 'zimpto', 'zimpet', 'zimpedo'], append: 'Maputo, Mozambique' },
+  { keys: ['maputo'], append: 'Mozambique' },
+  { keys: ['matola'], append: 'Mozambique' },
+  { keys: ['isctem'], append: 'Maputo, Mozambique' },
+  { keys: ['uem'], append: 'Maputo, Mozambique' },
+  { keys: ['ct university', 'ctu', 'ct univ'], append: 'Ludhiana, Punjab, India' },
+  { keys: ['ludhiana'], append: 'Punjab, India' },
+  { keys: ['tete'], append: 'Mozambique' },
+  { keys: ['beira'], append: 'Mozambique' },
+  { keys: ['cape town'], append: 'South Africa' },
+  { keys: ['johannesburg'], append: 'South Africa' },
+  { keys: ['durban'], append: 'South Africa' },
+  { keys: ['nairobi'], append: 'Kenya' },
+  { keys: ['lagos'], append: 'Nigeria' },
+  { keys: ['dubai'], append: 'United Arab Emirates' },
+  { keys: ['london'], append: 'United Kingdom' },
+  { keys: ['paris'], append: 'France' },
+  { keys: ['new york'], append: 'United States' },
+];
+
+const SMART_LOCATION_ALIASES: Array<{
+  keys: string[];
+  value: string;
+}> = [
+  { keys: ['ct university ludhiana', 'ctu ludhiana'], value: 'CT University, Ludhiana, Punjab, India' },
+  { keys: ['zimpeto maputo'], value: 'Zimpeto, Maputo, Mozambique' },
+  { keys: ['isctem maputo'], value: 'ISCTEM, Maputo, Mozambique' },
+  { keys: ['uem maputo'], value: 'Universidade Eduardo Mondlane, Maputo, Mozambique' },
+];
+
+function clampText(value: string, max: number) {
+  return value.length > max ? value.slice(0, max) : value;
+}
 
 function normalizePhone(value?: string | null) {
   return (value || '').replace(/\D/g, '');
@@ -59,10 +109,6 @@ function normalizePhone(value?: string | null) {
 function isValidEmail(value?: string | null) {
   if (!value) return false;
   return /\S+@\S+\.\S+/.test(value);
-}
-
-function clampText(value: string, max: number) {
-  return value.length > max ? value.slice(0, max) : value;
 }
 
 function getGridMode(cols?: string): '1' | '2' | '4' {
@@ -98,7 +144,7 @@ function getTitleSize(fontSize?: SectionStyles['fontSize']) {
 function createEditableHandlers(
   field: keyof ContactoMapaContent,
   max: number,
-  onUpdate?: ((field: string, value: string) => void) | undefined
+  onUpdate?: (field: string, value: string) => void
 ) {
   return {
     contentEditable: true,
@@ -107,7 +153,6 @@ function createEditableHandlers(
       const el = e.currentTarget;
       const raw = el.textContent || '';
       const next = clampText(raw, max);
-
       if (raw !== next) el.textContent = next;
       onUpdate?.(field, next);
     },
@@ -117,128 +162,131 @@ function createEditableHandlers(
       const el = e.currentTarget;
       const current = el.textContent || '';
       const allowed = clampText(text, Math.max(0, max - current.length));
-
       document.execCommand('insertText', false, allowed);
       onUpdate?.(field, clampText(current + allowed, max));
     },
   };
 }
 
-function looksLikeUrl(value: string) {
-  return /^(https?:\/\/|www\.)/i.test(value.trim());
+function normalizeLooseText(value?: string | null) {
+  return (value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
 }
 
-function isValidHttpUrl(value: string) {
-  try {
-    const normalized =
-      value.startsWith('http://') || value.startsWith('https://')
-        ? value
-        : `https://${value}`;
-    const url = new URL(normalized);
-    return url.protocol === 'http:' || url.protocol === 'https:';
-  } catch {
-    return false;
+function titleCasePreserveWords(value: string) {
+  return value
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => {
+      if (word.toUpperCase() === word) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+}
+
+function commaParts(value: string) {
+  return value
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function appendIfMissing(base: string, addition?: string) {
+  if (!addition) return base;
+
+  const normalizedBase = normalizeLooseText(base);
+  const normalizedAddition = normalizeLooseText(addition);
+
+  if (!normalizedAddition) return base;
+  if (normalizedBase.includes(normalizedAddition)) return base;
+
+  const baseParts = commaParts(base);
+  const additionParts = commaParts(addition);
+  const merged = [...baseParts];
+
+  for (const part of additionParts) {
+    const normalizedPart = normalizeLooseText(part);
+    const alreadyExists = merged.some(
+      (existing) => normalizeLooseText(existing) === normalizedPart
+    );
+    if (!alreadyExists) merged.push(part);
   }
+
+  return merged.join(', ');
 }
 
-function extractLocationFromMapsUrl(value: string): string {
-  try {
-    const normalized =
-      value.startsWith('http://') || value.startsWith('https://')
-        ? value
-        : `https://${value}`;
+function findStrongAlias(raw: string) {
+  const normalized = normalizeLooseText(raw);
 
-    const url = new URL(normalized);
-    const host = url.hostname.toLowerCase();
-
-    if (!host.includes('google.') && !host.includes('maps.app.goo.gl')) {
-      return '';
+  for (const item of SMART_LOCATION_ALIASES) {
+    if (item.keys.some((key) => normalized.includes(normalizeLooseText(key)))) {
+      return item.value;
     }
-
-    const q = url.searchParams.get('q');
-    if (q?.trim()) return q.trim();
-
-    const query = url.searchParams.get('query');
-    if (query?.trim()) return query.trim();
-
-    const path = decodeURIComponent(url.pathname);
-
-    const matchAt = path.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-    if (matchAt) return `${matchAt[1]}, ${matchAt[2]}`;
-
-    const matchPlace = path.match(/\/place\/([^/]+)/);
-    if (matchPlace?.[1]) return matchPlace[1].replace(/\+/g, ' ').trim();
-
-    return '';
-  } catch {
-    return '';
   }
+
+  return null;
 }
 
-function normalizeLocationInput(raw?: string | null) {
-  const value = (raw || '').trim();
+export function resolveLocationSmart(raw?: string | null): ResolvedLocation | null {
+  if (!raw) return null;
 
-  if (!value) {
+  const original = raw.trim();
+  if (!original) return null;
+
+  const strongAlias = findStrongAlias(original);
+  if (strongAlias) {
     return {
-      raw: '',
-      text: '',
-      isUrl: false,
-      urlValid: false,
-      isValidLocation: false,
-      reason: 'empty',
+      raw: original,
+      finalQuery: strongAlias,
+      label: strongAlias,
+      confidence: 'high',
     };
   }
 
-  const isUrl = looksLikeUrl(value);
+  const normalized = normalizeLooseText(original);
+  let finalText = titleCasePreserveWords(original);
+  let confidence: 'high' | 'medium' | 'low' = 'low';
 
-  if (isUrl) {
-    const urlValid = isValidHttpUrl(value);
-
-    if (!urlValid) {
-      return {
-        raw: value,
-        text: '',
-        isUrl: true,
-        urlValid: false,
-        isValidLocation: false,
-        reason: 'invalid_url',
-      };
+  for (const rule of SMART_LOCATION_HELPERS) {
+    if (rule.keys.some((k) => normalized.includes(normalizeLooseText(k)))) {
+      finalText = appendIfMissing(finalText, rule.append);
+      confidence = 'medium';
+      break;
     }
-
-    const extracted = extractLocationFromMapsUrl(value);
-    const finalText = extracted || '';
-    const isValidLocation = finalText.trim().length >= 6;
-
-    return {
-      raw: value,
-      text: finalText,
-      isUrl: true,
-      urlValid: true,
-      isValidLocation,
-      reason: isValidLocation ? 'ok' : 'weak',
-    };
   }
 
-  const compact = value.replace(/\s+/g, ' ').trim();
-  const hasEnoughText = compact.length >= 6;
-  const hasSomeStructure = compact.includes(',') || compact.split(' ').length >= 2;
+  const localSuggestion = LOCATION_SUGGESTIONS.find((item) => {
+    const normalizedItem = normalizeLooseText(item);
+    return normalizedItem === normalized || normalizedItem.includes(normalized);
+  });
+
+  if (
+    localSuggestion &&
+    normalizeLooseText(localSuggestion).length > normalizeLooseText(finalText).length
+  ) {
+    finalText = appendIfMissing(titleCasePreserveWords(original), localSuggestion);
+    confidence = 'high';
+  }
 
   return {
-    raw: value,
-    text: compact,
-    isUrl: false,
-    urlValid: false,
-    isValidLocation: hasEnoughText && hasSomeStructure,
-    reason: hasEnoughText && hasSomeStructure ? 'ok' : 'weak',
+    raw: original,
+    finalQuery: finalText,
+    label: finalText,
+    confidence,
   };
-}
-
-function buildSatelliteEmbedUrl(query: string) {
-  return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=k&z=17&ie=UTF8&iwloc=&output=embed`;
 }
 
 function buildGoogleMapsUrl(query: string) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
+function buildGoogleMapsEmbedUrl(query: string) {
+  return `https://maps.google.com/maps?q=${encodeURIComponent(
+    query
+  )}&t=k&z=15&ie=UTF8&iwloc=&output=embed`;
 }
 
 function FieldHint({
@@ -426,7 +474,7 @@ function CompactSettingsButton({
   );
 }
 
-function OrientationCard({
+function SectionEditHelp({
   theme,
   t,
 }: {
@@ -436,7 +484,7 @@ function OrientationCard({
   return (
     <div
       className={[
-        'rounded-xl border p-3.5',
+        'rounded-xl border p-3',
         theme === 'dark'
           ? 'border-white/10 bg-white/5'
           : 'border-slate-200 bg-slate-50',
@@ -444,52 +492,15 @@ function OrientationCard({
     >
       <div className="flex items-start gap-2.5">
         <Sparkles
-          size={16}
+          size={15}
           className={theme === 'dark' ? 'text-blue-200 mt-0.5 shrink-0' : 'text-blue-600 mt-0.5 shrink-0'}
         />
         <div className="min-w-0">
           <p className={['text-sm font-bold', theme === 'dark' ? 'text-white' : 'text-slate-900'].join(' ')}>
-            {t('contact_admin_help_title')}
+            {t('contact_edit_section_title')}
           </p>
-          <p className={['mt-1 text-[13px]', theme === 'dark' ? 'text-white/75' : 'text-slate-600'].join(' ')}>
-            {t('contact_admin_help_desc')}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PreviewGuideCard({ theme }: { theme: 'dark' | 'light' }) {
-  return (
-    <div
-      className={[
-        'rounded-xl border p-3.5',
-        theme === 'dark'
-          ? 'border-white/10 bg-white/5'
-          : 'border-slate-200 bg-slate-50',
-      ].join(' ')}
-    >
-      <div className="flex items-start gap-3">
-        <div
-          className={[
-            'shrink-0 rounded-xl border p-2',
-            theme === 'dark'
-              ? 'border-white/10 bg-slate-900'
-              : 'border-slate-200 bg-white',
-          ].join(' ')}
-        >
-          <div className="w-16 h-12 rounded-lg bg-gradient-to-br from-blue-500/80 to-slate-800 flex items-center justify-center">
-            <Store size={16} className="text-white" />
-          </div>
-        </div>
-
-        <div className="min-w-0">
-          <p className={['text-sm font-bold', theme === 'dark' ? 'text-white' : 'text-slate-900'].join(' ')}>
-            Public preview
-          </p>
-          <p className={['mt-1 text-[13px]', theme === 'dark' ? 'text-white/75' : 'text-slate-600'].join(' ')}>
-            This location preview appears in the public store page when the address is valid.
+          <p className={['mt-1 text-[12px]', theme === 'dark' ? 'text-white/75' : 'text-slate-600'].join(' ')}>
+            {t('contact_edit_section_desc')}
           </p>
         </div>
       </div>
@@ -504,6 +515,7 @@ function WhatsAppField({
   isAdminRoute,
   missingText,
   loadingText,
+  accent = false,
 }: {
   value: string;
   loading: boolean;
@@ -511,27 +523,84 @@ function WhatsAppField({
   isAdminRoute: boolean;
   missingText: string;
   loadingText: string;
+  accent?: boolean;
 }) {
   const visibleValue = loading ? loadingText : value || missingText;
 
-  return (
+  const inner = (
     <EditableDisplayField
       icon={Phone}
       label="WhatsApp"
       value={visibleValue}
       placeholder={missingText}
       editable={false}
-      theme={theme}
+      theme={accent ? 'dark' : theme}
       footer={
         isAdminRoute ? (
           <CompactSettingsButton
-            theme={theme}
+            theme={accent ? 'dark' : theme}
             to="/admin/configuracoes"
             label="Edit WhatsApp"
           />
         ) : null
       }
     />
+  );
+
+  if (!accent) return inner;
+
+  return (
+    <div className="rounded-[22px] bg-gradient-to-br from-blue-600 via-blue-700 to-slate-900 text-white p-4">
+      {inner}
+    </div>
+  );
+}
+
+function EmailField({
+  value,
+  loading,
+  theme,
+  isAdminRoute,
+  missingText,
+  loadingText,
+  accent = false,
+}: {
+  value: string;
+  loading: boolean;
+  theme: 'dark' | 'light';
+  isAdminRoute: boolean;
+  missingText: string;
+  loadingText: string;
+  accent?: boolean;
+}) {
+  const visibleValue = loading ? loadingText : value || missingText;
+
+  const inner = (
+    <EditableDisplayField
+      icon={Mail}
+      label="Email"
+      value={visibleValue}
+      placeholder={missingText}
+      editable={false}
+      theme={accent ? 'dark' : theme}
+      footer={
+        isAdminRoute ? (
+          <CompactSettingsButton
+            theme={accent ? 'dark' : theme}
+            to="/admin/configuracoes"
+            label="Edit Email"
+          />
+        ) : null
+      }
+    />
+  );
+
+  if (!accent) return inner;
+
+  return (
+    <div className="rounded-[22px] bg-gradient-to-br from-blue-600 via-blue-700 to-slate-900 text-white p-4">
+      {inner}
+    </div>
   );
 }
 
@@ -540,41 +609,66 @@ function LocationAssistField({
   value,
   onChange,
   onCommit,
-  status,
+  t,
 }: {
   theme: 'dark' | 'light';
   value: string;
   onChange: (v: string) => void;
   onCommit: (v: string) => void;
-  status: {
-    isValidLocation: boolean;
-    isUrl: boolean;
-    urlValid: boolean;
-    reason: string;
-  };
+  t: (key: string, vars?: Record<string, unknown>) => string;
 }) {
   const [open, setOpen] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const boxRef = useRef<HTMLDivElement | null>(null);
 
   const suggestions = useMemo(() => {
-    const q = value.trim().toLowerCase();
-    if (!q) return LOCAL_LOCATION_SUGGESTIONS.slice(0, 5);
+    const q = normalizeLooseText(value);
+    const smart = resolveLocationSmart(value);
 
-    return LOCAL_LOCATION_SUGGESTIONS.filter((item) =>
-      item.toLowerCase().includes(q)
-    ).slice(0, 6);
+    const scored = LOCATION_SUGGESTIONS.map((item) => {
+      const normalizedItem = normalizeLooseText(item);
+      let score = 0;
+
+      if (!q) {
+        score = 1;
+      } else {
+        if (normalizedItem === q) score += 100;
+        if (normalizedItem.startsWith(q)) score += 60;
+        if (normalizedItem.includes(q)) score += 35;
+
+        const qWords = q.split(/\s+/).filter(Boolean);
+        const itemWords = normalizedItem.split(/\s+/).filter(Boolean);
+
+        for (const word of qWords) {
+          if (itemWords.some((w) => w.startsWith(word))) score += 12;
+          else if (itemWords.some((w) => w.includes(word))) score += 6;
+        }
+      }
+
+      return { item, score };
+    })
+      .filter((x) => x.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map((x) => x.item);
+
+    const merged = Array.from(
+      new Set([...(smart?.label ? [smart.label] : []), ...scored])
+    );
+
+    return merged.slice(0, q ? 10 : 12);
   }, [value]);
 
   useEffect(() => {
-    function onDocClick(e: MouseEvent) {
+    function onDocMouseDown(e: MouseEvent) {
       if (!boxRef.current) return;
       if (!boxRef.current.contains(e.target as Node)) {
         setOpen(false);
+        setIsFocused(false);
       }
     }
 
-    document.addEventListener('mousedown', onDocClick);
-    return () => document.removeEventListener('mousedown', onDocClick);
+    document.addEventListener('mousedown', onDocMouseDown);
+    return () => document.removeEventListener('mousedown', onDocMouseDown);
   }, []);
 
   const inputClass =
@@ -584,40 +678,42 @@ function LocationAssistField({
 
   const suggestionSurface =
     theme === 'dark'
-      ? 'border-white/10 bg-slate-900'
+      ? 'border-white/10 bg-slate-950'
       : 'border-slate-200 bg-white';
 
-  return (
-    <div
-      ref={boxRef}
-      className={[
-        'rounded-xl border p-3',
-        theme === 'dark'
-          ? 'border-white/10 bg-white/5'
-          : 'border-slate-200 bg-white',
-      ].join(' ')}
-    >
-      <div className="flex items-center gap-2 mb-1.5">
-        <MapPin
-          size={15}
-          className={theme === 'dark' ? 'text-blue-100 shrink-0' : 'text-blue-600 shrink-0'}
-        />
-        <p
-          className={[
-            'text-[10px] font-black uppercase tracking-[0.18em]',
-            theme === 'dark' ? 'text-white/60' : 'text-slate-500',
-          ].join(' ')}
-        >
-          Location
-        </p>
-      </div>
+  const resolved = resolveLocationSmart(value);
+  const shouldShowDropdown = open && isFocused && suggestions.length > 0;
 
-      <div className="relative">
+  return (
+    <div ref={boxRef} className="relative z-[80]" style={{ isolation: 'isolate' }}>
+      <div
+        className={[
+          'rounded-xl border p-3',
+          theme === 'dark'
+            ? 'border-white/10 bg-white/5'
+            : 'border-slate-200 bg-white',
+        ].join(' ')}
+      >
+        <div className="flex items-center gap-2 mb-1.5">
+          <MapPin
+            size={15}
+            className={theme === 'dark' ? 'text-blue-100 shrink-0' : 'text-blue-600 shrink-0'}
+          />
+          <p
+            className={[
+              'text-[10px] font-black uppercase tracking-[0.18em]',
+              theme === 'dark' ? 'text-white/60' : 'text-slate-500',
+            ].join(' ')}
+          >
+            {t('contact_location_area_label')}
+          </p>
+        </div>
+
         <div className="relative">
           <Search
             size={15}
             className={[
-              'absolute left-3 top-1/2 -translate-y-1/2',
+              'absolute left-3 top-1/2 -translate-y-1/2 z-[1]',
               theme === 'dark' ? 'text-white/35' : 'text-slate-400',
             ].join(' ')}
           />
@@ -629,67 +725,235 @@ function LocationAssistField({
               onChange(next);
               setOpen(true);
             }}
-            onBlur={() => onCommit(value)}
-            onFocus={() => setOpen(true)}
-            placeholder="Street, City, Country"
+            onFocus={() => {
+              setIsFocused(true);
+              setOpen(true);
+            }}
+            onBlur={() => {
+              setIsFocused(false);
+              setOpen(false);
+              onCommit(value);
+            }}
+            placeholder={t('contact_location_placeholder')}
             className={`w-full rounded-xl border pl-10 pr-3 py-3 text-base outline-none focus:border-blue-500 transition ${inputClass}`}
+            style={{ fontSize: 16 }}
+            autoComplete="off"
           />
         </div>
 
-        {open && suggestions.length > 0 ? (
+        <p
+          className={[
+            'mt-2 text-[12px]',
+            theme === 'dark' ? 'text-white/55' : 'text-slate-500',
+          ].join(' ')}
+        >
+          {t('contact_location_help')}
+        </p>
+
+        <FieldHint theme={theme}>
+          <span>{t('contact_location_max', { count: LOCATION_MAX })}</span>
+          <span>
+            {resolved
+              ? t('contact_location_final', { value: resolved.label })
+              : t('contact_location_smart_help')}
+          </span>
+        </FieldHint>
+
+        {resolved ? (
           <div
-            className={`absolute z-20 mt-2 w-full overflow-hidden rounded-xl border shadow-lg ${suggestionSurface}`}
+            className={`mt-2 inline-flex items-center gap-2 text-[12px] ${
+              theme === 'dark' ? 'text-emerald-300' : 'text-emerald-600'
+            }`}
           >
-            {suggestions.map((item) => (
-              <button
-                key={item}
-                type="button"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  onChange(item);
-                  onCommit(item);
-                  setOpen(false);
-                }}
-                className={[
-                  'w-full text-left px-3 py-2.5 text-sm transition',
-                  theme === 'dark'
-                    ? 'text-white hover:bg-white/5'
-                    : 'text-slate-700 hover:bg-slate-50',
-                ].join(' ')}
-              >
-                {item}
-              </button>
-            ))}
+            <CheckCircle2 size={14} />
+            {t('contact_location_final_search', { value: resolved.label })}
           </div>
         ) : null}
       </div>
 
-      <p className={['mt-2 text-[12px]', theme === 'dark' ? 'text-white/55' : 'text-slate-500'].join(' ')}>
-        Search or paste a Google Maps link.
-      </p>
-
-      <FieldHint theme={theme}>
-        <span>Max {LOCATION_MAX}</span>
-      </FieldHint>
-
-      {value.trim().length > 0 && status.isValidLocation && (
-        <div className={`mt-2 inline-flex items-center gap-2 text-[12px] ${theme === 'dark' ? 'text-emerald-300' : 'text-emerald-600'}`}>
-          <CheckCircle2 size={14} />
-          Valid location
+      {shouldShowDropdown ? (
+        <div
+          className={`absolute left-0 right-0 top-full mt- z-[999] overflow-hidden rounded-xl border shadow-2xl ${suggestionSurface}`}
+        >
+<div className="max-h-52 overflow-y-auto overscroll-contain">            {suggestions.map((item) => (
+              <button
+                key={item}
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  onChange(item);
+                  onCommit(item);
+                  setOpen(false);
+                  setIsFocused(false);
+                }}
+                className={[
+                  'w-full text-left px-3 py-3 text-sm transition border-b last:border-b-0',
+                  theme === 'dark'
+                    ? 'text-white hover:bg-white/5 border-white/5'
+                    : 'text-slate-700 hover:bg-slate-50 border-slate-100',
+                ].join(' ')}
+              >
+                <div className="font-semibold break-words">{item}</div>
+                <div
+                  className={`text-[11px] ${
+                    theme === 'dark' ? 'text-white/45' : 'text-slate-400'
+                  }`}
+                >
+                  {t('contact_location_dropdown_hint')}
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
-      )}
+      ) : null}
+    </div>
+  );
+}
 
-      {value.trim().length > 0 && !status.isValidLocation && status.reason === 'invalid_url' && (
-        <div className={`mt-2 text-[12px] ${theme === 'dark' ? 'text-red-300' : 'text-red-600'}`}>
-          Invalid URL.
-        </div>
-      )}
+function SimpleMap({
+  finalQuery,
+  label,
+}: {
+  finalQuery: string;
+  label: string;
+}) {
+  return (
+    <div className="rounded-[22px] overflow-hidden border border-slate-200 dark:border-white/10">
+      <div className="h-[250px] md:h-[320px] xl:h-[520px]">
+        <iframe
+          title={label}
+          src={buildGoogleMapsEmbedUrl(finalQuery)}
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          className="w-full h-full border-0"
+        />
+      </div>
 
-      {value.trim().length > 0 && !status.isValidLocation && status.reason !== 'invalid_url' && (
-        <div className={`mt-2 text-[12px] ${theme === 'dark' ? 'text-amber-200' : 'text-amber-600'}`}>
-          Add a clearer location to show the map.
+      <div className="flex items-center justify-between gap-3 px-3 py-3 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-white/10">
+        <div className="min-w-0">
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-white/50">
+            Location
+          </p>
+          <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+            {label}
+          </p>
         </div>
-      )}
+
+        <a
+          href={buildGoogleMapsUrl(finalQuery)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-[10px] font-black uppercase tracking-[0.15em] text-white hover:bg-blue-700 transition-colors"
+        >
+          Open
+          <ExternalLink size={13} />
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function FormCard({
+  formDisabled,
+  hasAnyContact,
+  storeLoading,
+  inputClass,
+  visitorName,
+  setVisitorName,
+  visitorMessage,
+  setVisitorMessage,
+  openModal,
+  t,
+  isAdminRoute,
+}: {
+  formDisabled: boolean;
+  hasAnyContact: boolean;
+  storeLoading: boolean;
+  inputClass: string;
+  visitorName: string;
+  setVisitorName: React.Dispatch<React.SetStateAction<string>>;
+  visitorMessage: string;
+  setVisitorMessage: React.Dispatch<React.SetStateAction<string>>;
+  openModal: () => void;
+  t: (key: string, vars?: Record<string, unknown>) => string;
+  isAdminRoute: boolean;
+}) {
+  return (
+    <div className="rounded-[24px] bg-gradient-to-br from-blue-600 via-blue-700 to-slate-900 text-white p-4 md:p-5 overflow-hidden">
+      <div className="flex items-start justify-between gap-3 min-w-0">
+        <div className="min-w-0">
+          <p className="text-[10px] uppercase tracking-[0.18em] font-black text-white/60 mb-1.5">
+            {t('contact_form_title')}
+          </p>
+          <h3 className="text-lg md:text-xl font-black tracking-tight break-words">
+            {t('contact_form_card_title')}
+          </h3>
+          <p className="mt-1.5 text-sm text-white/75 break-words">
+            {t('contact_form_card_desc')}
+          </p>
+        </div>
+
+        <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+          <Send size={16} />
+        </div>
+      </div>
+
+      <div className="mt-4">
+        {!hasAnyContact && !storeLoading ? (
+          <WarningCard
+            isAdminRoute={isAdminRoute}
+            dark
+            title={t('contact_unavailable_title')}
+            desc={t('contact_unavailable_desc')}
+            action={t('contact_go_settings')}
+          />
+        ) : (
+          <div className="grid gap-2.5">
+            <input
+              value={visitorName}
+              onChange={(e) =>
+                setVisitorName(clampText(e.target.value, NAME_MAX))
+              }
+              disabled={formDisabled}
+              maxLength={NAME_MAX}
+              placeholder={t('contact_form_name_placeholder')}
+              className={`w-full min-w-0 rounded-xl border px-3 py-3 text-base outline-none focus:border-blue-400 transition ${inputClass} ${
+                formDisabled ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
+              style={{ fontSize: 16 }}
+            />
+
+            <textarea
+              value={visitorMessage}
+              onChange={(e) =>
+                setVisitorMessage(clampText(e.target.value, MESSAGE_MAX))
+              }
+              disabled={formDisabled}
+              rows={4}
+              maxLength={MESSAGE_MAX}
+              placeholder={t('contact_form_message_placeholder')}
+              className={`w-full min-w-0 rounded-xl border px-3 py-3 text-base outline-none focus:border-blue-400 transition resize-none ${inputClass} ${
+                formDisabled ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
+              style={{ fontSize: 16 }}
+            />
+
+            <FieldHint theme="dark">
+              <span>{t('contact_form_name_limit', { count: NAME_MAX })}</span>
+              <span>{t('contact_form_message_limit', { count: MESSAGE_MAX })}</span>
+            </FieldHint>
+
+            <button
+              type="button"
+              onClick={openModal}
+              disabled={formDisabled || !hasAnyContact}
+              className="w-full rounded-xl bg-white text-slate-900 py-3 px-4 font-black uppercase tracking-[0.15em] text-[10px] flex items-center justify-center gap-2 hover:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {t('contact_send_now')} <Send size={14} />
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -704,10 +968,13 @@ function ContactoMapaComponent({
   };
 
   const route = useLocation();
+
   const [showModal, setShowModal] = useState(false);
   const [visitorName, setVisitorName] = useState('');
   const [visitorMessage, setVisitorMessage] = useState('');
-  const [adminLocationInput, setAdminLocationInput] = useState(content.location?.trim() || '');
+  const [adminLocationInput, setAdminLocationInput] = useState(
+    content.location?.trim() || ''
+  );
 
   useEffect(() => {
     setAdminLocationInput(content.location?.trim() || '');
@@ -756,23 +1023,31 @@ function ContactoMapaComponent({
 
   const store = storeQuery.data || null;
 
-  const resolvedPhone = useMemo(() => store?.whatsapp_number?.trim() || '', [store?.whatsapp_number]);
-  const resolvedEmail = useMemo(() => store?.owner_email?.trim() || '', [store?.owner_email]);
+  const resolvedPhone = useMemo(
+    () => store?.whatsapp_number?.trim() || '',
+    [store?.whatsapp_number]
+  );
+  const resolvedEmail = useMemo(
+    () => store?.owner_email?.trim() || '',
+    [store?.owner_email]
+  );
 
   const resolvedTitle = clampText(content.title || t('contact_title'), TITLE_MAX);
-  const resolvedSubtitle = clampText(content.subtitle || t('contact_subtitle'), SUBTITLE_MAX);
+  const resolvedSubtitle = clampText(
+    content.subtitle || t('contact_subtitle'),
+    SUBTITLE_MAX
+  );
 
   const effectiveLocationValue = isAdminRoute
     ? adminLocationInput
     : content.location?.trim() || '';
 
-  const locationState = useMemo(
-    () => normalizeLocationInput(effectiveLocationValue),
+  const resolvedLocation = useMemo(
+    () => resolveLocationSmart(effectiveLocationValue),
     [effectiveLocationValue]
   );
 
-  const mapQuery = locationState.text;
-  const hasLocation = locationState.isValidLocation;
+  const showPublicMap = !isAdminRoute && !!resolvedLocation;
 
   const phoneDigits = useMemo(() => normalizePhone(resolvedPhone), [resolvedPhone]);
   const hasWhatsapp = phoneDigits.length >= 8;
@@ -789,18 +1064,10 @@ function ContactoMapaComponent({
       ? 'bg-white/[0.04] border border-white/10'
       : 'bg-white border border-slate-200 shadow-sm';
 
-  const softSurfaceClass =
-    theme === 'dark'
-      ? 'bg-white/[0.03] border border-white/10'
-      : 'bg-slate-50 border border-slate-200';
-
   const inputClass =
     theme === 'dark'
       ? 'bg-white/5 border-white/10 text-white placeholder-white/35'
       : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400';
-
-  const accentClass =
-    'bg-gradient-to-br from-blue-600 via-blue-700 to-slate-900 text-white';
 
   const editableTitleProps = isAdminRoute
     ? createEditableHandlers('title', TITLE_MAX, onUpdate)
@@ -811,7 +1078,6 @@ function ContactoMapaComponent({
     : {};
 
   const formDisabled = isAdminRoute;
-  const showMap = !isAdminRoute && hasLocation;
 
   const commitLocation = useCallback(
     (value: string) => {
@@ -839,7 +1105,9 @@ function ContactoMapaComponent({
           .filter(Boolean)
           .join('\n');
 
-        const whatsappUrl = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(text)}`;
+        const whatsappUrl = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(
+          text
+        )}`;
         window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
       }
 
@@ -862,37 +1130,16 @@ function ContactoMapaComponent({
 
       setShowModal(false);
     },
-    [hasWhatsapp, hasEmail, phoneDigits, resolvedEmail, resolvedTitle, t, visitorMessage, visitorName]
-  );
-
-  const compactHeaderClass = style.align === 'center' ? 'mx-auto' : '';
-
-  const phoneField = (
-    <WhatsAppField
-      value={resolvedPhone}
-      loading={storeQuery.isLoading}
-      theme={theme}
-      isAdminRoute={isAdminRoute}
-      missingText={t('contact_missing_value')}
-      loadingText={t('contact_loading_contact')}
-    />
-  );
-
-  const emailField = (
-    <EditableDisplayField
-      icon={Mail}
-      label={t('contact_label_email')}
-      value={
-        storeQuery.isLoading
-          ? t('contact_loading_contact')
-          : hasEmail
-          ? resolvedEmail
-          : t('contact_missing_value')
-      }
-      placeholder={t('contact_missing_value')}
-      editable={false}
-      theme={theme}
-    />
+    [
+      hasWhatsapp,
+      hasEmail,
+      phoneDigits,
+      resolvedEmail,
+      resolvedTitle,
+      t,
+      visitorMessage,
+      visitorName,
+    ]
   );
 
   const locationField = isAdminRoute ? (
@@ -901,24 +1148,41 @@ function ContactoMapaComponent({
       value={adminLocationInput}
       onChange={setAdminLocationInput}
       onCommit={commitLocation}
-      status={locationState}
+      t={t}
     />
-  ) : (
+  ) : resolvedLocation ? (
     <EditableDisplayField
       icon={MapPin}
       label={t('contact_label_location')}
-      value={content.location?.trim() || ''}
+      value={resolvedLocation.label}
       placeholder=""
       editable={false}
       theme={theme}
+      helpText={t('contact_location_final_help')}
     />
-  );
+  ) : null;
+
+  const topHelp = isAdminRoute ? <SectionEditHelp theme={theme} t={t} /> : null;
+
+  const publicMap =
+    showPublicMap && resolvedLocation ? (
+      <SimpleMap
+        finalQuery={resolvedLocation.finalQuery}
+        label={resolvedLocation.label}
+      />
+    ) : null;
 
   return (
-    <section className={`py-10 md:py-14 px-4 sm:px-6 ${sectionClass}`}>
-      <div className="max-w-6xl mx-auto">
-        <div className={`mb-6 flex flex-col ${headerAlign}`}>
-          <div className={`w-full ${style.align === 'center' ? 'max-w-2xl mx-auto' : 'max-w-3xl'} min-w-0`}>
+    <section className={`py-8 md:py-10 px-4 sm:px-5 ${sectionClass}`}>
+      <div className="max-w-6xl mx-auto space-y-4">
+        {topHelp}
+
+        <div className={`flex flex-col ${headerAlign}`}>
+          <div
+            className={`w-full ${
+              style.align === 'center' ? 'max-w-2xl mx-auto' : 'max-w-3xl'
+            } min-w-0`}
+          >
             <h2
               {...editableTitleProps}
               suppressContentEditableWarning
@@ -940,7 +1204,6 @@ function ContactoMapaComponent({
               suppressContentEditableWarning
               className={[
                 'mt-2 text-sm opacity-75 outline-none break-words max-w-full min-w-0',
-                compactHeaderClass,
                 isAdminRoute
                   ? theme === 'dark'
                     ? 'rounded-xl border border-dashed border-white/15 bg-white/5 px-3 py-2'
@@ -955,25 +1218,32 @@ function ContactoMapaComponent({
         </div>
 
         {gridMode === '2' && (
-          <div className="grid grid-cols-1 xl:grid-cols-[1.05fr_0.95fr] gap-4 items-start">
+          <div className={showPublicMap ? 'grid grid-cols-1 xl:grid-cols-[1.05fr_0.95fr] gap-4 items-start' : 'space-y-4'}>
             <div className="min-w-0 space-y-4">
-              <div className={`${surfaceClass} rounded-[24px] p-4 md:p-5 overflow-hidden`}>
+              <div className={`${surfaceClass} rounded-[24px] p-4 overflow-visible`}>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {phoneField}
-                  {emailField}
+                  <WhatsAppField
+                    value={resolvedPhone}
+                    loading={storeQuery.isLoading}
+                    theme={theme}
+                    isAdminRoute={isAdminRoute}
+                    missingText={t('contact_missing_value')}
+                    loadingText={t('contact_loading_contact')}
+                  />
+
+                  <EmailField
+                    value={resolvedEmail}
+                    loading={storeQuery.isLoading}
+                    theme={theme}
+                    isAdminRoute={isAdminRoute}
+                    missingText={t('contact_missing_value')}
+                    loadingText={t('contact_loading_contact')}
+                  />
                 </div>
 
-                <div className="mt-3">
-                  {locationField}
-                </div>
+                {locationField ? <div className="mt-3">{locationField}</div> : null}
 
-                {isAdminRoute && (
-                  <div className="mt-3">
-                    <PreviewGuideCard theme={theme} />
-                  </div>
-                )}
-
-                {!hasAnyContact && !storeQuery.isLoading && (
+                {!hasAnyContact && !storeQuery.isLoading ? (
                   <div className="mt-3">
                     <WarningCard
                       isAdminRoute={isAdminRoute}
@@ -983,306 +1253,116 @@ function ContactoMapaComponent({
                       action={t('contact_go_settings')}
                     />
                   </div>
-                )}
-
-                {isAdminRoute && (
-                  <div className="mt-3">
-                    <OrientationCard theme={theme} t={t} />
-                  </div>
-                )}
+                ) : null}
               </div>
 
-              <div className={`${accentClass} rounded-[24px] p-4 md:p-5 overflow-hidden`}>
-                <div className="flex items-start justify-between gap-3 min-w-0">
-                  <div className="min-w-0">
-                    <p className="text-[10px] uppercase tracking-[0.18em] font-black text-white/60 mb-1.5">
-                      {t('contact_form_title')}
-                    </p>
-                    <h3 className="text-lg md:text-xl font-black tracking-tight break-words">
-                      {t('contact_form_card_title')}
-                    </h3>
-                    <p className="mt-1.5 text-sm text-white/75 break-words">
-                      {t('contact_form_card_desc')}
-                    </p>
-                  </div>
-
-                  <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-                    <Send size={16} />
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  {!hasAnyContact && !storeQuery.isLoading ? (
-                    <WarningCard
-                      isAdminRoute={isAdminRoute}
-                      dark
-                      title={t('contact_unavailable_title')}
-                      desc={t('contact_unavailable_desc')}
-                      action={t('contact_go_settings')}
-                    />
-                  ) : (
-                    <div className="grid gap-2.5">
-                      <input
-                        value={visitorName}
-                        onChange={(e) => setVisitorName(clampText(e.target.value, NAME_MAX))}
-                        disabled={formDisabled}
-                        maxLength={NAME_MAX}
-                        placeholder={t('contact_form_name_placeholder')}
-                        className={`w-full min-w-0 rounded-xl border px-3 py-3 text-base outline-none focus:border-blue-400 transition ${inputClass} ${formDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
-                      />
-
-                      <textarea
-                        value={visitorMessage}
-                        onChange={(e) => setVisitorMessage(clampText(e.target.value, MESSAGE_MAX))}
-                        disabled={formDisabled}
-                        rows={4}
-                        maxLength={MESSAGE_MAX}
-                        placeholder={t('contact_form_message_placeholder')}
-                        className={`w-full min-w-0 rounded-xl border px-3 py-3 text-base outline-none focus:border-blue-400 transition resize-none ${inputClass} ${formDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
-                      />
-
-                      <FieldHint theme="dark">
-                        <span>{t('contact_form_name_limit', { count: NAME_MAX })}</span>
-                        <span>{t('contact_form_message_limit', { count: MESSAGE_MAX })}</span>
-                      </FieldHint>
-
-                      <button
-                        type="button"
-                        onClick={openModal}
-                        disabled={formDisabled || !hasAnyContact}
-                        className="w-full rounded-xl bg-white text-slate-900 py-3 px-4 font-black uppercase tracking-[0.15em] text-[10px] flex items-center justify-center gap-2 hover:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {t('contact_send_now')} <Send size={14} />
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {!isAdminRoute && hasLocation && (
-                  <div className="mt-3 grid sm:grid-cols-2 gap-2.5">
-                    <a
-                      href={buildGoogleMapsUrl(mapQuery)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/10 px-4 py-3 font-black uppercase tracking-[0.15em] text-[10px] hover:bg-white/15 transition-colors"
-                    >
-                      {t('contact_open_maps')} <ExternalLink size={14} />
-                    </a>
-
-                    <a
-                      href={buildGoogleMapsUrl(mapQuery)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-white text-slate-900 px-4 py-3 font-black uppercase tracking-[0.15em] text-[10px] hover:bg-slate-100 transition-colors"
-                    >
-                      {t('contact_route_now')} <Navigation size={14} />
-                    </a>
-                  </div>
-                )}
-              </div>
+              <FormCard
+                formDisabled={formDisabled}
+                hasAnyContact={hasAnyContact}
+                storeLoading={storeQuery.isLoading}
+                inputClass={inputClass}
+                visitorName={visitorName}
+                setVisitorName={setVisitorName}
+                visitorMessage={visitorMessage}
+                setVisitorMessage={setVisitorMessage}
+                openModal={openModal}
+                t={t}
+                isAdminRoute={isAdminRoute}
+              />
             </div>
 
-            <div className="min-w-0">
-              {showMap ? (
-                <div className={`${surfaceClass} rounded-[24px] overflow-hidden xl:sticky xl:top-6`}>
-                  <div className="p-3 border-b border-slate-200 dark:border-white/10">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <MapPin size={15} className={theme === 'dark' ? 'text-white/70 shrink-0' : 'text-slate-500 shrink-0'} />
-                      <p
-                        className={[
-                          'text-[12px] font-semibold break-words',
-                          theme === 'dark' ? 'text-white/85' : 'text-slate-700',
-                        ].join(' ')}
-                        style={{ overflowWrap: 'anywhere' }}
-                      >
-                        {mapQuery}
-                      </p>
-                    </div>
-                  </div>
-
-                  <iframe
-                    title={resolvedTitle}
-                    src={buildSatelliteEmbedUrl(mapQuery)}
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    className="w-full h-[240px] md:h-[300px] xl:h-[520px]"
-                  />
-                </div>
-              ) : (
-                <div
-                  className={[
-                    'rounded-[24px] border border-dashed p-4 text-sm text-center',
-                    theme === 'dark'
-                      ? 'border-white/10 text-white/65'
-                      : 'border-slate-300 text-slate-500',
-                  ].join(' ')}
-                >
-                  {isAdminRoute
-                    ? 'The public map preview will appear here after a valid location is added.'
-                    : 'Map will appear after a valid location is added.'}
-                </div>
-              )}
-            </div>
+            {showPublicMap ? <div className="min-w-0">{publicMap}</div> : null}
           </div>
         )}
 
         {gridMode === '1' && (
-          <div className="grid grid-cols-1 xl:grid-cols-[0.96fr_1.04fr] gap-4">
-            <div className={`${accentClass} rounded-[24px] p-4 md:p-5`}>
-              <div className="grid gap-2.5">
+          <div className={showPublicMap ? 'grid grid-cols-1 xl:grid-cols-[0.96fr_1.04fr] gap-4' : 'space-y-4'}>
+            <div className={`${surfaceClass} rounded-[24px] p-4 overflow-visible`}>
+              <div className="grid gap-3">
                 <WhatsAppField
                   value={resolvedPhone}
                   loading={storeQuery.isLoading}
-                  theme="dark"
+                  theme={theme}
                   isAdminRoute={isAdminRoute}
                   missingText={t('contact_missing_value')}
                   loadingText={t('contact_loading_contact')}
                 />
 
-                <EditableDisplayField
-                  icon={Mail}
-                  label={t('contact_label_email')}
-                  value={
-                    storeQuery.isLoading
-                      ? t('contact_loading_contact')
-                      : hasEmail
-                      ? resolvedEmail
-                      : t('contact_missing_value')
-                  }
-                  placeholder={t('contact_missing_value')}
-                  editable={false}
-                  theme="dark"
+                <EmailField
+                  value={resolvedEmail}
+                  loading={storeQuery.isLoading}
+                  theme={theme}
+                  isAdminRoute={isAdminRoute}
+                  missingText={t('contact_missing_value')}
+                  loadingText={t('contact_loading_contact')}
                 />
 
-                {isAdminRoute ? (
-                  <LocationAssistField
-                    theme="dark"
-                    value={adminLocationInput}
-                    onChange={setAdminLocationInput}
-                    onCommit={commitLocation}
-                    status={locationState}
-                  />
-                ) : (
-                  <EditableDisplayField
-                    icon={MapPin}
-                    label={t('contact_label_location')}
-                    value={content.location?.trim() || ''}
-                    placeholder=""
-                    editable={false}
-                    theme="dark"
-                  />
-                )}
-
-                {isAdminRoute && <PreviewGuideCard theme="dark" />}
-                {isAdminRoute && <OrientationCard theme="dark" t={t} />}
+                {locationField}
               </div>
             </div>
 
-            <div className={`${surfaceClass} rounded-[24px] p-3 md:p-4`}>
-              <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.02fr] gap-3">
-                <div className={`${softSurfaceClass} rounded-[20px] p-4`}>
-                  <h3 className="text-base md:text-lg font-black tracking-tight mb-3">
-                    {t('contact_form_title')}
-                  </h3>
-
-                  {!hasAnyContact && !storeQuery.isLoading ? (
-                    <WarningCard
-                      isAdminRoute={isAdminRoute}
-                      title={t('contact_unavailable_title')}
-                      desc={t('contact_unavailable_desc')}
-                      action={t('contact_go_settings')}
-                    />
-                  ) : (
-                    <div className="grid gap-2.5">
-                      <input
-                        value={visitorName}
-                        onChange={(e) => setVisitorName(clampText(e.target.value, NAME_MAX))}
-                        disabled={formDisabled}
-                        maxLength={NAME_MAX}
-                        placeholder={t('contact_form_name_placeholder')}
-                        className={`w-full rounded-xl border px-3 py-3 text-base outline-none focus:border-blue-500 transition ${inputClass} ${formDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
-                      />
-                      <textarea
-                        value={visitorMessage}
-                        onChange={(e) => setVisitorMessage(clampText(e.target.value, MESSAGE_MAX))}
-                        disabled={formDisabled}
-                        rows={4}
-                        maxLength={MESSAGE_MAX}
-                        placeholder={t('contact_form_message_placeholder')}
-                        className={`w-full rounded-xl border px-3 py-3 text-base outline-none focus:border-blue-500 transition resize-none ${inputClass} ${formDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
-                      />
-                      <button
-                        type="button"
-                        onClick={openModal}
-                        disabled={formDisabled || !hasAnyContact}
-                        className="w-full rounded-xl bg-blue-600 text-white py-3 px-4 font-black uppercase tracking-[0.16em] text-[10px] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {t('contact_send_now')} <Send size={14} />
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {showMap ? (
-                  <div className="rounded-[20px] overflow-hidden border border-white/10 min-h-[220px]">
-                    <iframe
-                      title={resolvedTitle}
-                      src={buildSatelliteEmbedUrl(mapQuery)}
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                      className="w-full h-[220px] md:h-[250px] lg:h-full"
-                    />
-                  </div>
-                ) : (
-                  <div className="rounded-[20px] border border-dashed border-slate-200 dark:border-white/10 p-4 flex items-center justify-center text-center text-sm opacity-70">
-                    {isAdminRoute
-                      ? 'The public map preview will appear here after a valid location is added.'
-                      : 'Map will appear after a valid location is added.'}
-                  </div>
-                )}
+            {showPublicMap ? (
+              <div className="space-y-4">
+                {publicMap}
+                <FormCard
+                  formDisabled={formDisabled}
+                  hasAnyContact={hasAnyContact}
+                  storeLoading={storeQuery.isLoading}
+                  inputClass={inputClass}
+                  visitorName={visitorName}
+                  setVisitorName={setVisitorName}
+                  visitorMessage={visitorMessage}
+                  setVisitorMessage={setVisitorMessage}
+                  openModal={openModal}
+                  t={t}
+                  isAdminRoute={isAdminRoute}
+                />
               </div>
-            </div>
+            ) : (
+              <FormCard
+                formDisabled={formDisabled}
+                hasAnyContact={hasAnyContact}
+                storeLoading={storeQuery.isLoading}
+                inputClass={inputClass}
+                visitorName={visitorName}
+                setVisitorName={setVisitorName}
+                visitorMessage={visitorMessage}
+                setVisitorMessage={setVisitorMessage}
+                openModal={openModal}
+                t={t}
+                isAdminRoute={isAdminRoute}
+              />
+            )}
           </div>
         )}
 
         {gridMode === '4' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5">
-            <div className={`${accentClass} rounded-[22px] p-4`}>
+            <EmailField
+              value={resolvedEmail}
+              loading={storeQuery.isLoading}
+              theme={theme}
+              isAdminRoute={isAdminRoute}
+              missingText={t('contact_missing_value')}
+              loadingText={t('contact_loading_contact')}
+              accent
+            />
+
+            <div className={`${surfaceClass} rounded-[22px] p-4`}>
               <WhatsAppField
                 value={resolvedPhone}
                 loading={storeQuery.isLoading}
-                theme="dark"
+                theme={theme}
                 isAdminRoute={isAdminRoute}
                 missingText={t('contact_missing_value')}
                 loadingText={t('contact_loading_contact')}
               />
             </div>
 
-            <div className={`${surfaceClass} rounded-[22px] p-4`}>
-              <div className="grid gap-2.5">
-                {emailField}
-                {locationField}
-              </div>
-            </div>
-
-            <div className={`${surfaceClass} rounded-[22px] overflow-hidden min-h-[200px]`}>
-              {showMap ? (
-                <iframe
-                  title={resolvedTitle}
-                  src={buildSatelliteEmbedUrl(mapQuery)}
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  className="w-full h-[200px]"
-                />
-              ) : (
-                <div className="h-[200px] flex items-center justify-center text-center text-sm opacity-70 px-4">
-                  {isAdminRoute ? (
-                    <div className="px-3">
-                      <PreviewGuideCard theme={theme} />
-                    </div>
-                  ) : (
-                    'Map will appear after a valid location is added.'
-                  )}
+            <div className={`${surfaceClass} rounded-[22px] p-4 overflow-visible`}>
+              {locationField || (
+                <div className="text-sm text-slate-500 dark:text-white/55">
+                  {isAdminRoute ? t('contact_add_location_here') : ''}
                 </div>
               )}
             </div>
@@ -1303,21 +1383,31 @@ function ContactoMapaComponent({
                 <div className="grid gap-2.5">
                   <input
                     value={visitorName}
-                    onChange={(e) => setVisitorName(clampText(e.target.value, NAME_MAX))}
+                    onChange={(e) =>
+                      setVisitorName(clampText(e.target.value, NAME_MAX))
+                    }
                     disabled={formDisabled}
                     maxLength={NAME_MAX}
                     placeholder={t('contact_form_name_placeholder')}
-                    className={`w-full rounded-xl border px-3 py-3 text-base outline-none focus:border-blue-500 transition ${inputClass} ${formDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    className={`w-full rounded-xl border px-3 py-3 text-base outline-none focus:border-blue-500 transition ${inputClass} ${
+                      formDisabled ? 'opacity-60 cursor-not-allowed' : ''
+                    }`}
+                    style={{ fontSize: 16 }}
                   />
 
                   <textarea
                     value={visitorMessage}
-                    onChange={(e) => setVisitorMessage(clampText(e.target.value, MESSAGE_MAX))}
+                    onChange={(e) =>
+                      setVisitorMessage(clampText(e.target.value, MESSAGE_MAX))
+                    }
                     disabled={formDisabled}
                     rows={3}
                     maxLength={MESSAGE_MAX}
                     placeholder={t('contact_form_message_placeholder')}
-                    className={`w-full rounded-xl border px-3 py-3 text-base outline-none focus:border-blue-500 transition resize-none ${inputClass} ${formDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    className={`w-full rounded-xl border px-3 py-3 text-base outline-none focus:border-blue-500 transition resize-none ${inputClass} ${
+                      formDisabled ? 'opacity-60 cursor-not-allowed' : ''
+                    }`}
+                    style={{ fontSize: 16 }}
                   />
 
                   <button
@@ -1331,6 +1421,10 @@ function ContactoMapaComponent({
                 </div>
               )}
             </div>
+
+            {showPublicMap ? (
+              <div className="sm:col-span-2 xl:col-span-4">{publicMap}</div>
+            ) : null}
           </div>
         )}
       </div>

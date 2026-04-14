@@ -1,166 +1,177 @@
-// src/data/locationSuggestions.ts
+export const LOCATION_SUGGESTIONS = [
+  // Mozambique
+  'Maputo',
+  'Maputo, Mozambique',
+  'Cidade de Maputo, Mozambique',
+  'Baixa de Maputo, Mozambique',
+  'Polana, Maputo, Mozambique',
+  'Polana Cimento, Maputo, Mozambique',
+  'Costa do Sol, Maputo, Mozambique',
+  'Magoanine, Maputo, Mozambique',
+  'Zimpeto',
+  'Zimpeto, Maputo, Mozambique',
+  'Bairro do Zimpeto, Maputo, Mozambique',
+  'ISCTEM',
+  'ISCTEM, Maputo, Mozambique',
+  'Universidade Eduardo Mondlane',
+  'Universidade Eduardo Mondlane, Maputo, Mozambique',
+  'UEM, Maputo, Mozambique',
+  'Matola',
+  'Matola, Mozambique',
+  'Matola Gare, Mozambique',
+  'Machava',
+  'Machava, Matola, Mozambique',
+  'Boane, Mozambique',
+  'Marracuene, Mozambique',
+  'Xai-Xai, Mozambique',
+  'Chimoio, Mozambique',
+  'Beira',
+  'Beira, Mozambique',
+  'Tete',
+  'Tete, Mozambique',
+  'Nampula, Mozambique',
+  'Pemba, Mozambique',
+  'Quelimane, Mozambique',
+  'Nacala, Mozambique',
+  'Inhambane, Mozambique',
 
-export const LOCATION_SUGGESTIONS: string[] = [
+  // India
+  'India',
+  'Punjab, India',
+  'Ludhiana',
+  'Ludhiana, Punjab, India',
+  'CT University',
+  'CT University Ludhiana',
+  'CT University, Ludhiana, Punjab, India',
+  'CTU',
+  'CTU Ludhiana',
+  'Jalandhar, Punjab, India',
+  'Amritsar, Punjab, India',
+  'Chandigarh, India',
+  'Delhi, India',
+  'New Delhi, India',
+  'Mumbai, India',
+  'Bangalore, India',
+  'Bengaluru, India',
+  'Hyderabad, India',
+  'Chennai, India',
+  'Kolkata, India',
+  'Pune, India',
+  'Ahmedabad, India',
+  'Jaipur, India',
+  'Goa, India',
+  'Kochi, India',
 
-    // =========================
-    // 🇲🇿 MOZAMBIQUE
-    // =========================
-  
-    'Maputo, Mozambique',
-    'Matola, Mozambique',
-    'Beira, Mozambique',
-    'Nampula, Mozambique',
-    'Chimoio, Mozambique',
-    'Quelimane, Mozambique',
-    'Tete, Mozambique',
-    'Pemba, Mozambique',
-    'Xai-Xai, Mozambique',
-    'Lichinga, Mozambique',
-  
-    'Baixa, Maputo, Mozambique',
-    'Polana, Maputo, Mozambique',
-    'Sommerschield, Maputo, Mozambique',
-    'Costa do Sol, Maputo, Mozambique',
-    'Zimpeto, Maputo, Mozambique',
-    'Malhangalene, Maputo, Mozambique',
-    'Maxaquene, Maputo, Mozambique',
-  
-    'Avenida Julius Nyerere, Maputo, Mozambique',
-    'Avenida 24 de Julho, Maputo, Mozambique',
-    'Avenida Eduardo Mondlane, Maputo, Mozambique',
-    'Avenida Vladimir Lenine, Maputo, Mozambique',
-  
-    'Matola Rio, Matola, Mozambique',
-    'Matola Gare, Matola, Mozambique',
-    'Machava, Matola, Mozambique',
-    'Liberdade, Matola, Mozambique',
-  
-    'Praia da Costa do Sol, Maputo, Mozambique',
-    'Mercado Central, Maputo, Mozambique',
-    'Aeroporto Internacional de Maputo, Mozambique',
-  
-    'Universidade Eduardo Mondlane, Maputo, Mozambique',
-    'Hospital Central de Maputo, Mozambique',
-  
-    // =========================
-    // 🇿🇦 SOUTH AFRICA
-    // =========================
-  
-    'Johannesburg, South Africa',
-    'Cape Town, South Africa',
-    'Durban, South Africa',
-    'Pretoria, South Africa',
-    'Port Elizabeth, South Africa',
-    'Bloemfontein, South Africa',
-    'East London, South Africa',
-    'Polokwane, South Africa',
-    'Nelspruit, South Africa',
-    'Kimberley, South Africa',
-  
-    'Sandton, Johannesburg, South Africa',
-    'Soweto, Johannesburg, South Africa',
-    'Rosebank, Johannesburg, South Africa',
-    'Midrand, Johannesburg, South Africa',
-  
-    'Waterfront, Cape Town, South Africa',
-    'Sea Point, Cape Town, South Africa',
-    'Green Point, Cape Town, South Africa',
-    'Table Mountain, Cape Town, South Africa',
-  
-    'Umhlanga, Durban, South Africa',
-    'Chatsworth, Durban, South Africa',
-    'Phoenix, Durban, South Africa',
-  
-    'OR Tambo International Airport, Johannesburg, South Africa',
-    'Cape Town International Airport, South Africa',
-  
-    'University of Johannesburg, South Africa',
-    'University of Cape Town, South Africa',
-  
-    // =========================
-    // 🇮🇳 INDIA
-    // =========================
-  
-    'Delhi, India',
-    'Mumbai, Maharashtra, India',
-    'Bangalore, Karnataka, India',
-    'Hyderabad, Telangana, India',
-    'Chennai, Tamil Nadu, India',
-    'Kolkata, West Bengal, India',
-    'Ahmedabad, Gujarat, India',
-    'Pune, Maharashtra, India',
-    'Jaipur, Rajasthan, India',
-    'Lucknow, Uttar Pradesh, India',
-  
-    'Ludhiana, Punjab, India',
-    'Chandigarh, India',
-    'Amritsar, Punjab, India',
-    'Jalandhar, Punjab, India',
-    'Patiala, Punjab, India',
-    'Mohali, Punjab, India',
-  
-    'CT University, Ludhiana, Punjab, India',
-    'Lovely Professional University, Punjab, India',
-    'Punjab Agricultural University, Ludhiana, India',
-  
-    'Sector 17, Chandigarh, India',
-    'Sector 22, Chandigarh, India',
-    'Sector 34, Chandigarh, India',
-  
-    'Connaught Place, Delhi, India',
-    'Karol Bagh, Delhi, India',
-    'Dwarka, Delhi, India',
-  
-    'Andheri, Mumbai, India',
-    'Bandra, Mumbai, India',
-    'Colaba, Mumbai, India',
-  
-    'Indira Gandhi International Airport, Delhi, India',
-    'Chandigarh International Airport, India',
-  
-    // =========================
-    // 🌍 OUTROS PAÍSES
-    // =========================
-  
-    'Lisbon, Portugal',
-    'Porto, Portugal',
-    'Braga, Portugal',
-    'Coimbra, Portugal',
-  
-    'Luanda, Angola',
-    'Benguela, Angola',
-    'Huambo, Angola',
-  
-    'Nairobi, Kenya',
-    'Mombasa, Kenya',
-  
-    'Dar es Salaam, Tanzania',
-    'Zanzibar, Tanzania',
-  
-    'London, United Kingdom',
-    'Manchester, United Kingdom',
-    'Birmingham, United Kingdom',
-  
-    'Paris, France',
-    'Lyon, France',
-    'Marseille, France',
-  
-    'Berlin, Germany',
-    'Munich, Germany',
-  
-    'New York, United States',
-    'Los Angeles, United States',
-    'Chicago, United States',
-  
-    'Toronto, Canada',
-    'Vancouver, Canada',
-  
-    'Dubai, United Arab Emirates',
-    'Abu Dhabi, United Arab Emirates',
-  
-    'Doha, Qatar',
-  
-    'Sydney, Australia',
-    'Melbourne, Australia',
-  
-  ];
+  // South Africa
+  'South Africa',
+  'Johannesburg, South Africa',
+  'Sandton, Johannesburg, South Africa',
+  'Pretoria, South Africa',
+  'Cape Town, South Africa',
+  'Durban, South Africa',
+  'Soweto, South Africa',
+  'Port Elizabeth, South Africa',
+
+  // Africa
+  'Nairobi, Kenya',
+  'Mombasa, Kenya',
+  'Kigali, Rwanda',
+  'Dar es Salaam, Tanzania',
+  'Lagos, Nigeria',
+  'Abuja, Nigeria',
+  'Accra, Ghana',
+  'Cairo, Egypt',
+  'Casablanca, Morocco',
+  'Addis Ababa, Ethiopia',
+  'Luanda, Angola',
+  'Harare, Zimbabwe',
+
+  // Europe
+  'London, United Kingdom',
+  'Manchester, United Kingdom',
+  'Birmingham, United Kingdom',
+  'Paris, France',
+  'Marseille, France',
+  'Berlin, Germany',
+  'Munich, Germany',
+  'Madrid, Spain',
+  'Barcelona, Spain',
+  'Lisbon, Portugal',
+  'Porto, Portugal',
+  'Rome, Italy',
+  'Milan, Italy',
+  'Amsterdam, Netherlands',
+  'Brussels, Belgium',
+  'Dublin, Ireland',
+  'Zurich, Switzerland',
+  'Vienna, Austria',
+  'Prague, Czech Republic',
+  'Warsaw, Poland',
+
+  // Middle East
+  'Dubai, United Arab Emirates',
+  'Abu Dhabi, United Arab Emirates',
+  'Doha, Qatar',
+  'Riyadh, Saudi Arabia',
+  'Jeddah, Saudi Arabia',
+  'Istanbul, Türkiye',
+
+  // Asia
+  'Singapore',
+  'Kuala Lumpur, Malaysia',
+  'Bangkok, Thailand',
+  'Jakarta, Indonesia',
+  'Manila, Philippines',
+  'Hong Kong',
+  'Tokyo, Japan',
+  'Osaka, Japan',
+  'Seoul, South Korea',
+  'Beijing, China',
+  'Shanghai, China',
+
+  // North America
+  'New York, United States',
+  'Manhattan, New York, United States',
+  'Brooklyn, New York, United States',
+  'Los Angeles, United States',
+  'San Francisco, United States',
+  'Chicago, United States',
+  'Houston, United States',
+  'Miami, United States',
+  'Toronto, Canada',
+  'Vancouver, Canada',
+  'Montreal, Canada',
+
+  // South America
+  'São Paulo, Brazil',
+  'Rio de Janeiro, Brazil',
+  'Brasília, Brazil',
+  'Buenos Aires, Argentina',
+  'Santiago, Chile',
+  'Lima, Peru',
+  'Bogotá, Colombia',
+
+  // Oceania
+  'Sydney, Australia',
+  'Melbourne, Australia',
+  'Brisbane, Australia',
+  'Auckland, New Zealand',
+
+  // Generic helpers
+  'University',
+  'College',
+  'Campus',
+  'School',
+  'Hospital',
+  'Airport',
+  'Bus Terminal',
+  'Train Station',
+  'Main Road',
+  'City Center',
+  'Downtown',
+  'Mall',
+  'Market',
+  'Beach',
+  'Harbor',
+  'Port',
+];

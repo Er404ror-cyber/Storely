@@ -1336,6 +1336,30 @@ contact_admin_help_title: "Edit directly in this section",
 contact_admin_help_desc: "Click the dashed fields to update the title, description, and location without leaving this area.",
 contact_map_hidden_admin: "The map appears only outside the admin panel.",
 contact_default_location: "Maputo",
+
+
+
+
+
+
+
+
+
+
+
+
+contact_edit_section_title: "Edit directly in this section",
+contact_edit_section_desc: "Change title, subtitle and location here. The map only appears on the public page.",
+contact_location_area_label: "Location area",
+contact_location_placeholder: "Example: ISCTEM Maputo, Zimpeto, CT University",
+contact_location_help: "Type a place, university, area or city. We preserve the name and only help Google Maps understand it better.",
+contact_location_max: "Max {{count}}",
+contact_location_final: "final: {{value}}",
+contact_location_smart_help: "smart location help",
+contact_location_final_search: "Final search: {{value}}",
+contact_location_dropdown_hint: "Suggestion from your saved locations list",
+contact_location_final_help: "Showing the final Google Maps search without removing the original name.",
+contact_add_location_here: "Add a location here."
   },
 
 
@@ -2698,7 +2722,30 @@ contact_form_message_limit: "mensagem até {{count}} caracteres",
 contact_admin_help_title: "Edite diretamente nesta secção",
 contact_admin_help_desc: "Clique nos campos com borda tracejada para atualizar título, descrição e localização sem sair desta área.",
 contact_map_hidden_admin: "O mapa aparece apenas fora do painel de administração.",
-contact_default_location: "Maputo"
+contact_default_location: "Maputo",
+
+
+
+
+
+
+
+
+
+
+
+contact_edit_section_title: "Edite diretamente nesta secção",
+contact_edit_section_desc: "Altere o título, subtítulo e localização aqui. O mapa só aparece na página pública.",
+contact_location_area_label: "Área da localização",
+contact_location_placeholder: "Exemplo: ISCTEM Maputo, Zimpeto, CT University",
+contact_location_help: "Escreva um lugar, universidade, área ou cidade. Mantemos o nome e só ajudamos o Google Maps a entender melhor.",
+contact_location_max: "Máx. {{count}}",
+contact_location_final: "final: {{value}}",
+contact_location_smart_help: "ajuda inteligente de localização",
+contact_location_final_search: "Pesquisa final: {{value}}",
+contact_location_dropdown_hint: "Sugestão da sua lista de localizações",
+contact_location_final_help: "A mostrar a pesquisa final do Google Maps sem remover o nome original.",
+contact_add_location_here: "Adicione uma localização aqui."
 
 }
 } as const;
