@@ -1387,6 +1387,15 @@ addNumberHint: "Add the store number in Settings to activate the button.",
 mediaSettings: "Media settings",
 
 
+store_page_links_discover: "Discover pages",
+store_page_links_title: "Navigate to other pages",
+store_page_links_subtitle: "Swipe through the available pages and open another section of this store.",
+store_page_links_items: "pages",
+store_page_links_page: "Page",
+store_page_links_home_badge: "home",
+store_page_links_navigate_label: "Open page",
+
+
 
 
   },
@@ -2795,6 +2804,18 @@ mobileCustomizeCardHint: "Use o card abaixo para personalizar esta secção.",
 numberMissing: "Número em falta",
 addNumberHint: "Adicione o número da loja nas Definições para ativar o botão.",
 mediaSettings: "Definições da mídia",
+
+
+
+
+
+store_page_links_discover: "Descobrir páginas",
+store_page_links_title: "Navegue para outras páginas",
+store_page_links_subtitle: "Deslize pelas páginas disponíveis e abra outra secção desta loja.",
+store_page_links_items: "páginas",
+store_page_links_page: "Página",
+store_page_links_home_badge: "início",
+store_page_links_navigate_label: "Abrir página",
 }
 } as const;
 

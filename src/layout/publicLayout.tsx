@@ -3,6 +3,7 @@ import { StoreHeader } from "../components/header";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { StorePageLinksSection } from "../components/public/StorePageLinks";
 
 type StorePublicData = {
   id: string;
@@ -20,7 +21,7 @@ type StoreCachePayload = {
 
 type DataSource = "cache" | "network" | "none";
 
-const STORE_CACHE_TTL = 1000 * 60 * 60; // 1 hora
+const STORE_CACHE_TTL = 1000 * 60 * 60;
 
 const mascotImages = [
   "/img/Mascote.png",
@@ -29,6 +30,7 @@ const mascotImages = [
 ];
 
 const socialIcons = ["whatsapp", "instagram", "twitter", "github"];
+
 
 function getCacheKey(slug?: string) {
   return `store-cache:${slug}`;
@@ -241,14 +243,16 @@ export function PublicLayout() {
       : "waiting for refresh";
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white dark:bg-black flex flex-col">
       <StoreHeader storeId={store.id} />
 
       <main className="flex-1">
         <Outlet context={{ storeId: store.id, store }} />
+
+        <StorePageLinksSection storeId={store.id} />
       </main>
 
-      <footer className="relative w-full border-t border-slate-100 dark:border-slate-900 bg-white dark:bg-black transition-colors duration-500 overflow-hidden">
+  <footer className="relative w-full border-t border-slate-100 dark:border-slate-900 bg-white dark:bg-black transition-colors duration-500 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 md:px-8 pt-16 pb-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-10 md:gap-6">
             <div className="relative flex flex-col items-center md:items-start min-w-[120px]">
