@@ -1381,6 +1381,14 @@ clickToEditHint: "Select this section to edit exactly here.",
 tapToEditHint: "Tap this section and use the card below to customize.",
 mobileCustomizeCardHint: "Use the card below to customize this section.",
 
+
+numberMissing: "Number missing",
+addNumberHint: "Add the store number in Settings to activate the button.",
+mediaSettings: "Media settings",
+
+
+
+
   },
 
 
@@ -2784,7 +2792,9 @@ product_form_extra_image_label: "Imagem extra {{number}}",
 clickToEditHint: "Selecione esta secção para editar exatamente aqui.",
 tapToEditHint: "Toque nesta secção e use o card abaixo para personalizar.",
 mobileCustomizeCardHint: "Use o card abaixo para personalizar esta secção.",
-
+numberMissing: "Número em falta",
+addNumberHint: "Adicione o número da loja nas Definições para ativar o botão.",
+mediaSettings: "Definições da mídia",
 }
 } as const;
 
