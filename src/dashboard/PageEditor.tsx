@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useBlocker } from 'react-router-dom';
 import { Plus, Layout } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -36,6 +36,10 @@ function sectionTotalPendingBytes(section: Section) {
   );
 }
 
+function cloneSections<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value));
+}
+
 export function Editor() {
   const [slugs, setSlugs] = useState<{ store: string; page: string } | null>(null);
   const { pageId } = useParams<{ pageId: string }>();
@@ -50,10 +54,13 @@ export function Editor() {
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const { t } = useTranslate();
 
-  const hasChanges = useMemo(
-    () => JSON.stringify(sections) !== JSON.stringify(originalSections),
-    [sections, originalSections]
-  );
+  const scrollAreaRef = useRef<HTMLDivElement | null>(null);
+  const lastFocusedIdRef = useRef<string | null>(null);
+  const scrollRafRef = useRef<number | null>(null);
+
+  const hasChanges = useMemo(() => {
+    return JSON.stringify(sections) !== JSON.stringify(originalSections);
+  }, [sections, originalSections]);
 
   const hasPendingUploads = useMemo(() => {
     return sections.some(sectionHasPendingUploads);
@@ -64,6 +71,71 @@ export function Editor() {
       (hasChanges || hasPendingUploads) &&
       currentLocation.pathname !== nextLocation.pathname
   );
+
+  const isSectionVisible = useCallback((element: HTMLElement) => {
+    const container = scrollAreaRef.current;
+    if (!container) return true;
+
+    const elementRect = element.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    const visibleTop = elementRect.top >= containerRect.top + 24;
+    const visibleBottom = elementRect.bottom <= containerRect.bottom - 24;
+
+    return visibleTop && visibleBottom;
+  }, []);
+
+  const focusSection = useCallback(
+    (id: string, force = false) => {
+      setEditingId((prev) => (prev === id ? prev : id));
+
+      if (!force && lastFocusedIdRef.current === id) {
+        const existing = document.getElementById(`section-${id}`);
+        if (existing && isSectionVisible(existing)) return;
+      }
+
+      lastFocusedIdRef.current = id;
+
+      if (scrollRafRef.current) {
+        window.cancelAnimationFrame(scrollRafRef.current);
+      }
+
+      scrollRafRef.current = window.requestAnimationFrame(() => {
+        const element = document.getElementById(`section-${id}`);
+        if (!element) return;
+
+        if (!force && isSectionVisible(element)) return;
+
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'nearest',
+        });
+      });
+    },
+    [isSectionVisible]
+  );
+
+  const handleSetEditingId = useCallback(
+    (id: string | null) => {
+      if (id === null) {
+        lastFocusedIdRef.current = null;
+        setEditingId(null);
+        return;
+      }
+
+      focusSection(id, false);
+    },
+    [focusSection]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (scrollRafRef.current) {
+        window.cancelAnimationFrame(scrollRafRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -137,8 +209,10 @@ export function Editor() {
             },
           }));
 
+          const snapshot = cloneSections(formatted);
+
           setSections(formatted);
-          setOriginalSections(JSON.parse(JSON.stringify(formatted)));
+          setOriginalSections(snapshot);
           setLastSaved(new Date());
         }
       } catch (err: unknown) {
@@ -154,22 +228,6 @@ export function Editor() {
     loadData();
     return () => controller.abort();
   }, [pageId]);
-
-  useEffect(() => {
-    if (!editingId) return;
-
-    const element = document.getElementById(`section-${editingId}`);
-    if (!element) return;
-
-    const raf = window.requestAnimationFrame(() => {
-      element.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-      });
-    });
-
-    return () => window.cancelAnimationFrame(raf);
-  }, [editingId]);
 
   const handleManualSave = useCallback(async () => {
     if (!pageId || isSaving) return;
@@ -212,10 +270,12 @@ export function Editor() {
       const { error } = await supabase.from('page_sections').insert(toInsert);
       if (error) throw error;
 
-      setOriginalSections(JSON.parse(JSON.stringify(sections)));
-      setLastSaved(new Date());
+      const snapshot = cloneSections(sections);
 
+      setOriginalSections(snapshot);
+      setLastSaved(new Date());
       setActiveModal(null);
+
       toast.success(t('publishedSuccess') || 'Publicado com sucesso!', {
         id: loadingToast,
       });
@@ -232,37 +292,43 @@ export function Editor() {
   }, [pageId, isSaving, sections, t, blocker]);
 
   const handleDiscard = useCallback(() => {
-    setSections(JSON.parse(JSON.stringify(originalSections)));
+    setSections(cloneSections(originalSections));
     setActiveModal(null);
+
     if (blocker.state === 'blocked') blocker.proceed();
   }, [originalSections, blocker]);
 
   const updateSectionStyle = useCallback(
     (id: string, key: keyof SectionStyle, value: string) => {
+      focusSection(id, false);
+
       setSections((prev) =>
         prev.map((s) =>
           s.id === id ? { ...s, style: { ...s.style, [key]: value } } : s
         )
       );
     },
-    []
+    [focusSection]
   );
 
-  const updateSectionContent = useCallback((id: string, key: string, value: unknown) => {
-    setSections((prev) =>
-      prev.map((sec) =>
-        sec.id === id
-          ? {
-              ...sec,
-              content: {
-                ...sec.content,
-                [key]: value,
-              },
-            }
-          : sec
-      )
-    );
-  }, []);
+  const updateSectionContent = useCallback(
+    (id: string, key: string, value: unknown) => {
+      setSections((prev) =>
+        prev.map((sec) =>
+          sec.id === id
+            ? {
+                ...sec,
+                content: {
+                  ...sec.content,
+                  [key]: value,
+                },
+              }
+            : sec
+        )
+      );
+    },
+    []
+  );
 
   const handlePreview = useCallback(() => {
     if (slugs?.store) {
@@ -327,7 +393,7 @@ export function Editor() {
         lastSaved={lastSaved}
         editingId={editingId}
         isSaving={isSaving}
-        setEditingId={setEditingId}
+        setEditingId={handleSetEditingId}
         updateSectionStyle={updateSectionStyle}
         setSections={setSections}
         setShowAddModal={setShowAddModal}
@@ -338,16 +404,19 @@ export function Editor() {
         <EditorHeader
           hasChanges={hasChanges}
           isSaving={isSaving}
-          setEditingId={setEditingId}
+          setEditingId={handleSetEditingId}
           setShowMobileSidebar={setShowMobileSidebar}
           handlePreview={handlePreview}
           setActiveModal={setActiveModal}
         />
 
         <div
+          ref={scrollAreaRef}
           className="flex-1 overflow-y-auto p-0 flex flex-col items-center bg-slate-100/50"
           onClick={() => {
-            if (!showMobileSidebar) setEditingId(null);
+            if (!showMobileSidebar && window.innerWidth >= 768) {
+              handleSetEditingId(null);
+            }
           }}
         >
           {sections.length === 0 && (
@@ -394,14 +463,14 @@ export function Editor() {
                   key={s.id}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (editingId !== s.id) setEditingId(s.id);
+                    if (editingId !== s.id) focusSection(s.id, true);
                   }}
                   className={[
-                    'group relative cursor-pointer border-b border-slate-200/80 transition-opacity duration-150',
+                    'group relative cursor-pointer border-b border-slate-200/80 transition-all duration-200',
                     isActive
-                      ? 'z-10 opacity-100 ring-2 ring-blue-500 ring-inset border-blue-300 bg-blue-50/30'
+                      ? 'z-20 opacity-100 ring-2 ring-blue-500 ring-inset border-blue-300 bg-blue-50/40 shadow-[0_0_0_1px_rgba(59,130,246,0.08)]'
                       : '',
-                    isInactive ? 'opacity-60 hover:opacity-85' : '',
+                    isInactive ? 'opacity-100' : '',
                   ].join(' ')}
                   style={{
                     textAlign: s.style.align,
@@ -413,7 +482,29 @@ export function Editor() {
                           : '1rem',
                   }}
                 >
-                  {!isActive && (
+                  {!isActive && isInactive && (
+                    <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center px-4">
+                      <div className="hidden md:flex flex-col items-center gap-2 rounded-2xl bg-white border border-slate-200 shadow-sm px-5 py-3 text-center max-w-sm">
+                        <span className="text-sm font-bold text-slate-800">
+                          {t('clickToEdit')}
+                        </span>
+                        <span className="text-xs text-slate-500 leading-relaxed">
+                          {t('clickToEditHint')}
+                        </span>
+                      </div>
+
+                      <div className="md:hidden flex flex-col items-center gap-2 rounded-2xl bg-slate-900 shadow-sm px-4 py-3 text-center max-w-[92%]">
+                        <span className="text-sm font-bold text-white">
+                          {t('tapToEdit')}
+                        </span>
+                        <span className="text-[11px] text-white/85 leading-relaxed">
+                          {t('tapToEditHint')}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {!isActive && !hasActiveSelection && (
                     <>
                       <div className="hidden md:flex absolute top-3 right-3 z-20 pointer-events-none">
                         <span className="px-2.5 py-1 rounded-full bg-slate-900/80 text-white text-[10px] font-semibold shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-150">
@@ -438,21 +529,43 @@ export function Editor() {
                           {t('editingSection')}
                         </span>
                       </div>
+
+                      <div className="md:hidden absolute left-3 right-3 bottom-3 z-20 pointer-events-none">
+                        <div className="rounded-2xl bg-white border border-blue-200 shadow-sm px-3 py-2 text-center">
+                          <p className="text-[11px] font-semibold text-slate-800">
+                            {t('mobileCustomizeCardHint')}
+                          </p>
+                        </div>
+                      </div>
                     </>
                   )}
 
                   <div
-                    className={`w-full overflow-hidden ${
+                    className={`w-full overflow-hidden transition-[opacity,transform,filter] duration-200 ${
                       s.style.theme === 'dark'
                         ? 'bg-slate-900 text-white'
                         : 'bg-white text-slate-900'
+                    } ${
+                      isActive
+                        ? 'min-h-[320px] md:min-h-[380px]'
+                        : 'min-h-[260px] md:min-h-[320px]'
                     }`}
                   >
-                    <Comp
-                      content={s.content}
-                      style={s.style}
-                      onUpdate={(k: string, v: unknown) => updateSectionContent(s.id, k, v)}
-                    />
+                    <div
+                      className={`transition-[opacity,transform,filter] duration-200 ${
+                        isInactive
+                          ? 'opacity-25  saturate-50 scale-[0.985] pointer-events-none select-none'
+                          : 'opacity-100  saturate-100 scale-100'
+                      }`}
+                    >
+                      <Comp
+                        content={s.content}
+                        style={s.style}
+                        onUpdate={(k: string, v: unknown) =>
+                          updateSectionContent(s.id, k, v)
+                        }
+                      />
+                    </div>
                   </div>
                 </section>
               );
@@ -467,7 +580,7 @@ export function Editor() {
           sections={sections}
           hasChanges={hasChanges}
           setShowMobileSidebar={setShowMobileSidebar}
-          setEditingId={setEditingId}
+          setEditingId={handleSetEditingId}
           updateSectionStyle={updateSectionStyle}
           setSections={setSections}
           setShowAddModal={setShowAddModal}
@@ -501,7 +614,7 @@ export function Editor() {
         handleDiscard={handleDiscard}
         resetBlocker={() => blocker.reset?.()}
         setSections={setSections}
-        setEditingId={setEditingId}
+        setEditingId={handleSetEditingId}
         setShowMobileSidebar={setShowMobileSidebar}
       />
     </div>

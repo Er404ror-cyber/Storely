@@ -1376,6 +1376,11 @@ product_form_add_more_images: "Add more images",
 product_form_compress_image_link: "Image is too large. Click here to compress it",
 product_form_extra_image_label: "Extra image {{number}}",
 
+
+clickToEditHint: "Select this section to edit exactly here.",
+tapToEditHint: "Tap this section and use the card below to customize.",
+mobileCustomizeCardHint: "Use the card below to customize this section.",
+
   },
 
 
@@ -2774,6 +2779,11 @@ product_form_add_more_images: "Adicionar mais imagens",
 product_form_compress_image_link: "Imagem muito grande. Clique aqui para comprimir",
 product_form_extra_image_label: "Imagem extra {{number}}",
 
+
+
+clickToEditHint: "Selecione esta secção para editar exatamente aqui.",
+tapToEditHint: "Toque nesta secção e use o card abaixo para personalizar.",
+mobileCustomizeCardHint: "Use o card abaixo para personalizar esta secção.",
 
 }
 } as const;
