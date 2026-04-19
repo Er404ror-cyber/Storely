@@ -1398,6 +1398,57 @@ store_page_links_navigate_label: "Open page",
 
 
 
+
+
+
+
+
+media_provider_not_detected: "Link not detected yet",
+media_hint_paste: "Paste a link.",
+media_error_duplicate: "This link is repeated. Use each link only once.",
+media_error_invalid_url: "This link is not valid.",
+media_error_wrong_type_media: "This is not a supported media link.",
+media_error_unsupported_media: "This media link is not supported yet.",
+media_error_wrong_type_social: "This is not a valid social link.",
+media_paste_button: "Paste",
+media_edit_button: "Edit",
+media_done_button: "Done",
+media_editor_title: "Manage your media and social links",
+media_editor_compact_hint: "Add one link at a time. Valid cards stay compact until you edit them again.",
+media_section_media: "Media",
+media_section_social: "Social links",
+media_group_guide_compact: "Paste a media link and finish it before adding another.",
+social_group_guide_compact: "Paste a social link and finish it before adding another.",
+media_finish_current_first: "Finish the current item first before adding another.",
+media_empty_media: "No media yet",
+media_empty_media_hint: "Add a media link to show video or music here.",
+media_empty_social: "No social links yet",
+media_empty_social_hint: "Add a social link to help visitors find your pages.",
+media_add_media: "Add media",
+media_add_social: "Add social link",
+media_placeholder_media_link: "Paste media link",
+media_placeholder_social_link: "Paste social link",
+media_provider_youtube: "YouTube",
+media_provider_spotify: "Spotify",
+media_provider_apple_music: "Apple Music",
+media_provider_facebook: "Facebook",
+media_provider_instagram: "Instagram",
+media_provider_tiktok: "TikTok",
+media_provider_x: "X",
+media_provider_linkedin: "LinkedIn",
+media_provider_website: "Website",
+media_open_link: "Open",
+media_status_valid: "Valid",
+media_status_invalid: "Invalid",
+media_summary_valid_total: "valid links",
+media_toast_item_valid: "Valid link added successfully.",
+
+
+
+
+
+
+
   },
 
 
@@ -2816,7 +2867,74 @@ store_page_links_items: "páginas",
 store_page_links_page: "Página",
 store_page_links_home_badge: "início",
 store_page_links_navigate_label: "Abrir página",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+media_provider_not_detected: "Link ainda não detectado",
+media_hint_paste: "Cole um link.",
+media_error_duplicate: "Este link está repetido. Use cada link apenas uma vez.",
+media_error_invalid_url: "Este link não é válido.",
+media_error_wrong_type_media: "Este não é um link de mídia suportado.",
+media_error_unsupported_media: "Este link de mídia ainda não é suportado.",
+media_error_wrong_type_social: "Este não é um link social válido.",
+media_paste_button: "Colar",
+media_edit_button: "Editar",
+media_done_button: "Feito",
+media_editor_title: "Gerir os seus links de mídia e redes sociais",
+media_editor_compact_hint: "Adicione um link de cada vez. Cards válidos ficam compactos até editar novamente.",
+media_section_media: "Mídia",
+media_section_social: "Redes sociais",
+media_group_guide_compact: "Cole um link de mídia e termine-o antes de adicionar outro.",
+social_group_guide_compact: "Cole um link social e termine-o antes de adicionar outro.",
+media_finish_current_first: "Complete primeiro o item atual antes de adicionar outro.",
+media_empty_media: "Ainda não há mídia",
+media_empty_media_hint: "Adicione um link de mídia para mostrar vídeo ou música aqui.",
+media_empty_social: "Ainda não há links sociais",
+media_empty_social_hint: "Adicione um link social para ajudar os visitantes a encontrar as suas páginas.",
+media_add_media: "Adicionar mídia",
+media_add_social: "Adicionar link social",
+media_placeholder_media_link: "Cole o link de mídia",
+media_placeholder_social_link: "Cole o link social",
+media_provider_youtube: "YouTube",
+media_provider_spotify: "Spotify",
+media_provider_apple_music: "Apple Music",
+media_provider_facebook: "Facebook",
+media_provider_instagram: "Instagram",
+media_provider_tiktok: "TikTok",
+media_provider_x: "X",
+media_provider_linkedin: "LinkedIn",
+media_provider_website: "Website",
+media_open_link: "Abrir",
+media_status_valid: "Válido",
+media_status_invalid: "Inválido",
+media_summary_valid_total: "links válidos",
+media_toast_item_valid: "Link válido adicionado com sucesso.",
 }
+
+
+
+
+
+
+
+
+
+
+
+
 } as const;
 
 export type Language = 'en' | 'pt';

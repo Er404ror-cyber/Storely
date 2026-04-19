@@ -1,3 +1,5 @@
+
+
 export type SectionStyles = {
   theme?: 'dark' | 'light';
   align?: 'center' | 'left' | 'justify';
@@ -6,18 +8,38 @@ export type SectionStyles = {
 };
 
 export interface MediaItem {
-  id?: string;          // Mude para opcional (?)
-  url: string;         // Mude para opcional (?)
+  id?: string;
+  url: string;
   type: 'video' | 'image';
   thumbnail?: string;
-  size?: number;        // Mude para opcional (?)
+  size?: number;
   file?: File;
   isTemp?: boolean;
-  delete_token?: string; 
+  delete_token?: string;
 }
+
+export type SocialProvider =
+  | 'youtube'
+  | 'spotify'
+  | 'apple_music'
+  | 'facebook'
+  | 'instagram'
+  | 'tiktok'
+  | 'x'
+  | 'linkedin'
+  | 'website';
+
+export interface SocialLinkItem {
+  id?: string;
+  provider: SocialProvider;
+  url: string;
+  title?: string;
+  subtitle?: string;
+}
+
 export interface SectionContent {
   title?: string;
-  category?: string; // Add this!
+  category?: string;
   sub?: string;
   description?: string;
   image?: string;
@@ -26,6 +48,7 @@ export interface SectionContent {
   email?: string;
   items?: Array<{ title: string; desc: string; price?: string }>;
   images?: MediaItem[];
+  socialLinks?: SocialLinkItem[];
   [key: string]: unknown;
   
 }

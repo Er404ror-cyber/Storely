@@ -7,6 +7,7 @@ import { EstatisticasLarga } from './components/EstatisticasLarga';
 import { ProductShowcase } from './components/ProductShowcase';
 import { TextoNarrativo } from './components/TextoNarrativo';
 import { TextoImagemShowcase } from './components/TextoImagemShowcase';
+import { MediaLinksCompact } from './components/MediaEmbeds';
 
 export const SectionLibrary = {
   hero_comercial: HeroComercial,
@@ -18,6 +19,7 @@ export const SectionLibrary = {
   vitrine_produtos: ProductShowcase,
   texto_narrativo: TextoNarrativo,
   texto_imagem_showcase: TextoImagemShowcase,
+  media_embeds: MediaLinksCompact,
 };
 
 export * from '../../types/library';
