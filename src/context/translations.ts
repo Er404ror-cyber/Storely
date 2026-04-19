@@ -1445,7 +1445,9 @@ media_toast_item_valid: "Valid link added successfully.",
 
 
 
-
+media_provider_video: "Video",
+media_provider_image: "Image",
+media_tap_to_open: "Tap to open",
 
 
 
@@ -2922,6 +2924,12 @@ media_status_valid: "Válido",
 media_status_invalid: "Inválido",
 media_summary_valid_total: "links válidos",
 media_toast_item_valid: "Link válido adicionado com sucesso.",
+
+
+
+media_provider_video: "Vídeo",
+media_provider_image: "Imagem",
+media_tap_to_open: "Toque para abrir",
 }
 
 

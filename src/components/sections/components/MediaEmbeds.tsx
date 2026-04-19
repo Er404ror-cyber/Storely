@@ -13,7 +13,6 @@ import {
   Music2,
   Facebook,
   Instagram,
-  ExternalLink,
   Globe,
   Linkedin,
   Play,
@@ -22,25 +21,28 @@ import {
   AlertCircle,
   ClipboardPaste,
   Pencil,
+  Image as ImageIcon,
+  Video as VideoIcon,
+  Link2,
+  PinIcon,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useTranslate } from '../../../context/LanguageContext';
 import type { SectionProps, SocialProvider } from '../../../types/library';
 
-export type SectionStyles = {
-  theme?: 'dark' | 'light';
-  align?: 'center' | 'left' | 'justify';
-  fontSize?: 'small' | 'medium' | 'large' | 'base';
-  cols?: string;
-};
-
 type EditorItemKind = 'media' | 'social';
 type ItemState = 'empty' | 'valid' | 'invalid';
+
+type ExtendedProvider =
+  | SocialProvider
+  | 'direct_video'
+  | 'direct_image'
+  | 'pinterest';
 
 type EditorSocialLinkItem = {
   id: string;
   kind: EditorItemKind;
-  provider?: SocialProvider;
+  provider?: ExtendedProvider;
   url: string;
   title?: string;
   subtitle?: string;
@@ -51,15 +53,18 @@ const MAX_SOCIAL_ITEMS = 3;
 const MAX_DESCRIPTION = 100;
 const INPUT_FONT_SIZE = '16px';
 
-const MEDIA_PROVIDERS: SocialProvider[] = ['youtube', 'spotify', 'apple_music'];
-const SOCIAL_PROVIDERS: SocialProvider[] = [
-  'facebook',
-  'instagram',
-  'tiktok',
-  'x',
-  'linkedin',
-  'website',
+const DIRECT_VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov', '.m4v'];
+const DIRECT_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif'];
+
+const EMBED_MEDIA_PROVIDERS: ExtendedProvider[] = [
+  'youtube',
+  'spotify',
+  'apple_music',
+  'direct_video',
+  'direct_image',
 ];
+
+
 
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
@@ -96,8 +101,37 @@ function isValidUrl(url: string) {
   }
 }
 
-function detectProviderFromUrl(url: string): SocialProvider {
+function getPathLower(url: string) {
+  try {
+    return new URL(normalizeInputUrl(url)).pathname.toLowerCase();
+  } catch {
+    return '';
+  }
+}
+
+function getHostname(url: string) {
+  try {
+    return new URL(normalizeInputUrl(url)).hostname.replace(/^www\./, '');
+  } catch {
+    return '';
+  }
+}
+
+function isDirectVideoUrl(url: string) {
+  const path = getPathLower(url);
+  return DIRECT_VIDEO_EXTENSIONS.some((ext) => path.endsWith(ext));
+}
+
+function isDirectImageUrl(url: string) {
+  const path = getPathLower(url);
+  return DIRECT_IMAGE_EXTENSIONS.some((ext) => path.endsWith(ext));
+}
+
+function detectProviderFromUrl(url: string): ExtendedProvider {
   const value = normalizeInputUrl(url).toLowerCase().trim();
+
+  if (isDirectVideoUrl(value)) return 'direct_video';
+  if (isDirectImageUrl(value)) return 'direct_image';
 
   if (value.includes('youtube.com') || value.includes('youtu.be')) return 'youtube';
   if (value.includes('spotify.com')) return 'spotify';
@@ -110,11 +144,11 @@ function detectProviderFromUrl(url: string): SocialProvider {
     value.includes('tiktok.com') ||
     value.includes('vm.tiktok.com') ||
     value.includes('vt.tiktok.com')
-  ) {
-    return 'tiktok';
-  }
+  ) return 'tiktok';
   if (value.includes('x.com') || value.includes('twitter.com')) return 'x';
   if (value.includes('linkedin.com')) return 'linkedin';
+  if (value.includes('pinterest.com') || value.includes('pin.it')) return 'pinterest';
+
   return 'website';
 }
 
@@ -124,22 +158,21 @@ function normalizeItems(raw: unknown): EditorSocialLinkItem[] {
   return raw
     .filter(Boolean)
     .map((item, index) => {
-      const value = item as Partial<EditorSocialLinkItem>;
+      const value = item as Partial<EditorSocialLinkItem> & { provider?: ExtendedProvider };
       const url = typeof value.url === 'string' ? normalizeInputUrl(value.url) : '';
+      const inferredProvider = url ? detectProviderFromUrl(url) : value.provider;
 
       const kind: EditorItemKind =
         value.kind === 'media' || value.kind === 'social'
           ? value.kind
-          : (() => {
-              const provider = value.provider;
-              if (provider && MEDIA_PROVIDERS.includes(provider)) return 'media';
-              return 'social';
-            })();
+          : inferredProvider && EMBED_MEDIA_PROVIDERS.includes(inferredProvider)
+            ? 'media'
+            : 'social';
 
       return {
         id: value.id || `social-${index}`,
         kind,
-        provider: value.provider,
+        provider: inferredProvider,
         url,
         title: typeof value.title === 'string' ? value.title : '',
         subtitle: typeof value.subtitle === 'string' ? value.subtitle : '',
@@ -147,50 +180,53 @@ function normalizeItems(raw: unknown): EditorSocialLinkItem[] {
     });
 }
 
-function getResolvedProvider(item: EditorSocialLinkItem): SocialProvider | null {
+function getResolvedProvider(item: EditorSocialLinkItem): ExtendedProvider | null {
   if (!hasText(item.url)) return null;
   if (!isValidUrl(item.url)) return null;
   return detectProviderFromUrl(item.url);
 }
 
-function getMediaEmbedUrl(url: string, provider: SocialProvider): string | null {
+function getYouTubeVideoId(url: string): string | null {
+  try {
+    const parsed = new URL(normalizeInputUrl(url));
+    const host = parsed.hostname.replace(/^www\./, '');
+
+    if (host === 'youtu.be') {
+      return parsed.pathname.split('/').filter(Boolean)[0] || null;
+    }
+
+    if (host.includes('youtube.com')) {
+      if (parsed.pathname.startsWith('/watch')) return parsed.searchParams.get('v');
+
+      if (parsed.pathname.startsWith('/shorts/')) {
+        return parsed.pathname.split('/shorts/')[1]?.split('/')[0] || null;
+      }
+
+      if (parsed.pathname.startsWith('/embed/')) {
+        return parsed.pathname.split('/embed/')[1]?.split('/')[0] || null;
+      }
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function getYouTubeThumb(url: string) {
+  const id = getYouTubeVideoId(url);
+  return id ? `https://i.ytimg.com/vi/${id}/maxresdefault.jpg` : null;
+}
+
+function getMediaEmbedUrl(url: string, provider: ExtendedProvider): string | null {
   try {
     const parsed = new URL(normalizeInputUrl(url));
 
     if (provider === 'youtube') {
-      const host = parsed.hostname.replace(/^www\./, '');
-
-      if (host === 'youtu.be') {
-        const id = parsed.pathname.split('/').filter(Boolean)[0];
-        return id
-          ? `https://www.youtube-nocookie.com/embed/${id}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1`
-          : null;
-      }
-
-      if (host.includes('youtube.com')) {
-        if (parsed.pathname.startsWith('/watch')) {
-          const id = parsed.searchParams.get('v');
-          return id
-            ? `https://www.youtube-nocookie.com/embed/${id}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1`
-            : null;
-        }
-
-        if (parsed.pathname.startsWith('/shorts/')) {
-          const id = parsed.pathname.split('/shorts/')[1]?.split('/')[0];
-          return id
-            ? `https://www.youtube-nocookie.com/embed/${id}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1`
-            : null;
-        }
-
-        if (parsed.pathname.startsWith('/embed/')) {
-          const id = parsed.pathname.split('/embed/')[1]?.split('/')[0];
-          return id
-            ? `https://www.youtube-nocookie.com/embed/${id}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1`
-            : null;
-        }
-      }
-
-      return null;
+      const id = getYouTubeVideoId(url);
+      return id
+        ? `https://www.youtube-nocookie.com/embed/${id}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1`
+        : null;
     }
 
     if (provider === 'spotify') {
@@ -203,6 +239,10 @@ function getMediaEmbedUrl(url: string, provider: SocialProvider): string | null 
 
     if (provider === 'apple_music') {
       return `https://embed.music.apple.com${parsed.pathname}${parsed.search || ''}`;
+    }
+
+    if (provider === 'direct_video' || provider === 'direct_image') {
+      return normalizeInputUrl(url);
     }
 
     return null;
@@ -234,16 +274,6 @@ function getItemError(item: EditorSocialLinkItem, duplicateSet: Set<string>) {
   const normalized = normalizeUrlForCompare(item.url);
   if (duplicateSet.has(normalized)) return 'duplicate' as const;
 
-  const provider = getResolvedProvider(item);
-  if (!provider) return 'invalid_url' as const;
-
-  if (item.kind === 'media') {
-    if (!MEDIA_PROVIDERS.includes(provider)) return 'wrong_type_media' as const;
-    if (!getMediaEmbedUrl(item.url, provider)) return 'unsupported_media' as const;
-    return null;
-  }
-
-  if (!SOCIAL_PROVIDERS.includes(provider)) return 'wrong_type_social' as const;
   return null;
 }
 
@@ -296,7 +326,7 @@ function getDescSize(fontSize?: string) {
   }
 }
 
-function getProviderMeta(provider: SocialProvider, t: (key: string) => string) {
+function getProviderMeta(provider: ExtendedProvider, t: (key: string) => string) {
   switch (provider) {
     case 'youtube':
       return { icon: <Play className="h-4 w-4" />, name: t('media_provider_youtube') };
@@ -314,6 +344,12 @@ function getProviderMeta(provider: SocialProvider, t: (key: string) => string) {
       return { icon: <AtSign className="h-4 w-4" />, name: t('media_provider_x') };
     case 'linkedin':
       return { icon: <Linkedin className="h-4 w-4" />, name: t('media_provider_linkedin') };
+    case 'pinterest':
+      return { icon: <PinIcon className="h-4 w-4" />, name: 'Pinterest' };
+    case 'direct_video':
+      return { icon: <VideoIcon className="h-4 w-4" />, name: t('media_provider_video') };
+    case 'direct_image':
+      return { icon: <ImageIcon className="h-4 w-4" />, name: t('media_provider_image') };
     case 'website':
     default:
       return { icon: <Globe className="h-4 w-4" />, name: t('media_provider_website') };
@@ -384,7 +420,7 @@ function getPublicMediaItemSpanClass(cols?: string, count = 0, index = 0) {
 }
 
 function getPublicSocialGridClass(cols?: string) {
-  if (cols === '1') return 'grid grid-cols-1 gap-3 max-w-lg mx-auto';
+  if (cols === '1') return 'grid grid-cols-1 gap-3';
   if (cols === '2') return 'grid grid-cols-2 gap-2 md:grid-cols-3';
   if (cols === '4') return 'grid grid-cols-2 gap-2 md:grid-cols-4';
   return 'grid grid-cols-2 gap-2 md:grid-cols-3';
@@ -409,7 +445,7 @@ function getEditorMediaItemSpanClass(cols?: string, count = 0, index = 0) {
   if (cols === '4') {
     if (count === 1) return 'md:col-span-4';
     if (count === 2) return 'md:col-span-2';
-    if (count === 3) return index === 2 ? 'md:col-span-2' : 'md:col-span-2';
+    if (count === 3) return 'md:col-span-2';
     return 'col-span-1';
   }
 
@@ -421,59 +457,6 @@ function getEditorSocialGridClass(cols?: string) {
   if (cols === '2') return 'grid grid-cols-1 gap-2 sm:grid-cols-2';
   if (cols === '4') return 'grid grid-cols-1 gap-2 md:grid-cols-2';
   return 'grid grid-cols-1 gap-2 sm:grid-cols-2';
-}
-
-function dispatchYoutubeIntent(id: string) {
-  window.dispatchEvent(
-    new CustomEvent('storely-youtube-play', {
-      detail: { id, time: Date.now() },
-    })
-  );
-}
-
-function pauseYoutubeFrame(frame: HTMLIFrameElement | null) {
-  if (!frame) return;
-
-  try {
-    frame.contentWindow?.postMessage(
-      JSON.stringify({
-        event: 'command',
-        func: 'pauseVideo',
-        args: [],
-      }),
-      '*'
-    );
-  } catch {
-    //
-  }
-}
-
-function useNearViewport<T extends HTMLElement>() {
-  const ref = useRef<T | null>(null);
-  const [isVisible, setIsVisible] = useState(true);
-
-  useEffect(() => {
-    if (typeof IntersectionObserver === 'undefined') {
-      setIsVisible(true);
-      return;
-    }
-
-    const node = ref.current;
-    if (!node) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsVisible(entry.isIntersecting),
-      {
-        threshold: 0.15,
-        rootMargin: '80px 0px',
-      }
-    );
-
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
-
-  return { ref, isVisible };
 }
 
 type StatusBadgeProps = {
@@ -522,23 +505,31 @@ const PasteInput = memo(function PasteInput({
   pasteLabel,
 }: PasteInputProps) {
   const palette = getThemePalette(theme);
-  const [isBusy, setIsBusy] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handlePaste = async () => {
+    const input = inputRef.current;
+
     try {
-      setIsBusy(true);
       const text = await navigator.clipboard.readText();
-      if (text) onChange(normalizeInputUrl(text));
+      if (text) {
+        const next = normalizeInputUrl(text);
+        onChange(next);
+        input?.focus();
+        requestAnimationFrame(() => {
+          input?.setSelectionRange(next.length, next.length);
+        });
+        return;
+      }
     } catch {
-      //
-    } finally {
-      setIsBusy(false);
+      input?.focus();
     }
   };
 
   return (
     <div className="flex items-center gap-2">
       <input
+        ref={inputRef}
         value={value}
         onChange={(e) => onChange(normalizeInputUrl(e.target.value))}
         placeholder={placeholder}
@@ -556,9 +547,8 @@ const PasteInput = memo(function PasteInput({
       <button
         type="button"
         onClick={handlePaste}
-        disabled={isBusy}
         className={cn(
-          'inline-flex h-10 shrink-0 items-center gap-1 rounded-xl border px-3 text-[11px] font-medium transition disabled:opacity-60',
+          'inline-flex. h-10 hidden shrink-0 items-center gap-1 rounded-xl border px-3 text-[11px] font-medium transition',
           palette.buttonPrimary
         )}
         title={pasteLabel}
@@ -721,17 +711,130 @@ function getErrorText(
       return t('media_error_duplicate');
     case 'invalid_url':
       return t('media_error_invalid_url');
-    case 'wrong_type_media':
-      return t('media_error_wrong_type_media');
-    case 'unsupported_media':
-      return t('media_error_unsupported_media');
-    case 'wrong_type_social':
-      return t('media_error_wrong_type_social');
     default:
       return t('media_error_invalid_url');
   }
 }
 
+type PublicLinkCardProps = {
+  url: string;
+  provider: ExtendedProvider;
+  align?: 'center' | 'left' | 'justify';
+  theme?: 'dark' | 'light';
+  t: (key: string) => string;
+};
+
+const PublicLinkCard = memo(function PublicLinkCard({
+  url,
+  provider,
+  align,
+  theme,
+  t,
+}: PublicLinkCardProps) {
+  const palette = getThemePalette(theme);
+  const meta = getProviderMeta(provider, t);
+  const cleanUrl = normalizeInputUrl(url);
+  const host = getHostname(url);
+  const centered = align === 'center';
+
+  return (
+    <a
+      href={cleanUrl}
+      target="_blank"
+      rel="noreferrer"
+      className={cn(
+        'group relative block w-full overflow-hidden rounded-xl border transition-all duration-200',
+        theme === 'dark'
+          ? 'border-[#223346] bg-[#0f1722] hover:border-[#35506e] hover:bg-[#132031]'
+          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+      )}
+    >
+      <div
+        className={cn(
+          'absolute inset-x-0 top-0 h-[2px]',
+          theme === 'dark'
+            ? 'bg-[#4f9cff]'
+            : 'bg-sky-500'
+        )}
+      />
+
+      <div className="p-3.5">
+        <div
+          className={cn(
+            'flex gap-3',
+            centered
+              ? 'flex-col items-center text-center'
+              : 'items-center justify-between'
+          )}
+        >
+          <div
+            className={cn(
+              'flex min-w-0 items-center gap-3',
+              centered ? 'flex-col justify-center' : 'flex-1'
+            )}
+          >
+            <div
+              className={cn(
+                'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border',
+                theme === 'dark'
+                  ? 'border-[#29405a] bg-[#162334] text-white'
+                  : 'border-slate-200 bg-slate-100 text-slate-800'
+              )}
+            >
+              {meta.icon}
+            </div>
+
+            <div className={cn('min-w-0', centered ? 'text-center' : 'text-left')}>
+              <p
+                className={cn(
+                  'truncate text-sm font-semibold leading-tight',
+                  palette.titleText
+                )}
+              >
+                {meta.name}
+              </p>
+
+              <p
+                className={cn(
+                  'mt-0.5 truncate hidden md:block text-xs',
+                  palette.mutedText
+                )}
+              >
+                {host || cleanUrl}
+              </p>
+            </div>
+          </div>
+
+          {!centered ? (
+            <div
+              className={cn(
+                'lg:inline-flex hidden shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium transition',
+                theme === 'dark'
+                  ? 'bg-white/5 text-[#9fb3c8] group-hover:bg-white/10 group-hover:text-white'
+                  : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
+              )}
+            >
+              <span>{t('media_open_link')}</span>
+              <Link2 className="h-3.5 w-3.5" />
+            </div>
+          ) : null}
+        </div>
+
+        <div
+          className={cn(
+            'mt-3 truncate rounded-lg px-2.5 py-2 text-[10px]',
+            centered ? 'text-center' : 'text-left',
+            theme === 'dark'
+              ? 'bg-[#111b27] text-[#8ea0b5]'
+              : 'bg-slate-50 text-slate-500'
+          )}
+        >
+          {cleanUrl}
+        </div>
+      </div>
+    </a>
+  );
+});
 type MediaCardProps = {
   item: EditorSocialLinkItem;
   index: number;
@@ -774,49 +877,10 @@ const MediaCard = memo(function MediaCard({
   const errorText = getErrorText(error, t);
   const meta = resolvedProvider ? getProviderMeta(resolvedProvider, t) : null;
   const embedUrl = resolvedProvider ? getMediaEmbedUrl(item.url, resolvedProvider) : null;
-  const isYoutube = resolvedProvider === 'youtube';
   const centered = align === 'center';
+  const [activateEmbed, setActivateEmbed] = useState(false);
 
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
-  const { ref, isVisible } = useNearViewport<HTMLDivElement>();
-
-  const pauseYoutube = useCallback(() => {
-    if (!isYoutube) return;
-    pauseYoutubeFrame(iframeRef.current);
-  }, [isYoutube]);
-
-  useEffect(() => {
-    if (!isYoutube || !item.id) return;
-
-    const onPlay = (event: Event) => {
-      const custom = event as CustomEvent<{ id: string }>;
-      if (custom.detail?.id === item.id) return;
-      pauseYoutube();
-    };
-
-    const onWindowBlur = () => pauseYoutube();
-    const onVisibility = () => {
-      if (document.visibilityState !== 'visible') pauseYoutube();
-    };
-
-    window.addEventListener('storely-youtube-play', onPlay as EventListener);
-    window.addEventListener('blur', onWindowBlur);
-    document.addEventListener('visibilitychange', onVisibility);
-
-    return () => {
-      window.removeEventListener('storely-youtube-play', onPlay as EventListener);
-      window.removeEventListener('blur', onWindowBlur);
-      document.removeEventListener('visibilitychange', onVisibility);
-    };
-  }, [isYoutube, item.id, pauseYoutube]);
-
-  useEffect(() => {
-    if (!isYoutube) return;
-    if (isVisible) return;
-    pauseYoutube();
-  }, [isYoutube, isVisible, pauseYoutube]);
-
-  if (!isEditable && !embedUrl) return null;
+  if (!isEditable && !resolvedProvider) return null;
 
   if (isEditable && state === 'valid' && isCollapsed) {
     return (
@@ -846,9 +910,15 @@ const MediaCard = memo(function MediaCard({
     );
   }
 
+  const commonAspect =
+    cols === '1'
+      ? 'aspect-[16/9.8] md:aspect-[16/9.4]'
+      : cols === '2'
+        ? 'aspect-[16/9.2] md:aspect-[16/9]'
+        : 'aspect-[16/9]';
+
   return (
     <div
-      ref={ref}
       className={cn(
         'h-full rounded-2xl border p-3 transition-colors',
         palette.card,
@@ -866,7 +936,7 @@ const MediaCard = memo(function MediaCard({
             <p className={cn('truncate text-sm font-semibold', palette.titleText)}>
               {meta?.name || t('media_provider_not_detected')}
             </p>
-            {state !== 'empty' ? <StatusBadge state={state} theme={theme} t={t} /> : null}
+            {isEditable && state !== 'empty' ? <StatusBadge state={state} theme={theme} t={t} /> : null}
           </div>
 
           {isEditable ? (
@@ -916,37 +986,79 @@ const MediaCard = memo(function MediaCard({
             </div>
           </div>
         </div>
-      ) : embedUrl ? (
+      ) : (
         <div className="space-y-2">
-          <div
-            className={cn(
-              'overflow-hidden rounded-xl border',
-              palette.embed,
-              cols === '1' ? 'mx-auto max-w-3xl' : 'mx-auto max-w-3xl'
-            )}
-            onPointerDownCapture={() => {
-              if (isYoutube && item.id) dispatchYoutubeIntent(item.id);
-            }}
-          >
-            <div
+          {resolvedProvider === 'youtube' && embedUrl ? (
+            <button
+              type="button"
+              onClick={() => setActivateEmbed(true)}
               className={cn(
-                'relative w-full',
-                resolvedProvider === 'apple_music'
-                  ? cols === '1'
-                    ? 'min-h-[145px] md:min-h-[160px]'
-                    : 'min-h-[150px] sm:min-h-[165px]'
-                  : resolvedProvider === 'spotify'
-                    ? cols === '1'
-                      ? 'aspect-[16/4.9] md:aspect-[16/5.3]'
-                      : 'aspect-[16/4.6] md:aspect-[16/4.9]'
-                    : cols === '1'
-                      ? 'aspect-[16/9.8] md:aspect-[16/9]'
-                      : cols === '2'
-                        ? 'aspect-[16/9.2] md:aspect-[16/9]'
-                        : 'aspect-[16/9] md:aspect-[16/9]'
+                'group block w-full overflow-hidden rounded-xl border text-left',
+                palette.embed,
+                cols === '1' ? 'mx-auto max-w-3xl' : 'mx-auto'
               )}
             >
-              {resolvedProvider === 'apple_music' ? (
+              {!activateEmbed ? (
+                <div className={cn('relative w-full bg-black', commonAspect)}>
+                  {getYouTubeThumb(item.url) ? (
+                    <img
+                      src={getYouTubeThumb(item.url)!}
+                      alt={meta?.name || 'YouTube preview'}
+                      loading="lazy"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : null}
+
+                  <div className="absolute inset-0 bg-black/20 transition group-hover:bg-black/25" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 text-black shadow-lg">
+                      <Play className="ml-0.5 h-6 w-6" />
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className={cn('relative w-full', commonAspect)}>
+                  <iframe
+                    src={embedUrl}
+                    title={`${meta?.name || 'media'}-${index}`}
+                    loading="lazy"
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    allowFullScreen
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    className="h-full w-full border-0"
+                  />
+                </div>
+              )}
+            </button>
+          ) : resolvedProvider === 'spotify' && embedUrl ? (
+            <div
+              className={cn(
+                'overflow-hidden rounded-xl border',
+                palette.embed,
+                cols === '1' ? 'mx-auto max-w-3xl' : 'mx-auto'
+              )}
+            >
+              <div className={cn('relative w-full', cols === '1' ? 'aspect-[16/4.9] md:aspect-[16/5.3]' : 'aspect-[16/4.6] md:aspect-[16/4.9]')}>
+                <iframe
+                  src={embedUrl}
+                  title={`${meta?.name || 'media'}-${index}`}
+                  loading="lazy"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  allowFullScreen
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  className="h-full w-full border-0"
+                />
+              </div>
+            </div>
+          ) : resolvedProvider === 'apple_music' && embedUrl ? (
+            <div
+              className={cn(
+                'overflow-hidden rounded-xl border',
+                palette.embed,
+                cols === '1' ? 'mx-auto max-w-3xl' : 'mx-auto'
+              )}
+            >
+              <div className={cn('relative w-full', cols === '1' ? 'min-h-[145px] md:min-h-[160px]' : 'min-h-[150px] sm:min-h-[165px]')}>
                 <iframe
                   src={embedUrl}
                   title={`${meta?.name || 'media'}-${index}`}
@@ -956,37 +1068,43 @@ const MediaCard = memo(function MediaCard({
                   referrerPolicy="strict-origin-when-cross-origin"
                   className="h-full w-full rounded-[10px] border-0"
                 />
-              ) : (
-                <iframe
-                  ref={iframeRef}
-                  src={embedUrl}
-                  title={`${meta?.name || 'media'}-${index}`}
-                  loading="lazy"
-                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                  allowFullScreen
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  className="h-full w-full border-0"
-                />
-              )}
+              </div>
             </div>
-          </div>
-
-          <div className={cn('flex', centered ? 'justify-center' : 'justify-end')}>
+          ) : resolvedProvider === 'direct_video' && embedUrl ? (
+            <div className={cn('overflow-hidden rounded-xl border', palette.embed, cols === '1' ? 'mx-auto max-w-3xl' : 'mx-auto')}>
+              <video
+                src={embedUrl}
+                controls
+                preload="metadata"
+                playsInline
+                className={cn('h-auto w-full bg-black', commonAspect)}
+              />
+            </div>
+          ) : resolvedProvider === 'direct_image' && embedUrl ? (
             <a
               href={normalizeInputUrl(item.url)}
               target="_blank"
               rel="noreferrer"
-              className={cn(
-                'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-medium transition',
-                palette.buttonSoft
-              )}
+              className={cn('block overflow-hidden rounded-xl border', palette.embed, cols === '1' ? 'mx-auto max-w-3xl' : 'mx-auto')}
             >
-              <ExternalLink className="h-3.5 w-3.5" />
-              {t('media_open_link')}
+              <img
+                src={embedUrl}
+                alt={meta?.name || 'media image'}
+                loading="lazy"
+                className="h-auto w-full object-cover"
+              />
             </a>
-          </div>
+          ) : resolvedProvider ? (
+            <PublicLinkCard
+              url={item.url}
+              provider={resolvedProvider}
+              align={align}
+              theme={theme}
+              t={t}
+            />
+          ) : null}
         </div>
-      ) : null}
+      )}
     </div>
   );
 });
@@ -1129,24 +1247,15 @@ const SocialChip = memo(function SocialChip({
             </div>
           </div>
         </div>
-      ) : (
-        <a
-          href={normalizeInputUrl(item.url)}
-          target="_blank"
-          rel="noreferrer"
-          className={cn('flex gap-2', centered ? 'items-center text-center justify-center' : 'items-center')}
-        >
-          <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full border', palette.chip)}>
-            {meta?.icon || <Globe className="h-4 w-4" />}
-          </div>
-
-          <div className={cn('min-w-0 flex-1', centered ? 'text-center' : '')}>
-            <p className={cn('truncate text-sm font-semibold', palette.titleText)}>
-              {meta?.name || t('media_provider_website')}
-            </p>
-          </div>
-        </a>
-      )}
+      ) : resolvedProvider ? (
+        <PublicLinkCard
+          url={item.url}
+          provider={resolvedProvider}
+          align={align}
+          theme={theme}
+          t={t}
+        />
+      ) : null}
     </div>
   );
 });
@@ -1283,30 +1392,21 @@ export const MediaLinksCompact: React.FC<SectionProps> = ({
   const handleChangeInGroup = useCallback(
     (kind: EditorItemKind, id: string, patch: Partial<EditorSocialLinkItem>) => {
       interactedRef.current[id] = true;
-  
+
       const applyPatch = (item: EditorSocialLinkItem): EditorSocialLinkItem => {
         if (item.id !== id) return item;
-  
+
         return {
           ...item,
           ...patch,
-          url:
-            typeof patch.url === 'string'
-              ? normalizeInputUrl(patch.url)
-              : item.url,
+          url: typeof patch.url === 'string' ? normalizeInputUrl(patch.url) : item.url,
         };
       };
-  
+
       if (kind === 'media') {
-        mergeGroups(
-          mediaItems.map(applyPatch),
-          socialItems
-        );
+        mergeGroups(mediaItems.map(applyPatch), socialItems);
       } else {
-        mergeGroups(
-          mediaItems,
-          socialItems.map(applyPatch)
-        );
+        mergeGroups(mediaItems, socialItems.map(applyPatch));
       }
     },
     [mediaItems, socialItems, mergeGroups]
@@ -1525,15 +1625,9 @@ export const MediaLinksCompact: React.FC<SectionProps> = ({
 };
 
 function isRenderableMedia(item: EditorSocialLinkItem) {
-  if (item.kind !== 'media') return false;
-  const provider = getResolvedProvider(item);
-  if (!provider || !MEDIA_PROVIDERS.includes(provider)) return false;
-  return !!getMediaEmbedUrl(item.url, provider);
+  return item.kind === 'media' && isValidUrl(item.url);
 }
 
 function isRenderableSocial(item: EditorSocialLinkItem) {
-  if (item.kind !== 'social') return false;
-  const provider = getResolvedProvider(item);
-  if (!provider) return false;
-  return SOCIAL_PROVIDERS.includes(provider);
+  return item.kind === 'social' && isValidUrl(item.url);
 }
