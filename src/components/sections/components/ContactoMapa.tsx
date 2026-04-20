@@ -1000,37 +1000,62 @@ function LazyMap({
 
   useEffect(() => {
     if (!wrapperRef.current) return;
-
+  
     let idleId: number | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  
     const node = wrapperRef.current;
-
+  
     const startMount = () => {
       if (shouldRenderIframe) return;
-
-      if ('requestIdleCallback' in window) {
-        idleId = (window as Window & {
-          requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number;
-        }).requestIdleCallback(() => setShouldRenderIframe(true), { timeout: 600 });
+  
+      if ("requestIdleCallback" in window) {
+        idleId = (
+          window as Window & {
+            requestIdleCallback: (
+              cb: IdleRequestCallback,
+              opts?: IdleRequestOptions
+            ) => number;
+          }
+        ).requestIdleCallback(() => {
+          setShouldRenderIframe(true);
+        }, { timeout: 600 });
       } else {
-        idleId = window.setTimeout(() => setShouldRenderIframe(true), 120);
+        timeoutId = setTimeout(() => {
+          setShouldRenderIframe(true);
+        }, 120);
       }
     };
-
+  
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
         if (!entry?.isIntersecting) return;
+  
         startMount();
         observer.disconnect();
       },
-      { rootMargin: '250px 0px' }
+      {
+        rootMargin: "250px 0px",
+      }
     );
-
+  
     observer.observe(node);
-
+  
     return () => {
       observer.disconnect();
-      if (idleId) window.clearTimeout(idleId);
+  
+      if (idleId !== null && "cancelIdleCallback" in window) {
+        (
+          window as Window & {
+            cancelIdleCallback: (id: number) => void;
+          }
+        ).cancelIdleCallback(idleId);
+      }
+  
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
     };
   }, [shouldRenderIframe]);
 

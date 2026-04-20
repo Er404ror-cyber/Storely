@@ -128,15 +128,7 @@ function canEmbedFacebookUrl(url: string) {
 }
 
 
-function isFacebookSharerUrl(url: string) {
-  try {
-    const parsed = new URL(normalizeInputUrl(url));
-    const path = parsed.pathname.toLowerCase();
-    return path.startsWith('/share/') || path.startsWith('/share/r/');
-  } catch {
-    return false;
-  }
-}
+
 
 
 
@@ -336,13 +328,7 @@ function getTikTokVideoId(url: string): string | null {
   }
 }
 
-function getFacebookWatchUrl(url: string): string | null {
-  try {
-    return encodeURIComponent(normalizeInputUrl(url));
-  } catch {
-    return null;
-  }
-}
+
 
 function isAppleMusicVideoUrl(url: string) {
   try {
