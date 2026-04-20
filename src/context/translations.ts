@@ -1449,6 +1449,8 @@ media_provider_video: "Video",
 media_provider_image: "Image",
 media_tap_to_open: "Tap to open",
 
+media_provider_youtube_music: "YouTube Music",
+media_clear_button: "Clear link",
 
 
   },
@@ -2930,6 +2932,9 @@ media_toast_item_valid: "Link válido adicionado com sucesso.",
 media_provider_video: "Vídeo",
 media_provider_image: "Imagem",
 media_tap_to_open: "Toque para abrir",
+
+media_provider_youtube_music: "YouTube Music",
+media_clear_button: "Limpar link",
 }
 
 

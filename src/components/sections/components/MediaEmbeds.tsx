@@ -19,12 +19,12 @@ import {
   AtSign,
   CheckCircle2,
   AlertCircle,
-  ClipboardPaste,
   Pencil,
   Image as ImageIcon,
   Video as VideoIcon,
   Link2,
   PinIcon,
+  X,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useTranslate } from '../../../context/LanguageContext';
@@ -37,7 +37,9 @@ type ExtendedProvider =
   | SocialProvider
   | 'direct_video'
   | 'direct_image'
-  | 'pinterest';
+  | 'pinterest'
+  | 'youtube_music'
+  | 'netflix';
 
 type EditorSocialLinkItem = {
   id: string;
@@ -48,8 +50,76 @@ type EditorSocialLinkItem = {
   subtitle?: string;
 };
 
+
+
+
+declare global {
+  interface Window {
+    YT?: {
+      Player: new (
+        elementId: string | HTMLElement,
+        config: {
+          events?: {
+            onReady?: (event: unknown) => void;
+            onStateChange?: (event: { data: number }) => void;
+          };
+        }
+      ) => {
+        playVideo: () => void;
+        pauseVideo: () => void;
+        destroy: () => void;
+      };
+      PlayerState?: {
+        UNSTARTED: -1;
+        ENDED: 0;
+        PLAYING: 1;
+        PAUSED: 2;
+        BUFFERING: 3;
+        CUED: 5;
+      };
+    };
+    onYouTubeIframeAPIReady?: () => void;
+    __ytIframeApiPromise?: Promise<void>;
+  }
+}
+
+function loadYouTubeIframeAPI() {
+  if (typeof window === 'undefined') return Promise.resolve();
+
+  if (window.YT?.Player) return Promise.resolve();
+  if (window.__ytIframeApiPromise) return window.__ytIframeApiPromise;
+
+  window.__ytIframeApiPromise = new Promise<void>((resolve) => {
+    const existing = document.querySelector('script[data-youtube-iframe-api="true"]');
+    if (existing) {
+      const prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => {
+        prev?.();
+        resolve();
+      };
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://www.youtube.com/iframe_api';
+    script.async = true;
+    script.defer = true;
+    script.setAttribute('data-youtube-iframe-api', 'true');
+
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      prev?.();
+      resolve();
+    };
+
+    document.head.appendChild(script);
+  });
+
+  return window.__ytIframeApiPromise;
+}
+
 const MAX_MEDIA_ITEMS = 3;
-const MAX_SOCIAL_ITEMS = 3;
+const MAX_SOCIAL_ITEMS = 6;
 const MAX_DESCRIPTION = 100;
 const INPUT_FONT_SIZE = '16px';
 
@@ -58,13 +128,12 @@ const DIRECT_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avi
 
 const EMBED_MEDIA_PROVIDERS: ExtendedProvider[] = [
   'youtube',
+  'youtube_music',
   'spotify',
   'apple_music',
   'direct_video',
   'direct_image',
 ];
-
-
 
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
@@ -133,11 +202,21 @@ function detectProviderFromUrl(url: string): ExtendedProvider {
   if (isDirectVideoUrl(value)) return 'direct_video';
   if (isDirectImageUrl(value)) return 'direct_image';
 
-  if (value.includes('youtube.com') || value.includes('youtu.be')) return 'youtube';
+  if (
+    value.includes('youtube.com') ||
+    value.includes('youtu.be') ||
+    value.includes('music.youtube.com')
+  ) {
+    if (value.includes('music.youtube.com')) return 'youtube_music';
+    return 'youtube';
+  }
+
   if (value.includes('spotify.com')) return 'spotify';
+
   if (value.includes('music.apple.com') || value.includes('embed.music.apple.com')) {
     return 'apple_music';
   }
+
   if (value.includes('facebook.com') || value.includes('fb.watch')) return 'facebook';
   if (value.includes('instagram.com')) return 'instagram';
   if (
@@ -148,6 +227,7 @@ function detectProviderFromUrl(url: string): ExtendedProvider {
   if (value.includes('x.com') || value.includes('twitter.com')) return 'x';
   if (value.includes('linkedin.com')) return 'linkedin';
   if (value.includes('pinterest.com') || value.includes('pin.it')) return 'pinterest';
+  if (value.includes('netflix.com')) return 'netflix';
 
   return 'website';
 }
@@ -205,9 +285,13 @@ function getYouTubeVideoId(url: string): string | null {
       if (parsed.pathname.startsWith('/embed/')) {
         return parsed.pathname.split('/embed/')[1]?.split('/')[0] || null;
       }
+
+      if (parsed.pathname.startsWith('/live/')) {
+        return parsed.pathname.split('/live/')[1]?.split('/')[0] || null;
+      }
     }
 
-    return null;
+    return parsed.searchParams.get('v');
   } catch {
     return null;
   }
@@ -215,18 +299,26 @@ function getYouTubeVideoId(url: string): string | null {
 
 function getYouTubeThumb(url: string) {
   const id = getYouTubeVideoId(url);
-  return id ? `https://i.ytimg.com/vi/${id}/maxresdefault.jpg` : null;
+  return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null;
 }
 
-function getMediaEmbedUrl(url: string, provider: ExtendedProvider): string | null {
+function getMediaEmbedUrl(url: string, provider: ExtendedProvider, autoplay = false): string | null {
   try {
     const parsed = new URL(normalizeInputUrl(url));
 
-    if (provider === 'youtube') {
+    if (provider === 'youtube' || provider === 'youtube_music') {
       const id = getYouTubeVideoId(url);
-      return id
-        ? `https://www.youtube-nocookie.com/embed/${id}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1`
-        : null;
+      if (!id) return null;
+
+      const params = new URLSearchParams({
+        autoplay: autoplay ? '1' : '0',
+        rel: '0',
+        modestbranding: '1',
+        playsinline: '1',
+        enablejsapi: '1',
+      });
+
+      return `https://www.youtube-nocookie.com/embed/${id}?${params.toString()}`;
     }
 
     if (provider === 'spotify') {
@@ -238,6 +330,9 @@ function getMediaEmbedUrl(url: string, provider: ExtendedProvider): string | nul
     }
 
     if (provider === 'apple_music') {
+      if (parsed.hostname.includes('embed.music.apple.com')) {
+        return normalizeInputUrl(url);
+      }
       return `https://embed.music.apple.com${parsed.pathname}${parsed.search || ''}`;
     }
 
@@ -263,7 +358,7 @@ function buildDuplicateSet(items: EditorSocialLinkItem[]) {
   return new Set(
     Array.from(map.entries())
       .filter(([, count]) => count > 1)
-      .map(([url]) => url)
+      .map(([url]) => url),
   );
 }
 
@@ -330,6 +425,8 @@ function getProviderMeta(provider: ExtendedProvider, t: (key: string) => string)
   switch (provider) {
     case 'youtube':
       return { icon: <Play className="h-4 w-4" />, name: t('media_provider_youtube') };
+    case 'youtube_music':
+      return { icon: <Music2 className="h-4 w-4" />, name: t('media_provider_youtube_music') };
     case 'spotify':
       return { icon: <Music2 className="h-4 w-4" />, name: t('media_provider_spotify') };
     case 'apple_music':
@@ -350,6 +447,8 @@ function getProviderMeta(provider: ExtendedProvider, t: (key: string) => string)
       return { icon: <VideoIcon className="h-4 w-4" />, name: t('media_provider_video') };
     case 'direct_image':
       return { icon: <ImageIcon className="h-4 w-4" />, name: t('media_provider_image') };
+    case 'netflix':
+      return { icon: <Play className="h-4 w-4" />, name: 'Netflix' };
     case 'website':
     default:
       return { icon: <Globe className="h-4 w-4" />, name: t('media_provider_website') };
@@ -360,35 +459,35 @@ function getThemePalette(theme?: 'dark' | 'light') {
   const isDark = theme === 'dark';
 
   return {
-    section: isDark ? 'bg-[#0b1118] text-[#eef4fb]' : 'bg-white text-slate-900',
-    titleText: isDark ? 'text-white' : 'text-slate-950',
-    softText: isDark ? 'text-[#c9d6e4]' : 'text-slate-700',
-    mutedText: isDark ? 'text-[#8ea0b5]' : 'text-slate-600',
+    section: isDark ? 'bg-[#0b0c0f] text-[#f2f3f5]' : 'bg-white text-slate-900',
+    titleText: isDark ? 'text-[#fcfcfd]' : 'text-slate-950',
+    softText: isDark ? 'text-[#cbcfd6]' : 'text-slate-700',
+    mutedText: isDark ? 'text-[#949ba6]' : 'text-slate-600',
 
-    panel: isDark ? 'bg-[#101823] border-[#1b2a3a]' : 'bg-slate-50 border-slate-200',
-    card: isDark ? 'bg-[#121c28] border-[#213244]' : 'bg-white border-slate-200',
-    chip: isDark ? 'bg-[#182434] border-[#2a3f57]' : 'bg-slate-100 border-slate-200',
+    panel: isDark ? 'bg-[#121418] border-[#252a31]' : 'bg-slate-50 border-slate-200',
+    card: isDark ? 'bg-[#171b20] border-[#2d333c]' : 'bg-white border-slate-200',
+    chip: isDark ? 'bg-[#1d2229] border-[#383f49]' : 'bg-slate-100 border-slate-200',
 
     input: isDark
-      ? 'bg-[#0c141d] border-[#23364a] text-white placeholder:text-[#70849d]'
+      ? 'bg-[#101318] border-[#353d48] text-white placeholder:text-[#7d8592]'
       : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400',
 
     buttonPrimary: isDark
-      ? 'bg-[#4f9cff] text-white border-[#4f9cff] hover:bg-[#3d8df0]'
+      ? 'bg-[#4b5563] text-white border-[#4b5563] hover:bg-[#3f4752]'
       : 'bg-sky-600 text-white border-sky-600 hover:bg-sky-700',
 
     buttonSoft: isDark
-      ? 'bg-[#162334] text-white border-[#29405a] hover:bg-[#1b2b40]'
+      ? 'bg-[#1a1f26] text-[#eceef2] border-[#383f49] hover:bg-[#222831]'
       : 'bg-white text-slate-900 border-slate-300 hover:bg-slate-50',
 
     buttonEdit: isDark
-      ? 'bg-[#1d3b2d] text-[#8ef0b1] border-[#2d5a45] hover:bg-[#234634]'
+      ? 'bg-[#1c261e] text-[#9fd0aa] border-[#334138] hover:bg-[#223026]'
       : 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100',
 
-    valid: isDark ? 'border-emerald-500/25 bg-emerald-500/8' : 'border-emerald-300 bg-emerald-50',
-    invalid: isDark ? 'border-amber-500/25 bg-amber-500/8' : 'border-amber-300 bg-amber-50',
-    info: isDark ? 'border-sky-500/20 bg-sky-500/8' : 'border-sky-300 bg-sky-50',
-    embed: isDark ? 'bg-[#0b1219] border-[#1b2a3a]' : 'bg-slate-100 border-slate-200',
+    valid: isDark ? 'border-emerald-500/20 bg-emerald-500/8' : 'border-emerald-300 bg-emerald-50',
+    invalid: isDark ? 'border-amber-500/20 bg-amber-500/8' : 'border-amber-300 bg-amber-50',
+    info: isDark ? 'border-white/10 bg-white/[0.03]' : 'border-sky-300 bg-sky-50',
+    embed: isDark ? 'bg-[#0f1115] border-[#252a31]' : 'bg-slate-100 border-slate-200',
     dangerText: isDark ? 'text-amber-300' : 'text-amber-700',
   };
 }
@@ -419,13 +518,6 @@ function getPublicMediaItemSpanClass(cols?: string, count = 0, index = 0) {
   return 'col-span-1';
 }
 
-function getPublicSocialGridClass(cols?: string) {
-  if (cols === '1') return 'grid grid-cols-1 gap-3';
-  if (cols === '2') return 'grid grid-cols-2 gap-2 md:grid-cols-3';
-  if (cols === '4') return 'grid grid-cols-2 gap-2 md:grid-cols-4';
-  return 'grid grid-cols-2 gap-2 md:grid-cols-3';
-}
-
 function getEditorMediaGridClass(cols?: string) {
   if (cols === '1') return 'grid grid-cols-1 gap-3';
   if (cols === '2') return 'grid grid-cols-1 gap-3 md:grid-cols-2';
@@ -452,10 +544,7 @@ function getEditorMediaItemSpanClass(cols?: string, count = 0, index = 0) {
   return 'col-span-1';
 }
 
-function getEditorSocialGridClass(cols?: string) {
-  if (cols === '1') return 'grid grid-cols-1 gap-2';
-  if (cols === '2') return 'grid grid-cols-1 gap-2 sm:grid-cols-2';
-  if (cols === '4') return 'grid grid-cols-1 gap-2 md:grid-cols-2';
+function getEditorSocialGridClass() {
   return 'grid grid-cols-1 gap-2 sm:grid-cols-2';
 }
 
@@ -470,7 +559,12 @@ const StatusBadge = memo(function StatusBadge({ state, theme, t }: StatusBadgePr
 
   if (state === 'valid') {
     return (
-      <span className={cn('inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium', palette.valid)}>
+      <span
+        className={cn(
+          'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium',
+          palette.valid,
+        )}
+      >
         <CheckCircle2 className="h-3.5 w-3.5" />
         {t('media_status_valid')}
       </span>
@@ -479,7 +573,12 @@ const StatusBadge = memo(function StatusBadge({ state, theme, t }: StatusBadgePr
 
   if (state === 'invalid') {
     return (
-      <span className={cn('inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium', palette.invalid)}>
+      <span
+        className={cn(
+          'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium',
+          palette.invalid,
+        )}
+      >
         <AlertCircle className="h-3.5 w-3.5" />
         {t('media_status_invalid')}
       </span>
@@ -489,47 +588,26 @@ const StatusBadge = memo(function StatusBadge({ state, theme, t }: StatusBadgePr
   return null;
 });
 
-type PasteInputProps = {
+type UrlInputProps = {
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
   theme?: 'dark' | 'light';
-  pasteLabel: string;
+  clearLabel: string;
 };
 
-const PasteInput = memo(function PasteInput({
+const UrlInput = memo(function UrlInput({
   value,
   onChange,
   placeholder,
   theme,
-  pasteLabel,
-}: PasteInputProps) {
+  clearLabel,
+}: UrlInputProps) {
   const palette = getThemePalette(theme);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
-  const handlePaste = async () => {
-    const input = inputRef.current;
-
-    try {
-      const text = await navigator.clipboard.readText();
-      if (text) {
-        const next = normalizeInputUrl(text);
-        onChange(next);
-        input?.focus();
-        requestAnimationFrame(() => {
-          input?.setSelectionRange(next.length, next.length);
-        });
-        return;
-      }
-    } catch {
-      input?.focus();
-    }
-  };
 
   return (
     <div className="flex items-center gap-2">
       <input
-        ref={inputRef}
         value={value}
         onChange={(e) => onChange(normalizeInputUrl(e.target.value))}
         placeholder={placeholder}
@@ -540,22 +618,24 @@ const PasteInput = memo(function PasteInput({
         style={{ fontSize: INPUT_FONT_SIZE }}
         className={cn(
           'min-w-0 flex-1 rounded-xl border px-3 py-2 text-sm outline-none transition-colors',
-          palette.input
+          palette.input,
         )}
       />
 
-      <button
-        type="button"
-        onClick={handlePaste}
-        className={cn(
-          'inline-flex. h-10 hidden shrink-0 items-center gap-1 rounded-xl border px-3 text-[11px] font-medium transition',
-          palette.buttonPrimary
-        )}
-        title={pasteLabel}
-      >
-        <ClipboardPaste className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">{pasteLabel}</span>
-      </button>
+      {value ? (
+        <button
+          type="button"
+          onClick={() => onChange('')}
+          aria-label={clearLabel}
+          title={clearLabel}
+          className={cn(
+            'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition',
+            palette.buttonSoft,
+          )}
+        >
+          <X className="h-4 w-4" />
+        </button>
+      ) : null}
     </div>
   );
 });
@@ -585,7 +665,10 @@ const CompactToolbar = memo(function CompactToolbar({
         type="button"
         onClick={onMoveUp}
         disabled={disableUp}
-        className={cn('rounded-full border px-2.5 py-1 text-[11px] transition disabled:opacity-40', palette.buttonSoft)}
+        className={cn(
+          'rounded-full border px-2.5 py-1 text-[11px] transition disabled:opacity-40',
+          palette.buttonSoft,
+        )}
       >
         ↑
       </button>
@@ -593,7 +676,10 @@ const CompactToolbar = memo(function CompactToolbar({
         type="button"
         onClick={onMoveDown}
         disabled={disableDown}
-        className={cn('rounded-full border px-2.5 py-1 text-[11px] transition disabled:opacity-40', palette.buttonSoft)}
+        className={cn(
+          'rounded-full border px-2.5 py-1 text-[11px] transition disabled:opacity-40',
+          palette.buttonSoft,
+        )}
       >
         ↓
       </button>
@@ -626,13 +712,21 @@ const EmptyAddCard = memo(function EmptyAddCard({
   const palette = getThemePalette(theme);
 
   return (
-    <div className={cn('flex min-h-[96px] flex-col items-center justify-center rounded-2xl border border-dashed p-4 text-center', palette.card)}>
+    <div
+      className={cn(
+        'flex min-h-[96px] flex-col items-center justify-center rounded-2xl border border-dashed p-4 text-center',
+        palette.card,
+      )}
+    >
       <p className="text-sm font-medium">{label}</p>
       <p className={cn('mt-1 text-[11px] leading-4', palette.mutedText)}>{hint}</p>
       <button
         type="button"
         onClick={onAdd}
-        className={cn('mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-medium transition', palette.buttonPrimary)}
+        className={cn(
+          'mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-medium transition',
+          palette.buttonPrimary,
+        )}
       >
         <Plus className="h-3.5 w-3.5" />
         {button}
@@ -681,7 +775,7 @@ const GroupBlock = memo(function GroupBlock({
             disabled={!!pendingMessage}
             className={cn(
               'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium transition disabled:opacity-45',
-              palette.buttonPrimary
+              palette.buttonPrimary,
             )}
           >
             <Plus className="h-3.5 w-3.5" />
@@ -701,10 +795,7 @@ const GroupBlock = memo(function GroupBlock({
   );
 });
 
-function getErrorText(
-  error: ReturnType<typeof getItemError>,
-  t: (key: string) => string
-) {
+function getErrorText(error: ReturnType<typeof getItemError>, t: (key: string) => string) {
   if (!error) return '';
   switch (error) {
     case 'duplicate':
@@ -715,6 +806,88 @@ function getErrorText(
       return t('media_error_invalid_url');
   }
 }
+
+function getSocialBrandClasses(provider: ExtendedProvider, theme?: 'dark' | 'light') {
+  const isDark = theme === 'dark';
+
+  switch (provider) {
+    case 'instagram':
+      return isDark
+        ? 'border-pink-400/25 bg-gradient-to-br from-pink-500/10 via-fuchsia-500/8 to-amber-400/8 hover:from-pink-500/14 hover:via-fuchsia-500/12 hover:to-amber-400/12'
+        : 'border-pink-200 bg-gradient-to-br from-pink-50 via-rose-50 to-amber-50 hover:from-pink-100 hover:via-rose-100 hover:to-amber-100';
+    case 'facebook':
+      return isDark
+        ? 'border-blue-400/25 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 hover:from-blue-500/14 hover:to-indigo-500/14'
+        : 'border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100';
+    case 'linkedin':
+      return isDark
+        ? 'border-cyan-400/25 bg-gradient-to-br from-cyan-500/10 to-sky-500/10 hover:from-cyan-500/14 hover:to-sky-500/14'
+        : 'border-sky-200 bg-gradient-to-br from-cyan-50 to-sky-50 hover:from-cyan-100 hover:to-sky-100';
+    case 'x':
+      return isDark
+        ? 'border-white/12 bg-gradient-to-br from-white/[0.05] to-slate-300/[0.05] hover:from-white/[0.08] hover:to-slate-300/[0.08]'
+        : 'border-slate-300 bg-gradient-to-br from-slate-100 to-zinc-100 hover:from-slate-200 hover:to-zinc-200';
+    case 'tiktok':
+      return isDark
+        ? 'border-fuchsia-400/25 bg-gradient-to-br from-fuchsia-500/10 via-pink-500/8 to-cyan-400/8 hover:from-fuchsia-500/14 hover:via-pink-500/12 hover:to-cyan-400/12'
+        : 'border-fuchsia-200 bg-gradient-to-br from-fuchsia-50 via-pink-50 to-cyan-50 hover:from-fuchsia-100 hover:via-pink-100 hover:to-cyan-100';
+    case 'pinterest':
+      return isDark
+        ? 'border-rose-400/25 bg-gradient-to-br from-rose-500/10 to-red-500/10 hover:from-rose-500/14 hover:to-red-500/14'
+        : 'border-red-200 bg-gradient-to-br from-rose-50 to-red-50 hover:from-rose-100 hover:to-red-100';
+    default:
+      return isDark
+        ? 'border-[#2d333c] bg-[#171b20] hover:bg-[#1e232b]'
+        : 'border-slate-200 bg-white hover:bg-slate-50';
+  }
+}
+
+type SocialScrollerCardProps = {
+  url: string;
+  provider: ExtendedProvider;
+  theme?: 'dark' | 'light';
+  t: (key: string) => string;
+};
+
+const SocialScrollerCard = memo(function SocialScrollerCard({
+  url,
+  provider,
+  theme,
+  t,
+}: SocialScrollerCardProps) {
+  const palette = getThemePalette(theme);
+  const meta = getProviderMeta(provider, t);
+  const cleanUrl = normalizeInputUrl(url);
+  const host = getHostname(url);
+
+  return (
+    <a
+      href={cleanUrl}
+      target="_blank"
+      rel="noreferrer"
+      className={cn(
+        'group flex min-w-[220px] max-w-[250px] snap-start items-center gap-3 rounded-2xl border p-3 transition',
+        getSocialBrandClasses(provider, theme),
+      )}
+    >
+      <div
+        className={cn(
+          'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border backdrop-blur-[1px]',
+          theme === 'dark'
+            ? 'border-white/10 bg-white/10 text-white'
+            : 'border-white/70 bg-white text-slate-800 shadow-sm',
+        )}
+      >
+        {meta.icon}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p className={cn('truncate text-sm font-semibold', palette.titleText)}>{meta.name}</p>
+        <p className={cn('mt-0.5 truncate text-[11px]', palette.mutedText)}>{host || cleanUrl}</p>
+      </div>
+    </a>
+  );
+});
 
 type PublicLinkCardProps = {
   url: string;
@@ -745,16 +918,14 @@ const PublicLinkCard = memo(function PublicLinkCard({
       className={cn(
         'group relative block w-full overflow-hidden rounded-xl border transition-all duration-200',
         theme === 'dark'
-          ? 'border-[#223346] bg-[#0f1722] hover:border-[#35506e] hover:bg-[#132031]'
-          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+          ? 'border-[#2d333c] bg-[#171b20] hover:border-[#424955] hover:bg-[#1d222a]'
+          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50',
       )}
     >
       <div
         className={cn(
           'absolute inset-x-0 top-0 h-[2px]',
-          theme === 'dark'
-            ? 'bg-[#4f9cff]'
-            : 'bg-sky-500'
+          theme === 'dark' ? 'bg-zinc-400' : 'bg-sky-500',
         )}
       />
 
@@ -762,44 +933,32 @@ const PublicLinkCard = memo(function PublicLinkCard({
         <div
           className={cn(
             'flex gap-3',
-            centered
-              ? 'flex-col items-center text-center'
-              : 'items-center justify-between'
+            centered ? 'flex-col items-center text-center' : 'items-center justify-between',
           )}
         >
           <div
             className={cn(
               'flex min-w-0 items-center gap-3',
-              centered ? 'flex-col justify-center' : 'flex-1'
+              centered ? 'flex-col justify-center' : 'flex-1',
             )}
           >
             <div
               className={cn(
                 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border',
                 theme === 'dark'
-                  ? 'border-[#29405a] bg-[#162334] text-white'
-                  : 'border-slate-200 bg-slate-100 text-slate-800'
+                  ? 'border-[#383f49] bg-[#1d2229] text-white'
+                  : 'border-slate-200 bg-slate-100 text-slate-800',
               )}
             >
               {meta.icon}
             </div>
 
             <div className={cn('min-w-0', centered ? 'text-center' : 'text-left')}>
-              <p
-                className={cn(
-                  'truncate text-sm font-semibold leading-tight',
-                  palette.titleText
-                )}
-              >
+              <p className={cn('truncate text-sm font-semibold leading-tight', palette.titleText)}>
                 {meta.name}
               </p>
 
-              <p
-                className={cn(
-                  'mt-0.5 truncate hidden md:block text-xs',
-                  palette.mutedText
-                )}
-              >
+              <p className={cn('mt-0.5 hidden truncate text-xs md:block', palette.mutedText)}>
                 {host || cleanUrl}
               </p>
             </div>
@@ -808,10 +967,10 @@ const PublicLinkCard = memo(function PublicLinkCard({
           {!centered ? (
             <div
               className={cn(
-                'lg:inline-flex hidden shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium transition',
+                'hidden shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium transition lg:inline-flex',
                 theme === 'dark'
-                  ? 'bg-white/5 text-[#9fb3c8] group-hover:bg-white/10 group-hover:text-white'
-                  : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
+                  ? 'bg-white/[0.04] text-[#a7afb9] group-hover:bg-white/[0.08] group-hover:text-white'
+                  : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200',
               )}
             >
               <span>{t('media_open_link')}</span>
@@ -824,9 +983,7 @@ const PublicLinkCard = memo(function PublicLinkCard({
           className={cn(
             'mt-3 truncate rounded-lg px-2.5 py-2 text-[10px]',
             centered ? 'text-center' : 'text-left',
-            theme === 'dark'
-              ? 'bg-[#111b27] text-[#8ea0b5]'
-              : 'bg-slate-50 text-slate-500'
+            theme === 'dark' ? 'bg-[#101419] text-[#949daa]' : 'bg-slate-50 text-slate-500',
           )}
         >
           {cleanUrl}
@@ -835,6 +992,116 @@ const PublicLinkCard = memo(function PublicLinkCard({
     </a>
   );
 });
+
+function getMediaFrameWrapClass(cols?: string, count = 0, index = 0) {
+  if (cols === '2' && count === 3 && index === 0) {
+    return 'mx-auto w-full max-w-3xl';
+  }
+
+  if (cols === '1') return 'mx-auto w-full max-w-4xl';
+
+  return 'mx-auto w-full';
+}
+
+function getMediaAspectClass(
+  provider: ExtendedProvider,
+  cols?: string,
+  count = 0,
+  index = 0,
+  sourceUrl?: string
+) {
+  if (provider === 'spotify') {
+    return cols === '1'
+      ? 'aspect-[16/4.8] md:aspect-[16/5.1]'
+      : 'aspect-[16/4.4] md:aspect-[16/4.8]';
+  }
+
+  if (provider === 'apple_music') {
+    const isVideo = sourceUrl ? isAppleMusicVideoUrl(sourceUrl) : false;
+  
+    // 🎬 Apple Music Video
+    if (isVideo) {
+      if (cols === '1')
+        return 'aspect-[16/9.2] md:aspect-[16/8.8]';
+  
+      if (cols === '2' && count === 3 && index === 0)
+        return 'aspect-[16/8.8] md:aspect-[16/8.2]';
+  
+      return 'aspect-[16/9.1] md:aspect-[16/8.8]';
+    }
+  
+    // 🎵 Apple Music áudio / álbum / playlist
+    if (cols === '1') {
+      return 'min-h-[210px] md:min-h-[230px]';
+    }
+  
+    if (cols === '2') {
+      return 'min-h-[200px] md:min-h-[220px]';
+    }
+  
+    if (cols === '4') {
+      return 'min-h-[190px] md:min-h-[210px]';
+    }
+  
+    return 'min-h-[200px] md:min-h-[220px]';
+  }
+  
+  if (cols === '2' && count === 3 && index === 0) {
+    return 'aspect-[16/8.6] md:aspect-[16/7.7]';
+  }
+  
+  if (cols === '1') {
+    return 'aspect-[16/9.4] md:aspect-[16/8.9]';
+  }
+  
+  if (cols === '2') {
+    return 'aspect-[16/9.2] md:aspect-[16/9]';
+  }
+  
+  return 'aspect-[16/9]';
+}
+
+
+
+function getAppleMusicIframeHeight(
+  cols?: string,
+  sourceUrl?: string
+): number | null {
+  const isVideo = sourceUrl ? isAppleMusicVideoUrl(sourceUrl) : false;
+
+  if (isVideo) {
+    return null;
+  }
+
+  if (cols === '1') return 260;
+  if (cols === '2') return 240;
+  if (cols === '4') return 220;
+
+  return 240;
+}
+function isAppleMusicVideoUrl(url: string) {
+  try {
+    const parsed = new URL(normalizeInputUrl(url));
+    return parsed.pathname.toLowerCase().includes('/music-video/');
+  } catch {
+    return false;
+  }
+}
+
+function withAppleTheme(
+  url: string | null,
+  theme: 'dark' | 'light'
+): string | null {
+  if (!url) return null;
+
+  try {
+    const parsed = new URL(url);
+    parsed.searchParams.set('theme', theme);
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
 type MediaCardProps = {
   item: EditorSocialLinkItem;
   index: number;
@@ -876,9 +1143,185 @@ const MediaCard = memo(function MediaCard({
   const error = getItemError(item, duplicateSet);
   const errorText = getErrorText(error, t);
   const meta = resolvedProvider ? getProviderMeta(resolvedProvider, t) : null;
-  const embedUrl = resolvedProvider ? getMediaEmbedUrl(item.url, resolvedProvider) : null;
   const centered = align === 'center';
-  const [activateEmbed, setActivateEmbed] = useState(false);
+
+  const [activated, setActivated] = useState(false);
+
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const ytPlayerRef = useRef<{
+    playVideo: () => void;
+    pauseVideo: () => void;
+    destroy: () => void;
+  } | null>(null);
+
+  const playerReadyRef = useRef(false);
+  const isInViewportRef = useRef(true);
+  const shouldResumeRef = useRef(false);
+  const pauseByVisibilityRef = useRef(false);
+  const userWantedPlayRef = useRef(false);
+
+  useEffect(() => {
+    setActivated(false);
+    playerReadyRef.current = false;
+    isInViewportRef.current = true;
+    shouldResumeRef.current = false;
+    pauseByVisibilityRef.current = false;
+    userWantedPlayRef.current = false;
+
+    if (ytPlayerRef.current) {
+      ytPlayerRef.current.destroy();
+      ytPlayerRef.current = null;
+    }
+  }, [item.url]);
+
+  const wrapClass = resolvedProvider
+    ? getMediaFrameWrapClass(cols, totalItems, index)
+    : 'mx-auto w-full';
+
+  const aspectClass = resolvedProvider
+    ? getMediaAspectClass(resolvedProvider, cols, totalItems, index, item.url)
+    : 'aspect-[16/9]';
+
+  const youtubeEmbedUrl =
+    resolvedProvider === 'youtube' || resolvedProvider === 'youtube_music'
+      ? getMediaEmbedUrl(item.url, resolvedProvider, activated)
+      : null;
+
+  const spotifyEmbedUrl =
+    resolvedProvider === 'spotify'
+      ? getMediaEmbedUrl(item.url, resolvedProvider)
+      : null;
+
+  const appleEmbedUrl =
+    resolvedProvider === 'apple_music'
+      ? getMediaEmbedUrl(item.url, resolvedProvider)
+      : null;
+
+  const themedAppleEmbedUrl =
+    resolvedProvider === 'apple_music'
+      ? withAppleTheme(appleEmbedUrl, theme === 'dark' ? 'dark' : 'light')
+      : null;
+
+  const isAppleVideo =
+    resolvedProvider === 'apple_music'
+      ? isAppleMusicVideoUrl(item.url)
+      : false;
+
+  const appleIframeHeight =
+    resolvedProvider === 'apple_music'
+      ? getAppleMusicIframeHeight(cols, item.url)
+      : null;
+
+  const directEmbedUrl =
+    resolvedProvider === 'direct_video' || resolvedProvider === 'direct_image'
+      ? getMediaEmbedUrl(item.url, resolvedProvider)
+      : null;
+
+  useEffect(() => {
+    if (!activated) return;
+    if (!(resolvedProvider === 'youtube' || resolvedProvider === 'youtube_music')) return;
+    if (!iframeRef.current) return;
+
+    let cancelled = false;
+    const iframe = iframeRef.current;
+
+    loadYouTubeIframeAPI().then(() => {
+      if (cancelled || !iframe || !window.YT?.Player) return;
+
+      if (ytPlayerRef.current) {
+        ytPlayerRef.current.destroy();
+        ytPlayerRef.current = null;
+      }
+
+      ytPlayerRef.current = new window.YT.Player(iframe, {
+        events: {
+          onReady: () => {
+            if (cancelled) return;
+            playerReadyRef.current = true;
+          },
+          onStateChange: (event) => {
+            const playingState = window.YT?.PlayerState?.PLAYING ?? 1;
+            const pausedState = window.YT?.PlayerState?.PAUSED ?? 2;
+            const endedState = window.YT?.PlayerState?.ENDED ?? 0;
+
+            if (event.data === playingState) {
+              userWantedPlayRef.current = true;
+              shouldResumeRef.current = true;
+              pauseByVisibilityRef.current = false;
+            } else if (event.data === pausedState) {
+              if (pauseByVisibilityRef.current) {
+                shouldResumeRef.current = true;
+              } else {
+                userWantedPlayRef.current = false;
+                shouldResumeRef.current = false;
+              }
+            } else if (event.data === endedState) {
+              userWantedPlayRef.current = false;
+              shouldResumeRef.current = false;
+              pauseByVisibilityRef.current = false;
+            }
+          },
+        },
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      playerReadyRef.current = false;
+
+      if (ytPlayerRef.current) {
+        ytPlayerRef.current.destroy();
+        ytPlayerRef.current = null;
+      }
+    };
+  }, [activated, resolvedProvider, item.url]);
+
+  useEffect(() => {
+    if (!activated) return;
+    if (!(resolvedProvider === 'youtube' || resolvedProvider === 'youtube_music')) return;
+    if (!containerRef.current) return;
+
+    const node = containerRef.current;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const player = ytPlayerRef.current;
+        if (!player || !playerReadyRef.current) return;
+
+        const nowVisible = entry.isIntersecting && entry.intersectionRatio >= 0.62;
+        const wasVisible = isInViewportRef.current;
+
+        if (nowVisible === wasVisible) return;
+        isInViewportRef.current = nowVisible;
+
+        if (!nowVisible) {
+          if (userWantedPlayRef.current) {
+            pauseByVisibilityRef.current = true;
+            shouldResumeRef.current = true;
+            try {
+              player.pauseVideo();
+            } catch {}
+          }
+          return;
+        }
+
+        if (shouldResumeRef.current) {
+          pauseByVisibilityRef.current = false;
+          try {
+            player.playVideo();
+          } catch {}
+        }
+      },
+      {
+        threshold: [0, 0.15, 0.35, 0.62, 0.82],
+        rootMargin: '-8% 0px -12% 0px',
+      }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [activated, resolvedProvider]);
 
   if (!isEditable && !resolvedProvider) return null;
 
@@ -894,13 +1337,18 @@ const MediaCard = memo(function MediaCard({
             <p className={cn('truncate text-sm font-semibold', palette.titleText)}>
               {meta?.name || t('media_provider_not_detected')}
             </p>
-            <p className={cn('mt-1 truncate text-[11px]', palette.mutedText)}>{item.url}</p>
+            <p className={cn('mt-1 truncate text-[11px]', palette.mutedText)}>
+              {item.url}
+            </p>
           </div>
 
           <button
             type="button"
             onClick={() => onToggleEdit(item.id)}
-            className={cn('inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium transition', palette.buttonEdit)}
+            className={cn(
+              'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium transition',
+              palette.buttonEdit
+            )}
           >
             <Pencil className="h-3.5 w-3.5" />
             {t('media_edit_button')}
@@ -909,13 +1357,6 @@ const MediaCard = memo(function MediaCard({
       </div>
     );
   }
-
-  const commonAspect =
-    cols === '1'
-      ? 'aspect-[16/9.8] md:aspect-[16/9.4]'
-      : cols === '2'
-        ? 'aspect-[16/9.2] md:aspect-[16/9]'
-        : 'aspect-[16/9]';
 
   return (
     <div
@@ -936,11 +1377,19 @@ const MediaCard = memo(function MediaCard({
             <p className={cn('truncate text-sm font-semibold', palette.titleText)}>
               {meta?.name || t('media_provider_not_detected')}
             </p>
-            {isEditable && state !== 'empty' ? <StatusBadge state={state} theme={theme} t={t} /> : null}
+            {isEditable && state !== 'empty' ? (
+              <StatusBadge state={state} theme={theme} t={t} />
+            ) : null}
           </div>
 
           {isEditable ? (
-            <p className={cn('mt-1 text-[11px] leading-4', state === 'invalid' ? palette.dangerText : palette.mutedText, centered ? 'text-center' : '')}>
+            <p
+              className={cn(
+                'mt-1 text-[11px] leading-4',
+                state === 'invalid' ? palette.dangerText : palette.mutedText,
+                centered ? 'text-center' : ''
+              )}
+            >
               {state === 'empty'
                 ? t('media_hint_paste')
                 : state === 'invalid'
@@ -953,12 +1402,12 @@ const MediaCard = memo(function MediaCard({
 
       {isEditable ? (
         <div className="space-y-2">
-          <PasteInput
+          <UrlInput
             value={item.url}
             onChange={(nextUrl) => onChange?.(item.id, { url: nextUrl })}
             placeholder={t('media_placeholder_media_link')}
             theme={theme}
-            pasteLabel={t('media_paste_button')}
+            clearLabel={t('media_clear_button')}
           />
 
           <div className="flex items-center justify-between gap-2">
@@ -988,59 +1437,55 @@ const MediaCard = memo(function MediaCard({
         </div>
       ) : (
         <div className="space-y-2">
-          {resolvedProvider === 'youtube' && embedUrl ? (
-            <button
-              type="button"
-              onClick={() => setActivateEmbed(true)}
-              className={cn(
-                'group block w-full overflow-hidden rounded-xl border text-left',
-                palette.embed,
-                cols === '1' ? 'mx-auto max-w-3xl' : 'mx-auto'
-              )}
+          {(resolvedProvider === 'youtube' || resolvedProvider === 'youtube_music') && youtubeEmbedUrl ? (
+            <div
+              ref={containerRef}
+              className={cn('overflow-hidden rounded-xl border', palette.embed, wrapClass)}
             >
-              {!activateEmbed ? (
-                <div className={cn('relative w-full bg-black', commonAspect)}>
+              {!activated ? (
+                <button
+                  type="button"
+                  onClick={() => setActivated(true)}
+                  className={cn('group relative block w-full overflow-hidden bg-black text-left', aspectClass)}
+                >
                   {getYouTubeThumb(item.url) ? (
                     <img
                       src={getYouTubeThumb(item.url)!}
                       alt={meta?.name || 'YouTube preview'}
                       loading="lazy"
+                      decoding="async"
                       className="h-full w-full object-cover"
                     />
                   ) : null}
 
-                  <div className="absolute inset-0 bg-black/20 transition group-hover:bg-black/25" />
+                  <div className="absolute inset-0 bg-black/35 transition group-hover:bg-black/40" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 text-black shadow-lg">
                       <Play className="ml-0.5 h-6 w-6" />
                     </span>
                   </div>
-                </div>
+                </button>
               ) : (
-                <div className={cn('relative w-full', commonAspect)}>
+                <div className={cn('relative w-full bg-black', aspectClass)}>
                   <iframe
-                    src={embedUrl}
+                    ref={iframeRef}
+                    id={`yt-player-${item.id}`}
+                    src={youtubeEmbedUrl}
                     title={`${meta?.name || 'media'}-${index}`}
                     loading="lazy"
-                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                     allowFullScreen
                     referrerPolicy="strict-origin-when-cross-origin"
                     className="h-full w-full border-0"
                   />
                 </div>
               )}
-            </button>
-          ) : resolvedProvider === 'spotify' && embedUrl ? (
-            <div
-              className={cn(
-                'overflow-hidden rounded-xl border',
-                palette.embed,
-                cols === '1' ? 'mx-auto max-w-3xl' : 'mx-auto'
-              )}
-            >
-              <div className={cn('relative w-full', cols === '1' ? 'aspect-[16/4.9] md:aspect-[16/5.3]' : 'aspect-[16/4.6] md:aspect-[16/4.9]')}>
+            </div>
+          ) : resolvedProvider === 'spotify' && spotifyEmbedUrl ? (
+            <div className={cn('overflow-hidden rounded-xl border', palette.embed, wrapClass)}>
+              <div className={cn('relative w-full', aspectClass)}>
                 <iframe
-                  src={embedUrl}
+                  src={spotifyEmbedUrl}
                   title={`${meta?.name || 'media'}-${index}`}
                   loading="lazy"
                   allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
@@ -1050,47 +1495,70 @@ const MediaCard = memo(function MediaCard({
                 />
               </div>
             </div>
-          ) : resolvedProvider === 'apple_music' && embedUrl ? (
+          ) : resolvedProvider === 'apple_music' && themedAppleEmbedUrl ? (
             <div
               className={cn(
                 'overflow-hidden rounded-xl border',
                 palette.embed,
-                cols === '1' ? 'mx-auto max-w-3xl' : 'mx-auto'
+                wrapClass,
+                isAppleVideo ? 'shadow-[0_10px_30px_rgba(0,0,0,0.18)]' : ''
               )}
             >
-              <div className={cn('relative w-full', cols === '1' ? 'min-h-[145px] md:min-h-[160px]' : 'min-h-[150px] sm:min-h-[165px]')}>
+              <div
+                className={cn(
+                  'relative w-full overflow-hidden',
+                  isAppleVideo ? `${aspectClass} bg-black` : ''
+                )}
+              >
                 <iframe
-                  src={embedUrl}
+                  src={themedAppleEmbedUrl}
                   title={`${meta?.name || 'media'}-${index}`}
                   loading="lazy"
                   allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write"
                   sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
                   referrerPolicy="strict-origin-when-cross-origin"
-                  className="h-full w-full rounded-[10px] border-0"
+                  style={
+                    isAppleVideo
+                      ? {
+                          width: '100%',
+                          height: '100%',
+                          border: 0,
+                        }
+                      : {
+                          width: '100%',
+                          height: `${appleIframeHeight ?? 240}px`,
+                          border: 0,
+                        }
+                  }
+                  className={cn(
+                    'w-full border-0',
+                    isAppleVideo ? 'absolute inset-0 rounded-none bg-black' : 'rounded-[10px]'
+                  )}
                 />
               </div>
             </div>
-          ) : resolvedProvider === 'direct_video' && embedUrl ? (
-            <div className={cn('overflow-hidden rounded-xl border', palette.embed, cols === '1' ? 'mx-auto max-w-3xl' : 'mx-auto')}>
+          ) : resolvedProvider === 'direct_video' && directEmbedUrl ? (
+            <div className={cn('overflow-hidden rounded-xl border', palette.embed, wrapClass)}>
               <video
-                src={embedUrl}
+                src={directEmbedUrl}
                 controls
                 preload="metadata"
                 playsInline
-                className={cn('h-auto w-full bg-black', commonAspect)}
+                className={cn('h-auto w-full bg-black', aspectClass)}
               />
             </div>
-          ) : resolvedProvider === 'direct_image' && embedUrl ? (
+          ) : resolvedProvider === 'direct_image' && directEmbedUrl ? (
             <a
               href={normalizeInputUrl(item.url)}
               target="_blank"
               rel="noreferrer"
-              className={cn('block overflow-hidden rounded-xl border', palette.embed, cols === '1' ? 'mx-auto max-w-3xl' : 'mx-auto')}
+              className={cn('block overflow-hidden rounded-xl border', palette.embed, wrapClass)}
             >
               <img
-                src={embedUrl}
+                src={directEmbedUrl}
                 alt={meta?.name || 'media image'}
                 loading="lazy"
+                decoding="async"
                 className="h-auto w-full object-cover"
               />
             </a>
@@ -1170,7 +1638,10 @@ const SocialChip = memo(function SocialChip({
           <button
             type="button"
             onClick={() => onToggleEdit(item.id)}
-            className={cn('inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium transition', palette.buttonEdit)}
+            className={cn(
+              'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium transition',
+              palette.buttonEdit,
+            )}
           >
             <Pencil className="h-3.5 w-3.5" />
             {t('media_edit_button')}
@@ -1186,7 +1657,7 @@ const SocialChip = memo(function SocialChip({
         'rounded-2xl border p-2.5 transition-colors',
         palette.card,
         state === 'valid' && isEditable && palette.valid,
-        state === 'invalid' && isEditable && palette.invalid
+        state === 'invalid' && isEditable && palette.invalid,
       )}
     >
       {isEditable ? (
@@ -1204,7 +1675,13 @@ const SocialChip = memo(function SocialChip({
                 {state !== 'empty' ? <StatusBadge state={state} theme={theme} t={t} /> : null}
               </div>
 
-              <p className={cn('mt-1 text-[11px] leading-4', state === 'invalid' ? palette.dangerText : palette.mutedText, centered ? 'text-center' : '')}>
+              <p
+                className={cn(
+                  'mt-1 text-[11px] leading-4',
+                  state === 'invalid' ? palette.dangerText : palette.mutedText,
+                  centered ? 'text-center' : '',
+                )}
+              >
                 {state === 'empty'
                   ? t('media_hint_paste')
                   : state === 'invalid'
@@ -1214,12 +1691,12 @@ const SocialChip = memo(function SocialChip({
             </div>
           </div>
 
-          <PasteInput
+          <UrlInput
             value={item.url}
             onChange={(nextUrl) => onChange?.(item.id, { url: nextUrl })}
             placeholder={t('media_placeholder_social_link')}
             theme={theme}
-            pasteLabel={t('media_paste_button')}
+            clearLabel={t('media_clear_button')}
           />
 
           <div className="flex items-center justify-between gap-2">
@@ -1281,12 +1758,12 @@ export const MediaLinksCompact: React.FC<SectionProps> = ({
 
   const mediaItems = useMemo(
     () => normalized.filter((item) => item.kind === 'media').slice(0, MAX_MEDIA_ITEMS),
-    [normalized]
+    [normalized],
   );
 
   const socialItems = useMemo(
     () => normalized.filter((item) => item.kind === 'social').slice(0, MAX_SOCIAL_ITEMS),
-    [normalized]
+    [normalized],
   );
 
   const pendingMedia = useMemo(() => firstPendingItem(mediaItems, duplicateSet), [mediaItems, duplicateSet]);
@@ -1294,18 +1771,18 @@ export const MediaLinksCompact: React.FC<SectionProps> = ({
 
   const visibleMedia = useMemo(
     () => (isEditable ? mediaItems : mediaItems.filter((item) => isRenderableMedia(item))),
-    [isEditable, mediaItems]
+    [isEditable, mediaItems],
   );
 
   const visibleSocial = useMemo(
     () => (isEditable ? socialItems : socialItems.filter((item) => isRenderableSocial(item))),
-    [isEditable, socialItems]
+    [isEditable, socialItems],
   );
 
   const validTotal = useMemo(
     () =>
       [...mediaItems, ...socialItems].filter((item) => getItemState(item, duplicateSet) === 'valid').length,
-    [mediaItems, socialItems, duplicateSet]
+    [mediaItems, socialItems, duplicateSet],
   );
 
   const invalidMessages = useMemo(() => {
@@ -1329,7 +1806,7 @@ export const MediaLinksCompact: React.FC<SectionProps> = ({
         ...nextSocial.slice(0, MAX_SOCIAL_ITEMS),
       ]);
     },
-    [onUpdate]
+    [onUpdate],
   );
 
   const setCardEditing = useCallback((id: string, value: boolean) => {
@@ -1366,7 +1843,7 @@ export const MediaLinksCompact: React.FC<SectionProps> = ({
         mergeGroups(mediaItems, [...socialItems, newItem]);
       }
     },
-    [pendingMedia, pendingSocial, mediaItems, socialItems, mergeGroups, uniqueId, setCardEditing]
+    [pendingMedia, pendingSocial, mediaItems, socialItems, mergeGroups, uniqueId, setCardEditing],
   );
 
   const handleRemoveFromGroup = useCallback(
@@ -1386,7 +1863,7 @@ export const MediaLinksCompact: React.FC<SectionProps> = ({
         mergeGroups(mediaItems, socialItems.filter((item) => item.id !== id));
       }
     },
-    [mediaItems, socialItems, mergeGroups]
+    [mediaItems, socialItems, mergeGroups],
   );
 
   const handleChangeInGroup = useCallback(
@@ -1409,7 +1886,7 @@ export const MediaLinksCompact: React.FC<SectionProps> = ({
         mergeGroups(mediaItems, socialItems.map(applyPatch));
       }
     },
-    [mediaItems, socialItems, mergeGroups]
+    [mediaItems, socialItems, mergeGroups],
   );
 
   const handleMoveInGroup = useCallback(
@@ -1429,7 +1906,7 @@ export const MediaLinksCompact: React.FC<SectionProps> = ({
         mergeGroups(mediaItems, source);
       }
     },
-    [mediaItems, socialItems, mergeGroups]
+    [mediaItems, socialItems, mergeGroups],
   );
 
   useEffect(() => {
@@ -1462,26 +1939,51 @@ export const MediaLinksCompact: React.FC<SectionProps> = ({
   if (!isEditable && !publicHasContent) return null;
 
   return (
-    <section className={cn('px-2 py-5 md:px-4 md:py-8', palette.section)}>
+    <section className={cn('px-2 pt-5 pb-10 md:px-4 md:pt-8 md:pb-16', palette.section)}>
       <div className="mx-auto max-w-6xl px-2 sm:px-4">
         {(hasText(String(content.category || '')) ||
           hasText(String(content.title || '')) ||
           hasText(String(content.description || ''))) && (
-          <div className={cn('mx-auto mb-4 flex max-w-3xl flex-col gap-1.5', getAlignClass(style.align))}>
+          <div
+            className={cn(
+              'mx-auto mb-5 flex max-w-3xl flex-col gap-1.5',
+              getAlignClass(style.align),
+            )}
+          >
             {!!content.category && (
-              <p className={cn('max-w-full break-words text-[10px] font-medium uppercase tracking-[0.2em]', palette.mutedText, getTextAlignClass(style.align))}>
+              <p
+                className={cn(
+                  'max-w-full break-words text-[10px] font-medium uppercase tracking-[0.2em]',
+                  palette.mutedText,
+                  getTextAlignClass(style.align),
+                )}
+              >
                 {String(content.category)}
               </p>
             )}
 
             {!!content.title && (
-              <h2 className={cn('max-w-full break-words font-semibold tracking-tight', getTitleSize(style.fontSize), palette.titleText, getTextAlignClass(style.align))}>
+              <h2
+                className={cn(
+                  'max-w-full break-words font-semibold tracking-tight',
+                  getTitleSize(style.fontSize),
+                  palette.titleText,
+                  getTextAlignClass(style.align),
+                )}
+              >
                 {String(content.title)}
               </h2>
             )}
 
             {!!content.description && (
-              <p className={cn('max-w-2xl break-words leading-5', getDescSize(style.fontSize), palette.softText, getTextAlignClass(style.align))}>
+              <p
+                className={cn(
+                  'max-w-2xl break-words leading-5',
+                  getDescSize(style.fontSize),
+                  palette.softText,
+                  getTextAlignClass(style.align),
+                )}
+              >
                 {clampText(String(content.description), MAX_DESCRIPTION)}
               </p>
             )}
@@ -1508,7 +2010,11 @@ export const MediaLinksCompact: React.FC<SectionProps> = ({
                 {invalidMessages.slice(0, 3).map((message, idx) => (
                   <div
                     key={`${message}-${idx}`}
-                    className={cn('rounded-xl border px-3 py-2 text-[11px] leading-4', palette.invalid, palette.dangerText)}
+                    className={cn(
+                      'rounded-xl border px-3 py-2 text-[11px] leading-4',
+                      palette.invalid,
+                      palette.dangerText,
+                    )}
                   >
                     {message}
                   </div>
@@ -1592,8 +2098,46 @@ export const MediaLinksCompact: React.FC<SectionProps> = ({
                     theme={theme}
                   />
                 ) : null
+              ) : !isEditable ? (
+                <>
+                  <div className="-mx-1 overflow-x-auto pb-1 md:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    <div className="flex snap-x snap-mandatory gap-3 px-1">
+                      {visibleSocial.map((item) => {
+                        const provider = getResolvedProvider(item);
+                        if (!provider) return null;
+
+                        return (
+                          <SocialScrollerCard
+                            key={item.id}
+                            url={item.url}
+                            provider={provider}
+                            theme={theme}
+                            t={t as (key: string) => string}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="hidden gap-3 md:grid md:grid-cols-3 lg:grid-cols-4">
+                    {visibleSocial.map((item) => {
+                      const provider = getResolvedProvider(item);
+                      if (!provider) return null;
+
+                      return (
+                        <SocialScrollerCard
+                          key={item.id}
+                          url={item.url}
+                          provider={provider}
+                          theme={theme}
+                          t={t as (key: string) => string}
+                        />
+                      );
+                    })}
+                  </div>
+                </>
               ) : (
-                <div className={isEditable ? getEditorSocialGridClass(style.cols) : getPublicSocialGridClass(style.cols)}>
+                <div className={getEditorSocialGridClass()}>
                   {visibleSocial.map((item, index) => (
                     <div key={item.id}>
                       <SocialChip
