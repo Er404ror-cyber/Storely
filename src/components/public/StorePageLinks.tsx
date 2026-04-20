@@ -15,8 +15,9 @@ import {
   Gem,
   Package,
   Star,
-  ArrowRight,
-  Compass,
+  ChevronRight,
+  Navigation,
+  CheckCircle2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "../../lib/supabase";
@@ -41,7 +42,6 @@ type PreparedPageItem = {
   shortLabel: string;
   active: boolean;
   Icon: LucideIcon;
-  isHome: boolean;
 };
 
 function normalizeText(value?: string | null) {
@@ -52,7 +52,7 @@ function normalizeText(value?: string | null) {
     .trim();
 }
 
-function trimLabel(text?: string | null, max = 20) {
+function trimLabel(text?: string | null, max = 22) {
   const value = (text || "").trim();
   if (!value) return "Page";
   if (value.length <= max) return value;
@@ -186,24 +186,18 @@ function getPageIcon(title?: string | null, slug?: string | null): LucideIcon {
   return Star;
 }
 
-const NavLinkItem = memo(function NavLinkItem({
+const RailDestination = memo(function RailDestination({
   to,
   shortLabel,
   fullLabel,
-  active,
   Icon,
-  isHome,
-  homeBadge,
-  navigateLabel,
+  openLabel,
 }: {
   to: string;
   shortLabel: string;
   fullLabel: string;
-  active: boolean;
   Icon: LucideIcon;
-  isHome: boolean;
-  homeBadge: string;
-  navigateLabel: string;
+  openLabel: string;
 }) {
   return (
     <Link
@@ -211,98 +205,81 @@ const NavLinkItem = memo(function NavLinkItem({
       title={fullLabel}
       aria-label={fullLabel}
       className={[
-        "group flex h-[78px] min-w-[216px] max-w-[216px] shrink-0 items-center gap-3 overflow-hidden rounded-2xl border px-3 sm:h-[82px] sm:min-w-[228px] sm:max-w-[228px] sm:px-3.5",
+        "group flex min-h-[72px] min-w-[220px] max-w-[220px] shrink-0 items-center gap-3 rounded-2xl border px-3.5 py-3",
+        "border-slate-200 bg-white text-slate-900",
+        "hover:border-slate-300 hover:bg-slate-50",
+        "dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:hover:border-slate-700 dark:hover:bg-slate-900",
         "transition-colors duration-200",
-        active
-          ? "border-slate-950 bg-slate-950 text-white dark:border-white dark:bg-white dark:text-slate-950"
-          : "border-slate-300 bg-white text-slate-900 hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:hover:border-slate-500 dark:hover:bg-slate-800/70",
       ].join(" ")}
     >
-      <div
-        className={[
-          "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
-          active
-            ? "bg-white/10 dark:bg-slate-200"
-            : "bg-slate-100 dark:bg-slate-800",
-        ].join(" ")}
-      >
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-200">
         <Icon size={17} />
       </div>
 
-      <div className="min-w-0 flex-1 overflow-hidden">
-        <div className="flex min-w-0 items-center gap-2 overflow-hidden">
-          <span className="truncate text-[13px] font-bold tracking-tight sm:text-[14px]">
-            {shortLabel}
-          </span>
-
-          {isHome && (
-            <span
-              className={[
-                "shrink-0 rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-[0.16em]",
-                active
-                  ? "bg-white/10 text-white/80 dark:bg-slate-200 dark:text-slate-900"
-                  : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300",
-              ].join(" ")}
-            >
-              {homeBadge}
-            </span>
-          )}
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-[14px] font-bold tracking-tight">
+          {shortLabel}
         </div>
-
-        <span
-          className={[
-            "mt-1 block truncate text-[10px]",
-            active
-              ? "text-white/65 dark:text-slate-600"
-              : "text-slate-500 dark:text-slate-400",
-          ].join(" ")}
-        >
-          {navigateLabel}
-        </span>
+        <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+          {openLabel}
+        </div>
       </div>
 
-      <div
-        className={[
-          "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-          active
-            ? "bg-white/10 dark:bg-slate-200"
-            : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300",
-        ].join(" ")}
-      >
-        <ArrowRight size={14} />
+      <div className="shrink-0 text-slate-400 dark:text-slate-500">
+        <ChevronRight size={16} />
       </div>
     </Link>
   );
 });
 
-const SectionSkeleton = memo(function SectionSkeleton({
-  title,
+const CurrentStage = memo(function CurrentStage({
+  label,
+  Icon,
+  currentLabel,
 }: {
-  title: string;
+  label: string;
+  Icon: LucideIcon;
+  currentLabel: string;
 }) {
   return (
+    <div
+      className={[
+        "flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5",
+        "border-slate-900 bg-slate-900 text-white",
+        "dark:border-white dark:bg-white dark:text-slate-950",
+      ].join(" ")}
+    >
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 dark:bg-slate-200">
+        <Icon size={17} />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-[14px] font-bold tracking-tight">
+          {label}
+        </div>
+        <div className="mt-1 inline-flex items-center gap-1.5 text-[11px] text-white/70 dark:text-slate-600">
+          <CheckCircle2 size={13} />
+          <span>{currentLabel}</span>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+const SectionSkeleton = memo(function SectionSkeleton() {
+  return (
     <section className="w-full">
-      <div className="mx-auto max-w-7xl px-4 pb-8 pt-4 sm:px-6 lg:px-8 lg:pb-12">
-        <div className="rounded-[24px] border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950 sm:p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div className="min-w-0">
-              <div className="h-5 w-28 animate-pulse rounded-full bg-slate-100 dark:bg-slate-800" />
-              <div className="mt-3 h-7 w-60 max-w-full animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800" />
-              <div className="mt-2 h-4 w-80 max-w-full animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800" />
+      <div className="mx-auto max-w-7xl px-4 pb-4 pt-3 sm:px-6 lg:px-8 lg:pb-6">
+        <div className="w-full rounded-[26px] border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950 sm:p-5">
+          <div className="flex items-start gap-3">
+            <div className="h-11 w-11 rounded-2xl bg-slate-100 animate-pulse dark:bg-slate-800" />
+            <div className="min-w-0 flex-1">
+              <div className="h-4 w-44 rounded-full bg-slate-100 animate-pulse dark:bg-slate-800" />
+              <div className="mt-2 h-3 w-64 max-w-full rounded-full bg-slate-100 animate-pulse dark:bg-slate-800" />
             </div>
-            <div className="h-7 w-14 animate-pulse rounded-full bg-slate-100 dark:bg-slate-800" />
           </div>
 
-          <div className="mt-4 flex gap-3 overflow-hidden">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div
-                key={index}
-                className="h-[78px] min-w-[216px] rounded-2xl border border-slate-200 bg-slate-50 animate-pulse dark:border-slate-800 dark:bg-slate-900"
-              />
-            ))}
-          </div>
-
-          <span className="sr-only">{title}</span>
+          <div className="mt-5 h-[96px] w-full rounded-[24px] bg-slate-50 animate-pulse dark:bg-slate-900" />
         </div>
       </div>
     </section>
@@ -334,10 +311,10 @@ export const StorePageLinksSection = memo(function StorePageLinksSection({
       return data ?? [];
     },
     enabled: !!storeId,
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 15,
+    staleTime: 1000 * 60 * 60 * 4,
+    gcTime: 1000 * 60 * 60 * 8,
     refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
   });
 
   const items = useMemo<PreparedPageItem[]>(() => {
@@ -352,71 +329,86 @@ export const StorePageLinksSection = memo(function StorePageLinksSection({
         key: `${page.slug || "home"}-${fullLabel}`,
         to,
         fullLabel,
-        shortLabel: trimLabel(fullLabel, 20),
+        shortLabel: trimLabel(fullLabel, 22),
         active,
         Icon: getPageIcon(page.title, page.slug),
-        isHome: !!page.is_home,
       };
     });
   }, [pages, maxItems, t, storeSlug, pageSlug, location.pathname]);
 
+  const currentItem = useMemo(
+    () => items.find((item) => item.active) || null,
+    [items]
+  );
+
+  const destinationItems = useMemo(
+    () => items.filter((item) => !item.active),
+    [items]
+  );
+
   if (isLoading && !items.length) {
-    return <SectionSkeleton title={t("store_page_links_title")} />;
+    return <SectionSkeleton />;
   }
 
-  if (!items.length) return null;
+  if (!items.length || destinationItems.length === 0) return null;
 
   return (
     <section className={["w-full", className].join(" ")}>
-      <div className="mx-auto max-w-7xl px-4 pb-4 pt-4 sm:px-6 lg:px-8 lg:pb-8">
-        <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
-          <div className="px-4 pb-3 pt-4 sm:px-5 sm:pb-4 sm:pt-5 lg:px-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div className="min-w-0 max-w-2xl">
-                <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                  <Compass size={13} />
-                  <span>{t("store_page_links_discover")}</span>
-                </div>
-
-                <h2 className="mt-3 text-[18px] font-black tracking-tight text-slate-950 dark:text-white sm:text-[22px] lg:text-[24px]">
-                  {t("store_page_links_title")}
-                </h2>
-
-                <p className="mt-1.5 max-w-xl text-[12px] leading-5 text-slate-600 dark:text-slate-300 sm:text-[13px]">
-                  {t("store_page_links_subtitle")}
-                </p>
+      <div className="mx-auto max-w-7xl px-4 pb-4 pt-3 sm:px-6 lg:px-8 lg:pb-6">
+        <div className="w-full rounded-[26px] border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-950 dark:shadow-none">
+          <div className="px-4 pt-4 sm:px-5 sm:pt-5">
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                <Navigation size={18} />
               </div>
 
-              <div className="shrink-0">
-                <span className="inline-flex items-center rounded-full border border-slate-300 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-600 dark:border-slate-700 dark:text-slate-300">
-                  {items.length} {t("store_page_links_items")}
-                </span>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-[15px] font-bold tracking-tight text-slate-900 dark:text-white">
+                  {t("store_page_links_title")}
+                </h2>
+                <p className="mt-1 text-[12px] leading-5 text-slate-500 dark:text-slate-400">
+                  {t("store_page_links_subtitle")}
+                </p>
               </div>
             </div>
           </div>
 
-          <div className="border-t border-slate-100 px-3 py-4 dark:border-slate-800 sm:px-5 lg:px-6">
+          <div className="px-4 py-5 sm:px-5">
             <div
               className={[
-                "flex gap-3 overflow-x-auto pb-1",
-                "snap-x snap-mandatory scroll-smooth",
-                "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+                "w-full rounded-[24px] border border-slate-200 bg-slate-50/80 p-3",
+                "dark:border-slate-800 dark:bg-slate-900/60",
               ].join(" ")}
             >
-              {items.map((item) => (
-                <div key={item.key} className="snap-start">
-                  <NavLinkItem
-                    to={item.to}
-                    shortLabel={item.shortLabel}
-                    fullLabel={item.fullLabel}
-                    active={item.active}
-                    Icon={item.Icon}
-                    isHome={item.isHome}
-                    homeBadge={t("store_page_links_home_badge")}
-                    navigateLabel={t("store_page_links_navigate_label")}
-                  />
-                </div>
-              ))}
+              <div
+                className={[
+                  "flex gap-3 overflow-x-auto",
+                  "snap-x snap-mandatory scroll-smooth",
+                  "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+                ].join(" ")}
+              >
+                {destinationItems.map((item) => (
+                  <div key={item.key} className="snap-start">
+                    <RailDestination
+                      to={item.to}
+                      shortLabel={item.shortLabel}
+                      fullLabel={item.fullLabel}
+                      Icon={item.Icon}
+                      openLabel={t("store_page_links_navigate_label")}
+                    />
+                  </div>
+                ))}
+
+                {currentItem ? (
+                  <div className="snap-start min-w-[220px] max-w-[220px] shrink-0">
+                    <CurrentStage
+                      label={currentItem.shortLabel}
+                      Icon={currentItem.Icon}
+                      currentLabel={t("store_page_links_current_label")}
+                    />
+                  </div>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>

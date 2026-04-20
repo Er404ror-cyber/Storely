@@ -11,17 +11,24 @@ type StorePublicData = {
   settings: any;
   logo_url: string | null;
   whatsapp_number?: string | null;
+  owner_email?: string | null;
+  slug?: string | null;
+  updated_at_name?: string | null;
+  [key: string]: any;
 };
 
 type StoreCachePayload = {
   data: StorePublicData;
   savedAt: number;
   expiresAt: number;
+  version: number;
+  signature: string;
 };
 
 type DataSource = "cache" | "network" | "none";
 
-const STORE_CACHE_TTL = 1000 * 60 * 60;
+const STORE_CACHE_TTL = 1000 * 60 * 60 * 4; // 4 hours
+const STORE_CACHE_VERSION = 3;
 
 const mascotImages = [
   "/img/Mascote.png",
@@ -31,9 +38,41 @@ const mascotImages = [
 
 const socialIcons = ["whatsapp", "instagram", "twitter", "github"];
 
-
 function getCacheKey(slug?: string) {
-  return `store-cache:${slug}`;
+  return `store-cache:v${STORE_CACHE_VERSION}:${slug}`;
+}
+
+function safeNow() {
+  return Date.now();
+}
+
+function buildStoreSignature(data: Partial<StorePublicData> | null | undefined) {
+  if (!data) return "";
+
+  return JSON.stringify({
+    id: data.id ?? null,
+    slug: data.slug ?? null,
+    name: data.name ?? null,
+    logo_url: data.logo_url ?? null,
+    whatsapp_number: data.whatsapp_number ?? null,
+    owner_email: data.owner_email ?? null,
+    updated_at_name: data.updated_at_name ?? null,
+    settings: data.settings ?? null,
+  });
+}
+
+function isValidCachePayload(value: unknown): value is StoreCachePayload {
+  if (!value || typeof value !== "object") return false;
+
+  const payload = value as StoreCachePayload;
+
+  return (
+    !!payload.data &&
+    typeof payload.savedAt === "number" &&
+    typeof payload.expiresAt === "number" &&
+    typeof payload.version === "number" &&
+    typeof payload.signature === "string"
+  );
 }
 
 function readStoreCache(slug?: string): StoreCachePayload | null {
@@ -43,26 +82,28 @@ function readStoreCache(slug?: string): StoreCachePayload | null {
     const raw = localStorage.getItem(getCacheKey(slug));
     if (!raw) return null;
 
-    const parsed = JSON.parse(raw) as StoreCachePayload;
+    const parsed = JSON.parse(raw);
 
-    if (
-      !parsed ||
-      !parsed.data ||
-      typeof parsed.savedAt !== "number" ||
-      typeof parsed.expiresAt !== "number"
-    ) {
+    if (!isValidCachePayload(parsed)) {
       localStorage.removeItem(getCacheKey(slug));
       return null;
     }
 
-    if (Date.now() >= parsed.expiresAt) {
+    if (parsed.version !== STORE_CACHE_VERSION) {
+      localStorage.removeItem(getCacheKey(slug));
+      return null;
+    }
+
+    if (safeNow() >= parsed.expiresAt) {
       localStorage.removeItem(getCacheKey(slug));
       return null;
     }
 
     return parsed;
   } catch {
-    localStorage.removeItem(getCacheKey(slug));
+    try {
+      localStorage.removeItem(getCacheKey(slug));
+    } catch {}
     return null;
   }
 }
@@ -70,12 +111,14 @@ function readStoreCache(slug?: string): StoreCachePayload | null {
 function writeStoreCache(slug: string | undefined, data: StorePublicData) {
   if (!slug || typeof window === "undefined") return null;
 
-  const now = Date.now();
+  const now = safeNow();
 
   const payload: StoreCachePayload = {
     data,
     savedAt: now,
     expiresAt: now + STORE_CACHE_TTL,
+    version: STORE_CACHE_VERSION,
+    signature: buildStoreSignature(data),
   };
 
   try {
@@ -97,11 +140,56 @@ function clearStoreCache(slug?: string) {
 function formatRemainingTime(ms: number) {
   if (ms <= 0) return "expired";
 
-  const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
+  const totalMinutes = Math.floor(ms / 1000 / 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
 
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  if (hours > 0) {
+    return `${String(hours).padStart(2, "0")}h ${String(minutes).padStart(2, "0")}m`;
+  }
+
+  return `${String(minutes).padStart(2, "0")}m`;
+}
+
+function shouldRefreshInBackground(cache: StoreCachePayload | null) {
+  if (!cache) return true;
+
+  const remaining = cache.expiresAt - safeNow();
+
+  // refresh silently if less than 20 minutes remain
+  return remaining <= 1000 * 60 * 20;
+}
+
+function getSocialLinks(settings: any) {
+  const social = settings?.social_links || settings?.socials || settings?.social || {};
+
+  const possible = [
+    {
+      key: "whatsapp",
+      icon: "whatsapp",
+      href:
+        social?.whatsapp ||
+        settings?.whatsapp_link ||
+        null,
+    },
+    {
+      key: "instagram",
+      icon: "instagram",
+      href: social?.instagram || settings?.instagram || null,
+    },
+    {
+      key: "twitter",
+      icon: "twitter",
+      href: social?.twitter || social?.x || settings?.twitter || settings?.x || null,
+    },
+    {
+      key: "github",
+      icon: "github",
+      href: social?.github || settings?.github || null,
+    },
+  ];
+
+  return possible.filter((item) => typeof item.href === "string" && item.href.trim().length > 0);
 }
 
 export function PublicLayout() {
@@ -113,10 +201,11 @@ export function PublicLayout() {
   const [source, setSource] = useState<DataSource>(initialCache ? "cache" : "none");
   const [expiresAt, setExpiresAt] = useState<number>(initialCache?.expiresAt ?? 0);
   const [remainingMs, setRemainingMs] = useState<number>(
-    initialCache ? Math.max(initialCache.expiresAt - Date.now(), 0) : 0
+    initialCache ? Math.max(initialCache.expiresAt - safeNow(), 0) : 0
   );
 
   const expiryTimeoutRef = useRef<number | null>(null);
+  const backgroundRefreshRef = useRef(false);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -136,31 +225,32 @@ export function PublicLayout() {
     queryKey: ["store-public", storeSlug],
     enabled: !!storeSlug,
     initialData: initialCache?.data,
-    staleTime: Number.POSITIVE_INFINITY,
-    gcTime: STORE_CACHE_TTL * 3,
+    staleTime: STORE_CACHE_TTL,
+    gcTime: STORE_CACHE_TTL * 2,
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
+    retry: 1,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("stores")
-        .select("id, name, settings, logo_url, whatsapp_number")
+        .select("*")
         .eq("slug", storeSlug)
         .single();
 
       if (error) throw error;
 
-      const payload = writeStoreCache(storeSlug, data);
+      const payload = writeStoreCache(storeSlug, data as StorePublicData);
 
       if (payload) {
         setExpiresAt(payload.expiresAt);
-        setRemainingMs(Math.max(payload.expiresAt - Date.now(), 0));
+        setRemainingMs(Math.max(payload.expiresAt - safeNow(), 0));
       } else {
         setExpiresAt(0);
         setRemainingMs(0);
       }
 
       setSource("network");
-      return data;
+      return data as StorePublicData;
     },
   });
 
@@ -172,7 +262,7 @@ export function PublicLayout() {
     if (cache) {
       setSource("cache");
       setExpiresAt(cache.expiresAt);
-      setRemainingMs(Math.max(cache.expiresAt - Date.now(), 0));
+      setRemainingMs(Math.max(cache.expiresAt - safeNow(), 0));
     } else {
       setSource("none");
       setExpiresAt(0);
@@ -187,9 +277,12 @@ export function PublicLayout() {
     }
 
     const tick = window.setInterval(() => {
-      const next = Math.max(expiresAt - Date.now(), 0);
+      const next = Math.max(expiresAt - safeNow(), 0);
       setRemainingMs(next);
-    }, 1000);
+    }, 60_000);
+
+    const firstNext = Math.max(expiresAt - safeNow(), 0);
+    setRemainingMs(firstNext);
 
     return () => window.clearInterval(tick);
   }, [expiresAt]);
@@ -202,13 +295,15 @@ export function PublicLayout() {
 
     if (!storeSlug || !expiresAt) return;
 
-    const delay = Math.max(expiresAt - Date.now(), 0);
+    const delay = Math.max(expiresAt - safeNow(), 0);
 
     expiryTimeoutRef.current = window.setTimeout(async () => {
       clearStoreCache(storeSlug);
       setRemainingMs(0);
       setSource("none");
+      backgroundRefreshRef.current = true;
       await refetch();
+      backgroundRefreshRef.current = false;
     }, delay + 50);
 
     return () => {
@@ -218,6 +313,53 @@ export function PublicLayout() {
       }
     };
   }, [expiresAt, refetch, storeSlug]);
+
+  useEffect(() => {
+    if (!storeSlug || !initialCache) return;
+    if (!shouldRefreshInBackground(initialCache)) return;
+    if (backgroundRefreshRef.current) return;
+
+    backgroundRefreshRef.current = true;
+
+    const timeout = window.setTimeout(async () => {
+      try {
+        await refetch();
+      } finally {
+        backgroundRefreshRef.current = false;
+      }
+    }, 1200);
+
+    return () => {
+      window.clearTimeout(timeout);
+      backgroundRefreshRef.current = false;
+    };
+  }, [storeSlug, initialCache, refetch]);
+
+  useEffect(() => {
+    if (!storeSlug || !store) return;
+
+    const cache = readStoreCache(storeSlug);
+    const nextSignature = buildStoreSignature(store);
+
+    if (!cache) {
+      const payload = writeStoreCache(storeSlug, store);
+      if (payload) {
+        setExpiresAt(payload.expiresAt);
+        setRemainingMs(Math.max(payload.expiresAt - safeNow(), 0));
+      }
+      return;
+    }
+
+    if (cache.signature !== nextSignature) {
+      const payload = writeStoreCache(storeSlug, store);
+      if (payload) {
+        setExpiresAt(payload.expiresAt);
+        setRemainingMs(Math.max(payload.expiresAt - safeNow(), 0));
+      }
+    }
+  }, [storeSlug, store]);
+
+  const socialLinks = useMemo(() => getSocialLinks(store?.settings), [store?.settings]);
 
   if (isLoading && !store) {
     return (
@@ -248,11 +390,10 @@ export function PublicLayout() {
 
       <main className="flex-1">
         <Outlet context={{ storeId: store.id, store }} />
-
         <StorePageLinksSection storeId={store.id} />
       </main>
 
-  <footer className="relative w-full border-t border-slate-100 dark:border-slate-900 bg-white dark:bg-black transition-colors duration-500 overflow-hidden">
+      <footer className="relative w-full border-t border-slate-100 dark:border-slate-900 bg-white dark:bg-black transition-colors duration-500 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 md:px-8 pt-16 pb-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-10 md:gap-6">
             <div className="relative flex flex-col items-center md:items-start min-w-[120px]">
@@ -261,6 +402,7 @@ export function PublicLayout() {
                   src={mascotImages[activeIndex]}
                   alt="Mascot"
                   className="h-24 md:h-24 w-auto object-contain transition-all duration-700 ease-out hover:-translate-y-1"
+                  loading="lazy"
                 />
                 <div className="w-10 h-1.5 bg-black/5 dark:bg-cyan-400/10 rounded-full mt-1" />
               </div>
@@ -323,21 +465,38 @@ export function PublicLayout() {
             </div>
 
             <div className="flex justify-center md:justify-end gap-5 order-2 md:order-3">
-              {socialIcons.map((icon) => (
-                <a
-                  key={icon}
-                  href="#"
-                  aria-label={icon}
-                  className="opacity-45 hover:opacity-100 hover:scale-110 transition-all duration-300 dark:invert"
-                >
-                  <img
-                    src={`/img/${icon}.png`}
-                    alt={icon}
-                    className="h-4 w-4 object-contain"
-                    loading="lazy"
-                  />
-                </a>
-              ))}
+              {socialLinks.length > 0
+                ? socialLinks.map((item) => (
+                    <a
+                      key={item.key}
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={item.key}
+                      className="opacity-45 hover:opacity-100 hover:scale-110 transition-all duration-300 dark:invert"
+                    >
+                      <img
+                        src={`/img/${item.icon}.png`}
+                        alt={item.key}
+                        className="h-4 w-4 object-contain"
+                        loading="lazy"
+                      />
+                    </a>
+                  ))
+                : socialIcons.map((icon) => (
+                    <span
+                      key={icon}
+                      aria-hidden="true"
+                      className="opacity-20 dark:invert"
+                    >
+                      <img
+                        src={`/img/${icon}.png`}
+                        alt={icon}
+                        className="h-4 w-4 object-contain"
+                        loading="lazy"
+                      />
+                    </span>
+                  ))}
             </div>
           </div>
         </div>

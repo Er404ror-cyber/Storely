@@ -1388,14 +1388,14 @@ mediaSettings: "Media settings",
 
 
 store_page_links_discover: "Discover pages",
-store_page_links_title: "Navigate to other pages",
-store_page_links_subtitle: "Swipe through the available pages and open another section of this store.",
 store_page_links_items: "pages",
 store_page_links_page: "Page",
 store_page_links_home_badge: "home",
 store_page_links_navigate_label: "Open page",
 
-
+store_page_links_title: "Continue browsing",
+store_page_links_subtitle: "Move to another page of this store.",
+store_page_links_current_label: "Current page",
 
 
 
@@ -2865,13 +2865,15 @@ mediaSettings: "Definições da mídia",
 
 
 store_page_links_discover: "Descobrir páginas",
-store_page_links_title: "Navegue para outras páginas",
-store_page_links_subtitle: "Deslize pelas páginas disponíveis e abra outra secção desta loja.",
 store_page_links_items: "páginas",
 store_page_links_page: "Página",
 store_page_links_home_badge: "início",
 store_page_links_navigate_label: "Abrir página",
 
+
+store_page_links_title: "Continuar a navegar",
+store_page_links_subtitle: "Ir para outra página desta loja.",
+store_page_links_current_label: "Página atual",
 
 
 

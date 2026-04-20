@@ -50,15 +50,13 @@ type EditorSocialLinkItem = {
   subtitle?: string;
 };
 
-
-
-
 declare global {
   interface Window {
     YT?: {
       Player: new (
         elementId: string | HTMLElement,
         config: {
+          playerVars?: Record<string, unknown>;
           events?: {
             onReady?: (event: unknown) => void;
             onStateChange?: (event: { data: number }) => void;
@@ -67,6 +65,7 @@ declare global {
       ) => {
         playVideo: () => void;
         pauseVideo: () => void;
+        stopVideo: () => void;
         destroy: () => void;
       };
       PlayerState?: {
@@ -83,41 +82,6 @@ declare global {
   }
 }
 
-function loadYouTubeIframeAPI() {
-  if (typeof window === 'undefined') return Promise.resolve();
-
-  if (window.YT?.Player) return Promise.resolve();
-  if (window.__ytIframeApiPromise) return window.__ytIframeApiPromise;
-
-  window.__ytIframeApiPromise = new Promise<void>((resolve) => {
-    const existing = document.querySelector('script[data-youtube-iframe-api="true"]');
-    if (existing) {
-      const prev = window.onYouTubeIframeAPIReady;
-      window.onYouTubeIframeAPIReady = () => {
-        prev?.();
-        resolve();
-      };
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = 'https://www.youtube.com/iframe_api';
-    script.async = true;
-    script.defer = true;
-    script.setAttribute('data-youtube-iframe-api', 'true');
-
-    const prev = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = () => {
-      prev?.();
-      resolve();
-    };
-
-    document.head.appendChild(script);
-  });
-
-  return window.__ytIframeApiPromise;
-}
-
 const MAX_MEDIA_ITEMS = 3;
 const MAX_SOCIAL_ITEMS = 6;
 const MAX_DESCRIPTION = 100;
@@ -126,11 +90,63 @@ const INPUT_FONT_SIZE = '16px';
 const DIRECT_VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov', '.m4v'];
 const DIRECT_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif'];
 
+
+
+function isFacebookShareUrl(url: string) {
+  try {
+    const parsed = new URL(normalizeInputUrl(url));
+    const path = parsed.pathname.toLowerCase();
+
+    return (
+      path.startsWith('/share/') ||
+      path.startsWith('/share/r/') ||
+      path.startsWith('/share/p/')
+    );
+  } catch {
+    return false;
+  }
+}
+
+function canEmbedFacebookUrl(url: string) {
+  if (!isValidUrl(url)) return false;
+  if (isFacebookShareUrl(url)) return false;
+
+  try {
+    const parsed = new URL(normalizeInputUrl(url));
+    const path = parsed.pathname.toLowerCase();
+
+    return (
+      path.includes('/videos/') ||
+      path.includes('/watch/') ||
+      path.includes('/reel/') ||
+      path.includes('/posts/') ||
+      path.includes('/permalink/')
+    );
+  } catch {
+    return false;
+  }
+}
+
+
+function isFacebookSharerUrl(url: string) {
+  try {
+    const parsed = new URL(normalizeInputUrl(url));
+    const path = parsed.pathname.toLowerCase();
+    return path.startsWith('/share/') || path.startsWith('/share/r/');
+  } catch {
+    return false;
+  }
+}
+
+
+
 const EMBED_MEDIA_PROVIDERS: ExtendedProvider[] = [
   'youtube',
   'youtube_music',
   'spotify',
   'apple_music',
+  'tiktok',
+  'facebook',
   'direct_video',
   'direct_image',
 ];
@@ -302,6 +318,56 @@ function getYouTubeThumb(url: string) {
   return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null;
 }
 
+function getTikTokVideoId(url: string): string | null {
+  try {
+    const parsed = new URL(normalizeInputUrl(url));
+
+    // formato normal
+    const match = parsed.pathname.match(/\/video\/(\d+)/);
+    if (match) return match[1];
+
+    // fallback: tenta encontrar números longos
+    const fallback = parsed.pathname.match(/(\d{8,})/);
+    if (fallback) return fallback[1];
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function getFacebookWatchUrl(url: string): string | null {
+  try {
+    return encodeURIComponent(normalizeInputUrl(url));
+  } catch {
+    return null;
+  }
+}
+
+function isAppleMusicVideoUrl(url: string) {
+  try {
+    const parsed = new URL(normalizeInputUrl(url));
+    return parsed.pathname.toLowerCase().includes('/music-video/');
+  } catch {
+    return false;
+  }
+}
+
+function withAppleTheme(
+  url: string | null,
+  theme: 'dark' | 'light'
+): string | null {
+  if (!url) return null;
+
+  try {
+    const parsed = new URL(url);
+    parsed.searchParams.set('theme', theme);
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
 function getMediaEmbedUrl(url: string, provider: ExtendedProvider, autoplay = false): string | null {
   try {
     const parsed = new URL(normalizeInputUrl(url));
@@ -336,6 +402,25 @@ function getMediaEmbedUrl(url: string, provider: ExtendedProvider, autoplay = fa
       return `https://embed.music.apple.com${parsed.pathname}${parsed.search || ''}`;
     }
 
+    if (provider === 'tiktok') {
+      const id = getTikTokVideoId(url);
+    
+      if (!id) return null;
+    
+      return `https://www.tiktok.com/player/v1/${id}`;
+    }
+    if (provider === 'facebook') {
+      if (!canEmbedFacebookUrl(url)) return null;
+    
+      const href = encodeURIComponent(normalizeInputUrl(url));
+    
+      if (url.includes('/videos/') || url.includes('/watch/') || url.includes('/reel/')) {
+        return `https://www.facebook.com/plugins/video.php?href=${href}&show_text=false&width=560`;
+      }
+    
+      return `https://www.facebook.com/plugins/post.php?href=${href}&show_text=false&width=560`;
+    }
+
     if (provider === 'direct_video' || provider === 'direct_image') {
       return normalizeInputUrl(url);
     }
@@ -344,6 +429,41 @@ function getMediaEmbedUrl(url: string, provider: ExtendedProvider, autoplay = fa
   } catch {
     return null;
   }
+}
+
+function loadYouTubeIframeAPI() {
+  if (typeof window === 'undefined') return Promise.resolve();
+
+  if (window.YT?.Player) return Promise.resolve();
+  if (window.__ytIframeApiPromise) return window.__ytIframeApiPromise;
+
+  window.__ytIframeApiPromise = new Promise<void>((resolve) => {
+    const existing = document.querySelector('script[data-youtube-iframe-api="true"]');
+    if (existing) {
+      const prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => {
+        prev?.();
+        resolve();
+      };
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://www.youtube.com/iframe_api';
+    script.async = true;
+    script.defer = true;
+    script.setAttribute('data-youtube-iframe-api', 'true');
+
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      prev?.();
+      resolve();
+    };
+
+    document.head.appendChild(script);
+  });
+
+  return window.__ytIframeApiPromise;
 }
 
 function buildDuplicateSet(items: EditorSocialLinkItem[]) {
@@ -548,6 +668,101 @@ function getEditorSocialGridClass() {
   return 'grid grid-cols-1 gap-2 sm:grid-cols-2';
 }
 
+function getMediaAspectClass(
+  provider: ExtendedProvider,
+  cols?: string,
+  count = 0,
+  index = 0,
+  sourceUrl?: string
+) {
+  if (provider === 'spotify') {
+    return cols === '1'
+      ? 'aspect-[16/4.8] md:aspect-[16/5.1]'
+      : 'aspect-[16/4.4] md:aspect-[16/4.8]';
+  }
+
+  if (provider === 'apple_music') {
+    const isVideo = sourceUrl ? isAppleMusicVideoUrl(sourceUrl) : false;
+
+    if (isVideo) {
+      if (cols === '1') return 'aspect-[16/9.1] md:aspect-[16/8.8]';
+      if (cols === '2' && count === 3 && index === 0) return 'aspect-[16/8.9] md:aspect-[16/8.3]';
+      return 'aspect-[16/9] md:aspect-[16/8.8]';
+    }
+
+    if (cols === '1') return 'min-h-[210px] md:min-h-[230px]';
+    if (cols === '2') return 'min-h-[200px] md:min-h-[220px]';
+    if (cols === '4') return 'min-h-[190px] md:min-h-[210px]';
+    return 'min-h-[200px] md:min-h-[220px]';
+  }
+
+  if (provider === 'tiktok') {
+    if (cols === '1') return 'aspect-[9/16] max-h-[760px]';
+    return 'aspect-[9/16] max-h-[680px]';
+  }
+
+  if (provider === 'facebook') {
+    return cols === '1'
+      ? 'aspect-[16/9]'
+      : 'aspect-[16/9.2]';
+  }
+
+  if (cols === '2' && count === 3 && index === 0) {
+    return 'aspect-[16/8.6] md:aspect-[16/7.7]';
+  }
+
+  if (cols === '1') {
+    return 'aspect-[16/9.4] md:aspect-[16/8.9]';
+  }
+
+  if (cols === '2') {
+    return 'aspect-[16/9.2] md:aspect-[16/9]';
+  }
+
+  return 'aspect-[16/9]';
+}
+
+function getAppleMusicIframeHeight(
+  cols?: string,
+  sourceUrl?: string
+): number | null {
+  const isVideo = sourceUrl ? isAppleMusicVideoUrl(sourceUrl) : false;
+  if (isVideo) return null;
+
+  if (cols === '1') return 260;
+  if (cols === '2') return 240;
+  if (cols === '4') return 220;
+  return 240;
+}
+
+function getBrandAccent(provider: ExtendedProvider, theme?: 'dark' | 'light') {
+  const isDark = theme === 'dark';
+
+  switch (provider) {
+    case 'youtube':
+    case 'youtube_music':
+      return isDark ? 'border-red-400/30' : 'border-red-200';
+    case 'spotify':
+      return isDark ? 'border-emerald-400/30' : 'border-emerald-200';
+    case 'apple_music':
+      return isDark ? 'border-pink-400/25' : 'border-pink-200';
+    case 'facebook':
+      return isDark ? 'border-blue-400/30' : 'border-blue-200';
+    case 'instagram':
+      return isDark ? 'border-fuchsia-400/30' : 'border-pink-200';
+    case 'tiktok':
+      return isDark ? 'border-cyan-400/30' : 'border-cyan-200';
+    case 'linkedin':
+      return isDark ? 'border-sky-400/30' : 'border-sky-200';
+    case 'x':
+      return isDark ? 'border-zinc-300/20' : 'border-zinc-300';
+    case 'pinterest':
+      return isDark ? 'border-rose-400/30' : 'border-rose-200';
+    default:
+      return '';
+  }
+}
+
 type StatusBadgeProps = {
   state: ItemState;
   theme?: 'dark' | 'light';
@@ -559,12 +774,7 @@ const StatusBadge = memo(function StatusBadge({ state, theme, t }: StatusBadgePr
 
   if (state === 'valid') {
     return (
-      <span
-        className={cn(
-          'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium',
-          palette.valid,
-        )}
-      >
+      <span className={cn('inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium', palette.valid)}>
         <CheckCircle2 className="h-3.5 w-3.5" />
         {t('media_status_valid')}
       </span>
@@ -573,12 +783,7 @@ const StatusBadge = memo(function StatusBadge({ state, theme, t }: StatusBadgePr
 
   if (state === 'invalid') {
     return (
-      <span
-        className={cn(
-          'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium',
-          palette.invalid,
-        )}
-      >
+      <span className={cn('inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium', palette.invalid)}>
         <AlertCircle className="h-3.5 w-3.5" />
         {t('media_status_invalid')}
       </span>
@@ -605,11 +810,22 @@ const UrlInput = memo(function UrlInput({
 }: UrlInputProps) {
   const palette = getThemePalette(theme);
 
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onChange(normalizeInputUrl(e.target.value));
+    },
+    [onChange]
+  );
+
+  const handleClear = useCallback(() => {
+    onChange('');
+  }, [onChange]);
+
   return (
     <div className="flex items-center gap-2">
       <input
         value={value}
-        onChange={(e) => onChange(normalizeInputUrl(e.target.value))}
+        onChange={handleInputChange}
         placeholder={placeholder}
         inputMode="url"
         autoCapitalize="none"
@@ -618,19 +834,19 @@ const UrlInput = memo(function UrlInput({
         style={{ fontSize: INPUT_FONT_SIZE }}
         className={cn(
           'min-w-0 flex-1 rounded-xl border px-3 py-2 text-sm outline-none transition-colors',
-          palette.input,
+          palette.input
         )}
       />
 
       {value ? (
         <button
           type="button"
-          onClick={() => onChange('')}
+          onClick={handleClear}
           aria-label={clearLabel}
           title={clearLabel}
           className={cn(
             'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition',
-            palette.buttonSoft,
+            palette.buttonSoft
           )}
         >
           <X className="h-4 w-4" />
@@ -665,10 +881,7 @@ const CompactToolbar = memo(function CompactToolbar({
         type="button"
         onClick={onMoveUp}
         disabled={disableUp}
-        className={cn(
-          'rounded-full border px-2.5 py-1 text-[11px] transition disabled:opacity-40',
-          palette.buttonSoft,
-        )}
+        className={cn('rounded-full border px-2.5 py-1 text-[11px] transition disabled:opacity-40', palette.buttonSoft)}
       >
         ↑
       </button>
@@ -676,10 +889,7 @@ const CompactToolbar = memo(function CompactToolbar({
         type="button"
         onClick={onMoveDown}
         disabled={disableDown}
-        className={cn(
-          'rounded-full border px-2.5 py-1 text-[11px] transition disabled:opacity-40',
-          palette.buttonSoft,
-        )}
+        className={cn('rounded-full border px-2.5 py-1 text-[11px] transition disabled:opacity-40', palette.buttonSoft)}
       >
         ↓
       </button>
@@ -712,21 +922,13 @@ const EmptyAddCard = memo(function EmptyAddCard({
   const palette = getThemePalette(theme);
 
   return (
-    <div
-      className={cn(
-        'flex min-h-[96px] flex-col items-center justify-center rounded-2xl border border-dashed p-4 text-center',
-        palette.card,
-      )}
-    >
+    <div className={cn('flex min-h-[96px] flex-col items-center justify-center rounded-2xl border border-dashed p-4 text-center', palette.card)}>
       <p className="text-sm font-medium">{label}</p>
       <p className={cn('mt-1 text-[11px] leading-4', palette.mutedText)}>{hint}</p>
       <button
         type="button"
         onClick={onAdd}
-        className={cn(
-          'mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-medium transition',
-          palette.buttonPrimary,
-        )}
+        className={cn('mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-medium transition', palette.buttonPrimary)}
       >
         <Plus className="h-3.5 w-3.5" />
         {button}
@@ -775,7 +977,7 @@ const GroupBlock = memo(function GroupBlock({
             disabled={!!pendingMessage}
             className={cn(
               'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium transition disabled:opacity-45',
-              palette.buttonPrimary,
+              palette.buttonPrimary
             )}
           >
             <Plus className="h-3.5 w-3.5" />
@@ -835,6 +1037,11 @@ function getSocialBrandClasses(provider: ExtendedProvider, theme?: 'dark' | 'lig
       return isDark
         ? 'border-rose-400/25 bg-gradient-to-br from-rose-500/10 to-red-500/10 hover:from-rose-500/14 hover:to-red-500/14'
         : 'border-red-200 bg-gradient-to-br from-rose-50 to-red-50 hover:from-rose-100 hover:to-red-100';
+    case 'youtube':
+    case 'youtube_music':
+      return isDark
+        ? 'border-red-400/25 bg-gradient-to-br from-red-500/10 to-rose-500/10 hover:from-red-500/14 hover:to-rose-500/14'
+        : 'border-red-200 bg-gradient-to-br from-red-50 to-rose-50 hover:from-red-100 hover:to-rose-100';
     default:
       return isDark
         ? 'border-[#2d333c] bg-[#171b20] hover:bg-[#1e232b]'
@@ -867,7 +1074,7 @@ const SocialScrollerCard = memo(function SocialScrollerCard({
       rel="noreferrer"
       className={cn(
         'group flex min-w-[220px] max-w-[250px] snap-start items-center gap-3 rounded-2xl border p-3 transition',
-        getSocialBrandClasses(provider, theme),
+        getSocialBrandClasses(provider, theme)
       )}
     >
       <div
@@ -875,7 +1082,7 @@ const SocialScrollerCard = memo(function SocialScrollerCard({
           'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border backdrop-blur-[1px]',
           theme === 'dark'
             ? 'border-white/10 bg-white/10 text-white'
-            : 'border-white/70 bg-white text-slate-800 shadow-sm',
+            : 'border-white/70 bg-white text-slate-800 shadow-sm'
         )}
       >
         {meta.icon}
@@ -920,12 +1127,31 @@ const PublicLinkCard = memo(function PublicLinkCard({
         theme === 'dark'
           ? 'border-[#2d333c] bg-[#171b20] hover:border-[#424955] hover:bg-[#1d222a]'
           : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50',
+        getBrandAccent(provider, theme)
       )}
     >
       <div
         className={cn(
           'absolute inset-x-0 top-0 h-[2px]',
-          theme === 'dark' ? 'bg-zinc-400' : 'bg-sky-500',
+          provider === 'youtube' || provider === 'youtube_music'
+            ? 'bg-red-500'
+            : provider === 'spotify'
+              ? 'bg-emerald-500'
+              : provider === 'apple_music'
+                ? 'bg-pink-500'
+                : provider === 'facebook'
+                  ? 'bg-blue-500'
+                  : provider === 'instagram'
+                    ? 'bg-fuchsia-500'
+                    : provider === 'tiktok'
+                      ? 'bg-cyan-400'
+                      : provider === 'linkedin'
+                        ? 'bg-sky-500'
+                        : provider === 'pinterest'
+                          ? 'bg-rose-500'
+                          : theme === 'dark'
+                            ? 'bg-zinc-400'
+                            : 'bg-sky-500'
         )}
       />
 
@@ -947,7 +1173,7 @@ const PublicLinkCard = memo(function PublicLinkCard({
                 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border',
                 theme === 'dark'
                   ? 'border-[#383f49] bg-[#1d2229] text-white'
-                  : 'border-slate-200 bg-slate-100 text-slate-800',
+                  : 'border-slate-200 bg-slate-100 text-slate-800'
               )}
             >
               {meta.icon}
@@ -970,7 +1196,7 @@ const PublicLinkCard = memo(function PublicLinkCard({
                 'hidden shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium transition lg:inline-flex',
                 theme === 'dark'
                   ? 'bg-white/[0.04] text-[#a7afb9] group-hover:bg-white/[0.08] group-hover:text-white'
-                  : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200',
+                  : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
               )}
             >
               <span>{t('media_open_link')}</span>
@@ -983,7 +1209,7 @@ const PublicLinkCard = memo(function PublicLinkCard({
           className={cn(
             'mt-3 truncate rounded-lg px-2.5 py-2 text-[10px]',
             centered ? 'text-center' : 'text-left',
-            theme === 'dark' ? 'bg-[#101419] text-[#949daa]' : 'bg-slate-50 text-slate-500',
+            theme === 'dark' ? 'bg-[#101419] text-[#949daa]' : 'bg-slate-50 text-slate-500'
           )}
         >
           {cleanUrl}
@@ -993,115 +1219,71 @@ const PublicLinkCard = memo(function PublicLinkCard({
   );
 });
 
-function getMediaFrameWrapClass(cols?: string, count = 0, index = 0) {
+function stopAllVisibleMedia(exceptId?: string) {
+  if (typeof window === 'undefined') return;
+
+  document.querySelectorAll<HTMLElement>('[data-media-instance-id]').forEach((node) => {
+    const instanceId = node.dataset.mediaInstanceId;
+    if (exceptId && instanceId === exceptId) return;
+
+    const video = node.querySelector('video');
+    if (video && !video.paused) {
+      try {
+        video.pause();
+      } catch {}
+    }
+
+    const ytFrame = node.querySelector('iframe[data-youtube-player="true"]') as HTMLIFrameElement | null;
+    if (ytFrame?.contentWindow) {
+      try {
+        ytFrame.contentWindow.postMessage(
+          JSON.stringify({
+            event: 'command',
+            func: 'pauseVideo',
+            args: [],
+          }),
+          '*'
+        );
+      } catch {}
+    }
+
+    const tiktokFrame = node.querySelector('iframe[data-tiktok-player="true"]') as HTMLIFrameElement | null;
+    if (tiktokFrame?.contentWindow) {
+      try {
+        tiktokFrame.contentWindow.postMessage(
+          { type: 'pause', 'x-tiktok-player': true },
+          '*'
+        );
+      } catch {}
+    }
+  });
+}
+
+function getMediaFrameWrapClass(
+  cols?: string,
+  count = 0,
+  index = 0,
+  provider?: ExtendedProvider
+) {
+  const isVerticalProvider = provider === 'tiktok';
+
+  if (isVerticalProvider) {
+    if (cols === '1') return 'mx-auto w-full max-w-[420px]';
+    if (cols === '2') return 'mx-auto w-full max-w-[380px]';
+    return 'mx-auto w-full max-w-[360px]';
+  }
+
   if (cols === '2' && count === 3 && index === 0) {
     return 'mx-auto w-full max-w-3xl';
   }
 
-  if (cols === '1') return 'mx-auto w-full max-w-4xl';
+  if (cols === '1') {
+    return 'mx-auto w-full max-w-4xl';
+  }
 
   return 'mx-auto w-full';
 }
 
-function getMediaAspectClass(
-  provider: ExtendedProvider,
-  cols?: string,
-  count = 0,
-  index = 0,
-  sourceUrl?: string
-) {
-  if (provider === 'spotify') {
-    return cols === '1'
-      ? 'aspect-[16/4.8] md:aspect-[16/5.1]'
-      : 'aspect-[16/4.4] md:aspect-[16/4.8]';
-  }
-
-  if (provider === 'apple_music') {
-    const isVideo = sourceUrl ? isAppleMusicVideoUrl(sourceUrl) : false;
-  
-    // 🎬 Apple Music Video
-    if (isVideo) {
-      if (cols === '1')
-        return 'aspect-[16/9.2] md:aspect-[16/8.8]';
-  
-      if (cols === '2' && count === 3 && index === 0)
-        return 'aspect-[16/8.8] md:aspect-[16/8.2]';
-  
-      return 'aspect-[16/9.1] md:aspect-[16/8.8]';
-    }
-  
-    // 🎵 Apple Music áudio / álbum / playlist
-    if (cols === '1') {
-      return 'min-h-[210px] md:min-h-[230px]';
-    }
-  
-    if (cols === '2') {
-      return 'min-h-[200px] md:min-h-[220px]';
-    }
-  
-    if (cols === '4') {
-      return 'min-h-[190px] md:min-h-[210px]';
-    }
-  
-    return 'min-h-[200px] md:min-h-[220px]';
-  }
-  
-  if (cols === '2' && count === 3 && index === 0) {
-    return 'aspect-[16/8.6] md:aspect-[16/7.7]';
-  }
-  
-  if (cols === '1') {
-    return 'aspect-[16/9.4] md:aspect-[16/8.9]';
-  }
-  
-  if (cols === '2') {
-    return 'aspect-[16/9.2] md:aspect-[16/9]';
-  }
-  
-  return 'aspect-[16/9]';
-}
-
-
-
-function getAppleMusicIframeHeight(
-  cols?: string,
-  sourceUrl?: string
-): number | null {
-  const isVideo = sourceUrl ? isAppleMusicVideoUrl(sourceUrl) : false;
-
-  if (isVideo) {
-    return null;
-  }
-
-  if (cols === '1') return 260;
-  if (cols === '2') return 240;
-  if (cols === '4') return 220;
-
-  return 240;
-}
-function isAppleMusicVideoUrl(url: string) {
-  try {
-    const parsed = new URL(normalizeInputUrl(url));
-    return parsed.pathname.toLowerCase().includes('/music-video/');
-  } catch {
-    return false;
-  }
-}
-
-function withAppleTheme(
-  url: string | null,
-  theme: 'dark' | 'light'
-): string | null {
-  if (!url) return null;
-
-  try {
-    const parsed = new URL(url);
-    parsed.searchParams.set('theme', theme);
-    return parsed.toString();
-  } catch {
-    return url;
-  }
-}
 type MediaCardProps = {
   item: EditorSocialLinkItem;
   index: number;
@@ -1144,6 +1326,7 @@ const MediaCard = memo(function MediaCard({
   const errorText = getErrorText(error, t);
   const meta = resolvedProvider ? getProviderMeta(resolvedProvider, t) : null;
   const centered = align === 'center';
+  const instanceId = item.id;
 
   const [activated, setActivated] = useState(false);
 
@@ -1152,6 +1335,7 @@ const MediaCard = memo(function MediaCard({
   const ytPlayerRef = useRef<{
     playVideo: () => void;
     pauseVideo: () => void;
+    stopVideo: () => void;
     destroy: () => void;
   } | null>(null);
 
@@ -1175,9 +1359,9 @@ const MediaCard = memo(function MediaCard({
     }
   }, [item.url]);
 
-  const wrapClass = resolvedProvider
-    ? getMediaFrameWrapClass(cols, totalItems, index)
-    : 'mx-auto w-full';
+const wrapClass = resolvedProvider
+  ? getMediaFrameWrapClass(cols, totalItems, index, resolvedProvider)
+  : 'mx-auto w-full';
 
   const aspectClass = resolvedProvider
     ? getMediaAspectClass(resolvedProvider, cols, totalItems, index, item.url)
@@ -1213,10 +1397,27 @@ const MediaCard = memo(function MediaCard({
       ? getAppleMusicIframeHeight(cols, item.url)
       : null;
 
+  const tiktokEmbedUrl =
+    resolvedProvider === 'tiktok'
+      ? getMediaEmbedUrl(item.url, resolvedProvider)
+      : null;
+
+  const facebookEmbedUrl =
+    resolvedProvider === 'facebook'
+      ? getMediaEmbedUrl(item.url, resolvedProvider)
+      : null;
+
   const directEmbedUrl =
     resolvedProvider === 'direct_video' || resolvedProvider === 'direct_image'
       ? getMediaEmbedUrl(item.url, resolvedProvider)
       : null;
+
+  const activateYouTube = useCallback(() => {
+    stopAllVisibleMedia(instanceId);
+    userWantedPlayRef.current = true;
+    shouldResumeRef.current = true;
+    setActivated(true);
+  }, [instanceId]);
 
   useEffect(() => {
     if (!activated) return;
@@ -1235,10 +1436,20 @@ const MediaCard = memo(function MediaCard({
       }
 
       ytPlayerRef.current = new window.YT.Player(iframe, {
+        playerVars: {
+          playsinline: 1,
+          rel: 0,
+          modestbranding: 1,
+          autoplay: 1,
+        },
         events: {
           onReady: () => {
             if (cancelled) return;
             playerReadyRef.current = true;
+            try {
+              stopAllVisibleMedia(instanceId);
+              ytPlayerRef.current?.playVideo();
+            } catch {}
           },
           onStateChange: (event) => {
             const playingState = window.YT?.PlayerState?.PLAYING ?? 1;
@@ -1246,6 +1457,7 @@ const MediaCard = memo(function MediaCard({
             const endedState = window.YT?.PlayerState?.ENDED ?? 0;
 
             if (event.data === playingState) {
+              stopAllVisibleMedia(instanceId);
               userWantedPlayRef.current = true;
               shouldResumeRef.current = true;
               pauseByVisibilityRef.current = false;
@@ -1275,7 +1487,7 @@ const MediaCard = memo(function MediaCard({
         ytPlayerRef.current = null;
       }
     };
-  }, [activated, resolvedProvider, item.url]);
+  }, [activated, resolvedProvider, item.url, instanceId]);
 
   useEffect(() => {
     if (!activated) return;
@@ -1289,7 +1501,7 @@ const MediaCard = memo(function MediaCard({
         const player = ytPlayerRef.current;
         if (!player || !playerReadyRef.current) return;
 
-        const nowVisible = entry.isIntersecting && entry.intersectionRatio >= 0.62;
+        const nowVisible = entry.isIntersecting && entry.intersectionRatio >= 0.68;
         const wasVisible = isInViewportRef.current;
 
         if (nowVisible === wasVisible) return;
@@ -1308,26 +1520,27 @@ const MediaCard = memo(function MediaCard({
 
         if (shouldResumeRef.current) {
           pauseByVisibilityRef.current = false;
+          stopAllVisibleMedia(instanceId);
           try {
             player.playVideo();
           } catch {}
         }
       },
       {
-        threshold: [0, 0.15, 0.35, 0.62, 0.82],
-        rootMargin: '-8% 0px -12% 0px',
+        threshold: [0, 0.25, 0.5, 0.68, 0.85],
+        rootMargin: '-12% 0px -14% 0px',
       }
     );
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, [activated, resolvedProvider]);
+  }, [activated, resolvedProvider, instanceId]);
 
   if (!isEditable && !resolvedProvider) return null;
 
   if (isEditable && state === 'valid' && isCollapsed) {
     return (
-      <div className={cn('rounded-2xl border p-3', palette.card, palette.valid)}>
+      <div className={cn('rounded-2xl border p-3', palette.card, palette.valid, getBrandAccent(resolvedProvider || 'website', theme))}>
         <div className={cn('flex gap-2.5', centered ? 'items-center text-center' : 'items-center')}>
           <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border', palette.chip)}>
             {meta?.icon || <Music2 className="h-4 w-4" />}
@@ -1360,9 +1573,11 @@ const MediaCard = memo(function MediaCard({
 
   return (
     <div
+      data-media-instance-id={instanceId}
       className={cn(
         'h-full rounded-2xl border p-3 transition-colors',
         palette.card,
+        resolvedProvider ? getBrandAccent(resolvedProvider, theme) : '',
         state === 'valid' && isEditable && palette.valid,
         state === 'invalid' && isEditable && palette.invalid
       )}
@@ -1440,13 +1655,13 @@ const MediaCard = memo(function MediaCard({
           {(resolvedProvider === 'youtube' || resolvedProvider === 'youtube_music') && youtubeEmbedUrl ? (
             <div
               ref={containerRef}
-              className={cn('overflow-hidden rounded-xl border', palette.embed, wrapClass)}
+              className={cn('overflow-hidden rounded-xl border', palette.embed, wrapClass, getBrandAccent(resolvedProvider, theme))}
             >
               {!activated ? (
                 <button
                   type="button"
-                  onClick={() => setActivated(true)}
-                  className={cn('group relative block w-full overflow-hidden bg-black text-left', aspectClass)}
+                  onClick={activateYouTube}
+                  className={cn('group relative block w-full overflow-hidden bg-black text-left touch-manipulation', aspectClass)}
                 >
                   {getYouTubeThumb(item.url) ? (
                     <img
@@ -1469,6 +1684,7 @@ const MediaCard = memo(function MediaCard({
                 <div className={cn('relative w-full bg-black', aspectClass)}>
                   <iframe
                     ref={iframeRef}
+                    data-youtube-player="true"
                     id={`yt-player-${item.id}`}
                     src={youtubeEmbedUrl}
                     title={`${meta?.name || 'media'}-${index}`}
@@ -1482,7 +1698,7 @@ const MediaCard = memo(function MediaCard({
               )}
             </div>
           ) : resolvedProvider === 'spotify' && spotifyEmbedUrl ? (
-            <div className={cn('overflow-hidden rounded-xl border', palette.embed, wrapClass)}>
+            <div className={cn('overflow-hidden rounded-xl border', palette.embed, wrapClass, getBrandAccent(resolvedProvider, theme))}>
               <div className={cn('relative w-full', aspectClass)}>
                 <iframe
                   src={spotifyEmbedUrl}
@@ -1501,6 +1717,7 @@ const MediaCard = memo(function MediaCard({
                 'overflow-hidden rounded-xl border',
                 palette.embed,
                 wrapClass,
+                getBrandAccent(resolvedProvider, theme),
                 isAppleVideo ? 'shadow-[0_10px_30px_rgba(0,0,0,0.18)]' : ''
               )}
             >
@@ -1537,13 +1754,49 @@ const MediaCard = memo(function MediaCard({
                 />
               </div>
             </div>
-          ) : resolvedProvider === 'direct_video' && directEmbedUrl ? (
-            <div className={cn('overflow-hidden rounded-xl border', palette.embed, wrapClass)}>
+          ) : resolvedProvider === 'tiktok' && tiktokEmbedUrl ? (
+            <div className={cn('overflow-hidden rounded-xl border', palette.embed, wrapClass, getBrandAccent(resolvedProvider, theme))}>
+             <div className="relative w-full max-w-[420px] aspect-[9/16] mx-auto bg-black rounded-xl overflow-hidden">
+  <iframe
+    data-tiktok-player="true"
+    src={tiktokEmbedUrl}
+    loading="lazy"
+    allow="fullscreen"
+    referrerPolicy="strict-origin-when-cross-origin"
+    className="absolute inset-0 w-full h-full border-0"
+  />
+</div>
+            </div>
+) : resolvedProvider === 'facebook' && facebookEmbedUrl ? (
+  <div className={cn('overflow-hidden rounded-xl border', palette.embed, wrapClass, getBrandAccent(resolvedProvider, theme))}>
+    <div className={cn('relative w-full bg-black', aspectClass)}>
+      <iframe
+        src={facebookEmbedUrl}
+        title={`${meta?.name || 'media'}-${index}`}
+        loading="lazy"
+        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+        allowFullScreen
+        referrerPolicy="strict-origin-when-cross-origin"
+        className="absolute inset-0 h-full w-full border-0"
+      />
+    </div>
+  </div>
+) : resolvedProvider === 'facebook' ? (
+  <PublicLinkCard
+    url={item.url}
+    provider={resolvedProvider}
+    align={align}
+    theme={theme}
+    t={t}
+  />
+) : resolvedProvider === 'direct_video' && directEmbedUrl ? (
+            <div className={cn('overflow-hidden rounded-xl border', palette.embed, wrapClass, getBrandAccent(resolvedProvider, theme))}>
               <video
                 src={directEmbedUrl}
                 controls
                 preload="metadata"
                 playsInline
+                onPlay={() => stopAllVisibleMedia(instanceId)}
                 className={cn('h-auto w-full bg-black', aspectClass)}
               />
             </div>
@@ -1552,7 +1805,7 @@ const MediaCard = memo(function MediaCard({
               href={normalizeInputUrl(item.url)}
               target="_blank"
               rel="noreferrer"
-              className={cn('block overflow-hidden rounded-xl border', palette.embed, wrapClass)}
+              className={cn('block overflow-hidden rounded-xl border', palette.embed, wrapClass, getBrandAccent(resolvedProvider, theme))}
             >
               <img
                 src={directEmbedUrl}
@@ -1622,7 +1875,7 @@ const SocialChip = memo(function SocialChip({
 
   if (isEditable && state === 'valid' && isCollapsed) {
     return (
-      <div className={cn('rounded-2xl border p-2.5', palette.card, palette.valid)}>
+      <div className={cn('rounded-2xl border p-2.5', palette.card, palette.valid, resolvedProvider ? getBrandAccent(resolvedProvider, theme) : '')}>
         <div className={cn('flex gap-2', centered ? 'items-center text-center' : 'items-center')}>
           <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full border', palette.chip)}>
             {meta?.icon || <Globe className="h-4 w-4" />}
@@ -1656,6 +1909,7 @@ const SocialChip = memo(function SocialChip({
       className={cn(
         'rounded-2xl border p-2.5 transition-colors',
         palette.card,
+        resolvedProvider ? getBrandAccent(resolvedProvider, theme) : '',
         state === 'valid' && isEditable && palette.valid,
         state === 'invalid' && isEditable && palette.invalid,
       )}

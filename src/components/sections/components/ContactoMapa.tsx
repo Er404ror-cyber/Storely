@@ -42,6 +42,7 @@ type ContactoMapaContent = {
 
 type StoreContactData = {
   id?: string | null;
+  slug?: string | null;
   owner_email?: string | null;
   whatsapp_number?: string | null;
 };
@@ -231,10 +232,17 @@ export function resolveLocationSmart(raw?: string | null): ResolvedLocation | nu
     }
   }
 
-  const localSuggestion = LOCATION_SUGGESTIONS.find((item) => {
-    const normalizedItem = normalizeLooseText(item);
-    return normalizedItem === normalized || normalizedItem.includes(normalized);
-  });
+  const exactMatch = LOCATION_SUGGESTIONS.find(
+    (item) => normalizeLooseText(item) === normalized
+  );
+  const startsWithMatch = LOCATION_SUGGESTIONS.find((item) =>
+    normalizeLooseText(item).startsWith(normalized)
+  );
+  const includesMatch = LOCATION_SUGGESTIONS.find((item) =>
+    normalizeLooseText(item).includes(normalized)
+  );
+
+  const localSuggestion = exactMatch || startsWithMatch || includesMatch;
 
   if (
     localSuggestion &&
@@ -260,6 +268,63 @@ function buildGoogleMapsEmbedUrl(query: string) {
   return `https://maps.google.com/maps?q=${encodeURIComponent(
     query
   )}&t=k&z=15&ie=UTF8&iwloc=&output=embed`;
+}
+
+function buildContactMessage({
+  storeTitle,
+  visitorName,
+  visitorMessage,
+  pageUrl,
+  t,
+}: {
+  storeTitle: string;
+  visitorName: string;
+  visitorMessage: string;
+  pageUrl?: string;
+  t: (key: string, vars?: Record<string, unknown>) => string;
+}) {
+  return [
+    `Hello, I would like to contact you about: ${storeTitle}`,
+    '',
+    visitorName ? `${t('contact_form_name')}: ${visitorName}` : '',
+    visitorMessage ? `${t('contact_form_message')}: ${visitorMessage}` : '',
+    pageUrl ? `Page: ${pageUrl}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+function tryGetPathStoreSlug(pathname: string) {
+  const clean = pathname.split('?')[0].split('#')[0];
+  const parts = clean.split('/').filter(Boolean);
+
+  if (!parts.length) return null;
+
+  const blocked = new Set([
+    'admin',
+    'dashboard',
+    'editor',
+    'manage',
+    'login',
+    'register',
+    'signup',
+    'signin',
+    'configuracoes',
+    'configurations',
+    'settings',
+    'produto',
+    'product',
+    'products',
+    'catalogo',
+    'catalog',
+    'contact',
+    'contato',
+  ]);
+
+  const first = parts[0]?.toLowerCase();
+  if (!first || blocked.has(first)) return null;
+
+  return parts[0];
 }
 
 function FieldHint({
@@ -627,7 +692,7 @@ function AdminTextField({
     align === 'center' ? 'text-center' : 'text-left',
     title
       ? 'px-3 py-2 text-2xl md:text-3xl font-black tracking-tight'
-      : 'px-3 py-2 text-sm leading-relaxed',
+      : 'px-3 py-3 text-base leading-relaxed',
   ].join(' ');
 
   if (multiline) {
@@ -645,6 +710,7 @@ function AdminTextField({
           overflowWrap: 'anywhere',
           whiteSpace: 'pre-wrap',
           unicodeBidi: 'plaintext',
+          fontSize: 16,
         }}
         onChange={(e) => {
           const next = clampText(e.target.value, max);
@@ -670,7 +736,10 @@ function AdminTextField({
       maxLength={max}
       placeholder={fallback}
       className={baseClass}
-      style={{ unicodeBidi: 'plaintext' }}
+      style={{
+        unicodeBidi: 'plaintext',
+        fontSize: title ? undefined : 16,
+      }}
       onChange={(e) => {
         const next = clampText(e.target.value, max);
         setDraft(next);
@@ -894,45 +963,121 @@ function LocationAssistField({
   );
 }
 
-function SimpleMap({
+function MapSkeleton({ theme }: { theme: 'dark' | 'light' }) {
+  return (
+    <div className="rounded-[22px] overflow-hidden border border-slate-200 dark:border-white/10">
+      <div
+        className={[
+          'h-[250px] md:h-[320px] xl:h-[520px] animate-pulse',
+          theme === 'dark'
+            ? 'bg-gradient-to-br from-white/5 via-white/[0.07] to-white/5'
+            : 'bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100',
+        ].join(' ')}
+      />
+      <div className="flex items-center justify-between gap-3 px-3 py-3 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-white/10">
+        <div className="min-w-0">
+          <div className="h-3 w-16 rounded bg-slate-200 dark:bg-white/10" />
+          <div className="mt-2 h-4 w-40 max-w-full rounded bg-slate-200 dark:bg-white/10" />
+        </div>
+        <div className="h-9 w-20 rounded-xl bg-slate-200 dark:bg-white/10" />
+      </div>
+    </div>
+  );
+}
+
+function LazyMap({
   finalQuery,
   label,
+  theme,
 }: {
   finalQuery: string;
   label: string;
+  theme: 'dark' | 'light';
 }) {
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const [shouldRenderIframe, setShouldRenderIframe] = useState(false);
+  const [iframeLoaded, setIframeLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!wrapperRef.current) return;
+
+    let idleId: number | null = null;
+    const node = wrapperRef.current;
+
+    const startMount = () => {
+      if (shouldRenderIframe) return;
+
+      if ('requestIdleCallback' in window) {
+        idleId = (window as Window & {
+          requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number;
+        }).requestIdleCallback(() => setShouldRenderIframe(true), { timeout: 600 });
+      } else {
+        idleId = window.setTimeout(() => setShouldRenderIframe(true), 120);
+      }
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry?.isIntersecting) return;
+        startMount();
+        observer.disconnect();
+      },
+      { rootMargin: '250px 0px' }
+    );
+
+    observer.observe(node);
+
+    return () => {
+      observer.disconnect();
+      if (idleId) window.clearTimeout(idleId);
+    };
+  }, [shouldRenderIframe]);
+
   return (
-    <div className="rounded-[22px] overflow-hidden border border-slate-200 dark:border-white/10">
-      <div className="h-[250px] md:h-[320px] xl:h-[520px]">
-        <iframe
-          title={label}
-          src={buildGoogleMapsEmbedUrl(finalQuery)}
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          className="w-full h-full border-0"
-        />
-      </div>
+    <div ref={wrapperRef} className="relative">
+      {!iframeLoaded ? <MapSkeleton theme={theme} /> : null}
 
-      <div className="flex items-center justify-between gap-3 px-3 py-3 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-white/10">
-        <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-white/50">
-            Location
-          </p>
-          <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-            {label}
-          </p>
-        </div>
-
-        <a
-          href={buildGoogleMapsUrl(finalQuery)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-[10px] font-black uppercase tracking-[0.15em] text-white hover:bg-blue-700 transition-colors"
+      {shouldRenderIframe ? (
+        <div
+          className={iframeLoaded ? 'block' : 'absolute inset-0 opacity-0 pointer-events-none'}
+          aria-hidden={!iframeLoaded}
         >
-          Open
-          <ExternalLink size={13} />
-        </a>
-      </div>
+          <div className="rounded-[22px] overflow-hidden border border-slate-200 dark:border-white/10">
+            <div className="h-[250px] md:h-[320px] xl:h-[520px]">
+              <iframe
+                title={label}
+                src={buildGoogleMapsEmbedUrl(finalQuery)}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="w-full h-full border-0"
+                onLoad={() => setIframeLoaded(true)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-3 px-3 py-3 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-white/10">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-white/50">
+                  Location
+                </p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                  {label}
+                </p>
+              </div>
+
+              <a
+                href={buildGoogleMapsUrl(finalQuery)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-[10px] font-black uppercase tracking-[0.15em] text-white hover:bg-blue-700 transition-colors"
+              >
+                Open
+                <ExternalLink size={13} />
+              </a>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -1048,11 +1193,9 @@ function FormCard({
   );
 }
 
-function ContactoMapaComponent({
-  content,
-  style,
-  onUpdate,
-}: ContactoMapaProps) {
+function ContactoMapaComponent(props: ContactoMapaProps) {
+  const { content, style, onUpdate } = props;
+
   const { t } = useTranslate() as {
     t: (key: string, vars?: Record<string, unknown>) => string;
   };
@@ -1085,10 +1228,47 @@ function ContactoMapaComponent({
   const headerAlign = getHeaderAlignClass(style.align);
   const titleSize = getTitleSize(style.fontSize);
 
-  const storeQuery = useQuery({
-    queryKey: ['contact-section-store-by-user'],
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 15,
+  const publicStoreId = useMemo(() => {
+    const anyProps = props as ContactoMapaProps & {
+      storeId?: string | null;
+      store?: { id?: string | null };
+      section?: { storeId?: string | null };
+      page?: { storeId?: string | null };
+    };
+
+    return (
+      anyProps.storeId ||
+      anyProps.store?.id ||
+      anyProps.section?.storeId ||
+      anyProps.page?.storeId ||
+      null
+    );
+  }, [props]);
+
+  const publicStoreSlug = useMemo(() => {
+    const anyProps = props as ContactoMapaProps & {
+      storeSlug?: string | null;
+      slug?: string | null;
+      store?: { slug?: string | null };
+      page?: { storeSlug?: string | null; slug?: string | null };
+    };
+
+    return (
+      anyProps.storeSlug ||
+      anyProps.slug ||
+      anyProps.store?.slug ||
+      anyProps.page?.storeSlug ||
+      anyProps.page?.slug ||
+      tryGetPathStoreSlug(route.pathname) ||
+      null
+    );
+  }, [props, route.pathname]);
+
+  const adminStoreQuery = useQuery({
+    queryKey: ['contact-section-admin-store'],
+    enabled: isAdminRoute,
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 20,
     refetchOnWindowFocus: false,
     retry: 1,
     queryFn: async () => {
@@ -1102,7 +1282,7 @@ function ContactoMapaComponent({
 
       const { data, error } = await supabase
         .from('stores')
-        .select('id, owner_email, whatsapp_number')
+        .select('id, slug, owner_email, whatsapp_number')
         .eq('owner_id', user.id)
         .single();
 
@@ -1111,6 +1291,41 @@ function ContactoMapaComponent({
     },
   });
 
+  const publicStoreQuery = useQuery({
+    queryKey: ['contact-section-public-store', publicStoreId, publicStoreSlug],
+    enabled: !isAdminRoute && (!!publicStoreId || !!publicStoreSlug),
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 20,
+    refetchOnWindowFocus: false,
+    retry: 1,
+    queryFn: async () => {
+      if (publicStoreId) {
+        const { data, error } = await supabase
+          .from('stores')
+          .select('id, slug, owner_email, whatsapp_number')
+          .eq('id', publicStoreId)
+          .maybeSingle();
+
+        if (error) throw error;
+        if (data) return data as StoreContactData;
+      }
+
+      if (publicStoreSlug) {
+        const { data, error } = await supabase
+          .from('stores')
+          .select('id, slug, owner_email, whatsapp_number')
+          .eq('slug', publicStoreSlug)
+          .maybeSingle();
+
+        if (error) throw error;
+        if (data) return data as StoreContactData;
+      }
+
+      return null;
+    },
+  });
+
+  const storeQuery = isAdminRoute ? adminStoreQuery : publicStoreQuery;
   const store = storeQuery.data || null;
 
   const resolvedPhone = useMemo(
@@ -1177,37 +1392,27 @@ function ContactoMapaComponent({
 
   const handleAction = useCallback(
     (type: 'wa' | 'mail') => {
-      if (type === 'wa' && hasWhatsapp) {
-        const titleForMessage = resolvedTitle || t('contact_title');
-        const text = [
-          titleForMessage,
-          '',
-          visitorName ? `${t('contact_form_name')}: ${visitorName}` : '',
-          visitorMessage ? `${t('contact_form_message')}: ${visitorMessage}` : '',
-        ]
-          .filter(Boolean)
-          .join('\n');
+      const pageUrl =
+        typeof window !== 'undefined' ? window.location.href : '';
 
+      const message = buildContactMessage({
+        storeTitle: visibleTitle,
+        visitorName: visitorName.trim(),
+        visitorMessage: visitorMessage.trim(),
+        pageUrl,
+        t,
+      });
+
+      if (type === 'wa' && hasWhatsapp) {
         const whatsappUrl = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(
-          text
+          message
         )}`;
         window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
       }
 
       if (type === 'mail' && hasEmail) {
-        const titleForMessage = resolvedTitle || t('contact_title');
-        const subject = encodeURIComponent(titleForMessage);
-        const body = encodeURIComponent(
-          [
-            titleForMessage,
-            '',
-            visitorName ? `${t('contact_form_name')}: ${visitorName}` : '',
-            visitorMessage ? `${t('contact_form_message')}: ${visitorMessage}` : '',
-          ]
-            .filter(Boolean)
-            .join('\n')
-        );
-
+        const subject = encodeURIComponent(`Contact about ${visibleTitle}`);
+        const body = encodeURIComponent(message);
         const mailUrl = `mailto:${resolvedEmail}?subject=${subject}&body=${body}`;
         window.open(mailUrl, '_blank', 'noopener,noreferrer');
       }
@@ -1219,10 +1424,10 @@ function ContactoMapaComponent({
       hasEmail,
       phoneDigits,
       resolvedEmail,
-      resolvedTitle,
-      t,
-      visitorMessage,
+      visibleTitle,
       visitorName,
+      visitorMessage,
+      t,
     ]
   );
 
@@ -1250,9 +1455,10 @@ function ContactoMapaComponent({
 
   const publicMap =
     showPublicMap && resolvedLocation ? (
-      <SimpleMap
+      <LazyMap
         finalQuery={resolvedLocation.finalQuery}
         label={resolvedLocation.label}
+        theme={theme}
       />
     ) : null;
 
