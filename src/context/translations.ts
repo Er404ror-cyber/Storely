@@ -414,7 +414,6 @@ label_slug: "Store URL (Slug)",
 label_description: "Public Description",
 label_whatsapp: "Contact WhatsApp",
 section_email_title: "Access Email",
-section_email_subtitle: "Manage your admin email",
 label_current_email: "Current Address",
 label_new_email: "New Email",
 label_confirm_password: "Confirm with Current Password",
@@ -1219,7 +1218,7 @@ currency: "Currency",
 
 
 
-
+Open_site: "Open site",
 
 
 
@@ -1452,6 +1451,108 @@ media_tap_to_open: "Tap to open",
 media_provider_youtube_music: "YouTube Music",
 media_clear_button: "Clear link",
 
+
+
+
+
+
+
+
+
+store_music_title: "Store music",
+  store_music_subtitle: "Music link",
+  store_music_url_label: "Music URL",
+  store_music_url_placeholder: "Paste a link from YouTube, Spotify, or Apple Music",
+  store_music_provider_unknown: "undefined",
+  store_music_invalid_url: "invalid link",
+  store_music_volume: "Volume",
+  store_music_enabled: "Enable music for the public",
+  store_music_clear: "Remove",
+  store_music_empty: "No music set",
+
+  store_music_help: "Supports .mp3,.m4a,.aac,.ogg,.wav,.webm,.flac,audio, For public view; ",
+
+
+
+
+
+
+
+
+
+  // EN
+store_required_title: "Required information",
+store_required_subtitle: "Add the number customers will use to contact your store.",
+store_phone_required_label: "Required number",
+store_phone_required_hint: "Used for WhatsApp orders and customer contact.",
+store_customization_title: "Customization",
+store_customization_subtitle: "Customize your logo, description and background music.",
+phone_number: "Phone number",
+
+store_music_step_1: "1. Choose audio",
+store_music_step_2: "2. Choose where it plays",
+store_music_upload_help: "Supported: MP3, M4A, AAC, OGG, WAV, WEBM, FLAC. Max 12MB.",
+store_music_choose_file: "Choose file",
+store_music_external_link: "Download music from YouTube",store_music_compress_link: "Compress audio",
+store_music_select_part_help: "Move the bar to choose the exact 1 minute that will play in your store.",
+store_music_clip_range: "Music part",
+store_music_total: "Total",
+store_music_clip_length: "Selected",
+store_music_volume_hint: "Volume is limited from 1% to 5% to avoid disturbing visitors.",
+store_music_disable_hint: "Music turns on after upload. You can disable it here.",
+store_music_empty_help: "Choose an audio file, select the best 1 minute and test it before saving.",
+store_music_status_on: "Active",
+store_music_status_off: "Off",
+store_music_save_clip: "Save music",
+store_music_delete_pending: "Delete temporary",
+store_music_invalid_file: "Unsupported audio format",
+store_music_file_too_large: "Audio file is too large",
+store_music_upload_error: "Audio upload failed",
+store_music_play_preview: "Test play",
+store_music_pause_preview: "Pause",
+store_music_clip_help: "Choose a music part up to 1 minute.",
+
+
+store_music_now_playing: "Playing",
+
+
+
+store_phone_missing_title: "Add your number",
+store_phone_missing_help: "Customers need this number to contact your store and place orders. Click Here",
+store_music_play_error: "Could not play the audio. Try choosing another file.",
+
+
+
+
+
+section_email_subtitle: "Update your account email safely.",
+
+account_email_updated_title: "Access updated",
+account_email_updated_desc: "Your new email was verified and is now active.",
+account_email_pending_title: "Email change in progress",
+account_resend_link: "Resend link",
+account_wait_seconds: "Wait {seconds}s",
+account_confirm_password: "Confirm with password",
+account_new_email_placeholder: "new@email.com",
+account_password_placeholder: "Your current password",
+account_updating_email: "Updating...",
+account_email_not_available: "Email not available",
+account_error_new_email_required: "Enter the new email.",
+account_error_password_required: "Enter your current password.",
+account_error_wrong_password: "Current password is incorrect.",
+account_error_no_pending_email: "No pending email change.",
+account_success_email_link_sent: "Link sent! Check your new email.",
+account_success_email_link_resent: "Link resent!",
+
+
+error_unauthorized: "Session expired. Please log in again.",
+
+
+
+
+
+
+upload_error : "Upload failed. Please try again.",
 
   },
 
@@ -1932,11 +2033,8 @@ label_slug: "URL da Loja (Slug)",
 label_description: "Descrição Pública",
 label_whatsapp: "WhatsApp de Contacto",
 section_email_title: "E-mail de Acesso",
-section_email_subtitle: "Gerencie seu e-mail administrativo",
-label_current_email: "Endereço Atual",
 label_new_email: "Novo E-mail",
 label_confirm_password: "Confirmar com Senha Atual",
-btn_update_email: "ATUALIZAR E-MAIL",
 section_crypto_title: "Criptografia",
 section_crypto_subtitle: "Proteção e troca de senha",
 label_current_password: "Senha Atual",
@@ -2937,6 +3035,113 @@ media_tap_to_open: "Toque para abrir",
 
 media_provider_youtube_music: "YouTube Music",
 media_clear_button: "Limpar link",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+store_music_title: "Música da loja",
+  store_music_subtitle: "Link de música",
+  store_music_url_label: "URL de música",
+  store_music_url_placeholder: "Cole link do YouTube, Spotify ou Apple Music",
+  store_music_provider_unknown: "indefinido",
+  store_music_invalid_url: "link inválido",
+  store_music_volume: "Volume",
+  store_music_enabled: "Ativar música no público",
+  store_music_clear: "Remover",
+
+  store_music_help: "Suporta .mp3,.m4a,.aac,.ogg,.wav,.webm,.flac,audio, Na Loja.",
+
+
+  // PT
+store_required_title: "Informação obrigatória",
+store_required_subtitle: "Adicione o número que os clientes vão usar para contactar a loja.",
+store_phone_required_label: "Número obrigatório",
+store_phone_required_hint: "Usado para pedidos no WhatsApp e contacto com clientes.",
+store_customization_title: "Personalização",
+store_customization_subtitle: "Personalize o logotipo, descrição e música de fundo.",
+phone_number: "Número",
+store_music_step_1: "1. Escolher áudio",
+store_music_step_2: "2. Escolher onde vai tocar",
+store_music_upload_help: "Suporta: MP3, M4A, AAC, OGG, WAV, WEBM, FLAC. Máx. 12MB.",
+store_music_choose_file: "Escolher ficheiro",
+store_music_external_link: "Baixar música do YouTube",store_music_compress_link: "Comprimir áudio",
+store_music_select_part_help: "Mova a barra para escolher exatamente o 1 minuto que vai tocar na loja.",
+store_music_clip_range: "Parte da música",
+store_music_total: "Total",
+store_music_clip_length: "Selecionado",
+store_music_volume_hint: "O volume é limitado de 1% até 5% para não incomodar visitantes.",
+store_music_disable_hint: "A música ativa depois do upload. Pode desligar aqui.",
+store_music_empty: "Nenhuma música selecionada",
+store_music_empty_help: "Escolha um áudio, selecione o melhor 1 minuto e teste antes de salvar.",
+store_music_status_on: "Ativo",
+store_music_status_off: "Desligado",
+store_music_save_clip: "Salvar música",
+store_music_delete_pending: "Apagar temporário",
+store_music_invalid_file: "Formato de áudio não suportado",
+store_music_file_too_large: "O ficheiro de áudio é muito grande",
+store_music_upload_error: "Erro ao enviar áudio",
+store_music_pause_preview: "Pausar",
+store_music_clip_help: "Escolha uma parte da música até 1 minuto.",
+
+store_music_play_preview: "Tocar",
+store_music_now_playing: "Tocando",
+
+
+
+  Open_site: "Abrir site",
+
+
+
+
+
+
+
+
+
+  // PT
+store_phone_missing_title: "Adicione o número",
+store_phone_missing_help: "Os clientes precisam deste número para contactar a loja e fazer pedidos. Clique Aqui",
+store_music_play_error: "Não foi possível tocar o áudio. Tente escolher outro ficheiro.",
+
+
+
+
+
+section_email_subtitle: "Atualize o e-mail da sua conta com segurança.",
+label_current_email: "E-mail atual",
+btn_update_email: "Atualizar e-mail",
+account_email_updated_title: "Acesso atualizado",
+account_email_updated_desc: "O seu novo e-mail foi validado e já está ativo.",
+account_email_pending_title: "Troca em andamento",
+account_resend_link: "Reenviar link",
+account_wait_seconds: "Aguarde {seconds}s",
+account_confirm_password: "Confirmar com senha",
+account_new_email_placeholder: "novo@email.com",
+account_password_placeholder: "Sua senha atual",
+account_updating_email: "Atualizando...",
+account_email_not_available: "E-mail indisponível",
+account_error_new_email_required: "Digite o novo e-mail.",
+account_error_password_required: "Digite a sua senha atual.",
+account_error_wrong_password: "Senha atual incorreta.",
+account_error_no_pending_email: "Nenhuma troca pendente.",
+account_success_email_link_sent: "Link enviado! Verifique o novo e-mail.",
+account_success_email_link_resent: "Link reenviado!",
+
+error_unauthorized: "Sessão inválida. Faça login novamente.",
+
+upload_error : "Falha no upload. Tente novamente.",
+
 }
 
 

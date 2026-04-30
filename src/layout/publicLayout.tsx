@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { StorePageLinksSection } from "../components/public/StorePageLinks";
+import { PublicBackgroundAudio } from "../components/public/PublicBackgroundAudio";
 
 type StorePublicData = {
   id: string;
@@ -14,6 +15,8 @@ type StorePublicData = {
   owner_email?: string | null;
   slug?: string | null;
   updated_at_name?: string | null;
+  description?: string | null;
+  currency?: string | null;
   [key: string]: any;
 };
 
@@ -27,8 +30,8 @@ type StoreCachePayload = {
 
 type DataSource = "cache" | "network" | "none";
 
-const STORE_CACHE_TTL = 1000 * 60 * 60 * 4; // 4 hours
-const STORE_CACHE_VERSION = 3;
+const STORE_CACHE_TTL = 1000 * 60 * 60 * 4;
+const STORE_CACHE_VERSION = 4;
 
 const mascotImages = [
   "/img/Mascote.png",
@@ -57,6 +60,8 @@ function buildStoreSignature(data: Partial<StorePublicData> | null | undefined) 
     whatsapp_number: data.whatsapp_number ?? null,
     owner_email: data.owner_email ?? null,
     updated_at_name: data.updated_at_name ?? null,
+    description: data.description ?? null,
+    currency: data.currency ?? null,
     settings: data.settings ?? null,
   });
 }
@@ -155,8 +160,6 @@ function shouldRefreshInBackground(cache: StoreCachePayload | null) {
   if (!cache) return true;
 
   const remaining = cache.expiresAt - safeNow();
-
-  // refresh silently if less than 20 minutes remain
   return remaining <= 1000 * 60 * 20;
 }
 
@@ -167,10 +170,7 @@ function getSocialLinks(settings: any) {
     {
       key: "whatsapp",
       icon: "whatsapp",
-      href:
-        social?.whatsapp ||
-        settings?.whatsapp_link ||
-        null,
+      href: social?.whatsapp || settings?.whatsapp_link || null,
     },
     {
       key: "instagram",
@@ -281,8 +281,7 @@ export function PublicLayout() {
       setRemainingMs(next);
     }, 60_000);
 
-    const firstNext = Math.max(expiresAt - safeNow(), 0);
-    setRemainingMs(firstNext);
+    setRemainingMs(Math.max(expiresAt - safeNow(), 0));
 
     return () => window.clearInterval(tick);
   }, [expiresAt]);
@@ -381,8 +380,8 @@ export function PublicLayout() {
     source === "cache"
       ? "loaded from local cache"
       : source === "network"
-      ? "loaded from network"
-      : "waiting for refresh";
+        ? "loaded from network"
+        : "waiting for refresh";
 
   return (
     <div className="min-h-screen bg-white dark:bg-black flex flex-col">
@@ -392,6 +391,15 @@ export function PublicLayout() {
         <Outlet context={{ storeId: store.id, store }} />
         <StorePageLinksSection storeId={store.id} />
       </main>
+
+     
+      <PublicBackgroundAudio
+  settings={store?.settings?.background_audio}
+  storeName={store?.name}
+  storeId={store?.id}
+  storeDescription={store?.description}
+  storeCurrency={store?.currency}
+/>
 
       <footer className="relative w-full border-t border-slate-100 dark:border-slate-900 bg-white dark:bg-black transition-colors duration-500 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 md:px-8 pt-16 pb-10">
@@ -435,8 +443,8 @@ export function PublicLayout() {
                     source === "cache"
                       ? "text-blue-600 border-blue-200 bg-blue-50 dark:text-blue-400 dark:border-blue-900/50 dark:bg-blue-950/30"
                       : source === "network"
-                      ? "text-violet-600 border-violet-200 bg-violet-50 dark:text-violet-400 dark:border-violet-900/50 dark:bg-violet-950/30"
-                      : "text-slate-500 border-slate-200 bg-slate-50 dark:text-slate-400 dark:border-slate-800 dark:bg-slate-900/40"
+                        ? "text-violet-600 border-violet-200 bg-violet-50 dark:text-violet-400 dark:border-violet-900/50 dark:bg-violet-950/30"
+                        : "text-slate-500 border-slate-200 bg-slate-50 dark:text-slate-400 dark:border-slate-800 dark:bg-slate-900/40"
                   }`}
                 >
                   {sourceText}

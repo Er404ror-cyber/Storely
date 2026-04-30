@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
@@ -786,16 +786,16 @@ export function ProductDetails({
                           </div>
                         </div>
 
-                        <a
-                          href={siteUrl}
+                        <Link
+                          to={siteUrl}
                           className={`mt-4 inline-flex w-full items-center justify-center rounded-[1rem] border bg-white px-4 py-3 text-[11px] font-black uppercase tracking-[0.14em] text-slate-900 transition hover:bg-slate-100 ${
                             forceLightUI
                               ? "border-slate-200"
                               : "border-slate-200 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white dark:hover:bg-zinc-800"
                           }`}
                         >
-                          Open site
-                        </a>
+                          {t("Open_site")}
+                        </Link>
                       </div>
                     ) : null}
                   </div>

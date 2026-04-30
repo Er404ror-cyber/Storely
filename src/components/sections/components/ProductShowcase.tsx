@@ -1,31 +1,143 @@
 import { useState, useMemo, useCallback } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import {
+  Package,
+  Search,
+  Plus,
+  Target,
+  X,
+  RotateCcw,
+  SlidersHorizontal,
+} from "lucide-react";
 import { supabase } from "../../../lib/supabase";
-import { Loader2, Package, Search, Plus, Target, X, RotateCcw, SlidersHorizontal } from "lucide-react";
 import { useTranslate } from "../../../context/LanguageContext";
-import { LayoutGrid, LayoutList } from "../../produtos/layouts";
+import {
+  LayoutGrid,
+  LayoutList,
+  ProductShowcaseSkeleton,
+} from "../../produtos/layouts";
 import { useAdminStore } from "../../../hooks/useAdminStore";
 
-const LIMITS = { category: 12, title: 30, description: 100 };
+const LIMITS = {
+  category: 12,
+  title: 30,
+  description: 80,
+};
+
+const CACHE_TIME = 1000 * 60 * 10;
+const CACHE_VERSION = "v7";
+
 const FONT_SIZE_MAP = {
-  small: { title: "text-xl md:text-2xl", desc: "text-xs md:text-sm" },
-  base: { title: "text-2xl md:text-3xl", desc: "text-sm md:text-base" },
-  medium: { title: "text-3xl md:text-4xl", desc: "text-base md:text-lg" },
-  large: { title: "text-4xl md:text-5xl", desc: "text-lg md:text-xl" },
+  small: {
+    title: "text-xl md:text-2xl",
+    desc: "text-sm md:text-sm",
+  },
+  base: {
+    title: "text-2xl md:text-3xl",
+    desc: "text-base",
+  },
+  medium: {
+    title: "text-3xl md:text-4xl",
+    desc: "text-base md:text-lg",
+  },
+  large: {
+    title: "text-4xl md:text-5xl",
+    desc: "text-lg md:text-xl",
+  },
 };
 
 export type SectionStyles = {
-  theme?: 'dark' | 'light';
-  align?: 'center' | 'left' | 'justify';
-  fontSize?: 'small' | 'medium' | 'large' | 'base';
+  theme?: "dark" | "light";
+  align?: "center" | "left" | "justify";
+  fontSize?: "small" | "medium" | "large" | "base";
   cols?: string | number;
 };
 
 interface ShowcaseProps {
-  content: { title?: string; category?: string; description?: string; };
+  content: {
+    title?: string;
+    category?: string;
+    description?: string;
+  };
   style: SectionStyles;
   onUpdate?: (field: string, value: string) => void;
+}
+
+type PublicStore = {
+  id: string;
+  currency: string | null;
+};
+
+type Product = {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+  main_image: string;
+  created_at?: string;
+  currency: string;
+};
+
+type CachePayload<T> = {
+  version: string;
+  data: T;
+  expiresAt: number;
+};
+
+function readCache<T>(key: string): T | null {
+  try {
+    if (typeof window === "undefined") return null;
+
+    const cached = localStorage.getItem(key);
+    if (!cached) return null;
+
+    const parsed = JSON.parse(cached) as CachePayload<T>;
+
+    if (parsed.version !== CACHE_VERSION || Date.now() > parsed.expiresAt) {
+      localStorage.removeItem(key);
+      return null;
+    }
+
+    return parsed.data;
+  } catch {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // ignore
+    }
+
+    return null;
+  }
+}
+
+function writeCache<T>(key: string, data: T) {
+  try {
+    if (typeof window === "undefined") return;
+
+    localStorage.setItem(
+      key,
+      JSON.stringify({
+        version: CACHE_VERSION,
+        data,
+        expiresAt: Date.now() + CACHE_TIME,
+      } satisfies CachePayload<T>)
+    );
+  } catch {
+    // Evita quebrar se o storage estiver cheio ou bloqueado.
+  }
+}
+
+function normalizeProduct(product: any, currency: string): Product {
+  return {
+    id: String(product?.id || ""),
+    name: String(product?.name || ""),
+    price: Number(product?.price) || 0,
+    category: String(product?.category || ""),
+    main_image: String(product?.main_image || ""),
+    created_at: product?.created_at || undefined,
+    currency,
+  };
 }
 
 export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
@@ -34,300 +146,465 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
   const navigate = useNavigate();
   const { storeSlug, pageSlug } = useParams();
   const { data: adminStore } = useAdminStore();
-  
-  const isDark = style?.theme === 'dark';
-  const isReadOnly = !location.pathname.includes('/editor/');
 
-  // Estados
+  const isEditor = location.pathname.includes("/editor/");
+  const isReadOnly = !isEditor;
+  const isDark = style?.theme === "dark";
+  const allLabel = t("common_all");
+
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState(() => t("common_all"));
+  const [selectedCategory, setSelectedCategory] = useState<string>(allLabel);
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const [showAll, setShowAll] = useState(false);
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
 
-  const selectedSize = FONT_SIZE_MAP[style?.fontSize as keyof typeof FONT_SIZE_MAP || 'medium'];
+  const selectedSize =
+    FONT_SIZE_MAP[(style?.fontSize || "medium") as keyof typeof FONT_SIZE_MAP];
 
-  // Handlers
-  const handleTextChange = useCallback((field: string, value: string, limit: number) => {
-    const sanitized = value.replace(/[\n\r]/g, "").slice(0, limit);
-    onUpdate?.(field, sanitized);
-  }, [onUpdate]);
+  const layoutCols = Number(style?.cols) || 4;
+
+  const handleTextChange = useCallback(
+    (field: string, value: string, limit: number) => {
+      const sanitized = value
+        .replace(/[\n\r]/g, " ")
+        .replace(/\s+/g, " ")
+        .slice(0, limit);
+
+      onUpdate?.(field, sanitized);
+    },
+    [onUpdate]
+  );
 
   const preventEnter = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter") e.preventDefault();
   }, []);
 
-  // 1. Busca ID da loja pelo Slug da URL (Prioridade máxima para o contexto da página)
   const { data: publicStore, isLoading: isLoadingStore } = useQuery({
     queryKey: ["public-store-info", storeSlug],
-    queryFn: async () => {
+    queryFn: async (): Promise<PublicStore | null> => {
       if (!storeSlug) return null;
+
+      const cacheKey = `storely_public_store_${CACHE_VERSION}_${storeSlug}`;
+      const cached = readCache<PublicStore>(cacheKey);
+      if (cached) return cached;
+
       const { data, error } = await supabase
         .from("stores")
-        .select("id")
+        .select("id,currency")
         .eq("slug", storeSlug)
         .single();
-      if (error) return null;
-      return data;
+
+      if (error || !data) {
+        console.error("Store error:", error);
+        return null;
+      }
+
+      const safeStore: PublicStore = {
+        id: String(data.id),
+        currency: data.currency ? String(data.currency) : null,
+      };
+
+      writeCache(cacheKey, safeStore);
+      return safeStore;
     },
-    enabled: !!storeSlug,
+    enabled: Boolean(storeSlug),
+    staleTime: CACHE_TIME,
+    gcTime: CACHE_TIME * 2,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    retry: 1,
   });
 
-  // Define qual ID usar: Prioriza a loja da URL, se não houver (ex: editor vazio), usa o admin
-  const effectiveStoreId = publicStore?.id || adminStore?.id;
+  const effectiveStoreId = publicStore?.id || adminStore?.id || null;
 
-  // 2. Busca os produtos da loja identificada
-  const { data: products, isLoading: isLoadingProducts } = useQuery({
-    queryKey: ["public-products", effectiveStoreId],
-    queryFn: async () => {
+  const storeCurrency = publicStore?.currency || adminStore?.currency || "MZN";
+
+  const { data: products = [], isLoading: isLoadingProducts } = useQuery({
+    queryKey: ["public-products", effectiveStoreId, storeCurrency],
+    queryFn: async (): Promise<Product[]> => {
       if (!effectiveStoreId) return [];
-      const { data } = await supabase
+
+      const cacheKey = `storely_products_showcase_${CACHE_VERSION}_${effectiveStoreId}_${storeCurrency}`;
+      const cached = readCache<Product[]>(cacheKey);
+      if (cached) return cached;
+
+      const { data, error } = await supabase
         .from("products")
-        .select("*")
+        .select("id,name,price,category,main_image,created_at")
         .eq("store_id", effectiveStoreId)
-        .eq("is_active", true);
-      return data || [];
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(40);
+
+      if (error) {
+        console.error("Products error:", error);
+        return [];
+      }
+
+      const safeData = (data || []).map((product) =>
+        normalizeProduct(product, storeCurrency)
+      );
+
+      writeCache(cacheKey, safeData);
+      return safeData;
     },
-    enabled: !!effectiveStoreId,
-    staleTime: 1000 * 60 * 5,
+    enabled: Boolean(effectiveStoreId),
+    staleTime: CACHE_TIME,
+    gcTime: CACHE_TIME * 2,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    retry: 1,
   });
 
-const isLoading = isLoadingStore || isLoadingProducts;
+  const isLoading =
+    (isLoadingStore || isLoadingProducts) && products.length === 0;
 
- // Estados de Filtro
- 
-
-  // Funções para Limpar Filtros
   const clearFilters = useCallback(() => {
-    setSelectedCategory(t("common_all"));
+    setSelectedCategory(allLabel);
     setMaxPrice(null);
     setSearchTerm("");
-  }, [t]);
-
- 
+  }, [allLabel]);
 
   const absoluteMaxPrice = useMemo(() => {
-    if (!products?.length) return 10000;
-    return Math.max(...products.map(p => p.price));
+    if (!products.length) return 10000;
+    return Math.max(1, ...products.map((p) => Number(p.price) || 0));
   }, [products]);
 
-  const categories = useMemo(() => {
-    const cats = products?.map(p => p.category).filter(Boolean) || [];
-    return [t("common_all"), ...Array.from(new Set(cats))];
-  }, [products, t]);
+  const categories = useMemo<string[]>(() => {
+    const cats = products
+      .map((p) => String(p.category || "").trim())
+      .filter(Boolean);
 
-  const displayProducts = useMemo(() => {
-    if (!products) return [];
-    const term = searchTerm.toLowerCase();
-  
-    // 1. Filtra os produtos
-    const filtered = products.filter(p => {
-      const matchesSearch = !term || p.name.toLowerCase().includes(term);
-      const matchesCategory = selectedCategory === t("common_all") || p.category === selectedCategory;
-      const matchesPrice = maxPrice === null ? true : p.price <= maxPrice;
+    return [allLabel, ...Array.from(new Set(cats))];
+  }, [products, allLabel]);
+
+  const displayProducts = useMemo<Product[]>(() => {
+    const term = searchTerm.trim().toLowerCase();
+
+    const filtered = products.filter((p) => {
+      const name = String(p.name || "").toLowerCase();
+      const category = String(p.category || "");
+      const price = Number(p.price) || 0;
+
+      const matchesSearch = !term || name.includes(term);
+      const matchesCategory =
+        selectedCategory === allLabel || category === selectedCategory;
+      const matchesPrice = maxPrice === null || price <= maxPrice;
+
       return matchesSearch && matchesCategory && matchesPrice;
     });
-  
-    // 2. Ordena por data de criação (Mais recentes primeiro)
-    const sorted = [...filtered].sort((a, b) => {
-      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
-      return dateB - dateA;
-    });
-  
-    // 3. Controla a quantidade (Aumentado para 7 conforme solicitado)
-    return showAll || sorted.length <= 7 ? sorted : sorted.slice(0, 7);
-  }, [products, searchTerm, selectedCategory, maxPrice, showAll, t]);
 
-  const hasActiveFilters = selectedCategory !== t("common_all") || maxPrice !== null || searchTerm !== "";
+    return showAll || filtered.length <= 7 ? filtered : filtered.slice(0, 7);
+  }, [products, searchTerm, selectedCategory, maxPrice, showAll, allLabel]);
 
-  const handleProductClick = useCallback((productId: string) => {
-    if (!isReadOnly) return;
-    
-    navigate(`/${storeSlug}/${pageSlug || "home"}/${productId}`, {
-      state: { fromStore: true }
-    });
-  }, [isReadOnly, navigate, storeSlug, pageSlug]);
+  const hasActiveFilters =
+    isReadOnly &&
+    (selectedCategory !== allLabel ||
+      maxPrice !== null ||
+      searchTerm.trim() !== "");
 
-  const alignClass = style?.align === 'center' ? 'text-center items-center' : 'text-left items-start';
-  
-  const inputBaseClass = isReadOnly 
-    ? "bg-transparent border-none p-0 m-0 resize-none focus:ring-0 cursor-default overflow-hidden block pointer-events-none" 
-    : "w-full transition-all duration-200 border-b border-transparent hover:border-slate-300 dark:hover:border-zinc-700 hover:bg-slate-50/50 dark:hover:bg-white/5 focus:bg-transparent focus:border-blue-500 focus:ring-0 outline-none px-1 py-0.5 cursor-edit";
+  const handleProductClick = useCallback(
+    (productId: string) => {
+      if (!isReadOnly) return;
+
+      navigate(`/${storeSlug}/${pageSlug || "home"}/${productId}`, {
+        state: { fromStore: true },
+      });
+    },
+    [isReadOnly, navigate, storeSlug, pageSlug]
+  );
+
+  const alignClass =
+    style?.align === "center"
+      ? "text-center items-center"
+      : "text-left items-start";
+
+  const inputBaseClass = isReadOnly
+    ? "bg-transparent border-none p-0 m-0 resize-none focus:ring-0 cursor-default overflow-hidden block pointer-events-none"
+    : "w-full text-[16px] md:text-base transition-colors duration-200 border-b border-transparent hover:border-slate-300 dark:hover:border-zinc-700 hover:bg-slate-50/50 dark:hover:bg-white/5 focus:bg-transparent focus:border-blue-500 focus:ring-0 outline-none px-1 py-0.5 cursor-edit";
 
   return (
-    <section className={`py-12 px-4 md:px-6 transition-colors duration-500 ${isDark ? 'bg-[#0a0a0a] text-zinc-100' : 'bg-white text-slate-900'}`}>
-      <div className=" mx-auto">
-        
-        {/* HEADER */}
-        <header className={`mb-8 flex flex-col w-full ${alignClass}`}>
-          <div className={`flex flex-col gap-1 w-full max-w-3xl ${style?.align === 'center' ? 'mx-auto' : ''}`}>
-            
-            <div className="relative group w-fit">
-              <input
-                readOnly={isReadOnly}
-                value={content?.category || ""}
-                onKeyDown={preventEnter}
-                onChange={(e) => handleTextChange("category", e.target.value, LIMITS.category)}
-                placeholder={t("showcase_defaultCategory")}
-                className={`${inputBaseClass} ${style?.align === 'center' ? 'text-center' : ''} text-blue-500 dark:text-blue-400 font-bold text-[10px] uppercase tracking-[0.2em]`}
-              />
-            </div>
+    <section
+      className={`py-6 md:py-10 px-4 md:px-6 overflow-hidden transition-colors duration-300 ${
+        isDark ? "bg-[#0a0a0a] text-zinc-100" : "bg-white text-slate-900"
+      }`}
+    >
+      <div className="mx-auto w-full max-w-6xl">
+        <header className={`mb-7 md:mb-8 flex flex-col w-full ${alignClass}`}>
+          <div
+            className={`flex flex-col gap-1.5 w-full max-w-3xl min-w-0 ${
+              style?.align === "center" ? "mx-auto" : ""
+            }`}
+          >
+            <input
+              readOnly={isReadOnly}
+              value={content?.category || ""}
+              onKeyDown={preventEnter}
+              onChange={(e) =>
+                handleTextChange("category", e.target.value, LIMITS.category)
+              }
+              placeholder={t("showcase_defaultCategory")}
+              className={`${inputBaseClass} ${
+                style?.align === "center" ? "text-center" : ""
+              } text-blue-500 dark:text-blue-400 font-bold text-[16px] md:text-[10px] uppercase tracking-[0.18em] truncate`}
+            />
 
-            <div className="relative group w-full">
-              <textarea
-                readOnly={isReadOnly}
-                value={content?.title || ""}
-                onKeyDown={preventEnter}
-                onChange={(e) => handleTextChange("title", e.target.value, LIMITS.title)}
-                placeholder={t("showcase_defaultTitle")}
-                rows={1}
-                className={`${inputBaseClass} ${style?.align === 'center' ? 'text-center' : ''} ${selectedSize?.title} font-extrabold tracking-tight leading-tight uppercase resize-none`}
-              />
-            </div>
+<textarea
+  readOnly={isReadOnly}
+  value={content?.title || ""}
+  onKeyDown={preventEnter}
+  onChange={(e) =>
+    handleTextChange("title", e.target.value, LIMITS.title)
+  }
+  placeholder={t("showcase_defaultTitle")}
+  rows={1}
+  style={{
+    fontSize:
+      style?.fontSize === "small"
+        ? "clamp(1.15rem, 5vw, 1.7rem)"
+        : style?.fontSize === "base"
+        ? "clamp(1.3rem, 6vw, 2rem)"
+        : style?.fontSize === "large"
+        ? "clamp(1.6rem, 8vw, 2.55rem)"
+        : "clamp(1.45rem, 7vw, 2.25rem)",
+  }}
+  className={`${inputBaseClass} ${
+    style?.align === "center" ? "text-center" : ""
+  } md:${selectedSize.title.replace("md:", "")} font-extrabold tracking-tight leading-[1.05] uppercase resize-none break-words max-w-full min-h-[2.2rem]`}
+/>
 
-            <div className="relative group w-full mt-1">
-              <textarea
-                readOnly={isReadOnly}
-                value={content?.description || ""}
-                onKeyDown={preventEnter}
-                onChange={(e) => handleTextChange("description", e.target.value, LIMITS.description)}
-                placeholder={t("showcase_defaultDescription")}
-                rows={2}
-                className={`${inputBaseClass} ${style?.align === 'center' ? 'text-center mx-auto' : ''} ${selectedSize?.desc} text-zinc-500 dark:text-zinc-400 font-medium leading-snug max-w-2xl resize-none`}
-              />
-            </div>
+            <textarea
+              readOnly={isReadOnly}
+              value={content?.description || ""}
+              onKeyDown={preventEnter}
+              onChange={(e) =>
+                handleTextChange(
+                  "description",
+                  e.target.value,
+                  LIMITS.description
+                )
+              }
+              placeholder={t("showcase_defaultDescription")}
+              rows={2}
+              className={`${inputBaseClass} ${
+                style?.align === "center" ? "text-center mx-auto" : ""
+              } ${selectedSize.desc} text-zinc-500 dark:text-zinc-400 font-medium leading-snug max-w-2xl resize-none break-words min-h-[3rem]`}
+            />
           </div>
         </header>
 
-        {/* BARRA DE BUSCA E TOGGLE DE FILTROS */}
-        <div className="mb-6 flex flex-col gap-4">
-          <div className="flex gap-2">
-            <div className={`flex items-center gap-3 flex-1 px-5 py-3 rounded-2xl border transition-all ${isDark ? 'bg-zinc-900/40 border-zinc-800 focus-within:border-zinc-600' : 'bg-slate-50 border-slate-100 focus-within:border-slate-300'}`}>
-              <Search size={18} className="opacity-40" />
-              <input 
-                type="text" 
-                value={searchTerm}
-                placeholder={t("showcase_searchPlaceholder")}
-                className="bg-transparent border-none outline-none w-full text-sm font-semibold"
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              {searchTerm && <button onClick={() => setSearchTerm("")}><X size={14} /></button>}
-            </div>
-            
-            <button 
-              onClick={() => setIsFiltersVisible(!isFiltersVisible)}
-              className={`flex items-center gap-2 px-5 py-3 rounded-2xl border font-bold text-xs transition-all ${
-                isFiltersVisible 
-                ? 'bg-blue-600 border-blue-600 text-white' 
-                : isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <SlidersHorizontal size={16} />
-              <span className="hidden md:block">{isFiltersVisible ? t("common_close") : t("common_filters")}</span>
-            </button>
-          </div>
+        {isReadOnly && (
+          <div className="mb-6 flex flex-col gap-4">
+            <div className="flex gap-2">
+              <div
+                className={`flex items-center gap-3 flex-1 min-w-0 px-4 md:px-5 py-3 rounded-2xl border transition-colors ${
+                  isDark
+                    ? "bg-zinc-900/40 border-zinc-800 focus-within:border-zinc-600"
+                    : "bg-slate-50 border-slate-100 focus-within:border-slate-300"
+                }`}
+              >
+                <Search size={18} className="opacity-40 shrink-0" />
 
-          {/* FILTROS EXPANSÍVEIS */}
-          {isFiltersVisible && (
-            <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
-                {categories.map((cat) => (
+                <input
+                  type="text"
+                  value={searchTerm}
+                  placeholder={t("showcase_searchPlaceholder")}
+                  className="bg-transparent border-none outline-none w-full min-w-0 text-[16px] md:text-sm font-semibold"
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+
+                {searchTerm && (
                   <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-5 py-2.5 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-all border whitespace-nowrap ${
-                      selectedCategory === cat ? "bg-blue-600 border-blue-600 text-white " : isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-slate-200 text-slate-500"
-                    }`}
+                    type="button"
+                    onClick={() => setSearchTerm("")}
+                    aria-label="Clear search"
+                    className="shrink-0 opacity-60 hover:opacity-100"
                   >
-                    {cat}
+                    <X size={14} />
                   </button>
-                ))}
+                )}
               </div>
 
-              <div className={`grid grid-cols-1 md:grid-cols-[auto_1fr_auto] items-center gap-6 px-6 py-4 rounded-3xl border ${isDark ? 'bg-zinc-900/20 border-zinc-800' : 'bg-slate-50/30 border-slate-100'}`}>
-                 <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsFiltersVisible((v) => !v)}
+                className={`shrink-0 flex items-center gap-2 px-4 md:px-5 py-3 rounded-2xl border font-bold text-xs transition-colors active:scale-[0.98] ${
+                  isFiltersVisible
+                    ? "bg-blue-600 border-blue-600 text-white"
+                    : isDark
+                    ? "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800"
+                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                <SlidersHorizontal size={16} />
+                <span className="hidden md:block">
+                  {isFiltersVisible ? t("common_close") : t("common_filters")}
+                </span>
+              </button>
+            </div>
+
+            {isFiltersVisible && (
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors border whitespace-nowrap ${
+                        selectedCategory === cat
+                          ? "bg-blue-600 border-blue-600 text-white"
+                          : isDark
+                          ? "bg-zinc-900 border-zinc-800 text-zinc-400"
+                          : "bg-white border-slate-200 text-slate-500"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+
+                <div
+                  className={`grid grid-cols-1 md:grid-cols-[auto_1fr_auto] items-center gap-5 md:gap-6 px-5 md:px-6 py-4 rounded-3xl border ${
+                    isDark
+                      ? "bg-zinc-900/20 border-zinc-800"
+                      : "bg-slate-50/30 border-slate-100"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
                     <Target size={16} className="text-blue-600" />
-                    <span className="text-[10px] font-bold uppercase opacity-60">{t("showcase_maxPrice")}</span>
-                 </div>
-                 <input 
-                    type="range" min="0" max={absoluteMaxPrice} 
+                    <span className="text-[10px] font-bold uppercase opacity-60">
+                      {t("showcase_maxPrice")}
+                    </span>
+                  </div>
+
+                  <input
+                    type="range"
+                    min="0"
+                    max={absoluteMaxPrice}
                     value={maxPrice ?? absoluteMaxPrice}
                     onChange={(e) => setMaxPrice(Number(e.target.value))}
                     className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full appearance-none accent-blue-600 cursor-pointer"
-                 />
-                 <div className={`flex items-center border rounded-xl px-3 py-2 min-w-[100px] ${isDark ? 'bg-zinc-950/50 border-zinc-800' : 'bg-white border-slate-200'}`}>
-                  <span className="text-xs mr-1 opacity-40">R$</span>
-                  <input 
-                    type="text"
-                    value={maxPrice === null ? "" : maxPrice}
-                    placeholder={t("filter_unlimited")}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, "");
-                      setMaxPrice(val === "" ? null : Number(val));
-                    }}
-                    className="bg-transparent font-bold text-sm w-full outline-none text-center"
                   />
+
+                  <div
+                    className={`flex items-center border rounded-xl px-3 py-2 min-w-[100px] ${
+                      isDark
+                        ? "bg-zinc-950/50 border-zinc-800"
+                        : "bg-white border-slate-200"
+                    }`}
+                  >
+                    <span className="text-xs mr-1 opacity-40">
+                      {storeCurrency}
+                    </span>
+
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={maxPrice === null ? "" : maxPrice}
+                      placeholder={t("filter_unlimited")}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "");
+                        setMaxPrice(val === "" ? null : Number(val));
+                      }}
+                      className="bg-transparent font-bold text-[16px] md:text-sm w-full outline-none text-center"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
-        {/* FILTROS ATIVOS */}
         {hasActiveFilters && (
           <div className="flex flex-wrap items-center gap-2 mb-8">
-            <span className="text-[10px] font-black uppercase tracking-tighter opacity-40 mr-2">{t("showcase_filter_active")}</span>
-            {selectedCategory !== t("common_all") && (
-              <button onClick={() => setSelectedCategory(t("common_all"))} className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-[10px] font-bold text-blue-500">
+            <span className="text-[10px] font-black uppercase tracking-tighter opacity-40 mr-2">
+              {t("showcase_filter_active")}
+            </span>
+
+            {selectedCategory !== allLabel && (
+              <button
+                type="button"
+                onClick={() => setSelectedCategory(allLabel)}
+                className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-[10px] font-bold text-blue-500"
+              >
                 {selectedCategory} <X size={12} />
               </button>
             )}
+
             {maxPrice !== null && (
-              <button onClick={() => setMaxPrice(null)} className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-[10px] font-bold text-blue-500">
-                {t("showcase_price_up_to").replace("{{price}}", String(maxPrice))} <X size={12} />
+              <button
+                type="button"
+                onClick={() => setMaxPrice(null)}
+                className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-[10px] font-bold text-blue-500"
+              >
+                {t("showcase_price_up_to").replace(
+                  "{{price}}",
+                  String(maxPrice)
+                )}
+                <X size={12} />
               </button>
             )}
-            <button onClick={clearFilters} className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold opacity-60 hover:opacity-100">
+
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold opacity-60 hover:opacity-100"
+            >
               <RotateCcw size={12} /> {t("showcase_clear_all")}
             </button>
           </div>
         )}
 
-
-        {/* LISTAGEM */}
-        <div className="min-h-[400px]">
+        <div className="min-h-[420px]">
           {isLoading ? (
-            <div className="flex justify-center py-20">
-              <Loader2 className="animate-spin text-blue-500" size={40} />
-            </div>
+            <ProductShowcaseSkeleton cols={layoutCols} isDark={isDark} />
           ) : (
             <>
-              {Number(style?.cols) === 1 ? (
-                <LayoutList products={displayProducts} onAction={handleProductClick} isDark={isDark} t={t} />
+              {layoutCols === 1 ? (
+                <LayoutList
+                  products={displayProducts}
+                  onAction={handleProductClick}
+                  isDark={isDark}
+                  t={t}
+                />
               ) : (
-                <LayoutGrid products={displayProducts} onAction={handleProductClick} cols={Number(style?.cols) || 3} isDark={isDark} t={t} />
+                <LayoutGrid
+                  products={displayProducts}
+                  onAction={handleProductClick}
+                  cols={layoutCols}
+                  isDark={isDark}
+                  t={t}
+                />
               )}
 
-{!showAll && (displayProducts.length >= 7 && products && products.length > 7) && (
-  <div className="mt-12 flex justify-center">
-    <button 
-      onClick={() => setShowAll(true)} 
-      className={`flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-[11px] uppercase tracking-widest transition-all active:scale-95 ${
-        isDark ? 'bg-white text-black hover:bg-zinc-100' : 'bg-zinc-900 text-white hover:bg-black'
-      }`}
-    >
-      <Plus size={16} /> {t("showcase_viewFull")}
-    </button>
-  </div>
-)}
+              {!showAll && displayProducts.length >= 7 && products.length > 7 && (
+                <div className="mt-12 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowAll(true)}
+                    className={`flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-[11px] uppercase tracking-widest transition-transform active:scale-95 ${
+                      isDark
+                        ? "bg-white text-black hover:bg-zinc-100"
+                        : "bg-zinc-900 text-white hover:bg-black"
+                    }`}
+                  >
+                    <Plus size={16} /> {t("showcase_viewFull")}
+                  </button>
+                </div>
+              )}
             </>
           )}
 
           {!isLoading && displayProducts.length === 0 && (
             <div className="text-center py-20 rounded-3xl border border-dashed border-zinc-200 dark:border-zinc-800">
-              <Package size={40} className="mx-auto mb-4 opacity-10 text-zinc-500" />
-              <p className="text-xs font-bold uppercase tracking-widest opacity-40">{t("showcase_empty")}</p>
+              <Package
+                size={40}
+                className="mx-auto mb-4 opacity-10 text-zinc-500"
+              />
+              <p className="text-xs font-bold uppercase tracking-widest opacity-40">
+                {t("showcase_empty")}
+              </p>
             </div>
           )}
         </div>
