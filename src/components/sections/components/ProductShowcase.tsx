@@ -21,36 +21,17 @@ import { useAdminStore } from "../../../hooks/useAdminStore";
 
 const LIMITS = {
   category: 12,
-  title: 30,
+  title: 25,
   description: 80,
 };
 
 const CACHE_TIME = 1000 * 60 * 10;
-const CACHE_VERSION = "v7";
-
-const FONT_SIZE_MAP = {
-  small: {
-    title: "text-xl md:text-2xl",
-    desc: "text-sm md:text-sm",
-  },
-  base: {
-    title: "text-2xl md:text-3xl",
-    desc: "text-base",
-  },
-  medium: {
-    title: "text-3xl md:text-4xl",
-    desc: "text-base md:text-lg",
-  },
-  large: {
-    title: "text-4xl md:text-5xl",
-    desc: "text-lg md:text-xl",
-  },
-};
+const CACHE_VERSION = "v9";
 
 export type SectionStyles = {
   theme?: "dark" | "light";
   align?: "center" | "left" | "justify";
-  fontSize?: "small" | "medium" | "large" | "base";
+  fontSize?: "small" | "base" | "medium" | "large";
   cols?: string | number;
 };
 
@@ -106,7 +87,6 @@ function readCache<T>(key: string): T | null {
     } catch {
       // ignore
     }
-
     return null;
   }
 }
@@ -124,7 +104,7 @@ function writeCache<T>(key: string, data: T) {
       } satisfies CachePayload<T>)
     );
   } catch {
-    // Evita quebrar se o storage estiver cheio ou bloqueado.
+    // storage cheio/bloqueado não deve quebrar o componente
   }
 }
 
@@ -158,10 +138,33 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
   const [showAll, setShowAll] = useState(false);
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
 
-  const selectedSize =
-    FONT_SIZE_MAP[(style?.fontSize || "medium") as keyof typeof FONT_SIZE_MAP];
-
   const layoutCols = Number(style?.cols) || 4;
+
+  const titleFontSize = useMemo(() => {
+    const size = style?.fontSize || "medium";
+
+    const map: Record<NonNullable<SectionStyles["fontSize"]>, string> = {
+      small: "clamp(1.15rem, 4.5vw, 1.6rem)",
+      base: "clamp(1.35rem, 5.5vw, 2rem)",
+      medium: "clamp(1.55rem, 6.5vw, 2.55rem)",
+      large: "clamp(1.8rem, 7.5vw, 3.2rem)",
+    };
+
+    return map[size];
+  }, [style?.fontSize]);
+
+  const descFontSize = useMemo(() => {
+    const size = style?.fontSize || "medium";
+
+    const map: Record<NonNullable<SectionStyles["fontSize"]>, string> = {
+      small: "clamp(0.85rem, 3vw, 0.95rem)",
+      base: "clamp(0.9rem, 3.3vw, 1rem)",
+      medium: "clamp(0.95rem, 3.6vw, 1.1rem)",
+      large: "clamp(0.98rem, 3.8vw, 1.15rem)",
+    };
+
+    return map[size];
+  }, [style?.fontSize]);
 
   const handleTextChange = useCallback(
     (field: string, value: string, limit: number) => {
@@ -216,7 +219,6 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
   });
 
   const effectiveStoreId = publicStore?.id || adminStore?.id || null;
-
   const storeCurrency = publicStore?.currency || adminStore?.currency || "MZN";
 
   const { data: products = [], isLoading: isLoadingProducts } = useQuery({
@@ -259,12 +261,6 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
   const isLoading =
     (isLoadingStore || isLoadingProducts) && products.length === 0;
 
-  const clearFilters = useCallback(() => {
-    setSelectedCategory(allLabel);
-    setMaxPrice(null);
-    setSearchTerm("");
-  }, [allLabel]);
-
   const absoluteMaxPrice = useMemo(() => {
     if (!products.length) return 10000;
     return Math.max(1, ...products.map((p) => Number(p.price) || 0));
@@ -294,7 +290,7 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
       return matchesSearch && matchesCategory && matchesPrice;
     });
 
-    return showAll || filtered.length <= 7 ? filtered : filtered.slice(0, 7);
+    return showAll || filtered.length <= 9 ? filtered : filtered.slice(0, 9);
   }, [products, searchTerm, selectedCategory, maxPrice, showAll, allLabel]);
 
   const hasActiveFilters =
@@ -302,6 +298,12 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
     (selectedCategory !== allLabel ||
       maxPrice !== null ||
       searchTerm.trim() !== "");
+
+  const clearFilters = useCallback(() => {
+    setSelectedCategory(allLabel);
+    setMaxPrice(null);
+    setSearchTerm("");
+  }, [allLabel]);
 
   const handleProductClick = useCallback(
     (productId: string) => {
@@ -319,9 +321,13 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
       ? "text-center items-center"
       : "text-left items-start";
 
-  const inputBaseClass = isReadOnly
+  const categoryInputClass = isReadOnly
     ? "bg-transparent border-none p-0 m-0 resize-none focus:ring-0 cursor-default overflow-hidden block pointer-events-none"
     : "w-full text-[16px] md:text-base transition-colors duration-200 border-b border-transparent hover:border-slate-300 dark:hover:border-zinc-700 hover:bg-slate-50/50 dark:hover:bg-white/5 focus:bg-transparent focus:border-blue-500 focus:ring-0 outline-none px-1 py-0.5 cursor-edit";
+
+  const textEditBaseClass = isReadOnly
+    ? "bg-transparent border-none p-0 m-0 focus:ring-0 cursor-default overflow-hidden block pointer-events-none"
+    : "w-full text-[16px] transition-colors duration-200 border-b border-transparent hover:border-slate-300 dark:hover:border-zinc-700 hover:bg-slate-50/50 dark:hover:bg-white/5 focus:bg-transparent focus:border-blue-500 focus:ring-0 outline-none px-1 py-0.5 cursor-edit";
 
   return (
     <section
@@ -344,34 +350,25 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
                 handleTextChange("category", e.target.value, LIMITS.category)
               }
               placeholder={t("showcase_defaultCategory")}
-              className={`${inputBaseClass} ${
+              className={`${categoryInputClass} ${
                 style?.align === "center" ? "text-center" : ""
               } text-blue-500 dark:text-blue-400 font-bold text-[16px] md:text-[10px] uppercase tracking-[0.18em] truncate`}
             />
 
-<textarea
-  readOnly={isReadOnly}
-  value={content?.title || ""}
-  onKeyDown={preventEnter}
-  onChange={(e) =>
-    handleTextChange("title", e.target.value, LIMITS.title)
-  }
-  placeholder={t("showcase_defaultTitle")}
-  rows={1}
-  style={{
-    fontSize:
-      style?.fontSize === "small"
-        ? "clamp(1.15rem, 5vw, 1.7rem)"
-        : style?.fontSize === "base"
-        ? "clamp(1.3rem, 6vw, 2rem)"
-        : style?.fontSize === "large"
-        ? "clamp(1.6rem, 8vw, 2.55rem)"
-        : "clamp(1.45rem, 7vw, 2.25rem)",
-  }}
-  className={`${inputBaseClass} ${
-    style?.align === "center" ? "text-center" : ""
-  } md:${selectedSize.title.replace("md:", "")} font-extrabold tracking-tight leading-[1.05] uppercase resize-none break-words max-w-full min-h-[2.2rem]`}
-/>
+            <textarea
+              readOnly={isReadOnly}
+              value={content?.title || ""}
+              onKeyDown={preventEnter}
+              onChange={(e) =>
+                handleTextChange("title", e.target.value, LIMITS.title)
+              }
+              placeholder={t("showcase_defaultTitle")}
+              rows={1}
+              style={{ fontSize: titleFontSize }}
+              className={`${textEditBaseClass} ${
+                style?.align === "center" ? "text-center" : ""
+              } font-extrabold tracking-tight leading-[1.05] uppercase resize-none break-words max-w-full min-h-[2.2rem]`}
+            />
 
             <textarea
               readOnly={isReadOnly}
@@ -386,9 +383,10 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
               }
               placeholder={t("showcase_defaultDescription")}
               rows={2}
-              className={`${inputBaseClass} ${
+              style={{ fontSize: descFontSize }}
+              className={`${textEditBaseClass} ${
                 style?.align === "center" ? "text-center mx-auto" : ""
-              } ${selectedSize.desc} text-zinc-500 dark:text-zinc-400 font-medium leading-snug max-w-2xl resize-none break-words min-h-[3rem]`}
+              } text-zinc-500 dark:text-zinc-400 font-medium leading-snug max-w-2xl resize-none break-words min-h-[3rem]`}
             />
           </div>
         </header>

@@ -254,71 +254,190 @@ export const LayoutGrid = ({
 
 export const LayoutList = ({ products, onAction, isDark }: LayoutProps) => {
   const sorted = useMemo(() => sortProductsByDate(products), [products]);
+  const featured = sorted[0];
+  const sideItems = sorted.slice(1, 5);
+  const restItems = sorted.slice(5);
+
+  if (!sorted.length) return null;
+
+  const cardBase = isDark
+    ? "bg-zinc-950 border-white/10"
+    : "bg-white border-zinc-200 shadow-sm";
 
   return (
-    <div className="max-w-6xl mx-auto px-3 md:px-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-        {sorted.map((p, index) => (
+    <div className="mx-auto w-full max-w-7xl px-0 md:px-4">
+      <div className="grid gap-2 lg:grid-cols-[1.15fr_0.85fr] xl:grid-cols-[1.25fr_0.75fr]">
+        {featured && (
           <button
-            key={p.id}
-            onClick={() => onAction(p.id)}
+            type="button"
+            onClick={() => onAction(featured.id)}
             className={`
-              group overflow-hidden rounded-2xl border text-left
-              transition-transform duration-200 active:scale-[0.98]
-              ${
-                isDark
-                  ? "bg-zinc-950 border-white/10 hover:border-white/20"
-                  : "bg-white border-zinc-200 hover:shadow-md"
-              }
+              group relative min-h-[300px] overflow-hidden rounded-[1.35rem] border text-left
+              sm:min-h-[360px] lg:min-h-[520px]
+              active:scale-[0.99] ${cardBase}
             `}
             style={{ contain: "layout paint" }}
           >
-            <div className="flex items-center gap-3 p-2.5">
-              <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800">
+            <img
+              src={featured.main_image}
+              alt={featured.name}
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
+              width={1100}
+              height={800}
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.035]"
+            />
+
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/5" />
+
+            <div className="absolute inset-x-3 bottom-3 z-10 sm:inset-x-5 sm:bottom-5">
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                {featured.category && (
+                  <span className="max-w-full truncate rounded-full bg-white/15 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-white backdrop-blur-md">
+                    {featured.category}
+                  </span>
+                )}
+
+                <span className="rounded-full bg-blue-600 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                  Featured
+                </span>
+              </div>
+
+              <h3 className="line-clamp-2 max-w-3xl text-2xl font-black leading-[0.98] text-white sm:text-4xl lg:text-5xl">
+                {featured.name}
+              </h3>
+
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <span className="truncate rounded-2xl bg-white px-3.5 py-2 text-sm font-black text-zinc-950 shadow-sm sm:text-base">
+                  {formatPrice(featured.currency, featured.price)}
+                </span>
+
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-zinc-950 shadow-sm transition-transform group-hover:translate-x-0.5">
+                  <ArrowRight size={17} />
+                </span>
+              </div>
+            </div>
+          </button>
+        )}
+
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
+          {sideItems.map((p, index) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => onAction(p.id)}
+              className={`
+                group grid overflow-hidden rounded-[1.25rem] border text-left
+                active:scale-[0.99]
+                lg:grid-cols-[0.95fr_1.05fr]
+                ${cardBase}
+              `}
+              style={{ contain: "layout paint" }}
+            >
+              <div className="relative aspect-[1/1] overflow-hidden bg-zinc-100 dark:bg-zinc-800 lg:aspect-auto lg:min-h-[122px]">
                 <img
                   src={p.main_image}
                   alt={p.name}
                   loading={index < 4 ? "eager" : "lazy"}
                   decoding="async"
-                  className="h-full w-full object-cover"
+                  width={420}
+                  height={420}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                 />
               </div>
 
-              <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 flex-col justify-between p-2.5 sm:p-3">
+                <div className="min-w-0">
+                  {p.category && (
+                    <p className="mb-1 line-clamp-1 text-[8px] font-black uppercase tracking-[0.12em] text-blue-500">
+                      {p.category}
+                    </p>
+                  )}
+
+                  <h3
+                    className={`
+                      line-clamp-2 text-[12.5px] font-extrabold leading-snug sm:text-sm
+                      ${isDark ? "text-zinc-100" : "text-zinc-950"}
+                    `}
+                  >
+                    {p.name}
+                  </h3>
+                </div>
+
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <span
+                    className={`
+                      min-w-0 truncate rounded-full px-2 py-1 text-[10px] font-black
+                      ${
+                        isDark
+                          ? "bg-white/10 text-zinc-100"
+                          : "bg-zinc-100 text-zinc-950"
+                      }
+                    `}
+                  >
+                    {formatPrice(p.currency, p.price)}
+                  </span>
+
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
+                    <ArrowRight size={12} />
+                  </span>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {!!restItems.length && (
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {restItems.map((p, index) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => onAction(p.id)}
+              className={`
+                group overflow-hidden rounded-[1.25rem] border text-left
+                active:scale-[0.99] ${cardBase}
+              `}
+              style={{ contain: "layout paint" }}
+            >
+              <div className="relative aspect-[4/3] overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+                <img
+                  src={p.main_image}
+                  alt={p.name}
+                  loading={index < 6 ? "eager" : "lazy"}
+                  decoding="async"
+                  width={380}
+                  height={285}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                />
+
+                <span className="absolute left-2 top-2 max-w-[85%] truncate rounded-full bg-white/95 px-2 py-1 text-[9px] font-black text-zinc-950 shadow-sm">
+                  {formatPrice(p.currency, p.price)}
+                </span>
+              </div>
+
+              <div className="p-2.5">
                 {p.category && (
-                  <p className="mb-1 line-clamp-1 text-[9px] font-black uppercase tracking-[0.14em] text-blue-500">
+                  <p className="mb-1 line-clamp-1 text-[8px] font-black uppercase tracking-[0.12em] text-blue-500">
                     {p.category}
                   </p>
                 )}
 
                 <h3
                   className={`
-                    line-clamp-2 text-sm font-bold leading-snug
+                    line-clamp-2 min-h-[34px] text-[12px] font-extrabold leading-snug
                     ${isDark ? "text-zinc-100" : "text-zinc-950"}
                   `}
                 >
                   {p.name}
                 </h3>
-
-                <div className="mt-2 flex items-center justify-between gap-2">
-                  <span
-                    className={`
-                      truncate text-sm font-black
-                      ${isDark ? "text-white" : "text-zinc-900"}
-                    `}
-                  >
-                    {formatPrice(p.currency, p.price)}
-                  </span>
-
-                  <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
-                    <ArrowRight size={13} />
-                  </span>
-                </div>
               </div>
-            </div>
-          </button>
-        ))}
-      </div>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
