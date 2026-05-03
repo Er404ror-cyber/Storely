@@ -470,11 +470,25 @@ export const PublicBackgroundAudio = memo(function PublicBackgroundAudio({
   const applyVolume = useCallback((nextRealVolume: number) => {
     const el = audioRef.current;
     if (!el) return;
-
+  
     const safe = clamp(nextRealVolume, 0, REAL_MAX_VOLUME) || DEFAULT_REAL_VOLUME;
-    el.volume = safe;
-    el.muted = false;
-    el.defaultMuted = false;
+  
+    // CRITICAL FIX (mobile browsers)
+    el.muted = true; // start muted to bypass system override
+  
+    // force apply multiple times (Safari fix)
+    requestAnimationFrame(() => {
+      el.volume = safe;
+    });
+  
+    setTimeout(() => {
+      el.volume = safe;
+      el.muted = false; // unmute after setting
+    }, 50);
+  
+    setTimeout(() => {
+      el.volume = safe;
+    }, 150);
   }, []);
 
   const pauseAudio = useCallback(() => {
@@ -516,22 +530,29 @@ export const PublicBackgroundAudio = memo(function PublicBackgroundAudio({
   const tryPlayNowFromGesture = useCallback(async () => {
     const el = audioRef.current;
     if (!el || !hasAudio || playInFlightRef.current || hasSegmentEndedRef.current) return false;
-
+  
     playInFlightRef.current = true;
-
+  
     try {
-      applyVolume(realVolume);
+      // 🔥 START MUTED (CRITICAL)
+      el.muted = true;
+      el.volume = 0;
+  
       seekIntoSegmentIfNeeded();
+  
       await el.play();
-
+  
+      // apply volume AFTER play
+      applyVolume(realVolume);
+  
       lastUserPausedRef.current = false;
       resumeOnVisibleRef.current = true;
       hasActivatedFromOverlayRef.current = true;
-
+  
       if (mountedRef.current) {
         setIsPlaying(true);
       }
-
+  
       return true;
     } catch {
       if (mountedRef.current) {
@@ -579,6 +600,8 @@ export const PublicBackgroundAudio = memo(function PublicBackgroundAudio({
 
       try {
         el.load();
+        el.muted = true;
+        el.volume = 0;
       } catch {}
 
       void warmCacheInBackground();
@@ -775,8 +798,9 @@ export const PublicBackgroundAudio = memo(function PublicBackgroundAudio({
     const onLoadedMetadata = () => {
       setIsReady(true);
       setLoadError(false);
-      applyVolume(realVolume);
-
+      requestAnimationFrame(() => {
+        applyVolume(realVolume);
+      });
       try {
         const current = Number.isFinite(el.currentTime) ? el.currentTime : 0;
         if (current < startAt || current > endAt) {
@@ -788,8 +812,9 @@ export const PublicBackgroundAudio = memo(function PublicBackgroundAudio({
     const onCanPlay = () => {
       setIsReady(true);
       setLoadError(false);
-      applyVolume(realVolume);
-    };
+      requestAnimationFrame(() => {
+        applyVolume(realVolume);
+      });    };
 
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);

@@ -1,4 +1,10 @@
-import { useState, useMemo, useCallback } from "react";
+import {
+  memo,
+  useCallback,
+  useDeferredValue,
+  useMemo,
+  useState,
+} from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -25,8 +31,10 @@ const LIMITS = {
   description: 80,
 };
 
-const CACHE_TIME = 1000 * 60 * 10;
-const CACHE_VERSION = "v9";
+const CACHE_TIME = 1000 * 60 * 20;
+const CACHE_VERSION = "v10";
+const PRODUCTS_LIMIT = 32;
+const INITIAL_VISIBLE = 9;
 
 export type SectionStyles = {
   theme?: "dark" | "light";
@@ -66,14 +74,26 @@ type CachePayload<T> = {
   expiresAt: number;
 };
 
+function safeText(value: unknown, limit: number) {
+  return String(value || "")
+    .replace(/[\n\r]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, limit);
+}
+
+function cacheKey(...parts: Array<string | number | null | undefined>) {
+  return parts.filter(Boolean).join("_");
+}
+
 function readCache<T>(key: string): T | null {
   try {
     if (typeof window === "undefined") return null;
 
-    const cached = localStorage.getItem(key);
-    if (!cached) return null;
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
 
-    const parsed = JSON.parse(cached) as CachePayload<T>;
+    const parsed = JSON.parse(raw) as CachePayload<T>;
 
     if (parsed.version !== CACHE_VERSION || Date.now() > parsed.expiresAt) {
       localStorage.removeItem(key);
@@ -104,21 +124,141 @@ function writeCache<T>(key: string, data: T) {
       } satisfies CachePayload<T>)
     );
   } catch {
-    // storage cheio/bloqueado não deve quebrar o componente
+    // ignore storage errors
   }
 }
 
 function normalizeProduct(product: any, currency: string): Product {
   return {
     id: String(product?.id || ""),
-    name: String(product?.name || ""),
+    name: safeText(product?.name, 70),
     price: Number(product?.price) || 0,
-    category: String(product?.category || ""),
+    category: safeText(product?.category, 40),
     main_image: String(product?.main_image || ""),
     created_at: product?.created_at || undefined,
     currency,
   };
 }
+
+const HeaderText = memo(function HeaderText({
+  content,
+  style,
+  isReadOnly,
+  isDark,
+  t,
+  onUpdate,
+}: {
+  content: ShowcaseProps["content"];
+  style: SectionStyles;
+  isReadOnly: boolean;
+  isDark: boolean;
+  t: ReturnType<typeof useTranslate>["t"];
+  onUpdate?: (field: string, value: string) => void;
+}) {
+  const alignCenter = style?.align === "center";
+
+  const titleFontSize = useMemo(() => {
+    const size = style?.fontSize || "medium";
+
+    const map: Record<NonNullable<SectionStyles["fontSize"]>, string> = {
+      small: "clamp(1.1rem, 5vw, 1.45rem)",
+      base: "clamp(1.25rem, 5.5vw, 1.8rem)",
+      medium: "clamp(1.4rem, 6vw, 2.15rem)",
+      large: "clamp(1.55rem, 6.5vw, 2.55rem)",
+    };
+
+    return map[size];
+  }, [style?.fontSize]);
+
+  const descFontSize = useMemo(() => {
+    const size = style?.fontSize || "medium";
+
+    const map: Record<NonNullable<SectionStyles["fontSize"]>, string> = {
+      small: "clamp(0.82rem, 3vw, 0.92rem)",
+      base: "clamp(0.86rem, 3.2vw, 0.98rem)",
+      medium: "clamp(0.9rem, 3.4vw, 1.02rem)",
+      large: "clamp(0.92rem, 3.5vw, 1.05rem)",
+    };
+
+    return map[size];
+  }, [style?.fontSize]);
+
+  const preventEnter = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter") e.preventDefault();
+  }, []);
+
+  const handleTextChange = useCallback(
+    (field: string, value: string, limit: number) => {
+      onUpdate?.(field, safeText(value, limit));
+    },
+    [onUpdate]
+  );
+
+  const readOnlyInput =
+    "bg-transparent border-none p-0 m-0 resize-none focus:ring-0 cursor-default overflow-hidden block pointer-events-none";
+
+  const editableInput =
+    "w-full text-[16px] transition-colors duration-150 border-b border-transparent hover:border-slate-300 dark:hover:border-zinc-700 hover:bg-slate-50/50 dark:hover:bg-white/5 focus:bg-transparent focus:border-blue-500 focus:ring-0 outline-none px-1 py-0.5 cursor-edit";
+
+  return (
+    <header
+      className={`mb-5 md:mb-7 flex w-full flex-col ${
+        alignCenter ? "items-center text-center" : "items-start text-left"
+      }`}
+    >
+      <div
+        className={`flex w-full max-w-3xl min-w-0 flex-col gap-1.5 ${
+          alignCenter ? "mx-auto" : ""
+        }`}
+      >
+        <input
+          readOnly={isReadOnly}
+          value={content?.category || ""}
+          onKeyDown={preventEnter}
+          onChange={(e) =>
+            handleTextChange("category", e.target.value, LIMITS.category)
+          }
+          placeholder={t("showcase_defaultCategory")}
+          className={`${isReadOnly ? readOnlyInput : editableInput} ${
+            alignCenter ? "text-center" : ""
+          } text-blue-500 dark:text-blue-400 font-black text-[11px] md:text-xs uppercase tracking-[0.16em] truncate max-w-full`}
+        />
+
+        <textarea
+          readOnly={isReadOnly}
+          value={content?.title || ""}
+          onKeyDown={preventEnter}
+          onChange={(e) =>
+            handleTextChange("title", e.target.value, LIMITS.title)
+          }
+          placeholder={t("showcase_defaultTitle")}
+          rows={1}
+          style={{ fontSize: titleFontSize }}
+          className={`${isReadOnly ? readOnlyInput : editableInput} ${
+            alignCenter ? "text-center" : ""
+          } font-extrabold tracking-tight leading-[1.05] uppercase resize-none max-w-full min-h-[2rem] line-clamp-2 break-words overflow-hidden`}
+        />
+
+        <textarea
+          readOnly={isReadOnly}
+          value={content?.description || ""}
+          onKeyDown={preventEnter}
+          onChange={(e) =>
+            handleTextChange("description", e.target.value, LIMITS.description)
+          }
+          placeholder={t("showcase_defaultDescription")}
+          rows={2}
+          style={{ fontSize: descFontSize }}
+          className={`${isReadOnly ? readOnlyInput : editableInput} ${
+            alignCenter ? "text-center mx-auto" : ""
+          } ${
+            isDark ? "text-zinc-400" : "text-zinc-500"
+          } font-medium leading-snug max-w-2xl resize-none min-h-[2.6rem] line-clamp-2 break-words overflow-hidden`}
+        />
+      </div>
+    </header>
+  );
+});
 
 export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
   const { t } = useTranslate();
@@ -133,88 +273,46 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
   const allLabel = t("common_all");
 
   const [searchTerm, setSearchTerm] = useState("");
+  const deferredSearch = useDeferredValue(searchTerm);
+
   const [selectedCategory, setSelectedCategory] = useState<string>(allLabel);
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const [showAll, setShowAll] = useState(false);
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
 
-  const layoutCols = Number(style?.cols) || 4;
-
-  const titleFontSize = useMemo(() => {
-    const size = style?.fontSize || "medium";
-
-    const map: Record<NonNullable<SectionStyles["fontSize"]>, string> = {
-      small: "clamp(1.15rem, 4.5vw, 1.6rem)",
-      base: "clamp(1.35rem, 5.5vw, 2rem)",
-      medium: "clamp(1.55rem, 6.5vw, 2.55rem)",
-      large: "clamp(1.8rem, 7.5vw, 3.2rem)",
-    };
-
-    return map[size];
-  }, [style?.fontSize]);
-
-  const descFontSize = useMemo(() => {
-    const size = style?.fontSize || "medium";
-
-    const map: Record<NonNullable<SectionStyles["fontSize"]>, string> = {
-      small: "clamp(0.85rem, 3vw, 0.95rem)",
-      base: "clamp(0.9rem, 3.3vw, 1rem)",
-      medium: "clamp(0.95rem, 3.6vw, 1.1rem)",
-      large: "clamp(0.98rem, 3.8vw, 1.15rem)",
-    };
-
-    return map[size];
-  }, [style?.fontSize]);
-
-  const handleTextChange = useCallback(
-    (field: string, value: string, limit: number) => {
-      const sanitized = value
-        .replace(/[\n\r]/g, " ")
-        .replace(/\s+/g, " ")
-        .slice(0, limit);
-
-      onUpdate?.(field, sanitized);
-    },
-    [onUpdate]
-  );
-
-  const preventEnter = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === "Enter") e.preventDefault();
-  }, []);
+  const layoutCols = Math.min(Math.max(Number(style?.cols) || 4, 1), 4);
 
   const { data: publicStore, isLoading: isLoadingStore } = useQuery({
     queryKey: ["public-store-info", storeSlug],
     queryFn: async (): Promise<PublicStore | null> => {
       if (!storeSlug) return null;
 
-      const cacheKey = `storely_public_store_${CACHE_VERSION}_${storeSlug}`;
-      const cached = readCache<PublicStore>(cacheKey);
+      const key = cacheKey("storely_public_store", CACHE_VERSION, storeSlug);
+      const cached = readCache<PublicStore>(key);
       if (cached) return cached;
 
       const { data, error } = await supabase
         .from("stores")
         .select("id,currency")
         .eq("slug", storeSlug)
-        .single();
+        .maybeSingle();
 
-      if (error || !data) {
-        console.error("Store error:", error);
-        return null;
-      }
+      if (error || !data) return null;
 
       const safeStore: PublicStore = {
         id: String(data.id),
         currency: data.currency ? String(data.currency) : null,
       };
 
-      writeCache(cacheKey, safeStore);
+      writeCache(key, safeStore);
       return safeStore;
     },
-    enabled: Boolean(storeSlug),
+    enabled: Boolean(storeSlug && isReadOnly),
     staleTime: CACHE_TIME,
     gcTime: CACHE_TIME * 2,
     refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
     retry: 1,
   });
 
@@ -222,12 +320,18 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
   const storeCurrency = publicStore?.currency || adminStore?.currency || "MZN";
 
   const { data: products = [], isLoading: isLoadingProducts } = useQuery({
-    queryKey: ["public-products", effectiveStoreId, storeCurrency],
+    queryKey: ["products-showcase", effectiveStoreId, storeCurrency],
     queryFn: async (): Promise<Product[]> => {
       if (!effectiveStoreId) return [];
 
-      const cacheKey = `storely_products_showcase_${CACHE_VERSION}_${effectiveStoreId}_${storeCurrency}`;
-      const cached = readCache<Product[]>(cacheKey);
+      const key = cacheKey(
+        "storely_products_showcase",
+        CACHE_VERSION,
+        effectiveStoreId,
+        storeCurrency
+      );
+
+      const cached = readCache<Product[]>(key);
       if (cached) return cached;
 
       const { data, error } = await supabase
@@ -236,25 +340,23 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
         .eq("store_id", effectiveStoreId)
         .eq("is_active", true)
         .order("created_at", { ascending: false })
-        .limit(40);
+        .limit(PRODUCTS_LIMIT);
 
-      if (error) {
-        console.error("Products error:", error);
-        return [];
-      }
+      if (error) return [];
 
       const safeData = (data || []).map((product) =>
         normalizeProduct(product, storeCurrency)
       );
 
-      writeCache(cacheKey, safeData);
+      writeCache(key, safeData);
       return safeData;
     },
     enabled: Boolean(effectiveStoreId),
     staleTime: CACHE_TIME,
     gcTime: CACHE_TIME * 2,
     refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
     retry: 1,
   });
 
@@ -267,47 +369,55 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
   }, [products]);
 
   const categories = useMemo<string[]>(() => {
-    const cats = products
-      .map((p) => String(p.category || "").trim())
-      .filter(Boolean);
+    const set = new Set<string>();
 
-    return [allLabel, ...Array.from(new Set(cats))];
+    for (const product of products) {
+      const cat = safeText(product.category, 40);
+      if (cat) set.add(cat);
+    }
+
+    return [allLabel, ...Array.from(set)];
   }, [products, allLabel]);
 
-  const displayProducts = useMemo<Product[]>(() => {
-    const term = searchTerm.trim().toLowerCase();
+  const filteredProducts = useMemo<Product[]>(() => {
+    const term = deferredSearch.trim().toLowerCase();
 
-    const filtered = products.filter((p) => {
-      const name = String(p.name || "").toLowerCase();
-      const category = String(p.category || "");
+    return products.filter((p) => {
+      const name = p.name.toLowerCase();
+      const category = p.category;
       const price = Number(p.price) || 0;
 
-      const matchesSearch = !term || name.includes(term);
-      const matchesCategory =
-        selectedCategory === allLabel || category === selectedCategory;
-      const matchesPrice = maxPrice === null || price <= maxPrice;
+      if (term && !name.includes(term)) return false;
+      if (selectedCategory !== allLabel && category !== selectedCategory) {
+        return false;
+      }
+      if (maxPrice !== null && price > maxPrice) return false;
 
-      return matchesSearch && matchesCategory && matchesPrice;
+      return true;
     });
+  }, [products, deferredSearch, selectedCategory, maxPrice, allLabel]);
 
-    return showAll || filtered.length <= 9 ? filtered : filtered.slice(0, 9);
-  }, [products, searchTerm, selectedCategory, maxPrice, showAll, allLabel]);
+  const displayProducts = useMemo(() => {
+    if (showAll) return filteredProducts;
+    return filteredProducts.slice(0, INITIAL_VISIBLE);
+  }, [filteredProducts, showAll]);
 
   const hasActiveFilters =
     isReadOnly &&
     (selectedCategory !== allLabel ||
       maxPrice !== null ||
-      searchTerm.trim() !== "");
+      deferredSearch.trim() !== "");
 
   const clearFilters = useCallback(() => {
     setSelectedCategory(allLabel);
     setMaxPrice(null);
     setSearchTerm("");
+    setShowAll(false);
   }, [allLabel]);
 
   const handleProductClick = useCallback(
     (productId: string) => {
-      if (!isReadOnly) return;
+      if (!isReadOnly || !storeSlug) return;
 
       navigate(`/${storeSlug}/${pageSlug || "home"}/${productId}`, {
         state: { fromStore: true },
@@ -316,99 +426,75 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
     [isReadOnly, navigate, storeSlug, pageSlug]
   );
 
-  const alignClass =
-    style?.align === "center"
-      ? "text-center items-center"
-      : "text-left items-start";
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchTerm(safeText(e.target.value, 40));
+      setShowAll(false);
+    },
+    []
+  );
 
-  const categoryInputClass = isReadOnly
-    ? "bg-transparent border-none p-0 m-0 resize-none focus:ring-0 cursor-default overflow-hidden block pointer-events-none"
-    : "w-full text-[16px] md:text-base transition-colors duration-200 border-b border-transparent hover:border-slate-300 dark:hover:border-zinc-700 hover:bg-slate-50/50 dark:hover:bg-white/5 focus:bg-transparent focus:border-blue-500 focus:ring-0 outline-none px-1 py-0.5 cursor-edit";
+  const handleCategoryChange = useCallback((cat: string) => {
+    setSelectedCategory(cat);
+    setShowAll(false);
+  }, []);
 
-  const textEditBaseClass = isReadOnly
-    ? "bg-transparent border-none p-0 m-0 focus:ring-0 cursor-default overflow-hidden block pointer-events-none"
-    : "w-full text-[16px] transition-colors duration-200 border-b border-transparent hover:border-slate-300 dark:hover:border-zinc-700 hover:bg-slate-50/50 dark:hover:bg-white/5 focus:bg-transparent focus:border-blue-500 focus:ring-0 outline-none px-1 py-0.5 cursor-edit";
+  const handleMaxPriceChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setMaxPrice(Number(e.target.value));
+      setShowAll(false);
+    },
+    []
+  );
+
+  const handleMaxPriceInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value.replace(/\D/g, "").slice(0, 9);
+      setMaxPrice(value === "" ? null : Number(value));
+      setShowAll(false);
+    },
+    []
+  );
 
   return (
     <section
-      className={`py-6 md:py-10 px-4 md:px-6 overflow-hidden transition-colors duration-300 ${
+      className={`px-3 py-6 md:px-6 md:py-9 overflow-hidden ${
         isDark ? "bg-[#0a0a0a] text-zinc-100" : "bg-white text-slate-900"
       }`}
+      style={{
+        contain: "layout paint",
+        contentVisibility: "auto",
+        containIntrinsicSize: "720px",
+      }}
     >
-      <div className="mx-auto w-full max-w-6xl">
-        <header className={`mb-7 md:mb-8 flex flex-col w-full ${alignClass}`}>
-          <div
-            className={`flex flex-col gap-1.5 w-full max-w-3xl min-w-0 ${
-              style?.align === "center" ? "mx-auto" : ""
-            }`}
-          >
-            <input
-              readOnly={isReadOnly}
-              value={content?.category || ""}
-              onKeyDown={preventEnter}
-              onChange={(e) =>
-                handleTextChange("category", e.target.value, LIMITS.category)
-              }
-              placeholder={t("showcase_defaultCategory")}
-              className={`${categoryInputClass} ${
-                style?.align === "center" ? "text-center" : ""
-              } text-blue-500 dark:text-blue-400 font-bold text-[16px] md:text-[10px] uppercase tracking-[0.18em] truncate`}
-            />
-
-            <textarea
-              readOnly={isReadOnly}
-              value={content?.title || ""}
-              onKeyDown={preventEnter}
-              onChange={(e) =>
-                handleTextChange("title", e.target.value, LIMITS.title)
-              }
-              placeholder={t("showcase_defaultTitle")}
-              rows={1}
-              style={{ fontSize: titleFontSize }}
-              className={`${textEditBaseClass} ${
-                style?.align === "center" ? "text-center" : ""
-              } font-extrabold tracking-tight leading-[1.05] uppercase resize-none break-words max-w-full min-h-[2.2rem]`}
-            />
-
-            <textarea
-              readOnly={isReadOnly}
-              value={content?.description || ""}
-              onKeyDown={preventEnter}
-              onChange={(e) =>
-                handleTextChange(
-                  "description",
-                  e.target.value,
-                  LIMITS.description
-                )
-              }
-              placeholder={t("showcase_defaultDescription")}
-              rows={2}
-              style={{ fontSize: descFontSize }}
-              className={`${textEditBaseClass} ${
-                style?.align === "center" ? "text-center mx-auto" : ""
-              } text-zinc-500 dark:text-zinc-400 font-medium leading-snug max-w-2xl resize-none break-words min-h-[3rem]`}
-            />
-          </div>
-        </header>
+      <div className="mx-auto w-full max-w-6xl min-w-0">
+        <HeaderText
+          content={content}
+          style={style}
+          isReadOnly={isReadOnly}
+          isDark={isDark}
+          t={t}
+          onUpdate={onUpdate}
+        />
 
         {isReadOnly && (
-          <div className="mb-6 flex flex-col gap-4">
+          <div className="mb-5 flex flex-col gap-3">
             <div className="flex gap-2">
               <div
-                className={`flex items-center gap-3 flex-1 min-w-0 px-4 md:px-5 py-3 rounded-2xl border transition-colors ${
+                className={`flex min-w-0 flex-1 items-center gap-2 rounded-2xl border px-3 py-2.5 ${
                   isDark
-                    ? "bg-zinc-900/40 border-zinc-800 focus-within:border-zinc-600"
-                    : "bg-slate-50 border-slate-100 focus-within:border-slate-300"
+                    ? "bg-zinc-900/50 border-zinc-800"
+                    : "bg-slate-50 border-slate-100"
                 }`}
               >
-                <Search size={18} className="opacity-40 shrink-0" />
+                <Search size={17} className="shrink-0 opacity-40" />
 
                 <input
                   type="text"
                   value={searchTerm}
                   placeholder={t("showcase_searchPlaceholder")}
-                  className="bg-transparent border-none outline-none w-full min-w-0 text-[16px] md:text-sm font-semibold"
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full min-w-0 bg-transparent border-none outline-none text-[16px] md:text-sm font-semibold truncate"
+                  onChange={handleSearchChange}
                 />
 
                 {searchTerm && (
@@ -416,9 +502,9 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
                     type="button"
                     onClick={() => setSearchTerm("")}
                     aria-label="Clear search"
-                    className="shrink-0 opacity-60 hover:opacity-100"
+                    className="shrink-0 opacity-60 active:scale-95"
                   >
-                    <X size={14} />
+                    <X size={15} />
                   </button>
                 )}
               </div>
@@ -426,30 +512,30 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
               <button
                 type="button"
                 onClick={() => setIsFiltersVisible((v) => !v)}
-                className={`shrink-0 flex items-center gap-2 px-4 md:px-5 py-3 rounded-2xl border font-bold text-xs transition-colors active:scale-[0.98] ${
+                className={`shrink-0 flex items-center justify-center gap-2 rounded-2xl border px-3 md:px-4 py-2.5 font-bold text-xs active:scale-[0.98] ${
                   isFiltersVisible
                     ? "bg-blue-600 border-blue-600 text-white"
                     : isDark
-                    ? "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800"
-                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                    ? "bg-zinc-900 border-zinc-800 text-zinc-400"
+                    : "bg-white border-slate-200 text-slate-600"
                 }`}
               >
                 <SlidersHorizontal size={16} />
-                <span className="hidden md:block">
+                <span className="hidden md:inline">
                   {isFiltersVisible ? t("common_close") : t("common_filters")}
                 </span>
               </button>
             </div>
 
             {isFiltersVisible && (
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
                   {categories.map((cat) => (
                     <button
                       key={cat}
                       type="button"
-                      onClick={() => setSelectedCategory(cat)}
-                      className={`px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors border whitespace-nowrap ${
+                      onClick={() => handleCategoryChange(cat)}
+                      className={`max-w-[150px] truncate rounded-xl border px-4 py-2 text-[10px] font-bold uppercase tracking-wide whitespace-nowrap active:scale-[0.98] ${
                         selectedCategory === cat
                           ? "bg-blue-600 border-blue-600 text-white"
                           : isDark
@@ -463,14 +549,14 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
                 </div>
 
                 <div
-                  className={`grid grid-cols-1 md:grid-cols-[auto_1fr_auto] items-center gap-5 md:gap-6 px-5 md:px-6 py-4 rounded-3xl border ${
+                  className={`grid grid-cols-1 items-center gap-3 rounded-2xl border px-4 py-3 md:grid-cols-[auto_1fr_auto] ${
                     isDark
-                      ? "bg-zinc-900/20 border-zinc-800"
-                      : "bg-slate-50/30 border-slate-100"
+                      ? "bg-zinc-900/30 border-zinc-800"
+                      : "bg-slate-50/50 border-slate-100"
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <Target size={16} className="text-blue-600" />
+                  <div className="flex items-center gap-2">
+                    <Target size={15} className="text-blue-600" />
                     <span className="text-[10px] font-bold uppercase opacity-60">
                       {t("showcase_maxPrice")}
                     </span>
@@ -481,18 +567,18 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
                     min="0"
                     max={absoluteMaxPrice}
                     value={maxPrice ?? absoluteMaxPrice}
-                    onChange={(e) => setMaxPrice(Number(e.target.value))}
-                    className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full appearance-none accent-blue-600 cursor-pointer"
+                    onChange={handleMaxPriceChange}
+                    className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-zinc-200 accent-blue-600 dark:bg-zinc-800"
                   />
 
                   <div
-                    className={`flex items-center border rounded-xl px-3 py-2 min-w-[100px] ${
+                    className={`flex min-w-[105px] items-center rounded-xl border px-3 py-2 ${
                       isDark
-                        ? "bg-zinc-950/50 border-zinc-800"
+                        ? "bg-zinc-950/60 border-zinc-800"
                         : "bg-white border-slate-200"
                     }`}
                   >
-                    <span className="text-xs mr-1 opacity-40">
+                    <span className="mr-1 max-w-[42px] truncate text-[11px] opacity-40">
                       {storeCurrency}
                     </span>
 
@@ -501,11 +587,8 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
                       inputMode="numeric"
                       value={maxPrice === null ? "" : maxPrice}
                       placeholder={t("filter_unlimited")}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, "");
-                        setMaxPrice(val === "" ? null : Number(val));
-                      }}
-                      className="bg-transparent font-bold text-[16px] md:text-sm w-full outline-none text-center"
+                      onChange={handleMaxPriceInput}
+                      className="w-full bg-transparent text-center text-[16px] md:text-sm font-bold outline-none"
                     />
                   </div>
                 </div>
@@ -515,18 +598,19 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
         )}
 
         {hasActiveFilters && (
-          <div className="flex flex-wrap items-center gap-2 mb-8">
-            <span className="text-[10px] font-black uppercase tracking-tighter opacity-40 mr-2">
+          <div className="mb-5 flex flex-wrap items-center gap-2">
+            <span className="mr-1 text-[10px] font-black uppercase tracking-tight opacity-40">
               {t("showcase_filter_active")}
             </span>
 
             {selectedCategory !== allLabel && (
               <button
                 type="button"
-                onClick={() => setSelectedCategory(allLabel)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-[10px] font-bold text-blue-500"
+                onClick={() => handleCategoryChange(allLabel)}
+                className="flex max-w-[170px] items-center gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-[10px] font-bold text-blue-500"
               >
-                {selectedCategory} <X size={12} />
+                <span className="truncate">{selectedCategory}</span>
+                <X size={12} className="shrink-0" />
               </button>
             )}
 
@@ -534,27 +618,29 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
               <button
                 type="button"
                 onClick={() => setMaxPrice(null)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-[10px] font-bold text-blue-500"
+                className="flex items-center gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-[10px] font-bold text-blue-500"
               >
-                {t("showcase_price_up_to").replace(
-                  "{{price}}",
-                  String(maxPrice)
-                )}
-                <X size={12} />
+                <span className="truncate">
+                  {t("showcase_price_up_to").replace(
+                    "{{price}}",
+                    String(maxPrice)
+                  )}
+                </span>
+                <X size={12} className="shrink-0" />
               </button>
             )}
 
             <button
               type="button"
               onClick={clearFilters}
-              className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold opacity-60 hover:opacity-100"
+              className="flex items-center gap-1.5 px-2 py-1.5 text-[10px] font-bold opacity-60 active:scale-95"
             >
               <RotateCcw size={12} /> {t("showcase_clear_all")}
             </button>
           </div>
         )}
 
-        <div className="min-h-[420px]">
+        <div className="min-h-[360px]">
           {isLoading ? (
             <ProductShowcaseSkeleton cols={layoutCols} isDark={isDark} />
           ) : (
@@ -576,15 +662,15 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
                 />
               )}
 
-              {!showAll && displayProducts.length >= 7 && products.length > 7 && (
-                <div className="mt-12 flex justify-center">
+              {!showAll && filteredProducts.length > INITIAL_VISIBLE && (
+                <div className="mt-8 flex justify-center">
                   <button
                     type="button"
                     onClick={() => setShowAll(true)}
-                    className={`flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-[11px] uppercase tracking-widest transition-transform active:scale-95 ${
+                    className={`flex items-center gap-2 rounded-2xl px-6 py-3 text-[11px] font-bold uppercase tracking-widest active:scale-95 ${
                       isDark
-                        ? "bg-white text-black hover:bg-zinc-100"
-                        : "bg-zinc-900 text-white hover:bg-black"
+                        ? "bg-white text-black"
+                        : "bg-zinc-900 text-white"
                     }`}
                   >
                     <Plus size={16} /> {t("showcase_viewFull")}
@@ -594,11 +680,11 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
             </>
           )}
 
-          {!isLoading && displayProducts.length === 0 && (
-            <div className="text-center py-20 rounded-3xl border border-dashed border-zinc-200 dark:border-zinc-800">
+          {!isLoading && filteredProducts.length === 0 && (
+            <div className="rounded-3xl border border-dashed border-zinc-200 py-16 text-center dark:border-zinc-800">
               <Package
-                size={40}
-                className="mx-auto mb-4 opacity-10 text-zinc-500"
+                size={38}
+                className="mx-auto mb-4 text-zinc-500 opacity-10"
               />
               <p className="text-xs font-bold uppercase tracking-widest opacity-40">
                 {t("showcase_empty")}
