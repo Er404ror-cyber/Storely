@@ -15,13 +15,35 @@ import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { AdminSidebar } from '../components/headers/adminHeader';
 import { useTranslate } from '../context/LanguageContext';
-import type { AdminPage, AdminStore, CachePayload } from '../types/admin';
+import type { AdminPage, CachePayload } from '../types/admin';
+
+// 1. Interface local perfeitamente alinhada com o teu Supabase
+interface AdminStore {
+  id: string;
+  name: string;
+  slug: string;
+  owner_id: string;
+  logo_url: string | null;
+  updated_at_name: string | null;
+  created_at: string;
+  currency: string | null;
+  description: string | null;       
+  whatsapp_number: string | null;   
+  settings: any;                    
+  owner_email?: string | null;      
+}
 
 const BASE_DOMAIN = 'https://storelyy.vercel.app';
 
-const ADMIN_STORE_CACHE_TTL = 1000 * 60 * 5;
-const ADMIN_PAGES_CACHE_TTL = 1000 * 60 * 2;
+// ==========================================
+// 💡 CONFIGURAÇÃO FÁCIL DO TEMPO DE CACHE (TTL)
+// Altera os minutos aqui para aumentar/diminuir manualmente
+// ==========================================
+const MINUTOS_DE_CACHE_STORE = 30; // Ex: Mudar para 15 ou 20 se quiseres mais tempo
+const MINUTOS_DE_CACHE_PAGES = 15;
 
+const ADMIN_STORE_CACHE_TTL = 1000 * 60 * MINUTOS_DE_CACHE_STORE;
+const ADMIN_PAGES_CACHE_TTL = 1000 * 60 * MINUTOS_DE_CACHE_PAGES;
 const ADMIN_STORE_CACHE_KEY = 'storelyy_admin_store_cache';
 
 type DataSource = 'cache' | 'network' | 'none';
@@ -44,28 +66,18 @@ function generateSlug(text: string): string {
 
 function readCache<T>(key: string): CachePayload<T> | null {
   if (typeof window === 'undefined') return null;
-
   try {
     const raw = localStorage.getItem(key);
     if (!raw) return null;
-
     const parsed = JSON.parse(raw) as CachePayload<T>;
-
-    if (
-      !parsed ||
-      typeof parsed.savedAt !== 'number' ||
-      typeof parsed.expiresAt !== 'number' ||
-      parsed.data == null
-    ) {
+    if (!parsed || typeof parsed.savedAt !== 'number' || typeof parsed.expiresAt !== 'number' || parsed.data == null) {
       localStorage.removeItem(key);
       return null;
     }
-
     if (Date.now() >= parsed.expiresAt) {
       localStorage.removeItem(key);
       return null;
     }
-
     return parsed;
   } catch {
     localStorage.removeItem(key);
@@ -75,15 +87,8 @@ function readCache<T>(key: string): CachePayload<T> | null {
 
 function writeCache<T>(key: string, data: T, ttl: number): CachePayload<T> | null {
   if (typeof window === 'undefined') return null;
-
   const now = Date.now();
-
-  const payload: CachePayload<T> = {
-    data,
-    savedAt: now,
-    expiresAt: now + ttl,
-  };
-
+  const payload: CachePayload<T> = { data, savedAt: now, expiresAt: now + ttl };
   try {
     localStorage.setItem(key, JSON.stringify(payload));
     return payload;
@@ -94,21 +99,14 @@ function writeCache<T>(key: string, data: T, ttl: number): CachePayload<T> | nul
 
 function clearCache(key: string) {
   if (typeof window === 'undefined') return;
-
-  try {
-    localStorage.removeItem(key);
-  } catch {
-    // ignore localStorage removal errors
-  }
+  try { localStorage.removeItem(key); } catch {}
 }
 
 function formatCacheRemaining(ms: number) {
   if (ms <= 0) return '0s';
-
   const totalSeconds = Math.floor(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-
   if (minutes <= 0) return `${seconds}s`;
   return `${minutes}m ${seconds}s`;
 }
@@ -129,24 +127,15 @@ export function AdminLayout() {
   const [storeCacheLeft, setStoreCacheLeft] = useState(0);
   const [source, setSource] = useState<DataSource>('none');
 
-  const initialStoreCache = useMemo(
-    () => readCache<AdminStore>(ADMIN_STORE_CACHE_KEY),
-    []
-  );
+  const initialStoreCache = useMemo(() => readCache<AdminStore>(ADMIN_STORE_CACHE_KEY), []);
 
   const handleLangChange = useCallback(() => {
     const newLang = lang === 'pt' ? 'en' : 'pt';
     setLang(newLang);
-
     toast.success(newLang === 'pt' ? 'Idioma: Português' : 'Language: English', {
       id: 'lang',
       icon: '🌎',
-      style: {
-        borderRadius: '12px',
-        background: '#1e293b',
-        color: '#fff',
-        fontSize: '12px',
-      },
+      style: { borderRadius: '12px', background: '#1e293b', color: '#fff', fontSize: '12px' },
     });
   }, [lang, setLang]);
 
@@ -168,28 +157,24 @@ export function AdminLayout() {
     data: store,
     isLoading: storeLoading,
     isFetching: storeFetching,
+    refetch: refetchStore,
   } = useQuery<AdminStore>({
     queryKey: ['admin-store'],
-    initialData: initialStoreCache?.data,
+    initialData: initialStoreCache?.data || undefined,
     initialDataUpdatedAt: initialStoreCache?.savedAt,
     staleTime: ADMIN_STORE_CACHE_TTL,
     gcTime: ADMIN_STORE_CACHE_TTL * 6,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnMount: false,         
+    refetchOnWindowFocus: false,   
+    refetchOnReconnect: false,     
     retry: 1,
     queryFn: async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        throw new Error('User not found');
-      }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not found');
 
       const { data, error } = await supabase
         .from('stores')
-        .select('id, name, slug, owner_id, logo_url, updated_at_name, created_at, currency')
+        .select('id, name, slug, owner_id, logo_url, updated_at_name, created_at, currency, description, whatsapp_number, settings, owner_email')
         .eq('owner_id', user.id)
         .single();
 
@@ -204,10 +189,13 @@ export function AdminLayout() {
         updated_at_name: data.updated_at_name ?? null,
         created_at: data.created_at ?? '',
         currency: data.currency ?? null,
+        description: data.description ?? null,         
+        whatsapp_number: data.whatsapp_number ?? null, 
+        settings: data.settings ?? {},                 
+        owner_email: data.owner_email ?? null,
       };
 
       const payload = writeCache(ADMIN_STORE_CACHE_KEY, safeStore, ADMIN_STORE_CACHE_TTL);
-
       setSource('network');
       setStoreCacheLeft(payload ? Math.max(payload.expiresAt - Date.now(), 0) : 0);
 
@@ -216,31 +204,24 @@ export function AdminLayout() {
   });
 
   const storeId = store?.id ?? '';
-
   const initialPagesCache = useMemo(() => {
     if (!storeId) return null;
     return readCache<AdminPage[]>(getAdminPagesCacheKey(storeId));
   }, [storeId]);
 
-  const {
-    data: pages = [],
-    isLoading: pagesLoading,
-  } = useQuery<AdminPage[]>({
+  const { data: pages = [], isLoading: pagesLoading } = useQuery<AdminPage[]>({
     queryKey: ['admin-pages', storeId],
     enabled: !!storeId,
-    initialData: initialPagesCache?.data,
+    initialData: initialPagesCache?.data || undefined,
     initialDataUpdatedAt: initialPagesCache?.savedAt,
     staleTime: ADMIN_PAGES_CACHE_TTL,
     gcTime: ADMIN_PAGES_CACHE_TTL * 6,
     refetchOnMount: false,
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     retry: 1,
     queryFn: async () => {
-      if (!storeId) {
-        throw new Error('Store not found');
-      }
-
+      if (!storeId) throw new Error('Store not found');
       const { data, error } = await supabase
         .from('pages')
         .select('id, store_id, title, slug, type, is_home, created_at')
@@ -265,9 +246,7 @@ export function AdminLayout() {
   });
 
   useEffect(() => {
-    if (store?.name) {
-      setNewName(store.name);
-    }
+    if (store?.name) setNewName(store.name);
   }, [store?.name]);
 
   const updateStoreMutation = useMutation({
@@ -275,14 +254,9 @@ export function AdminLayout() {
       const cleanName = name.trim();
       const newSlug = generateSlug(cleanName);
 
-      if (!store || !cleanName) {
-        throw new Error(t('invalid_store_name'));
-      }
+      if (!store || !cleanName) throw new Error(t('invalid_store_name'));
 
-      if (
-        cleanName.toLowerCase() === store.name.toLowerCase() ||
-        newSlug === store.slug
-      ) {
+      if (cleanName.toLowerCase() === store.name.toLowerCase() || newSlug === store.slug) {
         setIsEditingName(false);
         return store;
       }
@@ -299,13 +273,9 @@ export function AdminLayout() {
 
       const { data, error } = await supabase
         .from('stores')
-        .update({
-          name: cleanName,
-          slug: newSlug,
-          updated_at_name: new Date().toISOString(),
-        })
+        .update({ name: cleanName, slug: newSlug, updated_at_name: new Date().toISOString() })
         .eq('id', store.id)
-        .select('id, name, slug, owner_id, logo_url, updated_at_name, created_at, currency')
+        .select('id, name, slug, owner_id, logo_url, updated_at_name, created_at, currency, description, whatsapp_number, settings, owner_email')
         .single();
 
       if (error) {
@@ -321,6 +291,10 @@ export function AdminLayout() {
         updated_at_name: data.updated_at_name ?? null,
         created_at: data.created_at ?? '',
         currency: data.currency ?? null,
+        description: data.description ?? null,
+        whatsapp_number: data.whatsapp_number ?? null,
+        settings: data.settings ?? {},
+        owner_email: data.owner_email ?? null,
       };
 
       return safeStore;
@@ -328,33 +302,25 @@ export function AdminLayout() {
     onSuccess: (updatedStore) => {
       if (!updatedStore) return;
 
+      // 💡 ATUALIZAÇÃO OTIMISTA: Sincroniza em memória instantaneamente em ambas as queries
       queryClient.setQueryData(['admin-store'], updatedStore);
+      queryClient.setQueryData(['admin-full-settings'], (old: any) => old ? { ...old, ...updatedStore } : old);
 
-      const payload = writeCache(
-        ADMIN_STORE_CACHE_KEY,
-        updatedStore,
-        ADMIN_STORE_CACHE_TTL
-      );
-
+      const payload = writeCache(ADMIN_STORE_CACHE_KEY, updatedStore, ADMIN_STORE_CACHE_TTL);
       setSource('network');
       setStoreCacheLeft(payload ? Math.max(payload.expiresAt - Date.now(), 0) : 0);
       setIsEditingName(false);
       toast.success(t('update_success'));
     },
-    onError: (err: Error) => {
-      toast.error(err.message);
-    },
+    onError: (err: Error) => { toast.error(err.message); },
   });
 
+  // 💡 CORREÇÃO: Adicionado o modificador async para devolver uma Promise<void> e bater certo com a tipagem da Sidebar
   const handleLogout = useCallback(async () => {
     try {
       await supabase.auth.signOut();
-
       clearCache(ADMIN_STORE_CACHE_KEY);
-      if (storeId) {
-        clearCache(getAdminPagesCacheKey(storeId));
-      }
-
+      if (storeId) clearCache(getAdminPagesCacheKey(storeId));
       queryClient.clear();
       navigate('/');
     } catch {
@@ -367,46 +333,60 @@ export function AdminLayout() {
       setTimeLeft('');
       return;
     }
-
     const updatedAt = store.updated_at_name;
-
     const interval = window.setInterval(() => {
       const lastUpdate = new Date(updatedAt).getTime();
       const diff = lastUpdate + 24 * 60 * 60 * 1000 - Date.now();
-
       if (diff <= 0) {
         setTimeLeft('');
         window.clearInterval(interval);
         return;
       }
-
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
       const s = Math.floor((diff % 60000) / 1000);
-
       setTimeLeft(`${h}h ${m}m ${s}s`);
     }, 1000);
-
     return () => window.clearInterval(interval);
   }, [store?.updated_at_name]);
 
+  // 💡 SINCRONIZADOR INTELIGENTE DE CACHE
   useEffect(() => {
+    let active = true;
     const syncCacheLeft = () => {
+      if (!active) return;
       const cache = readCache<AdminStore>(ADMIN_STORE_CACHE_KEY);
-      const next = cache ? Math.max(cache.expiresAt - Date.now(), 0) : 0;
-
-      setStoreCacheLeft((prev) => (prev !== next ? next : prev));
-
-      if (!storeFetching) {
-        setSource(cache ? 'cache' : 'none');
+      
+      if (cache) {
+        const tempoRestante = cache.expiresAt - Date.now();
+        
+        if (tempoRestante <= 0) {
+          // 💡 SE CHEGOU A ZERO: Consulta o Supabase em background, reseta o tempo e renova a cache automaticamente!
+          setStoreCacheLeft(0);
+          if (!storeFetching) {
+            refetchStore();
+          }
+        } else {
+          setStoreCacheLeft(tempoRestante);
+          if (!storeFetching) setSource('cache');
+        }
+      } else {
+        setStoreCacheLeft(0);
+        // Se a cache local sumir por completo, também força a renovação autónoma
+        if (!storeFetching) {
+          setSource('none');
+          refetchStore();
+        }
       }
     };
-
+    
     syncCacheLeft();
     const interval = window.setInterval(syncCacheLeft, 1000);
-
-    return () => window.clearInterval(interval);
-  }, [storeFetching]);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [storeFetching, refetchStore]);
 
   const statusText = storeFetching
     ? t('cacheStatusSyncing')
@@ -425,7 +405,6 @@ export function AdminLayout() {
   }
 
   const storeUrl = `${BASE_DOMAIN}/${store?.slug ?? ''}`;
-
   const menuItems = [
     { path: '/admin', label: t('nav_dashboard'), icon: <LayoutDashboard size={20} /> },
     { path: '/admin/produtos', label: t('nav_products'), icon: <ShoppingBag size={20} /> },
@@ -471,46 +450,27 @@ export function AdminLayout() {
         {!isEditorRoute && (
           <header className="h-16 flex items-center justify-between px-4 md:px-6 border-b border-slate-100 bg-white/90 sticky top-0 z-50 shrink-0 ">
             <div className="flex items-center gap-2 min-w-0">
-              <button
-                onClick={() => setIsOpen(true)}
-                className="p-2 -ml-2 text-slate-600 lg:hidden"
-              >
+              <button onClick={() => setIsOpen(true)} className="p-2 -ml-2 text-slate-600 lg:hidden">
                 <Menu size={24} />
               </button>
-
               <div className="min-w-0">
                 <div className="font-black text-[12px] md:text-[13px] uppercase italic truncate max-w-[160px] md:max-w-[240px]">
                   {store?.name}
                 </div>
-
                 <div className="text-[9px] md:text-[10px] text-slate-400 truncate">
                   {t('cacheLabel')} · {formatCacheRemaining(storeCacheLeft)} · {statusText}
                   {store?.currency ? ` · ${store.currency}` : ''}
                 </div>
               </div>
             </div>
-
-            <a
-              href={storeUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="p-2 -mr-2 text-slate-400"
-            >
+            <a href={storeUrl} target="_blank" rel="noreferrer" className="p-2 -mr-2 text-slate-400">
               <ExternalLink size={20} />
             </a>
           </header>
         )}
 
-<div
-  data-scroll-container="admin"
-  className="flex-1 overflow-y-auto overflow-x-hidden"
->          <Outlet
-            context={{
-              store,
-              pages,
-              pagesLoading,
-            }}
-          />
+        <div data-scroll-container="admin" className="flex-1 overflow-y-auto overflow-x-hidden">
+          <Outlet context={{ store, pages, pagesLoading }} />
         </div>
       </main>
     </div>

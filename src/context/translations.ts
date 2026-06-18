@@ -723,7 +723,7 @@ storely_search_placeholder: "Search Storely",
 storely_suggestions: "Suggestions",
 storely_recent_searches: "Recent searches",
 storely_explore: "Explore",
-storely_sell_now: "Sell now",
+storely_sell_now: "Create my store for free →",
 storely_clear_filters: "Clear filters",
 storely_view_store: "View store",
 storely_main_feed: "Main feed",
@@ -768,7 +768,7 @@ storely_try_these: "Try searching for:",
 
 
 marketplace_hero_badge: "Discover more in one place",
-marketplace_hero_subtitle: "Explore a marketplace with multiple types of products and shops in one simple, fast and organized experience.",
+marketplace_hero_subtitle: "Explore a marketplace with multiple types of products and shops.",
 marketplace_hero_point_products: "Different product types",
 marketplace_hero_point_stores: "Multiple stores",
 marketplace_hero_point_discover: "Easy to explore",
@@ -1458,7 +1458,7 @@ media_clear_button: "Clear link",
 
 
 
-
+store_music_step:"Change audio",
 store_music_title: "Store music",
   store_music_subtitle: "Music link",
   store_music_url_label: "Music URL",
@@ -1468,7 +1468,7 @@ store_music_title: "Store music",
   store_music_volume: "Volume",
   store_music_enabled: "Enable music for the public",
   store_music_clear: "Remove",
-  store_music_empty: "No music set",
+  store_music_empty: "No music set. Supports audio only",
 
   store_music_help: "Supports .mp3,.m4a,.aac,.ogg,.wav,.webm,.flac,audio, For public view; ",
 
@@ -1498,7 +1498,7 @@ store_music_select_part_help: "Move the bar to choose the exact 1 minute that wi
 store_music_clip_range: "Music part",
 store_music_total: "Total",
 store_music_clip_length: "Selected",
-store_music_volume_hint: "Volume is limited from 1% to 5% to avoid disturbing visitors.",
+store_music_volume_hint: "Volume is limited to avoid disturbing visitors.",
 store_music_disable_hint: "Music turns on after upload. You can disable it here.",
 store_music_empty_help: "Choose an audio file, select the best 1 minute and test it before saving.",
 store_music_status_on: "Active",
@@ -1553,6 +1553,16 @@ error_unauthorized: "Session expired. Please log in again.",
 
 
 upload_error : "Upload failed. Please try again.",
+
+noImage: "No Image",
+  noCover: "No Cover",
+  products: "products",
+
+  official_store: "Official Store",
+    enter_btn: "Enter Store",
+    click_anywhere: "Click anywhere to enter",
+    activate_audio: "Enable Audio",
+    enter_store_aria: "Enter the storefront experience"
 
   },
 
@@ -2312,7 +2322,7 @@ storely_search_placeholder: "Pesquisar na Storely",
 storely_suggestions: "Sugestões",
 storely_recent_searches: "Pesquisas recentes",
 storely_explore: "Explorar",
-storely_sell_now: "Vender agora",
+storely_sell_now: "Criar minha loja grátis →",
 storely_clear_filters: "Limpar filtros",
 storely_view_store: "Ver loja",
 storely_main_feed: "Feed principal",
@@ -2350,7 +2360,7 @@ storely_search_message_fallback: "Não encontramos nada semelhante, mas aqui est
 storely_other_products_we_have: "Outros produtos que temos",
 
 marketplace_hero_badge: "Descubra mais num só lugar",
-marketplace_hero_subtitle: "Explore um marketplace com vários tipos de produtos e lojas numa experiência simples, rápida e organizada.",
+marketplace_hero_subtitle: "Explore um marketplace com vários tipos de produtos e lojas.",
 marketplace_hero_point_products: "Vários tipos de produtos",
 marketplace_hero_point_stores: "Múltiplas lojas",
 marketplace_hero_point_discover: "Fácil de explorar",
@@ -3071,18 +3081,19 @@ store_phone_required_hint: "Usado para pedidos no WhatsApp e contacto com client
 store_customization_title: "Personalização",
 store_customization_subtitle: "Personalize o logotipo, descrição e música de fundo.",
 phone_number: "Número",
-store_music_step_1: "1. Escolher áudio",
+store_music_step: "Trocar áudio",
 store_music_step_2: "2. Escolher onde vai tocar",
+
 store_music_upload_help: "Suporta: MP3, M4A, AAC, OGG, WAV, WEBM, FLAC. Máx. 12MB.",
-store_music_choose_file: "Escolher ficheiro",
+store_music_choose_file: "Escolher áudio",
 store_music_external_link: "Baixar música do YouTube",store_music_compress_link: "Comprimir áudio",
 store_music_select_part_help: "Mova a barra para escolher exatamente o 1 minuto que vai tocar na loja.",
 store_music_clip_range: "Parte da música",
 store_music_total: "Total",
 store_music_clip_length: "Selecionado",
-store_music_volume_hint: "O volume é limitado de 1% até 5% para não incomodar visitantes.",
+store_music_volume_hint: "O volume é limitado para não incomodar visitantes.",
 store_music_disable_hint: "A música ativa depois do upload. Pode desligar aqui.",
-store_music_empty: "Nenhuma música selecionada",
+store_music_empty: "Nenhuma música selecionada. Suporta áudio apenas",
 store_music_empty_help: "Escolha um áudio, selecione o melhor 1 minuto e teste antes de salvar.",
 store_music_status_on: "Ativo",
 store_music_status_off: "Desligado",
@@ -3142,6 +3153,15 @@ error_unauthorized: "Sessão inválida. Faça login novamente.",
 
 upload_error : "Falha no upload. Tente novamente.",
 
+noImage: "Sem Imagem",
+  noCover: "Sem Capa",
+  products: "produtos",
+
+  official_store: "Loja Oficial",
+    enter_btn: "Entrar na Loja",
+    click_anywhere: "Clique em qualquer lugar para acessar",
+    activate_audio: "Ativar Som",
+    enter_store_aria: "Entrar na experiência da loja",
 }
 
 

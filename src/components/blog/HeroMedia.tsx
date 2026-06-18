@@ -16,14 +16,8 @@ function usePrefersReducedMotion() {
     const update = () => setReduced(media.matches);
 
     update();
-
-    if (typeof media.addEventListener === 'function') {
-      media.addEventListener('change', update);
-      return () => media.removeEventListener('change', update);
-    }
-
-    media.addListener(update);
-    return () => media.removeListener(update);
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
   }, []);
 
   return reduced;
@@ -36,27 +30,12 @@ function useSaveData() {
     if (typeof navigator === 'undefined') return;
 
     const nav = navigator as Navigator & {
-      connection?: {
-        saveData?: boolean;
-        effectiveType?: string;
-      };
-      mozConnection?: {
-        saveData?: boolean;
-        effectiveType?: string;
-      };
-      webkitConnection?: {
-        saveData?: boolean;
-        effectiveType?: string;
-      };
+      connection?: { saveData?: boolean; effectiveType?: string };
     };
 
-    const connection =
-      nav.connection || nav.mozConnection || nav.webkitConnection || undefined;
-
+    const connection = nav.connection;
     const nextSaveData = Boolean(connection?.saveData);
-    const isSlowNetwork =
-      connection?.effectiveType === 'slow-2g' ||
-      connection?.effectiveType === '2g';
+    const isSlowNetwork = connection?.effectiveType === 'slow-2g' || connection?.effectiveType === '2g';
 
     setSaveData(nextSaveData || isSlowNetwork);
   }, []);
@@ -74,72 +53,60 @@ export const HeroBackgroundMedia = memo(function HeroBackgroundMedia({
 
   const prefersReducedMotion = usePrefersReducedMotion();
   const saveData = useSaveData();
-
-  const [isNearViewport, setIsNearViewport] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
-  const [hasMountedVideo, setHasMountedVideo] = useState(false);
-
   const disableVideo = prefersReducedMotion || saveData;
+
+  const [videoState, setVideoState] = useState({
+    hasMounted: false,
+    isVisible: false,
+  });
 
   useEffect(() => {
     const node = containerRef.current;
     if (!node || typeof IntersectionObserver === 'undefined') {
-      setIsNearViewport(true);
-      setIsVisible(true);
+      setVideoState({ hasMounted: true, isVisible: true });
       return;
     }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         const near = entry.isIntersecting || entry.intersectionRatio > 0;
-        const visibleNow = entry.isIntersecting && entry.intersectionRatio >= 0.35;
+        // Se estiver com pelo menos 10% visível na tela, consideramos visível
+        const visibleNow = entry.isIntersecting && entry.intersectionRatio >= 0.10;
 
-        setIsNearViewport(near);
-        setIsVisible(visibleNow);
-
-        if (near) {
-          setHasMountedVideo(true);
-        }
+        setVideoState(prev => {
+          const nextMounted = prev.hasMounted || near;
+          if (prev.hasMounted === nextMounted && prev.isVisible === visibleNow) {
+            return prev;
+          }
+          return { hasMounted: nextMounted, isVisible: visibleNow };
+        });
       },
       {
         root: null,
-        rootMargin: '180px 0px 180px 0px',
-        threshold: [0, 0.12, 0.35, 0.6],
+        rootMargin: '150px 0px 150px 0px', // Margem segura para carregar um pouco antes de aparecer
+        threshold: [0, 0.10],
       }
     );
 
     observer.observe(node);
-
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    if (disableVideo || !isNearViewport) return;
-    setHasMountedVideo(true);
-  }, [disableVideo, isNearViewport]);
-
+  // CORREÇÃO: Controle nativo de Play/Pause sem quebrar as tags <source>
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || disableVideo || !hasMountedVideo) return;
+    if (!video || disableVideo || !videoState.hasMounted) return;
 
-    if (isVisible) {
-      const playPromise = video.play();
-      if (playPromise && typeof playPromise.catch === 'function') {
-        playPromise.catch(() => {
-          // autoplay pode ser bloqueado em alguns browsers
-        });
-      }
-      return;
+    if (videoState.isVisible) {
+      // O play() nativo do navegador é assíncrono
+      video.play().catch(() => {
+        // Evita logs de erro se o autoplay for bloqueado temporariamente
+      });
+    } else {
+      // Apenas pausar nativamente poupa 100% de CPU/GPU sem quebrar o player
+      video.pause();
     }
-
-    video.pause();
-
-    try {
-      video.currentTime = 0;
-    } catch {
-      // alguns browsers podem impedir ajustes em certos estados
-    }
-  }, [disableVideo, hasMountedVideo, isVisible]);
+  }, [disableVideo, videoState.hasMounted, videoState.isVisible]);
 
   return (
     <div
@@ -156,30 +123,25 @@ export const HeroBackgroundMedia = memo(function HeroBackgroundMedia({
         fetchPriority="high"
       />
 
-      {!disableVideo && hasMountedVideo ? (
-  <video
-    ref={videoRef}
-    className="absolute inset-0 h-full w-full object-cover"
-    muted
-    loop
-    autoPlay
-    playsInline
-    preload="none"
-    poster={posterSrc}
-    disablePictureInPicture
-  >
-    {/* MP4 primeiro — Safari / iPhone */}
-    <source src={`${videoSrc}.mp4`} type="video/mp4" />
+      {!disableVideo && videoState.hasMounted ? (
+        <video
+          ref={videoRef}
+          className="absolute inset-0 h-full w-full object-cover"
+          muted
+          loop
+          playsInline
+          preload="none"
+          poster={posterSrc}
+          disablePictureInPicture
+          disableRemotePlayback
+        >
+          {/* WebM primeiro por performance de processamento */}
+          <source src={`${videoSrc}.webm`} type="video/webm" />
+          <source src={`${videoSrc}.mp4`} type="video/mp4" />
+        </video>
+      ) : null}
 
-    {/* WebM depois — Chrome / Android */}
-    <source src={`${videoSrc}.webm`} type="video/webm" />
-  </video>
-) : null}
-
-      {/* overlay estável e leve para legibilidade */}
       <div className="absolute inset-0 bg-black/72 dark:bg-zinc-950/72" />
-
-      {/* leve reforço de contraste sem blur */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/28 via-white/12 to-transparent dark:from-zinc-950/22 dark:via-zinc-950/8 dark:to-transparent" />
     </div>
   );

@@ -16,7 +16,7 @@ export function AdminSettings() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // 1. Extração de Parâmetros com Memoização (Evita processamento de string em cada render)
+  // 1. Extração de Parâmetros com Memoização
   const urlParams = useMemo(() => {
     const params = new URLSearchParams(location.search);
     return {
@@ -30,7 +30,7 @@ export function AdminSettings() {
     urlParams.tabParam || (urlParams.isRecovery ? 'security' : (urlParams.isEmailConfirm ? 'account' : 'store'))
   );
 
-  // 2. Limpeza de URL Inteligente (Replace não gera nova entrada no histórico)
+  // 2. Limpeza de URL Inteligente
   useEffect(() => {
     if (urlParams.isRecovery || urlParams.isEmailConfirm) {
       queryClient.invalidateQueries({ queryKey: ["admin-full-settings"] });
@@ -41,8 +41,7 @@ export function AdminSettings() {
     }
   }, [urlParams.isRecovery, urlParams.isEmailConfirm, queryClient, navigate]);
 
- 
-
+  // 3. Query de Configurações Corrigida com as colunas REAIS do teu banco
   const { data: store, isLoading } = useQuery<AdminStore | null>({
     queryKey: ["admin-full-settings"],
     queryFn: async () => {
@@ -52,9 +51,10 @@ export function AdminSettings() {
   
       if (!user) throw new Error(t("error_unauthorized"));
   
+      // 💡 CORREÇÃO: Mudado 'phone' para 'whatsapp_number' para bater certo com a tua tabela
       const { data, error } = await supabase
         .from("stores")
-        .select("id, name, slug, logo_url, settings, owner_id, updated_at_name, currency")
+        .select("id, name, slug, logo_url, settings, owner_id, updated_at_name, currency, description, whatsapp_number")
         .eq("owner_id", user.id)
         .single();
   
@@ -64,12 +64,15 @@ export function AdminSettings() {
         ...data,
         email: user.email ?? null,
         new_email_pending: user.new_email ?? null,
-      };
+      } as any;
     },
-    staleTime: 1000 * 60 * 10,
+    staleTime: 1000 * 60 * 10, // Mantém os dados frescos por 10 minutos
     gcTime: 1000 * 60 * 30,
     retry: 1,
+    refetchOnMount: false,        // 💡 TRAVA: Não faz reload automático ao entrar na página se já houver cache
+    refetchOnWindowFocus: false,   // 💡 TRAVA: Não pisca o ecrã ao mudar de monitor ou focar o browser
   });
+
   // Handler de troca de aba otimizado
   const handleTabChange = useCallback((tab: 'store' | 'account' | 'security') => {
     setActiveTab(tab);
@@ -86,7 +89,6 @@ export function AdminSettings() {
 
   return (
     <div className="max-w-5xl mx-auto pb-20 px-4 sm:px-8 antialiased">
-      {/* Header com tipografia otimizada para legibilidade */}
       <header className="mb-10 pt-10 space-y-1">
         <h1 className="text-3xl sm:text-5xl font-black tracking-tighter text-slate-900 uppercase italic">
           {t('settings_title')}{" "}
@@ -100,7 +102,7 @@ export function AdminSettings() {
       </header>
 
       <nav className="flex mb-12 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
-        <div className="flex gap-2 p-1.5 bg-slate-100/80  rounded-4xl border border-slate-200/40 shadow-sm min-w-max">
+        <div className="flex gap-2 p-1.5 bg-slate-100/80 rounded-4xl border border-slate-200/40 shadow-sm min-w-max">
           <TabItem 
             active={activeTab === 'store'} 
             onClick={() => handleTabChange('store')} 
@@ -122,13 +124,11 @@ export function AdminSettings() {
         </div>
       </nav>
 
-
-      {/* Container de Conteúdo com Hardware Acceleration */}
       <main className="relative min-h-[400px]">
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both ">
-          {activeTab === 'store' && <StoreTab store={store ?? null} />}
-          {activeTab === 'account' && <AccountTab store={store ?? null} isConfirmed={urlParams.isEmailConfirm} />}
-          {activeTab === 'security' && <SecurityTab store={store ?? null} isRecoveryMode={urlParams.isRecovery} />}
+          {activeTab === 'store' && <StoreTab store={store as any} />}
+          {activeTab === 'account' && <AccountTab store={store as any} isConfirmed={urlParams.isEmailConfirm} />}
+          {activeTab === 'security' && <SecurityTab store={store as any} isRecoveryMode={urlParams.isRecovery} />}
         </div>
       </main>
     </div>
