@@ -7,7 +7,7 @@ import {
   type PublicBackgroundAudioProps,
   type IntroPhase,
   isPlayableBackgroundAudioUrl,
-} from "../../types/publicAudio";
+} from "../../../types/publicAudio";
 
 import {
   getSafeStoreCacheId,
@@ -15,11 +15,11 @@ import {
   readPreviousRouteKind,
   writeCurrentRouteKind,
   getCachedAudioBlobUrl,
-} from "../../utils/audioCache";
+} from "../../../utils/audioCache";
 
-import { getCurrencyPresentation } from "../../utils/currencyMeta";
+import { getCurrencyPresentation } from "../../../utils/currencyMeta";
 import { PublicIntroOverlay } from "./PublicIntroOverlay";
-import { AudioPlayerWidget } from "./AudioPlayerWidget"; // Importando o seu widget compacto novo
+import { AudioPlayerWidget } from "./AudioPlayerWidget";
 
 function getRouteKind(pathname: string): "blog" | "store" | "other" {
   if (pathname.includes("/blog/")) return "blog";
@@ -46,6 +46,9 @@ export const PublicBackgroundAudio = memo(function PublicBackgroundAudio({
   const lastUserPausedRef = useRef(false);
   const objectUrlRef = useRef<string | null>(null);
   const introTimerRef = useRef<number | null>(null);
+
+  // Guarda de forma performática a referência do último elemento ou identificador que mutou o background
+  const activeExternalMediaRef = useRef<any>(null);
 
   const currentRouteKind = useMemo(() => getRouteKind(pathname), [pathname]);
   const isBlogRoute = currentRouteKind === "blog";
@@ -246,6 +249,163 @@ export const PublicBackgroundAudio = memo(function PublicBackgroundAudio({
     };
   }, [hasAudio, startAt, endAt, applyVolume]);
 
+  // =========================================================================
+  // CONTROLADOR DE VISIBILIDADE INTELIGENTE (PAGE VISIBILITY API)
+  // =========================================================================
+  useEffect(() => {
+    if (!hasAudio) return;
+
+    const handleVisibilityChange = () => {
+      const el = audioRef.current;
+      if (!el) return;
+
+      if (document.hidden) {
+        // Se saiu do separador e o áudio estava de facto a tocar (ON)
+        if (!el.paused && isPlaying) {
+          resumeOnVisibleRef.current = true; // Valida permissão para retoma
+          el.pause();
+          setIsPlaying(false);
+        } else {
+          // Se já estava em pausa, limpa o token para não ativar sozinho no retorno
+          resumeOnVisibleRef.current = false;
+        }
+      } else {
+        // O utilizador regressou à aba da loja
+        if (
+          resumeOnVisibleRef.current && 
+          !lastUserPausedRef.current && 
+          !activeExternalMediaRef.current
+        ) {
+          resumeOnVisibleRef.current = false; // Consome o token sincronamente
+          tryPlayNowFromGesture();
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [hasAudio, isPlaying, tryPlayNowFromGesture]);
+
+  // =========================================================================
+  // INTERCEPTADOR DE MÍDIAS EXTERNAS MULTI-CENÁRIO (TRAVA ANTI-BOUNCE)
+  // =========================================================================
+  useEffect(() => {
+    if (!hasAudio) return;
+
+    // Dispara a retomada garantindo que limpa o bloqueio ANTES do disparo
+    const triggerAudioResume = () => {
+      const localAudio = audioRef.current;
+      if (localAudio && localAudio.paused && !lastUserPausedRef.current && !document.hidden) {
+        activeExternalMediaRef.current = null; // Destrava a referência primeiro
+        tryPlayNowFromGesture();               // Executa a reprodução
+      }
+    };
+
+    const forceAudioPause = (sourceIdentifier: any) => {
+      const localAudio = audioRef.current;
+      if (localAudio && !localAudio.paused) {
+        activeExternalMediaRef.current = sourceIdentifier;
+        setIsPlaying(false);
+        localAudio.pause();
+      }
+    };
+
+    // Valida mídias nativas (HTML5 local)
+    const handleAudibleCheck = (target: HTMLMediaElement | null) => {
+      const localAudio = audioRef.current;
+      if (!target || target === localAudio || !localAudio) return;
+
+      const hasAudibleSound = !target.muted && target.volume > 0;
+
+      if (hasAudibleSound && !localAudio.paused) {
+        forceAudioPause(target);
+      } else if (!hasAudibleSound && target === activeExternalMediaRef.current) {
+        triggerAudioResume();
+      }
+    };
+
+    const handleExternalMediaPlay = (e: Event) => handleAudibleCheck(e.target as HTMLMediaElement | null);
+    const handleExternalVolumeChange = (e: Event) => handleAudibleCheck(e.target as HTMLMediaElement | null);
+    const handleExternalMediaStop = (e: Event) => {
+      if (e.target === activeExternalMediaRef.current) triggerAudioResume();
+    };
+
+    // Comunicação postMessage (YouTube e Spotify)
+    const handleIframeMessages = (e: MessageEvent) => {
+      try {
+        let data = e.data;
+        if (typeof data === "string") {
+          data = JSON.parse(data);
+        }
+
+        if (data?.event === "infoDelivery" && data?.info) {
+          if (data.info.playerState === 1) {
+            forceAudioPause("iframe-media");
+          } else if (data.info.playerState === 2 || data.info.playerState === 0) {
+            triggerAudioResume();
+          }
+        }
+        if (data?.type === "hub" && data?.event === "play") forceAudioPause("iframe-media");
+        if (data?.type === "hub" && data?.event === "pause") triggerAudioResume();
+
+        if (data?.type === "playback_update" && data?.payload) {
+          if (data.payload.is_paused === false) {
+            forceAudioPause("iframe-media");
+          } else if (data.payload.is_paused === true) {
+            triggerAudioResume();
+          }
+        }
+      } catch {}
+    };
+
+    // Polling tático de foco (Apple Music, SoundCloud, embeds genéricos)
+    const checkIframeFocusClick = () => {
+      const activeEl = document.activeElement;
+      
+      if (activeEl && activeEl.tagName === "IFRAME") {
+        if (activeExternalMediaRef.current !== activeEl && activeExternalMediaRef.current !== "iframe-media") {
+          forceAudioPause(activeEl);
+        }
+      } else {
+        if (activeExternalMediaRef.current && typeof activeExternalMediaRef.current !== "string" && activeExternalMediaRef.current.tagName === "IFRAME") {
+          triggerAudioResume();
+        }
+      }
+    };
+
+    // MutationObserver para mídias ou iframes deletados dinamicamente
+    const observer = new MutationObserver(() => {
+      const currentActive = activeExternalMediaRef.current;
+      if (currentActive && typeof currentActive !== "string") {
+        if (!document.body.contains(currentActive)) {
+          triggerAudioResume();
+        }
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    window.addEventListener("play", handleExternalMediaPlay, { capture: true });
+    window.addEventListener("volumechange", handleExternalVolumeChange, { capture: true });
+    window.addEventListener("pause", handleExternalMediaStop, { capture: true });
+    window.addEventListener("ended", handleExternalMediaStop, { capture: true });
+    window.addEventListener("message", handleIframeMessages);
+    
+    const focusTimer = setInterval(checkIframeFocusClick, 500);
+    
+    return () => {
+      observer.disconnect();
+      clearInterval(focusTimer);
+      window.removeEventListener("play", handleExternalMediaPlay, { capture: true });
+      window.removeEventListener("volumechange", handleExternalVolumeChange, { capture: true });
+      window.removeEventListener("pause", handleExternalMediaStop, { capture: true });
+      window.removeEventListener("ended", handleExternalMediaStop, { capture: true });
+      window.removeEventListener("message", handleIframeMessages);
+    };
+  }, [hasAudio, tryPlayNowFromGesture]);
+
   if (!hasAudio) return null;
 
   return (
@@ -260,7 +420,6 @@ export const PublicBackgroundAudio = memo(function PublicBackgroundAudio({
         onActivate={handleOverlayActivate}
       />
 
-      {/* Renderização do Widget Novo Ultra-Compacto e Síncrono */}
       <AudioPlayerWidget 
         rootRef={rootRef}
         isPlaying={isPlaying}

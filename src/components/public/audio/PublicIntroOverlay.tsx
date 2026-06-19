@@ -1,7 +1,7 @@
 import { memo, useEffect, useState } from "react";
 import { ArrowRight, ShoppingBag, MapPin, Globe, Tag, Volume2 } from "lucide-react";
-import type { IntroPhase } from "../../types/publicAudio";
-import { useTranslate } from "../../context/LanguageContext";
+import type { IntroPhase } from "../../../types/publicAudio";
+import { useTranslate } from "../../../context/LanguageContext";
 
 interface PublicIntroOverlayProps {
   introPhase: IntroPhase;

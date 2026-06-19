@@ -8,6 +8,7 @@ import { ProductShowcase } from './components/ProductShowcase';
 import { TextoNarrativo } from './components/TextoNarrativo';
 import { TextoImagemShowcase } from './components/TextoImagemShowcase';
 import { MediaLinksCompact } from './components/MediaEmbeds';
+import { ProductsCatalog } from './components/ProductsCatalog';
 
 export const SectionLibrary = {
   hero_comercial: HeroComercial,
@@ -20,6 +21,7 @@ export const SectionLibrary = {
   texto_narrativo: TextoNarrativo,
   texto_imagem_showcase: TextoImagemShowcase,
   media_embeds: MediaLinksCompact,
+  products_catalog: ProductsCatalog,
 };
 
 export * from '../../types/library';

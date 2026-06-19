@@ -135,7 +135,6 @@ const ModernScrollRow = memo(function ModernScrollRow({
         style={{
           WebkitOverflowScrolling: "touch",
           contain: "layout paint",
-          contentVisibility: "auto",
         }}
       >
         {children}
@@ -145,7 +144,7 @@ const ModernScrollRow = memo(function ModernScrollRow({
         <button
           type="button"
           onClick={() => scroll("left")}
-          className="rounded-lg border border-zinc-200 bg-zinc-100 p-2 text-zinc-500 active:bg-blue-600 active:text-white dark:border-zinc-800 dark:bg-zinc-900"
+          className="rounded-lg border border-zinc-200 bg-zinc-100 p-2 text-zinc-500 active:bg-blue-600 active:text-white dark:border-zinc-800 dark:bg-zinc-900 cursor-pointer"
           aria-label="Scroll left"
         >
           <ChevronLeft size={17} />
@@ -154,7 +153,7 @@ const ModernScrollRow = memo(function ModernScrollRow({
         <button
           type="button"
           onClick={() => scroll("right")}
-          className="rounded-lg border border-zinc-200 bg-zinc-100 p-2 text-zinc-500 active:bg-blue-600 active:text-white dark:border-zinc-800 dark:bg-zinc-900"
+          className="rounded-lg border border-zinc-200 bg-zinc-100 p-2 text-zinc-500 active:bg-blue-600 active:text-white dark:border-zinc-800 dark:bg-zinc-900 cursor-pointer"
           aria-label="Scroll right"
         >
           <ChevronRight size={17} />
@@ -164,12 +163,13 @@ const ModernScrollRow = memo(function ModernScrollRow({
   );
 });
 
-export const LayoutGrid = ({
+// DECLARAÇÃO INDEPENDENTE: Impede falhas de compilação e mantém o layout original intacto
+function GridComponent({
   products = [],
   onAction,
   cols,
   isDark,
-}: LayoutProps & { cols: number }) => {
+}: LayoutProps & { cols: number }) {
   const sortedProducts = useMemo(
     () => sortProductsByDate(products),
     [products]
@@ -198,7 +198,7 @@ export const LayoutGrid = ({
 
   if (cols === 2) {
     return (
-      <div className="mx-auto max-w-[1400px] space-y-4 px-0 md:px-4">
+      <div className="mx-auto max-w-[1400px] space-y-4 px-0 md:px-4" style={{ contain: "layout paint" }}>
         <div className="flex h-auto flex-col gap-3 md:grid md:h-[450px] md:grid-cols-6 md:grid-rows-2">
           {featured.map((p, idx) => {
             const isMain = idx === 0;
@@ -213,8 +213,8 @@ export const LayoutGrid = ({
                   isMain
                     ? "aspect-[16/10] md:col-span-4 md:row-span-2 md:aspect-auto"
                     : "aspect-[16/10] md:col-span-2 md:row-span-1 md:aspect-auto"
-                } group relative cursor-pointer overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-200 text-left active:scale-[0.99] dark:border-zinc-800 dark:bg-zinc-800`}
-                style={{ contain: "layout paint" }}
+                } group relative cursor-pointer overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-200 text-left active:scale-[0.99] dark:border-zinc-800 dark:bg-zinc-800 will-change-transform`}
+                style={{ transform: "translate3d(0,0,0)" }}
               >
                 <ProductImage
                   src={p.main_image}
@@ -246,8 +246,8 @@ export const LayoutGrid = ({
                   key={p.id}
                   type="button"
                   onClick={() => handleAction(p.id)}
-                  className="w-[280px] shrink-0 snap-start text-left md:w-[calc(30%-12px)]"
-                  style={{ contain: "layout paint" }}
+                  className="w-[280px] shrink-0 snap-start text-left md:w-[calc(30%-12px)] will-change-transform"
+                  style={{ transform: "translate3d(0,0,0)" }}
                 >
                   <div className="relative aspect-[16/12] overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 dark:border-zinc-800 dark:bg-zinc-800 md:aspect-[16/9]">
                     <ProductImage
@@ -274,7 +274,7 @@ export const LayoutGrid = ({
   }
 
   return (
-    <div className="mx-auto max-w-[1400px] px-0 md:px-4">
+    <div className="mx-auto max-w-[1400px] px-0 md:px-4" style={{ isolation: "isolate" }}>
       <div className="columns-2 gap-2 space-y-4 md:columns-3 md:gap-3 md:space-y-4 lg:columns-4">
         {sortedProducts.map((p, index) => {
           const name = safeText(p.name);
@@ -284,12 +284,8 @@ export const LayoutGrid = ({
               key={p.id}
               type="button"
               onClick={() => handleAction(p.id)}
-              className="group mb-4 flex w-full break-inside-avoid cursor-pointer flex-col text-left active:scale-[0.99]"
-              style={{
-                contain: "layout paint",
-                contentVisibility: "auto",
-                containIntrinsicSize: "260px",
-              }}
+              className="group mb-4 flex w-full break-inside-avoid cursor-pointer flex-col text-left active:scale-[0.99] will-change-transform"
+              style={{ transform: "translate3d(0,0,0)" }}
             >
               <div
                 className={`relative overflow-hidden rounded-xl border ${
@@ -334,9 +330,9 @@ export const LayoutGrid = ({
       </div>
     </div>
   );
-};
+}
 
-export function LayoutList({ products, onAction, isDark }: LayoutProps) {
+function ListComponent({ products, onAction, isDark }: LayoutProps) {
   const sorted = useMemo(() => sortProductsByDate(products || []), [products]);
 
   const featured = sorted[0];
@@ -357,7 +353,7 @@ export function LayoutList({ products, onAction, isDark }: LayoutProps) {
     : "border-zinc-200 bg-white shadow-sm";
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-0 md:px-4">
+    <div className="mx-auto w-full max-w-7xl px-0 md:px-4" style={{ contain: "layout paint" }}>
       <div className="grid gap-2 lg:grid-cols-[1.1fr_0.9fr] xl:grid-cols-[1.2fr_0.8fr]">
         {featured && (
           <button
@@ -496,11 +492,7 @@ export function LayoutList({ products, onAction, isDark }: LayoutProps) {
                   "group min-w-0 overflow-hidden rounded-[1.1rem] border text-left active:scale-[0.99]",
                   cardBase,
                 ].join(" ")}
-                style={{
-                  contain: "layout paint",
-                  contentVisibility: "auto",
-                  containIntrinsicSize: "230px",
-                }}
+                style={{ contain: "layout paint" }}
               >
                 <div className="relative aspect-[4/3] overflow-hidden bg-zinc-100 dark:bg-zinc-800">
                   <ProductImage
@@ -542,6 +534,10 @@ export function LayoutList({ products, onAction, isDark }: LayoutProps) {
     </div>
   );
 }
+
+// EXPORTAÇÕES DE REFERÊNCIA PURA: Garante que o React reconheça como funções válidas e mate o erro de runtime
+export const LayoutGrid = memo(GridComponent);
+export const LayoutList = memo(ListComponent);
 
 export function ProductShowcaseSkeleton({
   cols,

@@ -1562,8 +1562,17 @@ noImage: "No Image",
     enter_btn: "Enter Store",
     click_anywhere: "Click anywhere to enter",
     activate_audio: "Enable Audio",
-    enter_store_aria: "Enter the storefront experience"
+    enter_store_aria: "Enter the storefront experience",
 
+    category: "Category",
+
+
+    search_title: "Search",
+    search_in_store: "In this Store",
+    search_global_title: "Other Stores",
+    search_global_btn: "Search in other stores for",
+    search_no_results: "No results found.",
+    search_suggestions: "Suggestions"
   },
 
 
@@ -1789,7 +1798,7 @@ noImage: "No Image",
 
   product: "Produto",
 price: "Preço",
-status: "Status",
+status: "Estado",
 actions: "Ações",
 
 
@@ -3162,6 +3171,15 @@ noImage: "Sem Imagem",
     click_anywhere: "Clique em qualquer lugar para acessar",
     activate_audio: "Ativar Som",
     enter_store_aria: "Entrar na experiência da loja",
+
+    category: "Categoria",
+    search_title: "Pesquisar",
+    search_in_store: "Nesta Loja",
+    search_global_title: "Outras Lojas",
+    search_global_btn: "Procurar noutras lojas por",
+    search_no_results: "Nenhum resultado encontrado.",
+    search_suggestions: "Sugestões"
+ 
 }
 
 
