@@ -22,9 +22,9 @@ export const AudioPlayerWidget = React.memo(function AudioPlayerWidget({
   };
 
   return (
-    <div ref={rootRef} className="fixed bottom-4 right-0 z-[2147483647] pointer-events-auto">
+    <div ref={rootRef} className="fixed bottom-4 left-0 z-[2147483647] pointer-events-auto">
       <div 
-        className={`flex items-center shadow-[0_4px_20px_rgba(0,0,0,0.3)] rounded-l-full border border-r-0 transition-all duration-200 ease-in-out ${
+        className={`flex items-center shadow-[0_4px_20px_rgba(0,0,0,0.3)] rounded-r-full border border-l-0 transition-all duration-200 ease-in-out ${
           isPlaying 
             ? "border-slate-900 bg-slate-950 text-white dark:border-white/10 dark:bg-[#0d1117]" 
             : "border-slate-400 bg-slate-900 text-slate-200 dark:border-white/10 dark:bg-[#161b22] dark:text-slate-400"
@@ -35,7 +35,7 @@ export const AudioPlayerWidget = React.memo(function AudioPlayerWidget({
           type="button"
           onClick={handlePlaybackClick}
           disabled={loadError}
-          className="flex h-8 w-[24px] sm:h-9 sm:w-[30px] shrink-0 flex-col items-center justify-center gap-0.5 cursor-pointer select-none disabled:opacity-40 transition-transform active:scale-90 pl-1"
+          className="flex h-8 w-[18px] sm:h-9 md:w-[24px] shrink-0 flex-col items-center justify-center gap-0.5 cursor-pointer select-none disabled:opacity-40 transition-transform active:scale-90 pr-1"
           aria-label={isPlaying ? "Pausar áudio" : "Tocar áudio"}
         >
           {/* Ícone Micro com feedback visual garantido */}

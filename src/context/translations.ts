@@ -1603,7 +1603,18 @@ noImage: "No Image",
   cat_pets: "Pet Shop",
   cat_tools: "Tools & Hardware",
   cat_toys: "Toys & Games",
-  cat_auto: "Automotive & Parts"
+  cat_auto: "Automotive & Parts",
+
+
+  common_general: "General",
+  common_of: "of",
+  catalog_collection: "Collection",
+  catalog_default_title: "Full Catalog",
+  catalog_default_subtitle: "Check out our available products",
+  catalog_add_description: "Add a description...",
+  catalog_layout_sample: "Layout Sample",
+  catalog_actives: "active",
+  catalog_no_products: "No products registered",
   },
 
 
@@ -3244,6 +3255,16 @@ noImage: "Sem Imagem",
   cat_tools: "Ferramentas & Bricolage",
   cat_toys: "Brinquedos & Jogos",
   cat_auto: "Acessórios Automóvel",
+
+  common_general: "Geral",
+  common_of: "de",
+  catalog_collection: "Coleção",
+  catalog_default_title: "Catálogo Completo",
+  catalog_default_subtitle: "Confira os nossos produtos disponíveis",
+  catalog_add_description: "Adicione uma descrição...",
+  catalog_layout_sample: "Amostra de Layout",
+  catalog_actives: "ativos",
+  catalog_no_products: "Nenhum produto cadastrado",
 }
 
 
