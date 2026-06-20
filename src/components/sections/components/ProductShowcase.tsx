@@ -6,7 +6,9 @@ import { supabase } from "../../../lib/supabase";
 import { useTranslate } from "../../../context/LanguageContext";
 import { LayoutGrid, LayoutList, ProductShowcaseSkeleton } from "../../produtos/layouts";
 import { useAdminStore } from "../../../hooks/useAdminStore";
-import { safeText, cacheKey, CACHE_VERSION, CACHE_TIME, PRODUCTS_LIMIT, INITIAL_VISIBLE } from "../../../utils/text";
+
+import { safeText, cacheKey, CACHE_VERSION, PRODUCTS_LIMIT, INITIAL_VISIBLE, readCache, writeCache } from "../../../utils/text";
+import { STORE_CACHE_TTL } from "../../../utils/storeCache";
 import { HeaderText } from "../../produtos/HeaderText";
 
 export type SectionStyles = {
@@ -32,30 +34,6 @@ export type Product = {
   currency: string;
 };
 
-function readCache<T>(key: string): T | null {
-  try {
-    if (typeof window === "undefined") return null;
-    const raw = localStorage.getItem(key);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (parsed.version !== CACHE_VERSION || Date.now() > parsed.expiresAt) {
-      localStorage.removeItem(key);
-      return null;
-    }
-    return parsed.data;
-  } catch {
-    try { localStorage.removeItem(key); } catch {}
-    return null;
-  }
-}
-
-function writeCache<T>(key: string, data: T) {
-  try {
-    if (typeof window === "undefined") return;
-    localStorage.setItem(key, JSON.stringify({ version: CACHE_VERSION, data, expiresAt: Date.now() + CACHE_TIME }));
-  } catch {}
-}
-
 export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
   const { t } = useTranslate();
   const location = useLocation();
@@ -76,24 +54,25 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
 
   const layoutCols = Math.min(Math.max(Number(style?.cols) || 4, 1), 4);
+  const activeStoreSlug = isReadOnly ? storeSlug : adminStore?.slug;
 
   const { data: publicStore, isLoading: isLoadingStore } = useQuery({
     queryKey: ["public-store-info", storeSlug],
     queryFn: async () => {
       if (!storeSlug) return null;
       const key = cacheKey("storely_public_store", CACHE_VERSION, storeSlug);
-      const cached = readCache<{ id: string; currency: string | null }>(key);
+      const cached = readCache<{ id: string; currency: string | null }>(key, storeSlug);
       if (cached) return cached;
 
       const { data, error } = await supabase.from("stores").select("id,currency").eq("slug", storeSlug).maybeSingle();
       if (error || !data) return null;
 
       const safeStore = { id: String(data.id), currency: data.currency ? String(data.currency) : null };
-      writeCache(key, safeStore);
+      writeCache(key, safeStore, storeSlug);
       return safeStore;
     },
     enabled: Boolean(storeSlug && isReadOnly),
-    staleTime: CACHE_TIME,
+    staleTime: STORE_CACHE_TTL,
   });
 
   const effectiveStoreId = publicStore?.id || adminStore?.id || null;
@@ -104,7 +83,7 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
     queryFn: async () => {
       if (!effectiveStoreId) return [];
       const key = cacheKey("storely_products_showcase", CACHE_VERSION, effectiveStoreId, storeCurrency);
-      const cached = readCache<Product[]>(key);
+      const cached = readCache<Product[]>(key, activeStoreSlug);
       if (cached) return cached;
 
       const { data, error } = await supabase
@@ -127,11 +106,11 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
         currency: storeCurrency,
       }));
 
-      writeCache(key, safeData);
+      writeCache(key, safeData, activeStoreSlug);
       return safeData;
     },
     enabled: Boolean(effectiveStoreId),
-    staleTime: CACHE_TIME,
+    staleTime: STORE_CACHE_TTL,
   });
 
   const isLoading = (isLoadingStore || isLoadingProducts) && products.length === 0;
@@ -206,7 +185,6 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
         isDark ? "bg-[#0a0a0a] text-zinc-100" : "bg-white text-slate-900"
       }`}
       style={{
-        // Correção de layout definitiva: Força isolamento de renderização nativo e aceleração por GPU estável
         isolation: "isolate",
         backfaceVisibility: "hidden",
         transform: "translate3d(0, 0, 0)"
@@ -218,7 +196,7 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
           style={style}
           isReadOnly={isReadOnly}
           isDark={isDark}
-          t={t} // Repassado agora sem acusar erros no TypeScript
+          t={t}
           onUpdate={onUpdate}
         />
 
@@ -321,7 +299,6 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
           </div>
         )}
 
-        {/* CSS GRID de tamanho mínimo estrito: impede o conteúdo de colapsar a 0px na montagem assíncrona */}
         <div className="w-full grid grid-cols-1 min-h-[360px] layout-stable transition-all duration-200 ease-out">
           {isLoading ? (
             <div className="w-full"><ProductShowcaseSkeleton cols={layoutCols} isDark={isDark} /></div>

@@ -1572,8 +1572,41 @@ noImage: "No Image",
     search_global_title: "Other Stores",
     search_global_btn: "Search in other stores for",
     search_no_results: "No results found.",
-    search_suggestions: "Suggestions"
+    search_suggestions: "Suggestions",
+
+
+  search_global_categories: "Global Categories",
+  search_see_local: "See Local",
+  search_see_global: "Other Stores",
+  search_no_categories: "No local categories found.",
+  search_local_results: "Store Products",
+  search_no_local_results: "No products found in this store.",
+  search_global_button: "Search outside this store",
+  search_no_global_results: "No global results found.",
+
+
+
+
+
+
+
+
+  cat_tech: "Technology & Gadgets",
+  cat_fashion: "Clothing & Fashion",
+  cat_grocery: "Supermarket & Snacks",
+  cat_home: "Home, Decor & Comfort",
+  cat_beauty: "Health & Cosmetics",
+  cat_fitness: "Fitness & Outdoor",
+  cat_books: "Books & Stationery",
+  cat_accessories: "Accessories & Bags",
+  cat_baby: "Baby & Kids",
+  cat_pets: "Pet Shop",
+  cat_tools: "Tools & Hardware",
+  cat_toys: "Toys & Games",
+  cat_auto: "Automotive & Parts"
   },
+
+
 
 
 
@@ -3178,8 +3211,39 @@ noImage: "Sem Imagem",
     search_global_title: "Outras Lojas",
     search_global_btn: "Procurar noutras lojas por",
     search_no_results: "Nenhum resultado encontrado.",
-    search_suggestions: "Sugestões"
+    search_suggestions: "Sugestões",
  
+
+
+
+
+  search_global_categories: "Categorias Globais",
+  search_see_local: "Ver Locais",
+  search_see_global: "Outras Lojas",
+  search_no_categories: "Nenhuma categoria carregada localmente.",
+  search_local_results: "Artigos da Loja",
+  search_no_local_results: "Nenhum artigo encontrado nesta loja.",
+  search_global_button: "Pesquisar fora desta loja",
+  search_no_global_results: "Nenhum resultado global encontrado.",
+
+
+
+
+
+
+  cat_tech: "Tecnologia & Gadgets",
+  cat_fashion: "Moda & Vestuário",
+  cat_grocery: "Supermercado & Snacks",
+  cat_home: "Casa, Decor & Conforto",
+  cat_beauty: "Saúde & Cosmética",
+  cat_fitness: "Fitness & Outdoor",
+  cat_books: "Livros & Papelaria",
+  cat_accessories: "Acessórios & Jóias",
+  cat_baby: "Bebés & Crianças",
+  cat_pets: "Produtos para Animais",
+  cat_tools: "Ferramentas & Bricolage",
+  cat_toys: "Brinquedos & Jogos",
+  cat_auto: "Acessórios Automóvel",
 }
 
 

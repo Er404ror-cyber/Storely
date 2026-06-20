@@ -5,6 +5,7 @@ import {
   ArrowRight,
   ChevronLeft,
   Edit3,
+  ImageOff,
   Loader2,
   Maximize2,
   Minus,
@@ -20,6 +21,7 @@ import type { MediaItem } from "../types/library";
 import { MediaModal } from "../components/modal";
 import { ProductForm } from "../components/produtos/ProductForm";
 import { useTranslate } from "../context/LanguageContext";
+import { FALLBACK_CURRENCY, FALLBACK_PRODUCT } from "../utils/constants";
 
 export interface ProductFormData {
   name: string;
@@ -91,9 +93,7 @@ const UNIT_TRANSLATION_KEY_MAP = {
   servico: "product_form_unit_servico",
 } as const;
 
-const FALLBACK_CURRENCY = "USD";
-const PLACEHOLDER_IMAGE =
-  "https://via.placeholder.com/1400x1200/f4f4f5/18181b?text=Product";
+const PLACEHOLDER_IMAGE = FALLBACK_PRODUCT;
 
 function normalizeCurrency(
   storeCurrency?: string | null,
@@ -498,6 +498,13 @@ export function ProductDetails({
     t,
   ]);
 
+  const handleImgError = (e: React.SyntheticEvent<HTMLImageElement>, fallback: string, setErr: (v: boolean) => void) => {
+    const t = e.currentTarget;
+    if (t.src !== fallback) { t.src = fallback; setErr(true); }
+  };
+    const [noImg, setNoImg] = useState(false);
+  
+
   if (isLoading && !isCreating && !resolvedProduct) {
     return (
       <div className={`flex min-h-screen items-center justify-center ${pageBgClass}`}>
@@ -614,7 +621,14 @@ export function ProductDetails({
                         draggable={false}
                         sizes="(max-width: 1024px) 100vw, 58vw"
                         className="h-full w-full object-cover object-center"
+                        onError={(e) => handleImgError(e, FALLBACK_PRODUCT, setNoImg)}
                       />
+                       {noImg && (
+          <div className="absolute right-2.5 bottom-2.5 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.12em] border border-zinc-700/30 backface-hidden">
+            <ImageOff size={10} className="text-zinc-400" />
+            {t("noImage") || "Sem Imagem"}
+          </div>
+        )}
 
                       <button
                         type="button"

@@ -22,7 +22,7 @@ import {
   STRIP_SIZE,
   STORELY_CACHE_TTL,
   CATEGORY_SCROLL_STEP,
-} from "./constants";
+} from "../../utils/constants";
 import {
   bumpScore,
   chunk,

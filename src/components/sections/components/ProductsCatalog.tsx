@@ -1,19 +1,16 @@
-
-
 import { useState, useMemo, useCallback } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Package,  Plus } from "lucide-react";
+import { Package, Plus } from "lucide-react";
 
-
-// IMPORTANTE: Ajusta estes caminhos para baterem certo com a localização real dos teus ficheiros!
 import { LayoutGrid, LayoutList, ProductShowcaseSkeleton } from "../../produtos/layouts";
 import { useTranslate } from "../../../context/LanguageContext";
 import { supabase } from "../../../lib/supabase";
 import { useAdminStore } from "../../../hooks/useAdminStore";
-import { FloatingSearch } from "../../produtos/componentsPublic/FloatingSearch";
 
-import { cacheKey, readCache, writeCache, INITIAL_VISIBLE, CACHE_VERSION, CACHE_TIME } from "../../../utils/text";
+import { safeText, cacheKey, readCache, writeCache, INITIAL_VISIBLE, CACHE_VERSION } from "../../../utils/text";
+import { STORE_CACHE_TTL } from "../../../utils/storeCache";
+
 export type SectionStyles = {
   theme?: "dark" | "light";
   align?: "center" | "left" | "justify";
@@ -46,6 +43,7 @@ export function ProductsCatalog(props: CatalogProps) {
   const { storeSlug, pageSlug } = useParams();
   
   const isEditor = location.pathname.includes("/editor/");
+  const isReadOnly = !isEditor;
   const isDark = props.style?.theme === "dark";
   const allLabel = t("common_all") || "Todos";
 
@@ -54,98 +52,121 @@ export function ProductsCatalog(props: CatalogProps) {
 
   const layoutCols = Math.min(Math.max(Number(props.style?.cols) || 4, 1), 4);
   const { data: adminStore } = useAdminStore();
-  const finalStoreId = props.storeId || props.store_id || props.section?.store_id || adminStore?.id;
 
-  const { data: storeInfo, isLoading: isLoadingStore } = useQuery({
-    queryKey: ["catalog-store-info", finalStoreId],
+  const { data: publicStore, isLoading: isLoadingPublicStore } = useQuery({
+    queryKey: ["catalog-public-store-info", storeSlug],
     queryFn: async () => {
-      if (!finalStoreId) return null;
-      const key = cacheKey("store_info", CACHE_VERSION, finalStoreId);
-      const cached = readCache<{id: string, currency: string, slug: string}>(key);
+      if (!storeSlug) return null;
+      const key = cacheKey("storely_public_store", CACHE_VERSION, storeSlug);
+      // Leitura subordinada ao Pai
+      const cached = readCache<{ id: string; currency: string | null; slug: string }>(key, storeSlug);
       if (cached) return cached;
 
-      const { data, error } = await supabase.from("stores").select("id, currency, slug").eq("id", finalStoreId).single();
-      if (error) throw error;
-      
-      writeCache(key, data);
-      return data;
+      const { data, error } = await supabase.from("stores").select("id, currency, slug").eq("slug", storeSlug).maybeSingle();
+      if (error || !data) return null;
+
+      const safeStore = { id: String(data.id), currency: data.currency ? String(data.currency) : null, slug: String(data.slug) };
+      // Escrita sincronizada com o Pai
+      writeCache(key, safeStore, storeSlug);
+      return safeStore;
     },
-    enabled: !!finalStoreId,
-    staleTime: CACHE_TIME,
+    enabled: Boolean(storeSlug && isReadOnly),
+    staleTime: STORE_CACHE_TTL,
   });
 
-  const storeCurrency = storeInfo?.currency || adminStore?.currency || "MZN";
-  const activeStoreSlug = storeSlug || storeInfo?.slug;
+  const effectiveStoreId = isReadOnly 
+    ? (publicStore?.id || props.storeId || props.store_id || props.section?.store_id)
+    : (props.storeId || props.store_id || props.section?.store_id || adminStore?.id);
+
+  const storeCurrency = isReadOnly 
+    ? (publicStore?.currency || "MZN") 
+    : (adminStore?.currency || "MZN");
+
+  const activeStoreSlug = isReadOnly ? (storeSlug || publicStore?.slug) : adminStore?.slug;
 
   const { data: products = [], isLoading: isLoadingProducts } = useQuery({
-    queryKey: ["catalog-products-full", finalStoreId, storeCurrency],
+    queryKey: ["catalog-products-full", effectiveStoreId, storeCurrency],
     queryFn: async () => {
-      if (!finalStoreId) return [];
-      const key = cacheKey("store_catalog", CACHE_VERSION, finalStoreId);
-      const cached = readCache<Product[]>(key);
+      if (!effectiveStoreId) return [];
+      const key = cacheKey("store_catalog", CACHE_VERSION, effectiveStoreId);
+      // Leitura subordinada ao Pai
+      const cached = readCache<Product[]>(key, activeStoreSlug);
       if (cached) return cached;
 
       const { data, error } = await supabase
         .from("products")
         .select("id, name, price, category, main_image, created_at, store_id")
-        .eq("store_id", finalStoreId)
+        .eq("store_id", effectiveStoreId)
         .eq("is_active", true)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) return [];
 
       const mapped = (data || []).map((product) => ({
-        ...product,
         id: String(product.id),
+        name: safeText(product.name, 70),
         price: Number(product.price) || 0,
-        category: (product.category || "").trim() || "Geral",
+        category: safeText(product.category, 40) || "Geral",
         main_image: product.main_image || "",
+        created_at: product.created_at,
+        store_id: String(product.store_id),
         currency: storeCurrency,
       })) as Product[];
 
-      writeCache(key, mapped);
+      // Escrita sincronizada com o Pai
+      writeCache(key, mapped, activeStoreSlug);
       return mapped;
     },
-    enabled: !!finalStoreId && !!storeCurrency,
-    staleTime: CACHE_TIME,
+    enabled: !!effectiveStoreId,
+    staleTime: STORE_CACHE_TTL,
   });
 
-  const isLoading = isLoadingStore || isLoadingProducts;
+  const isLoading = (isLoadingPublicStore || isLoadingProducts) && products.length === 0;
 
   const categories = useMemo(() => {
     const set = new Set<string>();
-    products.forEach(p => set.add(p.category));
+    products.forEach(p => {
+      if (p.category) set.add(p.category);
+    });
     return [allLabel, ...Array.from(set)];
   }, [products, allLabel]);
 
   const displayProducts = useMemo(() => {
-    const filtered = selectedCategory === allLabel 
-      ? products 
-      : products.filter(p => p.category === selectedCategory);
+    const filtered = (isReadOnly && selectedCategory !== allLabel)
+      ? products.filter(p => p.category === selectedCategory)
+      : products;
     return filtered.slice(0, visibleCount);
-  }, [products, selectedCategory, visibleCount, allLabel]);
+  }, [products, selectedCategory, visibleCount, allLabel, isReadOnly]);
 
-  const totalFiltered = selectedCategory === allLabel 
-    ? products.length 
-    : products.filter(p => p.category === selectedCategory).length;
+  const totalFiltered = (isReadOnly && selectedCategory !== allLabel)
+    ? products.filter(p => p.category === selectedCategory).length
+    : products.length;
 
   const handleProductClick = useCallback((productId: string) => {
     if (isEditor || !activeStoreSlug) return;
     navigate(`/${activeStoreSlug}/${pageSlug || "products"}/${productId}`, { state: { fromStore: true } });
   }, [isEditor, activeStoreSlug, navigate, pageSlug]);
 
-  if (!finalStoreId) return null;
+  if (!effectiveStoreId) return null;
 
-  // Se removemos o "right", a lógica fica assim:
-const alignClass = props.style?.align === 'center' 
-? 'text-center items-center' 
-: props.style?.align === 'justify' 
-  ? 'text-justify items-stretch' 
-  : 'text-left items-start';
+  const alignClass = props.style?.align === 'center' 
+    ? 'text-center items-center' 
+    : props.style?.align === 'justify' 
+      ? 'text-justify items-stretch' 
+      : 'text-left items-start';
 
   return (
     <>
-      <section className={`px-3 py-10 md:px-6 md:py-16 overflow-hidden ${isDark ? "bg-[#0a0a0a] text-zinc-100" : "bg-white text-slate-900"}`} style={{ contentVisibility: 'auto', containIntrinsicSize: '800px' }}>
+      <section 
+        className={`px-3 py-10 md:px-6 md:py-16 overflow-hidden ${isDark ? "bg-[#0a0a0a] text-zinc-100" : "bg-white text-slate-900"}`} 
+        style={{ 
+          contentVisibility: 'auto', 
+          containIntrinsicSize: '800px',
+          isolation: "isolate",
+          backfaceVisibility: "hidden",
+          transform: "translate3d(0, 0, 0)"
+        }}
+      >
         <div className="mx-auto w-full max-w-[1400px] min-w-0">
           
           <div className={`mb-10 flex flex-col ${alignClass}`}>
@@ -153,12 +174,12 @@ const alignClass = props.style?.align === 'center'
             {props.content?.subtitle && <p className="mt-4 text-sm md:text-base font-medium opacity-60 max-w-2xl">{props.content.subtitle}</p>}
           </div>
 
-          {/* Navegação de Categorias Super Leve */}
-          {!isLoading && categories.length > 1 && (
+          {isReadOnly && !isLoading && categories.length > 1 && (
             <div className="mb-8 flex items-center gap-2 overflow-x-auto no-scrollbar pb-2" style={{ transform: "translateZ(0)" }}>
               {categories.map((cat) => (
                 <button
                   key={cat}
+                  type="button"
                   onClick={() => { setSelectedCategory(cat); setVisibleCount(INITIAL_VISIBLE); }}
                   className={`shrink-0 rounded-2xl px-5 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors active:scale-[0.98] ${
                     selectedCategory === cat 
@@ -186,10 +207,11 @@ const alignClass = props.style?.align === 'center'
                 {visibleCount < totalFiltered && (
                   <div className="mt-12 flex justify-center">
                     <button
+                      type="button"
                       onClick={() => setVisibleCount(v => v + INITIAL_VISIBLE)}
                       className={`flex items-center gap-2 rounded-2xl px-8 py-4 text-[11px] font-black uppercase tracking-widest transition-transform active:scale-95 ${isDark ? "bg-zinc-800 text-white hover:bg-zinc-700" : "bg-slate-100 text-slate-900 hover:bg-slate-200"}`}
                     >
-                      <Plus size={18} /> Carregar Mais
+                      <Plus size={18} /> {t("showcase_viewFull") || "Carregar Mais"}
                     </button>
                   </div>
                 )}
@@ -206,8 +228,7 @@ const alignClass = props.style?.align === 'center'
         </div>
       </section>
 
-      {/* Injeção do Search Flutuante */}
-      {!isEditor && <FloatingSearch currentStoreId={finalStoreId} storeCurrency={storeCurrency} activeStoreSlug={activeStoreSlug} />}
+
     </>
   );
 }

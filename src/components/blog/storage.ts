@@ -1,5 +1,5 @@
 import type { PreferenceState, SearchHistoryItem, ShowcaseViewState, ProductRow, StorelyCachePayload } from "../../types/Marketplace";
-import { LS_PREFS, LS_HISTORY, STORELY_STATE_KEY, STORELY_CACHE_KEY, STORELY_CACHE_VERSION, STORELY_CACHE_TTL, MAX_RECENT_SEARCHES } from "./constants";
+import { LS_PREFS, LS_HISTORY, STORELY_STATE_KEY, STORELY_CACHE_KEY, STORELY_CACHE_VERSION, STORELY_CACHE_TTL, MAX_RECENT_SEARCHES } from "../../utils/constants";
 import { normalizeText, parseJSON } from "../../utils/marketplaceutils";
 
 export function getPrefs(): PreferenceState {

@@ -4,7 +4,7 @@ import { ShoppingBag, Store as StoreIcon } from "lucide-react";
 import { SectionHeader, RailControls, ProductCard, StoreCard } from "./UIHelpers";
 import type { ProductItem, StoreItem } from "../../types/Marketplace";
 import { smoothScrollBy } from "../../utils/marketplaceutils";
-import { STRIP_SCROLL_STEP } from "./constants";
+import { STRIP_SCROLL_STEP } from "../../utils/constants";
 
 export function HorizontalProductsStrip({
   title,

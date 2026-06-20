@@ -1,4 +1,4 @@
-import type { ProductItem, StoreItem } from "../../types/Marketplace";
+import type { ProductItem, StoreItem } from "../types/Marketplace";
 
 // Fallback para Produtos (SVG Leve com ícone de Caixa/Produto)
 // Fallback Premium Otimizado para Produtos (Caixa isométrica de luxo com linhas finas)

@@ -2,7 +2,7 @@ import React, { memo, useState } from "react";
 import { ChevronLeft, ChevronRight as ChevronRightIcon, ChevronRight, Store as StoreIcon, ImageOff, Verified, ArrowRight, Sparkles } from "lucide-react";
 import type { ProductItem, StoreItem } from "../../types/Marketplace";
 import { formatProductPrice } from "../../utils/marketplaceutils";
-import { FALLBACK_PRODUCT, FALLBACK_STORE } from "./constants";
+import { FALLBACK_PRODUCT, FALLBACK_STORE } from "../../utils/constants";
 import { useTranslate } from "../../context/LanguageContext";
 
 // Função única para tratar links quebrados (Cloudinary 404, etc)
