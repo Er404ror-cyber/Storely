@@ -1,14 +1,14 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Package, Plus, Sparkles } from "lucide-react";
+import { Package, Sparkles } from "lucide-react";
 
 import { LayoutGrid, LayoutList, ProductShowcaseSkeleton } from "../../produtos/layouts";
 import { useTranslate } from "../../../context/LanguageContext";
 import { supabase } from "../../../lib/supabase";
 import { useAdminStore } from "../../../hooks/useAdminStore";
 
-import { safeText, cacheKey, readCache, writeCache, INITIAL_VISIBLE, CACHE_VERSION } from "../../../utils/text";
+import { safeText, cacheKey, readCache, writeCache,  CACHE_VERSION } from "../../../utils/text";
 import { STORE_CACHE_TTL } from "../../../utils/storeCache";
 
 // ==========================================
@@ -373,7 +373,8 @@ export function ProductsCatalog(props: CatalogProps) {
                 <button
                   key={cat}
                   type="button"
-                  onClick={() => { setSelectedCategory(cat); setVisibleCount(INITIAL_VISIBLE); }}
+                  onClick={() => { setSelectedCategory(cat);
+                    /* setVisibleCount(INITIAL_VISIBLE);*/ }}
                   className={`shrink-0 rounded-lg px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide transition-all active:scale-[0.97] border ${
                     selectedCategory === cat 
                     ? (isDark ? "bg-white border-white text-black" : "bg-zinc-950 border-zinc-950 text-white shadow-xs") 

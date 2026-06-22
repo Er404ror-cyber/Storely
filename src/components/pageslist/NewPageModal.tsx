@@ -1,4 +1,4 @@
-import { Loader2, X, AlertCircle, CheckCircle2 } from 'lucide-react'; 
+import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react'; 
 import { useTranslate } from '../../context/LanguageContext';
 
 export function NewPageModal({ 
