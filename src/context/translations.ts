@@ -362,7 +362,7 @@ modal_library_subtitle: "Select a block to build",
 
   new_page: "NEW PAGE",
 updated_status: "Updated",
-deploy_now: "Deploy now",
+deploy_now: "Create Now",
 new_deployment: "New Deployment",
 configuring_page: "Configuring Page",
 destination_path: "Destination Path",
@@ -1615,6 +1615,7 @@ noImage: "No Image",
   catalog_layout_sample: "Layout Sample",
   catalog_actives: "active",
   catalog_no_products: "No products registered",
+    catalog_page: "Product Catalog",
   },
 
 
@@ -2037,7 +2038,7 @@ loading_engine: "Sincronizando Storely...",
 
 new_page: "NOVA PÁGINA",
 updated_status: "Actualizado",
-deploy_now: "Publicar agora",
+deploy_now: "Criar Agora",
 new_deployment: "Nova Implementação",
 configuring_page: "Configurando Página",
 destination_path: "Caminho de Destino",
@@ -3265,6 +3266,7 @@ noImage: "Sem Imagem",
   catalog_layout_sample: "Amostra de Layout",
   catalog_actives: "ativos",
   catalog_no_products: "Nenhum produto cadastrado",
+    catalog_page: "Catálogo de Produtos",
 }
 
 

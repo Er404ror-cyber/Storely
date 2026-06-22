@@ -218,8 +218,8 @@ export function ProductsCatalog(props: CatalogProps) {
       return filtered.slice(0, EDITOR_PREVIEW_LIMIT);
     }
     
-    return filtered.slice(0, visibleCount);
-  }, [products, selectedCategory, visibleCount, allLabel, isReadOnly, isEditor]);
+    return filtered/*.slice(0, visibleCount)*/;
+  }, [products, selectedCategory,/* visibleCount, */ allLabel, isReadOnly, isEditor]);
 
   const totalFiltered = (isReadOnly && selectedCategory !== allLabel)
     ? products.filter(p => p.category === selectedCategory).length
@@ -405,7 +405,7 @@ export function ProductsCatalog(props: CatalogProps) {
                   <LayoutGrid products={displayProducts} onAction={handleProductClick} cols={layoutCols} isDark={isDark} t={t} />
                 )}
 
-                {/* BOTÃO CARREGAR MAIS APENAS EM MODO PÚBLICO */}
+                {/* BOTÃO CARREGAR MAIS APENAS EM MODO PÚBLICO 
                 {isReadOnly && visibleCount < totalFiltered && (
                   <div className="mt-8 flex justify-center">
                     <button
@@ -418,7 +418,7 @@ export function ProductsCatalog(props: CatalogProps) {
                       <Plus size={12} /> {t("showcase_viewFull") || "Carregar Mais"}
                     </button>
                   </div>
-                )}
+                )}*/}
               </div>
             )}
 
