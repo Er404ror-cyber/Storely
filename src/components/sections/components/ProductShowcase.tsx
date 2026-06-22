@@ -50,7 +50,6 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
   const deferredSearch = useDeferredValue(searchTerm);
   const [selectedCategory, setSelectedCategory] = useState<string>(allLabel);
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
-  const [showAll, setShowAll] = useState(false);
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
 
   const layoutCols = Math.min(Math.max(Number(style?.cols) || 4, 1), 4);
@@ -139,10 +138,10 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
     });
   }, [products, deferredSearch, selectedCategory, maxPrice, allLabel]);
 
+  // Mantém fatiado na vitrine inicial da Home
   const displayProducts = useMemo(() => {
-    if (showAll) return filteredProducts;
     return filteredProducts.slice(0, INITIAL_VISIBLE);
-  }, [filteredProducts, showAll]);
+  }, [filteredProducts]);
 
   const hasActiveFilters = isReadOnly && (selectedCategory !== allLabel || maxPrice !== null || deferredSearch.trim() !== "");
 
@@ -150,7 +149,6 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
     setSelectedCategory(allLabel);
     setMaxPrice(null);
     setSearchTerm("");
-    setShowAll(false);
   }, [allLabel]);
 
   const handleProductClick = useCallback((productId: string) => {
@@ -160,24 +158,26 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(safeText(e.target.value, 40));
-    setShowAll(false);
   }, []);
 
   const handleCategoryChange = useCallback((cat: string) => {
     setSelectedCategory(cat);
-    setShowAll(false);
   }, []);
 
   const handleMaxPriceChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setMaxPrice(Number(e.target.value));
-    setShowAll(false);
   }, []);
 
   const handleMaxPriceInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 9);
     setMaxPrice(value === "" ? null : Number(value));
-    setShowAll(false);
   }, []);
+
+  // MUDANÇA AQUI: Função que redireciona para a página completa de produtos
+  const handleViewFullCatalog = useCallback(() => {
+    if (isEditor || !activeStoreSlug) return;
+    navigate(`/${activeStoreSlug}/products`);
+  }, [isEditor, activeStoreSlug, navigate]);
 
   return (
     <section
@@ -310,11 +310,12 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
                 <LayoutGrid products={displayProducts} onAction={handleProductClick} cols={layoutCols} isDark={isDark} t={t} />
               )}
 
-              {!showAll && filteredProducts.length > INITIAL_VISIBLE && (
+              {/* MUDANÇA AQUI: Botão agora dispara o handleViewFullCatalog que redireciona o usuário */}
+              {isReadOnly && filteredProducts.length > INITIAL_VISIBLE && (
                 <div className="mt-8 flex justify-center">
                   <button
                     type="button"
-                    onClick={() => setShowAll(true)}
+                    onClick={handleViewFullCatalog}
                     className={`flex items-center gap-2 rounded-2xl px-6 py-3 text-[11px] font-bold uppercase tracking-widest active:scale-95 ${isDark ? "bg-white text-black" : "bg-zinc-900 text-white"}`}
                   >
                     <Plus size={16} /> {t("showcase_viewFull")}

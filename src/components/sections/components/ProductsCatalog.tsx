@@ -112,7 +112,7 @@ export function ProductsCatalog(props: CatalogProps) {
   const fallbackSubtitle = useMemo(() => t("catalog_default_subtitle") || "Confira os nossos produtos disponíveis", [t]);
 
   const [selectedCategory, setSelectedCategory] = useState<string>(allLabel);
-  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
+ /* const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);*/
 
   const [editableTitle, setEditableTitle] = useState(props.content?.title || fallbackTitle);
   const [editableSubtitle, setEditableSubtitle] = useState(props.content?.subtitle || fallbackSubtitle);
@@ -221,9 +221,9 @@ export function ProductsCatalog(props: CatalogProps) {
     return filtered/*.slice(0, visibleCount)*/;
   }, [products, selectedCategory,/* visibleCount, */ allLabel, isReadOnly, isEditor]);
 
-  const totalFiltered = (isReadOnly && selectedCategory !== allLabel)
+ /* const totalFiltered = (isReadOnly && selectedCategory !== allLabel)
     ? products.filter(p => p.category === selectedCategory).length
-    : products.length;
+    : products.length;*/
 
   const handleProductClick = useCallback((productId: string) => {
     if (isEditor || !activeStoreSlug) return;

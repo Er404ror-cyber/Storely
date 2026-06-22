@@ -336,8 +336,8 @@ function ListComponent({ products, onAction, isDark }: LayoutProps) {
   const sorted = useMemo(() => sortProductsByDate(products || []), [products]);
 
   const featured = sorted[0];
-  const sideItems = sorted.slice(1, 5);
-  const restItems = sorted.slice(5);
+  const sideItems = sorted.slice(1, 4);
+  const restItems = sorted.slice(4);
 
   const handleAction = useCallback(
     (id: string) => {
@@ -355,13 +355,16 @@ function ListComponent({ products, onAction, isDark }: LayoutProps) {
   return (
     <div className="mx-auto w-full max-w-7xl px-0 md:px-4" style={{ contain: "layout paint" }}>
       <div className="grid gap-2 lg:grid-cols-[1.1fr_0.9fr] xl:grid-cols-[1.2fr_0.8fr]">
+        {/*sm:min-h-[340px] lg:min-h-[500px]*/}
         {featured && (
           <button
             type="button"
             onClick={() => handleAction(featured.id)}
             className={[
               "group relative min-h-[280px] overflow-hidden rounded-[1.35rem] border text-left active:scale-[0.99]",
-              "sm:min-h-[340px] lg:min-h-[500px]",
+
+              "h-[320px] sm:h-[400px] lg:h-[480px] ",
+              
               cardBase,
             ].join(" ")}
             style={{ contain: "layout paint" }}
@@ -410,72 +413,83 @@ function ListComponent({ products, onAction, isDark }: LayoutProps) {
           </button>
         )}
 
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
-          {sideItems.map((p, index) => {
-            const name = safeText(p.name);
+       {/* Mantém 2 colunas no celular, 3 no tablet e 1 coluna vertical no PC */}
+<div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-1">
+  {sideItems.map((p, index) => {
+    const name = safeText(p.name);
+    const isThirdItem = index === 2; // Identifica o 3º produto para ajustar o layout
 
-            return (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => handleAction(p.id)}
-                className={[
-                  "group grid min-w-0 overflow-hidden rounded-[1.1rem] border text-left active:scale-[0.99]",
-                  "lg:grid-cols-[0.9fr_1.1fr]",
-                  cardBase,
-                ].join(" ")}
-                style={{ contain: "layout paint" }}
-              >
-                <div className="relative aspect-square overflow-hidden bg-zinc-100 dark:bg-zinc-800 lg:aspect-auto lg:min-h-[118px]">
-                  <ProductImage
-                    src={p.main_image}
-                    alt={name}
-                    priority={index < 2}
-                    width={420}
-                    height={420}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-
-                <div className="flex min-w-0 flex-col justify-between p-2.5">
-                  <div className="min-w-0">
-                    {p.category && (
-                      <p className="mb-1 truncate text-[8px] font-black uppercase tracking-[0.1em] text-blue-500">
-                        {safeText(p.category)}
-                      </p>
-                    )}
-
-                    <h3
-                      className={[
-                        "line-clamp-2 min-w-0 text-[12px] font-extrabold leading-snug sm:text-sm",
-                        isDark ? "text-zinc-100" : "text-zinc-950",
-                      ].join(" ")}
-                      title={name}
-                    >
-                      {name}
-                    </h3>
-                  </div>
-
-                  <div className="mt-2 flex items-center justify-between gap-2">
-                    <span
-                      className={`min-w-0 truncate rounded-full px-2 py-1 text-[10px] font-black ${
-                        isDark
-                          ? "bg-white/10 text-zinc-100"
-                          : "bg-zinc-100 text-zinc-950"
-                      }`}
-                    >
-                      {formatPrice(p.currency, p.price)}
-                    </span>
-
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
-                      <ArrowRight size={12} />
-                    </span>
-                  </div>
-                </div>
-              </button>
-            );
-          })}
+    return (
+      <button
+        key={p.id}
+        type="button"
+        onClick={() => handleAction(p.id)}
+        className={[
+          "group grid min-w-0 overflow-hidden rounded-[1.1rem] border text-left active:scale-[0.99] transition-all",
+          // 💡 RESOLVE O BURACO: O 3º card ocupa a linha toda sozinho no mobile, mas volta ao normal no tablet/PC
+          isThirdItem ? "col-span-2 sm:col-span-1" : "col-span-1",
+          // 💡 RESOLVE O APERTO: Imagem no topo no celular (grid-cols-1), lado a lado só no PC (lg)
+          "grid-cols-1 lg:grid-cols-[0.9fr_1.1fr]",
+          cardBase,
+        ].join(" ")}
+        style={{ contain: "layout paint" }}
+      >
+        {/* Imagem do Produto */}
+        <div className={[
+          "relative overflow-hidden bg-zinc-100 dark:bg-zinc-800 lg:min-h-[118px]",
+          // Se for o 3º item esticado no celular, damos um aspecto mais horizontal à foto para não ficar gigante
+          isThirdItem ? "aspect-[21/9] sm:aspect-square lg:aspect-auto" : "aspect-square lg:aspect-auto"
+        ].join(" ")}>
+          <ProductImage
+            src={p.main_image}
+            alt={name}
+            priority={index < 2}
+            width={420}
+            height={420}
+            className="h-full w-full object-cover"
+          />
         </div>
+
+        {/* Informações */}
+        <div className="flex min-w-0 flex-col justify-between p-2.5">
+          <div className="min-w-0">
+            {p.category && (
+              <p className="mb-1 truncate text-[8px] font-black uppercase tracking-[0.1em] text-blue-500">
+                {safeText(p.category)}
+              </p>
+            )}
+
+            <h3
+              className={[
+                "line-clamp-2 min-w-0 text-[12px] font-extrabold leading-snug sm:text-sm",
+                isDark ? "text-zinc-100" : "text-zinc-950",
+              ].join(" ")}
+              title={name}
+            >
+              {name}
+            </h3>
+          </div>
+
+          <div className="mt-2 flex items-center justify-between gap-2 pt-1">
+            <span
+              className={`min-w-0 truncate rounded-full px-2 py-1 text-[10px] font-black ${
+                isDark
+                  ? "bg-white/10 text-zinc-100"
+                  : "bg-zinc-100 text-zinc-950"
+              }`}
+            >
+              {formatPrice(p.currency, p.price)}
+            </span>
+
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
+              <ArrowRight size={12} />
+            </span>
+          </div>
+        </div>
+      </button>
+    );
+  })}
+</div>
       </div>
 
       {!!restItems.length && (

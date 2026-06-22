@@ -9,7 +9,7 @@ export const LIMITS = {
 export const CACHE_TIME = 1000 * 60 * 20;
 export const CACHE_VERSION = "v10";
 export const PRODUCTS_LIMIT = 32;
-export const INITIAL_VISIBLE = 12;
+export const INITIAL_VISIBLE = 6;
 
 export function safeText(value: unknown, limit: number): string {
   return String(value || "")
