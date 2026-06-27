@@ -295,7 +295,7 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
 
   const handleNavigate = useCallback((slug: string, id: string) => {
     handleClose();
-    if (slug) navigate(`/${slug}/products/${id}`);
+    if (slug) navigate(`/${slug}/blog/${id}`);
   }, [handleClose, navigate]);
 
   const handleToggleGlobal = useCallback(() => setShowGlobalCats(p => !p), []);
