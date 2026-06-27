@@ -13,6 +13,7 @@ export const PRODUCT_UNIT_OPTIONS = [
   'par',
   'kit',
   'pacote',
+  'peca',
   'caixa',
   'kg',
   'hora',
@@ -27,6 +28,7 @@ export const PRODUCT_UNIT_OPTIONS = [
   'cm',
   'm2',
   'm3',
+
 ] as const;
 
 export function sanitizeMajor(value: string): string {

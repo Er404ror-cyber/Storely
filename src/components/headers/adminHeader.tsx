@@ -320,16 +320,18 @@ export function AdminSidebar({
                     {isEditingName ? (
                       <div className="space-y-2">
                         <div className="flex items-center gap-1">
-                          <input
-                            autoFocus
-                            value={newName}
-                            onChange={(e) => setNewName(e.target.value)}
-                            className={`w-full rounded-xl border px-3 py-2 text-[13px] font-semibold outline-none ${
-                              isNameTaken
-                                ? 'border-red-500 ring-1 ring-red-500'
-                                : 'border-slate-200 bg-white focus:border-indigo-400'
-                            }`}
-                          />
+                        <input
+  autoFocus
+  value={newName}
+  // 💡 O .slice(0, 15) garante que mesmo se colarem texto grande, ele é cortado na hora
+  onChange={(e) => setNewName(e.target.value.slice(0, 15))}
+  maxLength={15} // 💡 Impede o utilizador de continuar a digitar após atingir os 15 caracteres
+  className={`w-full rounded-xl border px-3 py-2 text-[13px] font-semibold outline-none ${
+    isNameTaken
+      ? 'border-red-500 ring-1 ring-red-500'
+      : 'border-slate-200 bg-white focus:border-indigo-400'
+  }`}
+/>
 
                           <button
                             type="button"
@@ -387,14 +389,14 @@ export function AdminSidebar({
                           </div>
                         </button>
 
-                        <a
-                          href={storeUrl}
+                        <Link
+                          to={storeUrl}
                           target="_blank"
                           rel="noreferrer"
                           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:text-slate-700"
                         >
                           <ExternalLink size={15} />
-                        </a>
+                        </Link>
                       </div>
                     )}
                   </div>

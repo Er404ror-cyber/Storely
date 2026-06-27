@@ -1,4 +1,4 @@
-import { Loader2, X, AlertCircle, CheckCircle2 } from 'lucide-react'; 
+import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react'; 
 import { useTranslate } from '../../context/LanguageContext';
 
 export function NewPageModal({ 
@@ -38,20 +38,21 @@ export function NewPageModal({
             </div>
           </div>
           <div className="flex items-center gap-3">
+            
             <button 
-              disabled={!isFormValid || createPage.isPending} 
-              onClick={() => createPage.mutate(newPage)} 
-              className={`px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-[0.1em] transition-all flex items-center gap-2 
-                ${isFormValid 
-                  ? 'bg-slate-900 text-white hover:bg-indigo-600 active:scale-95 shadow-xl shadow-indigo-100' 
-                  : 'bg-slate-100 text-slate-300 cursor-not-allowed opacity-100 grayscale'
-                }`}
-            >
-              {createPage.isPending ? <Loader2 size={16} className="animate-spin" /> : t('deploy_now')}
-            </button>
+            onClick={onClose} 
+            className=" 
+            px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center gap-2 
+
+            border-2 border-slate-100 bg-red-50 text-[11px]  text-red-500   hover:bg-red-600 hover:text-white hover:border-red-600  active:scale-95"
+          >
+            {t('cancel')} 
+          </button>
+          {/*
             <button onClick={onClose} className="hidden md:flex p-3 bg-slate-50 text-slate-400 hover:text-red-500 rounded-2xl transition-colors">
               <X size={20} />
             </button>
+            */}
           </div>
         </div>
         
@@ -133,11 +134,17 @@ export function NewPageModal({
         {/* FOOTER */}
         <div className="px-8 py-2 md:py-8 bg-white border-t border-slate-100 shrink-0">
           <button 
-            onClick={onClose} 
-            className="w-full py-5 rounded-[22px] border-2 border-slate-100 bg-red-50 text-[11px] font-black text-red-500 uppercase tracking-[0.2em] hover:bg-red-600 hover:text-white hover:border-red-600 transition-all active:scale-95"
-          >
-            {t('cancel')} 
-          </button>
+              disabled={!isFormValid || createPage.isPending} 
+              onClick={() => createPage.mutate(newPage)} 
+              className={`px-8 w-full py-5 rounded-[22px]  font-black text-xs uppercase tracking-[0.2em] transition-all  items-center gap-2 
+                ${isFormValid 
+                  ? 'bg-slate-900 text-white hover:bg-indigo-600 active:scale-95 shadow-xl shadow-indigo-100' 
+                  : 'bg-slate-100 text-slate-300 cursor-not-allowed opacity-100 grayscale'
+                }`}
+            >
+              {createPage.isPending ? <Loader2 size={16} className="animate-spin" /> : t('deploy_now')}
+            </button>
+         
         </div>
       </div>
     </div>

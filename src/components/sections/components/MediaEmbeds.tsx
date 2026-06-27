@@ -1065,7 +1065,7 @@ const SocialScrollerCard = memo(function SocialScrollerCard({
     >
       <div
         className={cn(
-          'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border backdrop-blur-[1px]',
+          'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ',
           theme === 'dark'
             ? 'border-white/10 bg-white/10 text-white'
             : 'border-white/70 bg-white text-slate-800 shadow-sm'

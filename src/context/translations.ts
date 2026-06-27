@@ -362,7 +362,7 @@ modal_library_subtitle: "Select a block to build",
 
   new_page: "NEW PAGE",
 updated_status: "Updated",
-deploy_now: "Deploy now",
+deploy_now: "Create Now",
 new_deployment: "New Deployment",
 configuring_page: "Configuring Page",
 destination_path: "Destination Path",
@@ -414,7 +414,6 @@ label_slug: "Store URL (Slug)",
 label_description: "Public Description",
 label_whatsapp: "Contact WhatsApp",
 section_email_title: "Access Email",
-section_email_subtitle: "Manage your admin email",
 label_current_email: "Current Address",
 label_new_email: "New Email",
 label_confirm_password: "Confirm with Current Password",
@@ -724,7 +723,7 @@ storely_search_placeholder: "Search Storely",
 storely_suggestions: "Suggestions",
 storely_recent_searches: "Recent searches",
 storely_explore: "Explore",
-storely_sell_now: "Sell now",
+storely_sell_now: "Create my store for free →",
 storely_clear_filters: "Clear filters",
 storely_view_store: "View store",
 storely_main_feed: "Main feed",
@@ -769,7 +768,7 @@ storely_try_these: "Try searching for:",
 
 
 marketplace_hero_badge: "Discover more in one place",
-marketplace_hero_subtitle: "Explore a marketplace with multiple types of products and shops in one simple, fast and organized experience.",
+marketplace_hero_subtitle: "Explore a marketplace with multiple types of products and shops.",
 marketplace_hero_point_products: "Different product types",
 marketplace_hero_point_stores: "Multiple stores",
 marketplace_hero_point_discover: "Easy to explore",
@@ -828,6 +827,7 @@ product_form_unit_dia: "Day",
 product_form_unit_semana: "Week",
 product_form_unit_mes: "Month",
 product_form_unit_servico: "Service",
+product_form_unit_peca:"Piece",
 product_form_description_label: "Description",
 product_form_description_placeholder: "Explain the product in a simple, clear, and useful way.",
 product_form_description_help: "Focus on what helps the customer decide: size, material, color, usage, or condition.",
@@ -1219,7 +1219,7 @@ currency: "Currency",
 
 
 
-
+Open_site: "Open site",
 
 
 
@@ -1453,7 +1453,199 @@ media_provider_youtube_music: "YouTube Music",
 media_clear_button: "Clear link",
 
 
+
+
+
+
+
+
+store_music_step:"Change audio",
+store_music_title: "Store music",
+  store_music_subtitle: "Music link",
+  store_music_url_label: "Music URL",
+  store_music_url_placeholder: "Paste a link from YouTube, Spotify, or Apple Music",
+  store_music_provider_unknown: "undefined",
+  store_music_invalid_url: "invalid link",
+  store_music_volume: "Volume",
+  store_music_enabled: "Enable music for the public",
+  store_music_clear: "Remove",
+  store_music_empty: "No music set. Supports audio only",
+
+  store_music_help: "Supports .mp3,.m4a,.aac,.ogg,.wav,.webm,.flac,audio, For public view; ",
+
+
+
+
+
+
+
+
+
+  // EN
+store_required_title: "Required information",
+store_required_subtitle: "Add the number customers will use to contact your store.",
+store_phone_required_label: "Required number",
+store_phone_required_hint: "Used for WhatsApp orders and customer contact.",
+store_customization_title: "Customization",
+store_customization_subtitle: "Customize your logo, description and background music.",
+phone_number: "Phone number",
+
+store_music_step_1: "1. Choose audio",
+store_music_step_2: "2. Choose where it plays",
+store_music_upload_help: "Supported: MP3, M4A, AAC, OGG, WAV, WEBM, FLAC. Max 12MB.",
+store_music_choose_file: "Choose file",
+store_music_external_link: "Download music from YouTube",store_music_compress_link: "Compress audio",
+store_music_select_part_help: "Move the bar to choose the exact 1 minute that will play in your store.",
+store_music_clip_range: "Music part",
+store_music_total: "Total",
+store_music_clip_length: "Selected",
+store_music_volume_hint: "Volume is limited to avoid disturbing visitors.",
+store_music_disable_hint: "Music turns on after upload. You can disable it here.",
+store_music_empty_help: "Choose an audio file, select the best 1 minute and test it before saving.",
+store_music_status_on: "Active",
+store_music_status_off: "Off",
+store_music_save_clip: "Save music",
+store_music_delete_pending: "Delete temporary",
+store_music_invalid_file: "Unsupported audio format",
+store_music_file_too_large: "Audio file is too large",
+store_music_upload_error: "Audio upload failed",
+store_music_play_preview: "Test play",
+store_music_pause_preview: "Pause",
+store_music_clip_help: "Choose a music part up to 1 minute.",
+
+
+store_music_now_playing: "Playing",
+
+
+
+store_phone_missing_title: "Add your number",
+store_phone_missing_help: "Customers need this number to contact your store and place orders. Click Here",
+store_music_play_error: "Could not play the audio. Try choosing another file.",
+
+
+
+
+
+section_email_subtitle: "Update your account email safely.",
+
+account_email_updated_title: "Access updated",
+account_email_updated_desc: "Your new email was verified and is now active.",
+account_email_pending_title: "Email change in progress",
+account_resend_link: "Resend link",
+account_wait_seconds: "Wait {seconds}s",
+account_confirm_password: "Confirm with password",
+account_new_email_placeholder: "new@email.com",
+account_password_placeholder: "Your current password",
+account_updating_email: "Updating...",
+account_email_not_available: "Email not available",
+account_error_new_email_required: "Enter the new email.",
+account_error_password_required: "Enter your current password.",
+account_error_wrong_password: "Current password is incorrect.",
+account_error_no_pending_email: "No pending email change.",
+account_success_email_link_sent: "Link sent! Check your new email.",
+account_success_email_link_resent: "Link resent!",
+
+
+error_unauthorized: "Session expired. Please log in again.",
+
+
+
+
+
+
+upload_error : "Upload failed. Please try again.",
+
+noImage: "No Image",
+  noCover: "No Cover",
+  products: "products",
+
+  official_store: "Official Store",
+    enter_btn: "Enter Store",
+    click_anywhere: "Click anywhere to enter",
+    activate_audio: "Enable Audio",
+    enter_store_aria: "Enter the storefront experience",
+
+    category: "Category",
+
+
+    search_title: "Search",
+    search_in_store: "In this Store",
+    search_global_title: "Other Stores",
+    search_global_btn: "Search in other stores for",
+    search_no_results: "No results found.",
+    search_suggestions: "Suggestions",
+
+
+  search_global_categories: "Global Categories",
+  search_see_local: "See Local",
+  search_see_global: "Other Stores",
+  search_no_categories: "No local categories found.",
+  search_local_results: "Store Products",
+  search_no_local_results: "No products found in this store.",
+  search_global_button: "Search outside this store",
+  search_no_global_results: "No global results found.",
+
+
+
+
+
+
+
+
+  cat_tech: "Technology & Gadgets",
+  cat_fashion: "Clothing & Fashion",
+  cat_grocery: "Supermarket & Snacks",
+  cat_home: "Home, Decor & Comfort",
+  cat_beauty: "Health & Cosmetics",
+  cat_fitness: "Fitness & Outdoor",
+  cat_books: "Books & Stationery",
+  cat_accessories: "Accessories & Bags",
+  cat_baby: "Baby & Kids",
+  cat_pets: "Pet Shop",
+  cat_tools: "Tools & Hardware",
+  cat_toys: "Toys & Games",
+  cat_auto: "Automotive & Parts",
+
+
+  common_general: "General",
+  common_of: "of",
+  catalog_collection: "Collection",
+  catalog_default_title: "Full Catalog",
+  catalog_default_subtitle: "Check out our available products",
+  catalog_add_description: "Add a description...",
+  catalog_layout_sample: "Layout Sample",
+  catalog_actives: "active",
+  catalog_no_products: "No products registered",
+    catalog_page: "Product Catalog",
+
+
+
+
+
+
+
+    
+      slug_tecnologia: "technology",
+      slug_moda: "fashion",
+      slug_grocery: "groceries",
+      slug_casa: "home",
+      slug_beleza: "beauty",
+      slug_desporto: "sports",
+      slug_cultura: "books",
+      slug_acessorios: "accessories",
+      slug_bebes: "baby",
+      slug_animais: "pets",
+      slug_ferramentas: "tools",
+      slug_brinquedos: "toys",
+      slug_automovel: "automotive",
+      slug_design: "design",
+      cat_design_editor: "video-editing",
+      cat_digital_3d: "3d-photos",
+      storely_filters_search:"Search Storely",
+
   },
+
+
 
 
 
@@ -1678,7 +1870,7 @@ media_clear_button: "Clear link",
 
   product: "Produto",
 price: "Preço",
-status: "Status",
+status: "Estado",
 actions: "Ações",
 
 
@@ -1873,7 +2065,7 @@ loading_engine: "Sincronizando Storely...",
 
 new_page: "NOVA PÁGINA",
 updated_status: "Actualizado",
-deploy_now: "Publicar agora",
+deploy_now: "Criar Agora",
 new_deployment: "Nova Implementação",
 configuring_page: "Configurando Página",
 destination_path: "Caminho de Destino",
@@ -1932,11 +2124,8 @@ label_slug: "URL da Loja (Slug)",
 label_description: "Descrição Pública",
 label_whatsapp: "WhatsApp de Contacto",
 section_email_title: "E-mail de Acesso",
-section_email_subtitle: "Gerencie seu e-mail administrativo",
-label_current_email: "Endereço Atual",
 label_new_email: "Novo E-mail",
 label_confirm_password: "Confirmar com Senha Atual",
-btn_update_email: "ATUALIZAR E-MAIL",
 section_crypto_title: "Criptografia",
 section_crypto_subtitle: "Proteção e troca de senha",
 label_current_password: "Senha Atual",
@@ -2214,7 +2403,7 @@ storely_search_placeholder: "Pesquisar na Storely",
 storely_suggestions: "Sugestões",
 storely_recent_searches: "Pesquisas recentes",
 storely_explore: "Explorar",
-storely_sell_now: "Vender agora",
+storely_sell_now: "Criar minha loja grátis →",
 storely_clear_filters: "Limpar filtros",
 storely_view_store: "Ver loja",
 storely_main_feed: "Feed principal",
@@ -2252,7 +2441,7 @@ storely_search_message_fallback: "Não encontramos nada semelhante, mas aqui est
 storely_other_products_we_have: "Outros produtos que temos",
 
 marketplace_hero_badge: "Descubra mais num só lugar",
-marketplace_hero_subtitle: "Explore um marketplace com vários tipos de produtos e lojas numa experiência simples, rápida e organizada.",
+marketplace_hero_subtitle: "Explore um marketplace com vários tipos de produtos e lojas.",
 marketplace_hero_point_products: "Vários tipos de produtos",
 marketplace_hero_point_stores: "Múltiplas lojas",
 marketplace_hero_point_discover: "Fácil de explorar",
@@ -2329,6 +2518,8 @@ product_form_unit_dia: "Dia",
 product_form_unit_semana: "Semana",
 product_form_unit_mes: "Mês",
 product_form_unit_servico: "Serviço",
+product_form_unit_peca:"Peça",
+
 product_form_description_label: "Descrição",
 product_form_description_placeholder: "Explique o produto de forma simples, clara e útil.",
 product_form_description_help: "Foque no que ajuda o cliente a decidir: tamanho, material, cor, uso ou estado.",
@@ -2937,6 +3128,199 @@ media_tap_to_open: "Toque para abrir",
 
 media_provider_youtube_music: "YouTube Music",
 media_clear_button: "Limpar link",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+store_music_title: "Música da loja",
+  store_music_subtitle: "Link de música",
+  store_music_url_label: "URL de música",
+  store_music_url_placeholder: "Cole link do YouTube, Spotify ou Apple Music",
+  store_music_provider_unknown: "indefinido",
+  store_music_invalid_url: "link inválido",
+  store_music_volume: "Volume",
+  store_music_enabled: "Ativar música no público",
+  store_music_clear: "Remover",
+
+  store_music_help: "Suporta .mp3,.m4a,.aac,.ogg,.wav,.webm,.flac,audio, Na Loja.",
+
+
+  // PT
+store_required_title: "Informação obrigatória",
+store_required_subtitle: "Adicione o número que os clientes vão usar para contactar a loja.",
+store_phone_required_label: "Número obrigatório",
+store_phone_required_hint: "Usado para pedidos no WhatsApp e contacto com clientes.",
+store_customization_title: "Personalização",
+store_customization_subtitle: "Personalize o logotipo, descrição e música de fundo.",
+phone_number: "Número",
+store_music_step: "Trocar áudio",
+store_music_step_2: "2. Escolher onde vai tocar",
+
+store_music_upload_help: "Suporta: MP3, M4A, AAC, OGG, WAV, WEBM, FLAC. Máx. 12MB.",
+store_music_choose_file: "Escolher áudio",
+store_music_external_link: "Baixar música do YouTube",store_music_compress_link: "Comprimir áudio",
+store_music_select_part_help: "Mova a barra para escolher exatamente o 1 minuto que vai tocar na loja.",
+store_music_clip_range: "Parte da música",
+store_music_total: "Total",
+store_music_clip_length: "Selecionado",
+store_music_volume_hint: "O volume é limitado para não incomodar visitantes.",
+store_music_disable_hint: "A música ativa depois do upload. Pode desligar aqui.",
+store_music_empty: "Nenhuma música selecionada. Suporta áudio apenas",
+store_music_empty_help: "Escolha um áudio, selecione o melhor 1 minuto e teste antes de salvar.",
+store_music_status_on: "Ativo",
+store_music_status_off: "Desligado",
+store_music_save_clip: "Salvar música",
+store_music_delete_pending: "Apagar temporário",
+store_music_invalid_file: "Formato de áudio não suportado",
+store_music_file_too_large: "O ficheiro de áudio é muito grande",
+store_music_upload_error: "Erro ao enviar áudio",
+store_music_pause_preview: "Pausar",
+store_music_clip_help: "Escolha uma parte da música até 1 minuto.",
+
+store_music_play_preview: "Tocar",
+store_music_now_playing: "Tocando",
+
+
+
+  Open_site: "Abrir site",
+
+
+
+
+
+
+
+
+
+  // PT
+store_phone_missing_title: "Adicione o número",
+store_phone_missing_help: "Os clientes precisam deste número para contactar a loja e fazer pedidos. Clique Aqui",
+store_music_play_error: "Não foi possível tocar o áudio. Tente escolher outro ficheiro.",
+
+
+
+
+
+section_email_subtitle: "Atualize o e-mail da sua conta com segurança.",
+label_current_email: "E-mail atual",
+btn_update_email: "Atualizar e-mail",
+account_email_updated_title: "Acesso atualizado",
+account_email_updated_desc: "O seu novo e-mail foi validado e já está ativo.",
+account_email_pending_title: "Troca em andamento",
+account_resend_link: "Reenviar link",
+account_wait_seconds: "Aguarde {seconds}s",
+account_confirm_password: "Confirmar com senha",
+account_new_email_placeholder: "novo@email.com",
+account_password_placeholder: "Sua senha atual",
+account_updating_email: "Atualizando...",
+account_email_not_available: "E-mail indisponível",
+account_error_new_email_required: "Digite o novo e-mail.",
+account_error_password_required: "Digite a sua senha atual.",
+account_error_wrong_password: "Senha atual incorreta.",
+account_error_no_pending_email: "Nenhuma troca pendente.",
+account_success_email_link_sent: "Link enviado! Verifique o novo e-mail.",
+account_success_email_link_resent: "Link reenviado!",
+
+error_unauthorized: "Sessão inválida. Faça login novamente.",
+
+upload_error : "Falha no upload. Tente novamente.",
+
+noImage: "Sem Imagem",
+  noCover: "Sem Capa",
+  products: "produtos",
+
+  official_store: "Loja Oficial",
+    enter_btn: "Entrar na Loja",
+    click_anywhere: "Clique em qualquer lugar para acessar",
+    activate_audio: "Ativar Som",
+    enter_store_aria: "Entrar na experiência da loja",
+
+    category: "Categoria",
+    search_title: "Pesquisar",
+    search_in_store: "Nesta Loja",
+    search_global_title: "Outras Lojas",
+    search_global_btn: "Procurar noutras lojas por",
+    search_no_results: "Nenhum resultado encontrado.",
+    search_suggestions: "Sugestões",
+ 
+
+
+
+
+  search_global_categories: "Categorias Globais",
+  search_see_local: "Ver Locais",
+  search_see_global: "Outras Lojas",
+  search_no_categories: "Nenhuma categoria carregada localmente.",
+  search_local_results: "Artigos da Loja",
+  search_no_local_results: "Nenhum artigo encontrado nesta loja.",
+  search_global_button: "Pesquisar fora desta loja",
+  search_no_global_results: "Nenhum resultado global encontrado.",
+
+
+
+
+
+
+  cat_tech: "Tecnologia & Gadgets",
+  cat_fashion: "Moda & Vestuário",
+  cat_grocery: "Supermercado & Snacks",
+  cat_home: "Casa, Decor & Conforto",
+  cat_beauty: "Saúde & Cosmética",
+  cat_fitness: "Fitness & Outdoor",
+  cat_books: "Livros & Papelaria",
+  cat_accessories: "Acessórios & Jóias",
+  cat_baby: "Bebés & Crianças",
+  cat_pets: "Produtos para Animais",
+  cat_tools: "Ferramentas & Bricolage",
+  cat_toys: "Brinquedos & Jogos",
+  cat_auto: "Acessórios Automóvel",
+
+  common_general: "Geral",
+  common_of: "de",
+  catalog_collection: "Coleção",
+  catalog_default_title: "Catálogo Completo",
+  catalog_default_subtitle: "Confira os nossos produtos disponíveis",
+  catalog_add_description: "Adicione uma descrição...",
+  catalog_layout_sample: "Amostra de Layout",
+  catalog_actives: "ativos",
+  catalog_no_products: "Nenhum produto cadastrado",
+    catalog_page: "Catálogo de Produtos",
+
+
+
+
+
+
+
+  slug_tecnologia: "tecnologia",
+  slug_moda: "moda",
+  slug_grocery: "mercado",
+  slug_casa: "casa",
+  slug_beleza: "beleza",
+  slug_desporto: "desporto",
+  slug_cultura: "livros",
+  slug_acessorios: "acessorios",
+  slug_bebes: "bebes",
+  slug_animais: "animais",
+  slug_ferramentas: "ferramentas",
+  slug_brinquedos: "brinquedos",
+  slug_automovel: "automovel",
+  cat_arts_crafts: "design",
+  cat_design_editor: "edicao-video", 
+  cat_digital_3d: "fotos-3d",  
+  
+  storely_filters_search:"busca da Storely",
 }
 
 
