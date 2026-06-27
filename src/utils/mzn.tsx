@@ -13,6 +13,9 @@ export type GeoConfig = {
   source: GeoSource;
 };
 
+// Cache interno para evitar re-processamento desnecessário na mesma sessão
+let memoizedGeoConfig: GeoConfig | null = null;
+
 const TZ_GEO_MAP: Record<string, { currency: string; country: string }> = {
   // ASIA
   'Asia/Kolkata': { currency: 'INR', country: 'IN' },
@@ -42,6 +45,7 @@ const TZ_GEO_MAP: Record<string, { currency: string; country: string }> = {
   'Africa/Accra': { currency: 'GHS', country: 'GH' },
   'Africa/Addis_Ababa': { currency: 'ETB', country: 'ET' },
   'Africa/Harare': { currency: 'ZWG', country: 'ZW' },
+  'Africa/Luanda': { currency: 'AOA', country: 'AO' },
 
   // EUROPE
   'Europe/London': { currency: 'GBP', country: 'GB' },
@@ -101,6 +105,14 @@ const LOCALE_REGION_MAP: Record<string, { currency: string; country: string }> =
   AE: { currency: 'AED', country: 'AE' },
   SG: { currency: 'SGD', country: 'SG' },
   MY: { currency: 'MYR', country: 'MY' },
+  CA: { currency: 'CAD', country: 'CA' },
+  MX: { currency: 'MXN', country: 'MX' },
+  GB: { currency: 'GBP', country: 'GB' },
+  CH: { currency: 'CHF', country: 'CH' },
+  AU: { currency: 'AUD', country: 'AU' },
+  NZ: { currency: 'NZD', country: 'NZ' },
+  JP: { currency: 'JPY', country: 'JP' },
+  CN: { currency: 'CNY', country: 'CN' },
 };
 
 const SYSTEM_CURRENCY_COUNTRY_MAP: Record<string, string> = {
@@ -117,6 +129,14 @@ const SYSTEM_CURRENCY_COUNTRY_MAP: Record<string, string> = {
   SGD: 'SG',
   MYR: 'MY',
   USD: 'US',
+  CAD: 'CA',
+  MXN: 'MX',
+  GBP: 'GB',
+  CHF: 'CH',
+  AUD: 'AU',
+  NZD: 'NZ',
+  JPY: 'JP',
+  CNY: 'CN',
 };
 
 function isLikelyGenericCurrency(code?: string): boolean {
@@ -124,18 +144,16 @@ function isLikelyGenericCurrency(code?: string): boolean {
 }
 
 function getSafeBrowserLocale(): string {
-  if (typeof window === 'undefined') return 'en-US';
+  if (typeof window === 'undefined' || !window.navigator) return 'en-US';
   return window.navigator.language || 'en-US';
 }
 
 function getSafeLanguages(): string[] {
-  if (typeof window === 'undefined') return ['en-US'];
-
+  if (typeof window === 'undefined' || !window.navigator) return ['en-US'];
   const langs = window.navigator.languages;
   if (Array.isArray(langs) && langs.length > 0) {
     return [...langs];
   }
-
   return [window.navigator.language || 'en-US'];
 }
 
@@ -162,7 +180,6 @@ function getSafeSystemCurrency(locale: string): string {
 
 export function countryCodeToFlag(countryCode?: string): string {
   if (!countryCode || countryCode.length !== 2) return '🌍';
-
   return countryCode
     .toUpperCase()
     .replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
@@ -182,6 +199,9 @@ export function getCurrencyDisplayName(code: string, locale: string = 'en'): str
 }
 
 export function getUserGeoConfig(): GeoConfig {
+  // Se já calculámos o config nesta sessão, devolve imediatamente (Performance-First)
+  if (memoizedGeoConfig) return memoizedGeoConfig;
+
   try {
     const timeZone = getSafeTimeZone();
     const browserLocale = getSafeBrowserLocale();
@@ -196,7 +216,7 @@ export function getUserGeoConfig(): GeoConfig {
     console.log('languages:', allLanguages);
     console.log('systemCurrency:', systemCurrency);
 
-    // 1) moeda do sistema, quando não for genérica
+    // 1) Moeda do sistema local, desde que não seja USD genérico
     if (!isLikelyGenericCurrency(systemCurrency)) {
       const result: GeoConfig = {
         currency: systemCurrency,
@@ -206,16 +226,18 @@ export function getUserGeoConfig(): GeoConfig {
 
       console.log('✅ etapa 1: moeda do sistema usada', result);
       console.groupEnd();
+      memoizedGeoConfig = result;
       return result;
     }
 
-    // 2) desempate para sul de África
+    // 2) Heurísticas de desempate refinadas para a África Austral (SADC)
     const southernAfricaTZs = [
       'Africa/Johannesburg',
       'Africa/Maputo',
       'Africa/Harare',
       'Africa/Gaborone',
       'Africa/Blantyre',
+      'Africa/Luanda',
     ];
 
     if (southernAfricaTZs.includes(timeZone)) {
@@ -225,7 +247,7 @@ export function getUserGeoConfig(): GeoConfig {
         timeZone === 'Africa/Maputo' ||
         countryCodeFromLocale === 'MZ' ||
         normalizedLangs.some((l) => l === 'pt-mz' || l.includes('-mz')) ||
-        (normalizedLangs.some((l) => l.startsWith('pt')) && timeZone !== 'Africa/Johannesburg');
+        (normalizedLangs.some((l) => l.startsWith('pt')) && timeZone !== 'Africa/Johannesburg' && timeZone !== 'Africa/Luanda');
 
       if (isMozambique) {
         const result: GeoConfig = {
@@ -236,6 +258,20 @@ export function getUserGeoConfig(): GeoConfig {
 
         console.log('✅ etapa 2: Moçambique detectado', result);
         console.groupEnd();
+        memoizedGeoConfig = result;
+        return result;
+      }
+
+      if (timeZone === 'Africa/Luanda' || countryCodeFromLocale === 'AO') {
+        const result: GeoConfig = {
+          currency: 'AOA',
+          country: 'AO',
+          source: 'southern-africa-heuristic',
+        };
+
+        console.log('✅ etapa 2: Angola detectado', result);
+        console.groupEnd();
+        memoizedGeoConfig = result;
         return result;
       }
 
@@ -248,6 +284,7 @@ export function getUserGeoConfig(): GeoConfig {
 
         console.log('✅ etapa 2: Zimbabwe detectado', result);
         console.groupEnd();
+        memoizedGeoConfig = result;
         return result;
       }
 
@@ -259,10 +296,11 @@ export function getUserGeoConfig(): GeoConfig {
 
       console.log('✅ etapa 2: África do Sul por fallback regional', result);
       console.groupEnd();
+      memoizedGeoConfig = result;
       return result;
     }
 
-    // 3) mapa direto por timezone
+    // 3) Mapa direto por Timezone (Excelente precisão global: Índia, Brasil, Europa, etc.)
     const tzMatch = TZ_GEO_MAP[timeZone];
     if (tzMatch) {
       const result: GeoConfig = {
@@ -273,10 +311,11 @@ export function getUserGeoConfig(): GeoConfig {
 
       console.log('✅ etapa 3: timezone map', result);
       console.groupEnd();
+      memoizedGeoConfig = result;
       return result;
     }
 
-    // 4) locale
+    // 4) Verificação direta pela Região do Locale do Navegador
     if (countryCodeFromLocale && LOCALE_REGION_MAP[countryCodeFromLocale]) {
       const localeMatch = LOCALE_REGION_MAP[countryCodeFromLocale];
 
@@ -288,27 +327,31 @@ export function getUserGeoConfig(): GeoConfig {
 
       console.log('✅ etapa 4: região do navegador', result);
       console.groupEnd();
+      memoizedGeoConfig = result;
       return result;
     }
 
-    // 5) fallback
+    // 5) Fallback global de segurança para ecrãs não identificados
     const fallback: GeoConfig = {
       currency: 'USD',
       country: 'US',
       source: 'fallback',
     };
 
-    console.log('⚠️ fallback global', fallback);
+    console.log('⚠️ fallback global aplicado', fallback);
     console.groupEnd();
+    memoizedGeoConfig = fallback;
     return fallback;
   } catch (error) {
-    console.error('❌ erro ao detectar geo/currency', error);
+    console.error('❌ erro fatal ao detectar geo/currency (usando fallback)', error);
 
-    return {
+    const ultimateFallback: GeoConfig = {
       currency: 'USD',
       country: 'US',
       source: 'fallback',
     };
+    memoizedGeoConfig = ultimateFallback;
+    return ultimateFallback;
   }
 }
 

@@ -1,4 +1,4 @@
-import { ImageIcon, Star, ShoppingCart, Plus, } from 'lucide-react';
+import { ImageIcon, Star, /*ShoppingCart,*/ Plus, } from 'lucide-react';
 import { useTranslate } from '../context/LanguageContext';
 
 const getImg = (id: string) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&q=80&w=600`;
@@ -17,12 +17,18 @@ export const useTemplates = () => {
           type: 'hero_comercial', 
           content: { 
             title: t('templates_photography_hero_title'), 
-            sub: t('templates_photography_hero_sub') 
+            sub: t('templates_photography_hero_sub'),
+            media: {
+              url: "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?auto=format&fit=crop&w=1200&q=80",
+              isTemp: false,
+              size: 0
+            }
+ 
           }, 
           style: { theme: 'light', align: 'left', fontSize: 'small' }, 
           order_index: 0 
         },
-        { 
+        /*{ 
           type: 'galeria_grid', 
           content: { 
             title: t('templates_photography_gallery_empty_title'), 
@@ -31,27 +37,54 @@ export const useTemplates = () => {
           }, 
           style: { theme: 'light', cols: '1', align: 'left' }, 
           order_index: 1 
-        },
-        { 
-          type: 'galeria_grid', 
-          content: { 
-            title: t('templates_photography_gallery_insp_title'), 
+        },*/
+        {
+          type: 'galeria_grid',
+          content: {
+            title: t('templates_photography_gallery_insp_title'),
             sub: t('templates_photography_gallery_insp_sub'),
             images: [
-              { url: getImg('1501785888041-af3ef285b470'), title: 'Exemplo 2' },
-            { url: getImg('1490730141103-6cac27aaab94'), title: 'Exemplo 1' },
-            { url: getImg('1470770841072-f978cf4d019e'), title: 'Exemplo 4' },
-            { url: getImg('1580489944761-15a19d654956'), title: 'Innovator' },
+              {
+                url: getImg('1517841905240-472988babdf9'),
+                title: 'Golden Hour'
+              },
+              {
+                url: getImg('1524504388940-b1c1722653e1'),
+                title: 'Wedding Moments'
+              },
+              {
+                url: getImg('1519741497674-611481863552'),
+                title: 'Fashion Editorial'
+              },
+              {
+                url: getImg('1500530855697-b586d89ba3ee'),
+                title: 'Creative Lifestyle'
+              },
+              {
+                url: getImg('1492691527719-9d1e07e534b4'),
+                title: 'Outdoor Adventure'
+              },
+              {
+                url: getImg('1511285560929-80b456fea0bc'),
+                title: 'Portrait Session'
+              }
+            
             ]
-          }, 
-          style: { theme: 'light', cols: '1', align: 'center' }, 
-          order_index: 2 
+          },
+          style: {
+            theme: 'light',
+            cols: '4',
+            align: 'center'
+          },
+          order_index: 2
         },
         { type: 'contacto_mapa', content: { title: t('templates_photography_contact_title') }, style: { theme: 'dark', align: 'center', fontSize: 'small' }, order_index: 3 }
       ] 
     },
 
-    // --- SAAS / PRODUCT ---
+
+
+    /*
     saas_product: { 
       label: t('templates_saas_label'), 
       icon: <ShoppingCart size={22} />,
@@ -78,7 +111,7 @@ export const useTemplates = () => {
         { type: 'contacto_mapa', content: { title: t('templates_saas_contact_title') }, style: { theme: 'dark', align: 'center' }, order_index: 2 }
       ] 
     },
-
+ */
     // --- PERSONAL BRAND ---
     personal_brand: {
         label: t('templates_brand_label'),
@@ -87,7 +120,15 @@ export const useTemplates = () => {
         sections: [
             { 
                 type: 'hero_comercial', 
-                content: { title: t('templates_brand_hero_title'), sub: t('templates_brand_hero_sub') }, 
+                content: { title: t('templates_brand_hero_title'), sub: t('templates_brand_hero_sub'),
+
+                  media: {
+                    url: "https://images.unsplash.com/photo-1469474968028-56623f02e42e",
+                    isTemp: false,
+                    size: 0
+                  }
+                }, 
+                
                 style: { theme: 'dark', align: 'left', fontSize: 'medium' }, 
                 order_index: 0 
             },

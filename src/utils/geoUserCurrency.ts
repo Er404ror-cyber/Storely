@@ -16,6 +16,9 @@ export interface GeoCurrencyResult {
   languages: string[];
 }
 
+// 🚀 Cache em memória para garantir performance máxima e zero repetições inúteis
+let memoizedGeoCurrency: GeoCurrencyResult | null = null;
+
 const TZ_GEO_MAP: Record<string, { currency: string; country: string }> = {
   // AFRICA
   'Africa/Maputo': { currency: 'MZN', country: 'MZ' },
@@ -124,53 +127,13 @@ const LOCALE_REGION_MAP: Record<string, { currency: string; country: string }> =
 };
 
 const CURRENCY_TO_COUNTRY: Record<string, string> = {
-  MZN: 'MZ',
-  ZAR: 'ZA',
-  ZWG: 'ZW',
-  AOA: 'AO',
-  NGN: 'NG',
-  KES: 'KE',
-  INR: 'IN',
-  AED: 'AE',
-  SGD: 'SG',
-  MYR: 'MY',
-  USD: 'US',
-  CAD: 'CA',
-  MXN: 'MX',
-  BRL: 'BR',
-  EUR: 'PT',
-  GBP: 'GB',
-  CHF: 'CH',
-  AUD: 'AU',
-  NZD: 'NZ',
-  JPY: 'JP',
-  CNY: 'CN',
-  HKD: 'HK',
-  SEK: 'SE',
-  NOK: 'NO',
-  DKK: 'DK',
-  PLN: 'PL',
-  CZK: 'CZ',
-  HUF: 'HU',
-  RON: 'RO',
-  TRY: 'TR',
-  ARS: 'AR',
-  CLP: 'CL',
-  COP: 'CO',
-  PEN: 'PE',
-  THB: 'TH',
-  IDR: 'ID',
-  PHP: 'PH',
-  PKR: 'PK',
-  BDT: 'BD',
-  LKR: 'LK',
-  NPR: 'NP',
-  KRW: 'KR',
-  EGP: 'EG',
-  MAD: 'MA',
-  TND: 'TN',
-  GHS: 'GH',
-  ETB: 'ET',
+  MZN: 'MZ', ZAR: 'ZA', ZWG: 'ZW', AOA: 'AO', NGN: 'NG', KES: 'KE', INR: 'IN',
+  AED: 'AE', SGD: 'SG', MYR: 'MY', USD: 'US', CAD: 'CA', MXN: 'MX', BRL: 'BR',
+  EUR: 'PT', GBP: 'GB', CHF: 'CH', AUD: 'AU', NZD: 'NZ', JPY: 'JP', CNY: 'CN',
+  HKD: 'HK', SEK: 'SE', NOK: 'NO', DKK: 'DK', PLN: 'PL', CZK: 'CZ', HUF: 'HU',
+  RON: 'RO', TRY: 'TR', ARS: 'AR', CLP: 'CL', COP: 'CO', PEN: 'PE', THB: 'TH',
+  IDR: 'ID', PHP: 'PH', PKR: 'PK', BDT: 'BD', LKR: 'LK', NPR: 'NP', KRW: 'KR',
+  EGP: 'EG', MAD: 'MA', TND: 'TN', GHS: 'GH', ETB: 'ET',
 };
 
 function safeSystemCurrency(locale: string): string {
@@ -219,15 +182,11 @@ function safeNavigatorLocale(): string {
   return navigator.language || 'en-US';
 }
 
+// Proteção para evitar falhas em SSR (Server-Side Rendering)
 function safeNavigatorLanguages(locale: string): string[] {
   if (typeof navigator === 'undefined') return [locale];
-
   const langs = navigator.languages;
-  if (Array.isArray(langs) && langs.length > 0) {
-    return [...langs];
-  }
-
-  return [locale];
+  return Array.isArray(langs) && langs.length > 0 ? [...langs] : [locale];
 }
 
 function safeTimeZone(): string {
@@ -239,99 +198,126 @@ function safeTimeZone(): string {
 }
 
 export function getUserGeoCurrency(): GeoCurrencyResult {
-  const locale = safeNavigatorLocale();
-  const languages = safeNavigatorLanguages(locale);
-  const timeZone = safeTimeZone();
-  const region = locale.split('-')[1]?.toUpperCase() || '';
-  const systemCurrency = safeSystemCurrency(locale);
+  // 🔥 Retorno imediato se o valor já foi processado antes (Melhoria crítica de Performance)
+  if (memoizedGeoCurrency) return memoizedGeoCurrency;
 
-  console.group('🌍 [geoUserCurrency]');
-  console.log('locale:', locale);
-  console.log('languages:', languages);
-  console.log('timeZone:', timeZone);
-  console.log('systemCurrency:', systemCurrency);
-  console.log('region:', region);
+  try {
+    const locale = safeNavigatorLocale();
+    const languages = safeNavigatorLanguages(locale);
+    const timeZone = safeTimeZone();
+    const region = locale.split('-')[1]?.toUpperCase() || '';
+    const systemCurrency = safeSystemCurrency(locale);
 
-  if (!isGenericCurrency(systemCurrency)) {
-    const result: GeoCurrencyResult = {
-      currency: systemCurrency,
-      country: getCurrencyCountry(systemCurrency) || region || 'US',
-      source: 'system-currency',
+    console.group('🌍 [geoUserCurrency]');
+    console.log('locale:', locale);
+    console.log('languages:', languages);
+    console.log('timeZone:', timeZone);
+    console.log('systemCurrency:', systemCurrency);
+    console.log('region:', region);
+
+    // 1) Moeda do sistema operacional (Não-genérica)
+    if (!isGenericCurrency(systemCurrency)) {
+      const result: GeoCurrencyResult = {
+        currency: systemCurrency,
+        country: getCurrencyCountry(systemCurrency) || region || 'US',
+        source: 'system-currency',
+        timeZone,
+        locale,
+        languages: [...languages],
+      };
+
+      console.log('✅ system-currency:', result);
+      console.groupEnd();
+      memoizedGeoCurrency = result; // Grava no cache
+      return result;
+    }
+
+    // 2) Heurística para Moçambique e região SADC
+    const normalizedLanguages = languages.map((lang) => lang.toLowerCase());
+    if (
+      timeZone === 'Africa/Maputo' ||
+      region === 'MZ' ||
+      normalizedLanguages.some((lang) => lang === 'pt-mz' || lang.endsWith('-mz'))
+    ) {
+      const result: GeoCurrencyResult = {
+        currency: 'MZN',
+        country: 'MZ',
+        source: 'southern-africa-heuristic',
+        timeZone,
+        locale,
+        languages: [...languages],
+      };
+
+      console.log('✅ mozambique heuristic:', result);
+      console.groupEnd();
+      memoizedGeoCurrency = result;
+      return result;
+    }
+
+    // 3) Mapa direto por fuso horário da Timezone
+    const timezoneMatch = TZ_GEO_MAP[timeZone];
+    if (timezoneMatch) {
+      const result: GeoCurrencyResult = {
+        currency: timezoneMatch.currency,
+        country: timezoneMatch.country,
+        source: 'timezone-map',
+        timeZone,
+        locale,
+        languages: [...languages],
+      };
+
+      console.log('✅ timezone-map:', result);
+      console.groupEnd();
+      memoizedGeoCurrency = result;
+      return result;
+    }
+
+    // 4) Fallback direto pela região do Locale do navegador
+    const localeRegionMatch = region ? LOCALE_REGION_MAP[region] : undefined;
+    if (localeRegionMatch) {
+      const result: GeoCurrencyResult = {
+        currency: localeRegionMatch.currency,
+        country: localeRegionMatch.country,
+        source: 'locale-region',
+        timeZone,
+        locale,
+        languages: [...languages],
+      };
+
+      console.log('✅ locale-region:', result);
+      console.groupEnd();
+      memoizedGeoCurrency = result;
+      return result;
+    }
+
+    // 5) Fallback global absoluto de segurança
+    const fallback: GeoCurrencyResult = {
+      currency: 'USD',
+      country: 'US',
+      source: 'fallback',
       timeZone,
       locale,
       languages: [...languages],
     };
 
-    console.log('✅ system-currency:', result);
+    console.log('⚠️ fallback:', fallback);
     console.groupEnd();
-    return result;
-  }
+    memoizedGeoCurrency = fallback;
+    return fallback;
 
-  const normalizedLanguages = languages.map((lang) => lang.toLowerCase());
-
-  if (
-    timeZone === 'Africa/Maputo' ||
-    region === 'MZ' ||
-    normalizedLanguages.some((lang) => lang === 'pt-mz' || lang.endsWith('-mz'))
-  ) {
-    const result: GeoCurrencyResult = {
-      currency: 'MZN',
-      country: 'MZ',
-      source: 'southern-africa-heuristic',
-      timeZone,
-      locale,
-      languages: [...languages],
+  } catch {
+    
+    const ultimateFallback: GeoCurrencyResult = {
+      currency: 'USD',
+      country: 'US',
+      source: 'fallback',
+      timeZone: '',
+      locale: 'en-US',
+      languages: ['en-US'],
     };
-
-    console.log('✅ mozambique heuristic:', result);
-    console.groupEnd();
-    return result;
+    memoizedGeoCurrency = ultimateFallback;
+    return ultimateFallback;
   }
-
-  const timezoneMatch = TZ_GEO_MAP[timeZone];
-  if (timezoneMatch) {
-    const result: GeoCurrencyResult = {
-      currency: timezoneMatch.currency,
-      country: timezoneMatch.country,
-      source: 'timezone-map',
-      timeZone,
-      locale,
-      languages: [...languages],
-    };
-
-    console.log('✅ timezone-map:', result);
-    console.groupEnd();
-    return result;
-  }
-
-  const localeRegionMatch = region ? LOCALE_REGION_MAP[region] : undefined;
-  if (localeRegionMatch) {
-    const result: GeoCurrencyResult = {
-      currency: localeRegionMatch.currency,
-      country: localeRegionMatch.country,
-      source: 'locale-region',
-      timeZone,
-      locale,
-      languages: [...languages],
-    };
-
-    console.log('✅ locale-region:', result);
-    console.groupEnd();
-    return result;
-  }
-
-  const fallback: GeoCurrencyResult = {
-    currency: 'USD',
-    country: 'US',
-    source: 'fallback',
-    timeZone,
-    locale,
-    languages: [...languages],
-  };
-
-  console.log('⚠️ fallback:', fallback);
-  console.groupEnd();
-  return fallback;
 }
 
 export function getUserCurrency(): string {

@@ -13,7 +13,7 @@ export const TabItem: React.FC<TabItemProps> = ({ active, onClick, icon, label }
   <button 
     onClick={onClick} 
     className={`px-10 py-4 rounded-[2.5rem] text-[11px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-3 ${
-      active ? 'bg-white text-indigo-600 shadow-xl scale-105 border border-slate-100' : 'text-slate-400 hover:text-slate-600'
+      active ? 'bg-white text-indigo-600 shadow-sm scale-105 border border-slate-100' : 'text-slate-400 hover:text-slate-600'
     }`}
   >
     {icon} {label}

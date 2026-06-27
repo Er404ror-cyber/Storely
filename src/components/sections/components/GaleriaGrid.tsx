@@ -13,7 +13,8 @@ import {
   StorageDashboard, 
   GalleryHeader, 
   EmptyState, 
-  GridItem 
+  GridItem,
+  GlobalEditToolbar // <- NOVO COMPONENTE IMPORTADO AQUI
 } from '../../galeria/galeria';
 
 const MAX_ITEMS: number = 10;
@@ -38,6 +39,9 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
   const [previewMedia, setPreviewMedia] = useState<MediaItem | null>(null);
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  
+  // NOVO: Estado para controlar qual item está a ser editado
+  const [activeEditIndex, setActiveEditIndex] = useState<number | null>(null);
 
   // Memoiza itens com fallback seguro
   const items = useMemo<MediaItem[]>(() => {
@@ -87,16 +91,21 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
     const itemToRemove = items[index];
     if (!itemToRemove) return;
   
+    // Se o item a apagar é o que está ativo, fechamos a toolbar
+    if (activeEditIndex === index) {
+      setActiveEditIndex(null);
+    } else if (activeEditIndex !== null && index < activeEditIndex) {
+      // Ajusta o index ativo se apagarmos algo antes dele
+      setActiveEditIndex(activeEditIndex - 1);
+    }
+
     const newItems = items.filter((_, idx) => idx !== index);
     onUpdate?.('images', newItems);
   
     try {
-      // Agora o TS reconhece delete_token por causa da interface atualizada
       if (itemToRemove.delete_token) {
         await deleteFromCloudinary(itemToRemove);
       }
-  
-      // Verificamos itemToRemove.url para evitar o erro "possibly undefined"
       if (itemToRemove.url && itemToRemove.url.startsWith('blob:')) {
         URL.revokeObjectURL(itemToRemove.url);
       }
@@ -105,18 +114,17 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
       console.error("Erro ao remover:", error);
     }
   };
+
   useEffect(() => {
     if (!isEditable) return;
     
     const fetchMissingSizes = async (): Promise<void> => {
-      // 1. Filtramos garantindo que a URL existe (Type Guard)
       const missing = items.filter((img): img is MediaItem & { url: string } => 
         !!img.url && !img.size && !img.url.startsWith('blob:') && !img.url.startsWith('data:')
       );
   
       if (missing.length === 0) return;
       
-      // 2. DECLARAÇÃO: Criamos a cópia aqui para poder alterar
       const updatedImages = [...items]; 
       let hasChanged = false;
   
@@ -128,7 +136,6 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
           if (size) {
             const idx = updatedImages.findIndex(ui => ui.url === img.url);
             if (idx !== -1) {
-              // Atualizamos a referência no array temporário
               updatedImages[idx] = { 
                 ...updatedImages[idx], 
                 size: parseInt(size, 10) 
@@ -141,7 +148,6 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
         }
       }));
   
-      // 3. Só dispara o update se realmente algo mudou
       if (hasChanged) {
         onUpdate?.('images', updatedImages);
       }
@@ -156,7 +162,14 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
     const [movedItem] = newItems.splice(from, 1);
     newItems.splice(to, 0, movedItem);
     onUpdate?.('images', newItems);
-  }, [items, onUpdate]);
+    
+    // Mantém a toolbar conectada ao item caso ele mude de posição
+    if (activeEditIndex === from) {
+      setActiveEditIndex(to);
+    } else if (activeEditIndex === to) {
+      setActiveEditIndex(from);
+    }
+  }, [items, onUpdate, activeEditIndex]);
 
   const handleUpload = (e: ChangeEvent<HTMLInputElement>, index: number | null = null): void => {
     if (e.target.files) {
@@ -166,17 +179,13 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
     }
   };
 
-
-
-
-  // --- REGRA DE OURO: CONDICIONAL DE RENDERIZAÇÃO APÓS OS HOOKS ---
   if (!isEditable && items.length === 0) {
     return null;
   }
 
   return (
-    <section className={`py-6 md:py-10 px-2 transition-colors duration-300 ${getTheme(style.theme)}`}>
-      <div className="max-w-4xl mx-auto px-4" ref={containerRef}>
+    <section className={`py-6 md:py-10 px-2 transition-colors duration-300${getTheme(style.theme)}`}>
+      <div className="max-w-4xl mx-auto px-4 relative" ref={containerRef}>
         
         <input 
           id={`up-${uniqueId}`} 
@@ -193,7 +202,8 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
             isSyncing={isSyncing}
             onSync={handleSyncToCloud}
             onUploadTrigger={() => document.getElementById(`up-${uniqueId}`)?.click()}
-            t={t as (key: string) => string}          />
+            t={t as (key: string) => string}          
+          />
         )}
 
         <GalleryHeader 
@@ -201,14 +211,16 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
           style={style}
           isEditable={isEditable}
           onUpdate={onUpdate}
-          t={t}
+          t={t as (key: string) => string}          
+
         />
 
         {items.length === 0 ? (
           <EmptyState 
             isEditable={isEditable} 
             onUploadTrigger={() => document.getElementById(`up-${uniqueId}`)?.click()}
-            t={t as (key: string) => string}          />
+            t={t as (key: string) => string}          
+          />
         ) : (
           <div className={style.cols === '4' ? 'columns-2 sm:columns-3 md:columns-4 gap-2' : 'grid grid-cols-4 md:grid-cols-6 gap-2'}>
             {items.map((item, i) => (
@@ -230,9 +242,25 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
                     setDraggedIdx(null); 
                   }
                 }}
-                t={t as (key: string) => string}              />
+                t={t as (key: string) => string}              
+                activeEditIndex={activeEditIndex}
+                setActiveEditIndex={setActiveEditIndex}
+              />
             ))}
           </div>
+        )}
+
+        {/* TOOLBAR FLUTUANTE GLOBAL PARA EDIÇÃO */}
+        {isEditable && (
+          <GlobalEditToolbar
+            items={items}
+            selectedIndex={activeEditIndex}
+            onClose={() => setActiveEditIndex(null)}
+            onRemove={handleRemove}
+            onUpload={handleUpload}
+            onMove={moveItem}
+            t={t as (key: string) => string}
+          />
         )}
       </div>
 
@@ -240,7 +268,8 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
         <MediaModal 
           media={previewMedia} 
           onClose={() => setPreviewMedia(null)} 
-          t={t as (key: string) => string}        />
+          t={t as (key: string) => string}        
+        />
       )}
     </section>
   );

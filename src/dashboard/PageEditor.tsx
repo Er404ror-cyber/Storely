@@ -524,18 +524,18 @@ export function Editor() {
                     <>
                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 z-20" />
 
-                      <div className="absolute top-2 right-2 md:top-3 md:right-3 z-20 pointer-events-none">
-                        <span className="px-2.5 py-1 rounded-full bg-blue-600 text-white text-[9px] md:text-[10px] font-bold uppercase tracking-wide shadow-sm">
-                          {t('editingSection')}
-                        </span>
-                      </div>
 
-                      <div className="md:hidden absolute left-3 right-3 bottom-3 z-20 pointer-events-none">
+                      <div className="md:hidden absolute left-3 right-3 top-3 z-20 pointer-events-none">
                         <div className="rounded-2xl bg-white border border-blue-200 shadow-sm px-3 py-2 text-center">
                           <p className="text-[11px] font-semibold text-slate-800">
                             {t('mobileCustomizeCardHint')}
                           </p>
                         </div>
+                      </div>
+                      <div className="absolute bottom-2 right-2 md:bottom-3 md:right-3 z-20 pointer-events-none">
+                        <span className="px-2.5 py-1 rounded-full bg-blue-600 text-white text-[9px] md:text-[10px] font-bold uppercase tracking-wide shadow-sm">
+                          {t('editingSection')}
+                        </span>
                       </div>
                     </>
                   )}

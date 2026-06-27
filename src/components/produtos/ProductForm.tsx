@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -36,6 +36,8 @@ import {
   sanitizeMajor,
   splitPrice,
 } from './productForm.utils';
+import { MOCK_GLOBAL_CATEGORIES } from './componentsPublic/SearchMocks';
+
 
 export interface ProductFormData {
   name: string;
@@ -74,6 +76,9 @@ export const ProductForm = memo(function ProductForm({
   const { t } = useTranslate();
   const { data: adminStore } = useAdminStore();
   const queryClient = useQueryClient();
+
+  // Guarda referências das ObjectURLs criadas localmente para limpeza adequada
+  const localUrlsRef = useRef<string[]>(Array(PRODUCT_IMAGE_SLOTS).fill(''));
 
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
@@ -200,6 +205,17 @@ export const ProductForm = memo(function ProductForm({
     [updateDeleteTokens]
   );
 
+  // Limpa ObjectURLs da memória ao desmontar o componente
+  useEffect(() => {
+    return () => {
+      localUrlsRef.current.forEach((url) => {
+        if (url && url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+  }, []);
+
   useEffect(() => {
     const mergedImages = [
       initialData.main_image || '',
@@ -258,7 +274,7 @@ export const ProductForm = memo(function ProductForm({
         .eq('store_id', adminStore!.id)
         .not('category', 'is', null)
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(5);
 
       if (error) throw error;
 
@@ -318,12 +334,7 @@ export const ProductForm = memo(function ProductForm({
     });
   }, [priceMajor]);
 
-  const handleCategoryBlur = useCallback(() => {
-    setFormData((prev) => ({
-      ...prev,
-      category: normalizeCategory(prev.category),
-    }));
-  }, []);
+
 
   const handleDescriptionChange = useCallback(
     (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -350,6 +361,12 @@ export const ProductForm = memo(function ProductForm({
 
   const clearPhotoSlot = useCallback(
     (index: number) => {
+      // Limpa a ObjectURL antiga se existir
+      if (localUrlsRef.current[index] && localUrlsRef.current[index].startsWith('blob:')) {
+        URL.revokeObjectURL(localUrlsRef.current[index]);
+        localUrlsRef.current[index] = '';
+      }
+
       setPreviews((prev) => {
         const next = [...prev];
         next[index] = '';
@@ -436,15 +453,22 @@ export const ProductForm = memo(function ProductForm({
         return next;
       });
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
+      if (!tooLarge) {
+        // Revoga a URL local anterior se houver para evitar vazamento de memória
+        if (localUrlsRef.current[index] && localUrlsRef.current[index].startsWith('blob:')) {
+          URL.revokeObjectURL(localUrlsRef.current[index]);
+        }
+
+        // Nova URL local segura de altíssima performance
+        const objectUrl = URL.createObjectURL(file);
+        localUrlsRef.current[index] = objectUrl;
+
         setPreviews((prev) => {
           const next = [...prev];
-          next[index] = String(reader.result || '');
+          next[index] = objectUrl;
           return next;
         });
-      };
-      reader.readAsDataURL(file);
+      }
 
       if (index > 0) {
         setVisibleExtraSlots((prev) => Math.max(prev, index));
@@ -518,7 +542,7 @@ export const ProductForm = memo(function ProductForm({
         clearPhotoSlot(index);
         toast(t('product_form_image_removed_local_only_after_cloud_fail'), {
           icon: '⚠️',
-        });
+          });
       } finally {
         setSlotProcessing(index, false);
       }
@@ -589,6 +613,7 @@ export const ProductForm = memo(function ProductForm({
         throw new Error(t('product_form_store_not_found'));
       }
 
+      // Upload sequencial ou paralelo apenas ao clicar em Salvar de fato
       const uploads = await Promise.all(
         tempFiles.map(async (file, index) => {
           if (!file) return null;
@@ -651,6 +676,12 @@ export const ProductForm = memo(function ProductForm({
       if (error) throw error;
     },
     onSuccess: async () => {
+      // Limpa os objetos locais pós-sucesso absoluto
+      localUrlsRef.current.forEach((url) => {
+        if (url && url.startsWith('blob:')) URL.revokeObjectURL(url);
+      });
+      localUrlsRef.current = Array(PRODUCT_IMAGE_SLOTS).fill('');
+
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['products'] }),
         queryClient.invalidateQueries({ queryKey: ['product', productId] }),
@@ -892,15 +923,21 @@ export const ProductForm = memo(function ProductForm({
               {t('product_form_category_label')}
             </label>
 
-            <input
-              type="text"
-              maxLength={PRODUCT_LIMITS.category}
-              value={formData.category}
+            <select
+              value={formData.category || ""} 
               onChange={(e) => handleFieldChange('category', e.target.value)}
-              onBlur={handleCategoryBlur}
-              placeholder={t('product_form_category_placeholder')}
-              className="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 font-bold outline-none focus:border-blue-500 focus:bg-white"
-            />
+              className="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 font-bold outline-none focus:border-blue-500 focus:bg-white text-slate-700"
+            >
+              <option value="" disabled hidden>
+                {t('product_form_category_placeholder', { defaultValue: 'Selecione uma categoria' })}
+              </option>
+
+              {MOCK_GLOBAL_CATEGORIES.map((category) => (
+                <option key={category.slug} value={category.slug}>
+                  {category.emoji} {t(category.nameKey as never)} 
+                </option>
+              ))}
+            </select>
 
             {recentStoreCategories.length > 0 ? (
               <div className="mt-3 flex flex-wrap gap-2">
@@ -909,7 +946,7 @@ export const ProductForm = memo(function ProductForm({
                     key={category}
                     type="button"
                     onClick={() => handleFieldChange('category', category)}
-                    className="rounded-xl bg-slate-100 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-slate-600"
+                    className="rounded-xl bg-slate-100 px-3 py-2 text-[11px] font-black uppercase truncate tracking-wide text-slate-600"
                   >
                     {category}
                   </button>

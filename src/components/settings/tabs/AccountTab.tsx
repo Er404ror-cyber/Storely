@@ -1,128 +1,206 @@
-import { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Mail, Send, Loader2, CheckCircle2 } from 'lucide-react';
-import { useTranslate } from '../../../context/LanguageContext';
-import { supabase } from '../../../lib/supabase';
-import { notify } from '../../../utils/toast';
-import { SectionInfo } from '../AdminSettingsComponents';
+import { useEffect, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Mail, Send, Loader2, CheckCircle2 } from "lucide-react";
+import { useTranslate } from "../../../context/LanguageContext";
+import { supabase } from "../../../lib/supabase";
+import { notify } from "../../../utils/toast";
+import { SectionInfo } from "../AdminSettingsComponents";
 
-export function AccountTab({ store, isConfirmed }: { store: any, isConfirmed: boolean }) {
+export function AccountTab({ store, isConfirmed }: { store: any; isConfirmed: boolean }) {
   const { t } = useTranslate();
-  const queryClient = useQueryClient();
-  const [newEmail, setNewEmail] = useState('');
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [resendTimer, setResendTimer] = useState(0);
+  const qc = useQueryClient();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [timer, setTimer] = useState(0);
 
   useEffect(() => {
-    if (resendTimer > 0) {
-      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [resendTimer]);
+    if (!timer) return;
+    const id = setTimeout(() => setTimer((v) => Math.max(v - 1, 0)), 1000);
+    return () => clearTimeout(id);
+  }, [timer]);
 
-  const updateEmailMutation = useMutation({
+  const updateEmail = useMutation({
     mutationFn: async () => {
-      if (!newEmail) throw new Error("Digite o novo e-mail");
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: store?.email || '',
-        password: currentPassword,
+      if (!email.trim()) throw new Error(t("account_error_new_email_required"));
+      if (!password) throw new Error(t("account_error_password_required"));
+
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: store?.email || "",
+        password,
       });
-      if (authError) throw new Error("Senha atual incorreta");
-      
+      if (loginError) throw new Error(t("account_error_wrong_password"));
+
       const { error } = await supabase.auth.updateUser(
-        { email: newEmail }, 
+        { email: email.trim() },
         { emailRedirectTo: `${window.location.origin}/auth/callback` }
       );
       if (error) throw error;
     },
     onSuccess: () => {
-      notify.success("Link enviado! Verifique o novo e-mail.");
-      setResendTimer(60); setNewEmail(''); setCurrentPassword('');
-      queryClient.invalidateQueries({ queryKey: ["admin-full-settings"] });
+      notify.success(t("account_success_email_link_sent"));
+      setTimer(60);
+      setEmail("");
+      setPassword("");
+      qc.invalidateQueries({ queryKey: ["admin-full-settings"] });
     },
-    onError: (err: Error) => notify.error(err.message)
+    onError: (e: Error) => notify.error(e.message),
   });
 
-  const resendEmailMutation = useMutation({
+  const resendEmail = useMutation({
     mutationFn: async () => {
-      if (!store?.new_email_pending) throw new Error("Nenhuma troca pendente");
-      const { error } = await supabase.auth.resend({ 
-        type: 'email_change', 
-        email: store.new_email_pending, 
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` } 
+      if (!store?.new_email_pending) throw new Error(t("account_error_no_pending_email"));
+
+      const { error } = await supabase.auth.resend({
+        type: "email_change",
+        email: store.new_email_pending,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
       });
       if (error) throw error;
     },
-    onSuccess: () => { notify.success("Link reenviado!"); setResendTimer(60); },
-    onError: (err: Error) => notify.error(err.message)
+    onSuccess: () => {
+      notify.success(t("account_success_email_link_resent"));
+      setTimer(60);
+    },
+    onError: (e: Error) => notify.error(e.message),
   });
 
-  return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <SectionInfo title={t('section_email_title')} subtitle={t('section_email_subtitle')} />
-      
-      <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl p-10 space-y-8">
-        
-        {/* Banner de Sucesso pós-confirmação via Callback */}
-        {isConfirmed && !store?.new_email_pending && (
-          <div className="bg-green-50 border-2 border-green-100 p-6 rounded-[2rem] flex items-center gap-4 text-green-700 animate-in slide-in-from-top-4 duration-700">
-            <div className="p-3 bg-white rounded-full shadow-sm">
-               <CheckCircle2 size={24} className="animate-pulse" />
-            </div>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest italic">Acesso Atualizado</p>
-              <p className="text-sm font-bold">Seu novo e-mail foi validado e já está em uso!</p>
-            </div>
-          </div>
-        )}
+  const card =
+    "w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4";
+  const label =
+    "mb-1 block truncate text-[10px] font-black uppercase tracking-wide text-slate-500";
+  const input =
+    "w-full min-w-0 rounded-2xl border border-slate-200 bg-slate-50 p-4 font-bold outline-none focus:border-indigo-500";
+  const btn =
+    "inline-flex w-full items-center justify-center rounded-2xl px-5 py-3 text-[11px] font-black uppercase text-white transition disabled:opacity-40 sm:w-auto";
 
-        {store?.new_email_pending && (
-          <div className="bg-amber-50 border border-amber-200 p-6 rounded-[2rem] flex flex-wrap items-center justify-between gap-4 border-dashed">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-white rounded-full text-amber-500 shadow-sm"><Send size={18}/></div>
-              <div>
-                <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest italic">Troca em andamento</p>
-                <p className="text-sm font-bold text-amber-900 leading-tight">{store.new_email_pending}</p>
+  return (
+    <div className="w-full min-w-0 max-w-full overflow-x-hidden space-y-6">
+      <SectionInfo title={t("section_email_title")} subtitle={t("section_email_subtitle")} />
+
+      <section className="w-full min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
+        <div className="space-y-5">
+          {isConfirmed && !store?.new_email_pending && (
+            <InfoBox
+              icon={<CheckCircle2 size={20} />}
+              title={t("account_email_updated_title")}
+              text={t("account_email_updated_desc")}
+              color="green"
+            />
+          )}
+
+          {store?.new_email_pending && (
+            <div className={`${card} border-amber-300 bg-amber-50`}>
+              <div className="flex min-w-0 gap-3">
+                <IconBox>
+                  <Send size={18} />
+                </IconBox>
+
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[10px] font-black uppercase text-amber-700">
+                    {t("account_email_pending_title")}
+                  </p>
+                  <p className="break-all text-sm font-bold text-amber-900">
+                    {store.new_email_pending}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                disabled={resendEmail.isPending || timer > 0}
+                onClick={() => resendEmail.mutate()}
+                className={`${btn} mt-4 bg-amber-500 hover:bg-amber-600`}
+              >
+                {resendEmail.isPending ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : timer ? (
+                  t("account_wait_seconds").replace("{seconds}", String(timer))
+                ) : (
+                  t("account_resend_link")
+                )}
+              </button>
+            </div>
+          )}
+
+          <div className={card}>
+            <div className="flex min-w-0 gap-3">
+              <IconBox>
+                <Mail size={20} />
+              </IconBox>
+
+              <div className="min-w-0 flex-1">
+                <p className={label}>{t("label_current_email")}</p>
+                <p className="break-all text-sm font-bold text-slate-800">
+                  {store?.email || t("account_email_not_available")}
+                </p>
               </div>
             </div>
-            <button 
-              disabled={resendEmailMutation.isPending || resendTimer > 0} 
-              onClick={() => resendEmailMutation.mutate()} 
-              className="bg-amber-500 text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase hover:bg-amber-600 transition-all shadow-lg disabled:opacity-50"
+          </div>
+
+          <div>
+            <label className={label}>{t("label_new_email")}</label>
+            <input
+              className={input}
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder={t("account_new_email_placeholder")}
+            />
+          </div>
+
+          <div>
+            <label className={label}>{t("account_confirm_password")}</label>
+            <input
+              className={input}
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder={t("account_password_placeholder")}
+            />
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              type="button"
+              disabled={!email.trim() || !password || updateEmail.isPending}
+              onClick={() => updateEmail.mutate()}
+              className={`${btn} bg-slate-900 hover:bg-indigo-600`}
             >
-              {resendTimer > 0 ? `Aguarde ${resendTimer}s` : "Reenviar Link"}
+              {updateEmail.isPending ? <Loader2 size={16} className="animate-spin" /> : t("btn_update_email")}
             </button>
           </div>
-        )}
-
-        <div className="flex items-center gap-5 p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
-          <div className="p-4 bg-white rounded-2xl shadow-sm text-indigo-600"><Mail size={24}/></div>
-          <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase">{t('label_current_email')}</p>
-            <p className="font-bold text-slate-800">{store?.email}</p>
-          </div>
         </div>
+      </section>
+    </div>
+  );
+}
 
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase ml-4 italic">{t('label_new_email')}</label>
-            <input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="novo@email.com" className="w-full p-6 bg-slate-50 rounded-[1.8rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase ml-4 italic">Confirmar com Senha</label>
-            <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="••••••" className="w-full p-6 bg-slate-50 rounded-[1.8rem] border-2 border-transparent focus:border-indigo-600 outline-none font-bold" />
-          </div>
-        </div>
+function IconBox({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="shrink-0 rounded-xl bg-white p-2.5 text-indigo-600">
+      {children}
+    </div>
+  );
+}
 
-        <div className="flex justify-end pt-4">
-          <button 
-            disabled={!newEmail || !currentPassword || updateEmailMutation.isPending} 
-            onClick={() => updateEmailMutation.mutate()} 
-            className="bg-slate-900 text-white px-12 py-5 rounded-[1.5rem] text-[11px] font-black uppercase hover:bg-indigo-600 shadow-xl disabled:opacity-20 active:scale-95 transition-all"
-          >
-            {updateEmailMutation.isPending ? <Loader2 className="animate-spin" size={18}/> : t('btn_update_email')}
-          </button>
-        </div>
+function InfoBox({
+  icon,
+  title,
+  text,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  text: string;
+  color: "green";
+}) {
+  return (
+    <div className="flex min-w-0 gap-3 overflow-hidden rounded-2xl border border-green-200 bg-green-50 p-4">
+      <IconBox>{icon}</IconBox>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[10px] font-black uppercase text-green-700">
+          {title}
+        </p>
+        <p className="break-words text-sm font-bold text-green-900">{text}</p>
       </div>
     </div>
   );
