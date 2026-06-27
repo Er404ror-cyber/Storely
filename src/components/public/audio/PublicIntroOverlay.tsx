@@ -97,7 +97,7 @@ export const PublicIntroOverlay = memo(function PublicIntroOverlay({
         <button
           onClick={handleMinimalModeActivation}
           type="button"
-          className="pointer-events-auto flex items-center gap-3 rounded-full border border-white/20 bg-slate-950/95 px-6 py-3.5 text-white shadow-2xl backdrop-blur-sm transition-all active:scale-95 hover:bg-slate-900 cursor-pointer animate-fade-in"
+          className="pointer-events-auto flex items-center gap-3 rounded-full border border-white/20 bg-slate-950/95 px-6 py-3.5 text-white shadow-2xl  transition-all active:scale-95 hover:bg-slate-900 cursor-pointer animate-fade-in"
           style={{ willChange: "transform, opacity" }}
         >
           <Volume2 size={14} className="text-white shrink-0 animate-pulse" />
@@ -187,7 +187,7 @@ export const PublicIntroOverlay = memo(function PublicIntroOverlay({
 
         {/* Rodapé */}
         <div className="mt-auto w-full pt-4 flex flex-col items-center shrink-0">
-          <div className="group relative flex items-center justify-center gap-3 rounded-full border border-white/20 bg-white/10 px-8 py-3.5 text-white shadow-2xl backdrop-blur-sm transition-all duration-150 w-auto max-w-xs">
+          <div className="group relative flex items-center justify-center gap-3 rounded-full border border-white/20 bg-white/10 px-8 py-3.5 text-white shadow-2xl  transition-all duration-150 w-auto max-w-xs">
             <span className="text-[11px] font-black uppercase tracking-[0.2em] text-center leading-none whitespace-nowrap">
               {t("enter_btn") || "Entrar na Loja"}
             </span>

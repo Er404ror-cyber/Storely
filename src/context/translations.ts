@@ -827,6 +827,7 @@ product_form_unit_dia: "Day",
 product_form_unit_semana: "Week",
 product_form_unit_mes: "Month",
 product_form_unit_servico: "Service",
+product_form_unit_peca:"Piece",
 product_form_description_label: "Description",
 product_form_description_placeholder: "Explain the product in a simple, clear, and useful way.",
 product_form_description_help: "Focus on what helps the customer decide: size, material, color, usage, or condition.",
@@ -1616,6 +1617,32 @@ noImage: "No Image",
   catalog_actives: "active",
   catalog_no_products: "No products registered",
     catalog_page: "Product Catalog",
+
+
+
+
+
+
+
+    
+      slug_tecnologia: "technology",
+      slug_moda: "fashion",
+      slug_grocery: "groceries",
+      slug_casa: "home",
+      slug_beleza: "beauty",
+      slug_desporto: "sports",
+      slug_cultura: "books",
+      slug_acessorios: "accessories",
+      slug_bebes: "baby",
+      slug_animais: "pets",
+      slug_ferramentas: "tools",
+      slug_brinquedos: "toys",
+      slug_automovel: "automotive",
+      slug_design: "design",
+      cat_design_editor: "video-editing",
+      cat_digital_3d: "3d-photos",
+      storely_filters_search:"Search Storely",
+
   },
 
 
@@ -2491,6 +2518,8 @@ product_form_unit_dia: "Dia",
 product_form_unit_semana: "Semana",
 product_form_unit_mes: "Mês",
 product_form_unit_servico: "Serviço",
+product_form_unit_peca:"Peça",
+
 product_form_description_label: "Descrição",
 product_form_description_placeholder: "Explique o produto de forma simples, clara e útil.",
 product_form_description_help: "Foque no que ajuda o cliente a decidir: tamanho, material, cor, uso ou estado.",
@@ -3267,6 +3296,31 @@ noImage: "Sem Imagem",
   catalog_actives: "ativos",
   catalog_no_products: "Nenhum produto cadastrado",
     catalog_page: "Catálogo de Produtos",
+
+
+
+
+
+
+
+  slug_tecnologia: "tecnologia",
+  slug_moda: "moda",
+  slug_grocery: "mercado",
+  slug_casa: "casa",
+  slug_beleza: "beleza",
+  slug_desporto: "desporto",
+  slug_cultura: "livros",
+  slug_acessorios: "acessorios",
+  slug_bebes: "bebes",
+  slug_animais: "animais",
+  slug_ferramentas: "ferramentas",
+  slug_brinquedos: "brinquedos",
+  slug_automovel: "automovel",
+  cat_arts_crafts: "design",
+  cat_design_editor: "edicao-video", 
+  cat_digital_3d: "fotos-3d",  
+  
+  storely_filters_search:"busca da Storely",
 }
 
 

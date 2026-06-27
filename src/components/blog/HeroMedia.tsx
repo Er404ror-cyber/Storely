@@ -66,13 +66,17 @@ export const HeroBackgroundMedia = memo(function HeroBackgroundMedia({
       setVideoState({ hasMounted: true, isVisible: true });
       return;
     }
-
+  
+    // Ajustado para 30% de visibilidade
+    const MIN_VISIBILITY_RATIO = 0.30;
+  
     const observer = new IntersectionObserver(
       ([entry]) => {
-        const near = entry.isIntersecting || entry.intersectionRatio > 0;
-        // Se estiver com pelo menos 10% visível na tela, consideramos visível
-        const visibleNow = entry.isIntersecting && entry.intersectionRatio >= 0.10;
-
+        const near = entry.isIntersecting;
+        
+        // Só considera visível se tiver pelo menos 30% na tela
+        const visibleNow = entry.isIntersecting && entry.intersectionRatio >= MIN_VISIBILITY_RATIO;
+  
         setVideoState(prev => {
           const nextMounted = prev.hasMounted || near;
           if (prev.hasMounted === nextMounted && prev.isVisible === visibleNow) {
@@ -83,11 +87,11 @@ export const HeroBackgroundMedia = memo(function HeroBackgroundMedia({
       },
       {
         root: null,
-        rootMargin: '150px 0px 150px 0px', // Margem segura para carregar um pouco antes de aparecer
-        threshold: [0, 0.10],
+        rootMargin: '0px', // Sem margens externas para não distorcer o cálculo dos 30%
+        threshold: [0, MIN_VISIBILITY_RATIO], // Monitora a entrada e o corte de 30%
       }
     );
-
+  
     observer.observe(node);
     return () => observer.disconnect();
   }, []);

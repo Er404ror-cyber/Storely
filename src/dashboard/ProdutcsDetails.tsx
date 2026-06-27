@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useAdminStore } from "../hooks/useAdminStore";
+import { useStorePublic } from "../hooks/useStorePublic";
 import { supabase } from "../lib/supabase";
 import type { MediaItem } from "../types/library";
 import { MediaModal } from "../components/modal";
@@ -91,6 +92,7 @@ const UNIT_TRANSLATION_KEY_MAP = {
   semana: "product_form_unit_semana",
   mes: "product_form_unit_mes",
   servico: "product_form_unit_servico",
+  peca: "product_form_unit_peca",
 } as const;
 
 const PLACEHOLDER_IMAGE = FALLBACK_PRODUCT;
@@ -129,14 +131,25 @@ export function ProductDetails({
   isCreating = false,
   onClose,
 }: ProductDetailsProps) {
-  const { storeSlug, productId } = useParams();
+  const params = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { pathname } = location;
+
+  // Lógica de segurança para extrair o slug da loja mesmo se a estrutura da rota mudar no useParams
+  const storeSlug = useMemo(() => {
+    if (params.storeSlug) return params.storeSlug;
+    // Fallback: se a rota for /sk/blog/id, o primeiro segmento limpo após a barra inicial é "sk"
+    const segments = pathname.split("/").filter(Boolean);
+    return segments[0] || "";
+  }, [params.storeSlug, pathname]);
+
+  const { productId } = params;
+
   const pageState = useMemo(
     () => (location.state || {}) as ProductLocationState,
     [location.state]
   );
-  const { pathname } = location;
 
   const { t, language } = useTranslate();
   const { data: adminStore } = useAdminStore();
@@ -197,6 +210,7 @@ export function ProductDetails({
   const [pauseCarousel, setPauseCarousel] = useState(false);
   const [showScrollHint, setShowScrollHint] = useState(true);
   const [previewMedia, setPreviewMedia] = useState<MediaItem | null>(null);
+  const [noImg, setNoImg] = useState(false);
 
   const stateProduct = pageState?.product;
   const stateStore = pageState?.store;
@@ -216,25 +230,8 @@ export function ProductDetails({
 
   const [initialData, setInitialData] = useState<ProductFormData>(emptyFormData);
 
-  const { data: publicStore } = useQuery({
-    queryKey: ["public-store", storeSlug],
-    queryFn: async (): Promise<PublicStoreData | null> => {
-      if (!storeSlug) return null;
-
-      const { data, error } = await supabase
-        .from("stores")
-        .select("id, whatsapp_number, slug, currency, settings, name, logo_url, description")
-        .eq("slug", storeSlug)
-        .single();
-
-      if (error) return null;
-      return data as PublicStoreData;
-    },
-    enabled: !!storeSlug && !stateStore,
-    staleTime: 1000 * 60 * 10,
-    gcTime: 1000 * 60 * 30,
-    initialData: stateStore ?? undefined,
-  });
+  // Utiliza o hook customizado que gerencia o cache e o fallback de rede de forma transparente
+  const { data: publicStore } = useStorePublic(storeSlug);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", productId],
@@ -256,7 +253,7 @@ export function ProductDetails({
     initialData: stateProduct ?? undefined,
   });
 
-  const resolvedStore = stateStore || publicStore || null;
+  const resolvedStore = (stateStore || publicStore || null) as PublicStoreData | null;
   const resolvedProduct = stateProduct || product || null;
 
   useEffect(() => {
@@ -326,6 +323,7 @@ export function ProductDetails({
   const unitPrice = useMemo(() => toMoneyValue(initialData.price), [initialData.price]);
   const totalPrice = useMemo(() => unitPrice * quantity, [unitPrice, quantity]);
 
+  // Busca o valor mapeado do campo `currency` gerado pelo useStorePublic vindo do localStorage ou do banco de dados
   const currency = useMemo(() => {
     return normalizeCurrency(
       resolvedStore?.currency,
@@ -502,8 +500,6 @@ export function ProductDetails({
     const t = e.currentTarget;
     if (t.src !== fallback) { t.src = fallback; setErr(true); }
   };
-    const [noImg, setNoImg] = useState(false);
-  
 
   if (isLoading && !isCreating && !resolvedProduct) {
     return (
@@ -624,11 +620,11 @@ export function ProductDetails({
                         onError={(e) => handleImgError(e, FALLBACK_PRODUCT, setNoImg)}
                       />
                        {noImg && (
-          <div className="absolute right-2.5 bottom-2.5 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.12em] border border-zinc-700/30 backface-hidden">
-            <ImageOff size={10} className="text-zinc-400" />
-            {t("noImage") || "Sem Imagem"}
-          </div>
-        )}
+                        <div className="absolute right-2.5 bottom-2.5 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.12em] border border-zinc-700/30 backface-hidden">
+                          <ImageOff size={10} className="text-zinc-400" />
+                          {t("noImage") || "Sem Imagem"}
+                        </div>
+                      )}
 
                       <button
                         type="button"

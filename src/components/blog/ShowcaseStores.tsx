@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate, useNavigationType } from "react-router-dom";
-import { Search, SlidersHorizontal, X, RefreshCw, Clock3, ShoppingBag } from "lucide-react";
+import { LayoutGrid } from "lucide-react";
 
 import { supabase } from "../../lib/supabase";
 import { useTranslate } from "../../context/LanguageContext";
@@ -40,7 +40,6 @@ import {
   sortProductsStableByCache,
   sortStoresStableByCache,
   useDebouncedValue,
-  formatRemainingShort,
 } from "../../utils/marketplaceutils";
 import {
   clearStorelyCache,
@@ -53,8 +52,12 @@ import {
   setPrefs,
   writeStorelyCache,
 } from "./storage";
-import { ProductCard, RailControls, SellerCTA, EmptyState, SectionHeader } from "./UIHelpers";
+import { ProductCard, SellerCTA, EmptyState, SectionHeader } from "./UIHelpers";
 import { HorizontalProductsStrip, HorizontalStoresStrip } from "./Strips";
+import { ShowcaseSidebar } from "./showcaseStores/ShowcaseSidebar";
+import { ShowcaseMobileHeader } from "./showcaseStores/ShowcaseMobileHeader";
+
+
 
 export const ShowcaseStores = () => {
   const { t, lang } = useTranslate() as {
@@ -72,6 +75,7 @@ export const ShowcaseStores = () => {
   const queryClient = useQueryClient();
 
   const searchRef = useRef<HTMLDivElement | null>(null);
+  const desktopSearchRef = useRef<HTMLDivElement | null>(null);
   const stickySentinelRef = useRef<HTMLDivElement | null>(null);
   const categoryRailRef = useRef<HTMLDivElement | null>(null);
   const expiryTimeoutRef = useRef<number | null>(null);
@@ -90,9 +94,6 @@ export const ShowcaseStores = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showFilters, setShowFilters] = useState(initialUiState?.showFilters ?? false);
   const [expiresAt, setExpiresAt] = useState<number>(initialCache?.expiresAt ?? 0);
-  const [remainingMs, setRemainingMs] = useState<number>(
-    initialCache ? Math.max(initialCache.expiresAt - Date.now(), 0) : 0
-  );
   const [isCompact, setIsCompact] = useState(false);
   const [cacheSeed, setCacheSeed] = useState<number>(
     initialCache?.savedAt ? seededHash(String(initialCache.savedAt), initialCache.savedAt) : 0
@@ -142,14 +143,6 @@ export const ShowcaseStores = () => {
       if (cancelled) return;
       const top = Number.isFinite(initialUiState.scrollY) ? initialUiState.scrollY : 0;
       window.scrollTo({ top, behavior: "auto" });
-
-      const t2 = window.setTimeout(() => { if (!cancelled) window.scrollTo({ top, behavior: "auto" }); }, 120);
-      const t3 = window.setTimeout(() => { if (!cancelled) window.scrollTo({ top, behavior: "auto" }); }, 260);
-
-      return () => {
-        window.clearTimeout(t2);
-        window.clearTimeout(t3);
-      };
     };
 
     const t1 = window.setTimeout(restore, 120);
@@ -161,26 +154,25 @@ export const ShowcaseStores = () => {
 
   useEffect(() => {
     const handleOutside = (e: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setShowDropdown(false);
+      const target = e.target as Node;
+      const isOutsideMobile = searchRef.current ? !searchRef.current.contains(target) : true;
+      const isOutsideDesktop = desktopSearchRef.current ? !desktopSearchRef.current.contains(target) : true;
+      
+      if (isOutsideMobile && isOutsideDesktop) {
+        setShowDropdown(false);
+      }
     };
-    document.addEventListener("mousedown", handleOutside);
+    document.addEventListener("mousedown", handleOutside, { passive: true });
     return () => document.removeEventListener("mousedown", handleOutside);
   }, []);
 
   useEffect(() => {
     const node = stickySentinelRef.current;
     if (!node) return;
-    const observer = new IntersectionObserver(([entry]) => { setIsCompact(!entry.isIntersecting); }, { threshold: 1 });
+    const observer = new IntersectionObserver(([entry]) => { setIsCompact(!entry.isIntersecting); }, { threshold: 0.1 });
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
-
-  useEffect(() => {
-    if (!expiresAt) { setRemainingMs(0); return; }
-    setRemainingMs(Math.max(expiresAt - Date.now(), 0));
-    const interval = window.setInterval(() => { setRemainingMs(Math.max(expiresAt - Date.now(), 0)); }, 60000);
-    return () => window.clearInterval(interval);
-  }, [expiresAt]);
 
   const { data: rows = initialCache?.data ?? [], isLoading, isFetching, refetch } = useQuery<ProductRow[]>({
     queryKey: ["storely-public-smart-v9"],
@@ -195,7 +187,6 @@ export const ShowcaseStores = () => {
       const cache = readStorelyCache();
       if (cache) {
         setExpiresAt(cache.expiresAt);
-        setRemainingMs(Math.max(cache.expiresAt - Date.now(), 0));
         setCacheSeed(seededHash(String(cache.savedAt), cache.savedAt));
         return cache.data;
       }
@@ -214,7 +205,6 @@ export const ShowcaseStores = () => {
       const payload = writeStorelyCache(safeData);
       if (payload) {
         setExpiresAt(payload.expiresAt);
-        setRemainingMs(Math.max(payload.expiresAt - Date.now(), 0));
         setCacheSeed(seededHash(String(payload.savedAt), payload.savedAt));
       }
       return safeData;
@@ -227,7 +217,7 @@ export const ShowcaseStores = () => {
     const delay = Math.max(expiresAt - Date.now(), 0);
 
     expiryTimeoutRef.current = window.setTimeout(() => {
-      clearStorelyCache(); setExpiresAt(0); setRemainingMs(0); setCacheSeed(0);
+      clearStorelyCache(); setExpiresAt(0); setCacheSeed(0);
     }, delay + 50);
 
     return () => { if (expiryTimeoutRef.current) { window.clearTimeout(expiryTimeoutRef.current); expiryTimeoutRef.current = null; } };
@@ -263,7 +253,8 @@ export const ShowcaseStores = () => {
       };
     }).filter(item => item.id && item.storeSlug);
 
-    const storeMap = new Map<string, StoreItem>();
+    const storeMap = new Map<string, StoreItem & { currency?: string }>();
+    
     for (const p of products) {
       const row = rows.find(r => r.id === p.id);
       const store = Array.isArray(row?.stores) ? row?.stores[0] : row?.stores;
@@ -282,6 +273,7 @@ export const ShowcaseStores = () => {
       storeMap.set(p.storeSlug, {
         id: store?.id || p.storeSlug, slug: p.storeSlug, name: p.storeName, description: p.storeDescription, logoUrl: p.storeLogo || "",
         heroImage: p.image || FALLBACK_STORE, whatsapp_number: store?.whatsapp_number || null,
+        currency: store?.currency || p.currency, 
         settings: typeof store?.settings === "object" && store?.settings !== null ? (store.settings as Record<string, unknown>) : { currency: resolveStoreCurrency(store, FALLBACK_CURRENCY) },
         total: 1, categories: [p.category], searchName: normalizeText(p.storeName), searchDescription: normalizeText(p.storeDescription), searchCategories: normalizeText(p.category),
       });
@@ -435,27 +427,67 @@ export const ShowcaseStores = () => {
     return "";
   }, [debouncedQuery, searchAnalysis.mode, t]);
 
-  const savePrefsState = useCallback((next: any) => { setPrefsState(next); idle(() => setPrefs(next)); }, []);
+  const savePrefsState = useCallback((next: typeof prefs) => { setPrefsState(next); idle(() => setPrefs(next)); }, []);
 
   const handleProductClick = useCallback((item: ProductItem) => {
     const next = { categories: bumpScore(prefs.categories, item.category, 3), stores: bumpScore(prefs.stores, item.storeSlug, 4), products: bumpScore(prefs.products, item.id, 2), searches: prefs.searches };
     setPrefsState(next); idle(() => setPrefs(next));
     saveShowcaseStateNow({ query, selectedCategory, selectedStore, showFilters, pathname });
 
-    const matchedStore = stores.find(s => s.slug === item.storeSlug);
-    const productState = { id: item.id, name: item.name, category: item.category, price: item.price, currency: item.currency, main_image: item.image || "", gallery: item.gallery?.length ? item.gallery : item.image ? [item.image] : [], full_description: item.description || "", unit: item.unit || "un", store_id: matchedStore?.id || item.storeSlug };
-    const storeState = matchedStore ? { id: matchedStore.id, slug: matchedStore.slug, name: matchedStore.name, whatsapp_number: matchedStore.whatsapp_number || null, settings: matchedStore.settings || { currency: item.currency || "USD" }, logo_url: matchedStore.logoUrl || "", heroImage: matchedStore.heroImage || "", description: matchedStore.description || "" } : { id: item.storeSlug, slug: item.storeSlug, name: item.storeName, whatsapp_number: item.storeWhatsApp || null, settings: { currency: item.currency || "USD" }, logo_url: item.storeLogo || "", heroImage: item.image || "", description: item.storeDescription || "" };
+    const matchedStore = stores.find(s => s.slug === item.storeSlug) as (StoreItem & { currency?: string }) | undefined;
+    
+    const productState = { 
+      id: item.id, 
+      name: item.name, 
+      category: item.category, 
+      price: item.price, 
+      unit: item.unit || "un", 
+      full_description: item.description || "", 
+      main_image: item.image || "", 
+      gallery: item.gallery?.length ? item.gallery : item.image ? [item.image] : [], 
+      store_id: matchedStore?.id || item.storeSlug 
+    };
+
+    const storeState = matchedStore ? { 
+      id: matchedStore.id, 
+      slug: matchedStore.slug, 
+      name: matchedStore.name, 
+      whatsapp_number: matchedStore.whatsapp_number || null, 
+      currency: matchedStore.currency || item.currency || FALLBACK_CURRENCY,
+      settings: matchedStore.settings || { currency: item.currency || FALLBACK_CURRENCY }, 
+      logo_url: matchedStore.logoUrl || "", 
+      description: matchedStore.description || "" 
+    } : { 
+      id: item.storeSlug, 
+      slug: item.storeSlug, 
+      name: item.storeName, 
+      whatsapp_number: item.storeWhatsApp || null, 
+      currency: item.currency || FALLBACK_CURRENCY,
+      settings: { currency: item.currency || FALLBACK_CURRENCY }, 
+      logo_url: item.storeLogo || "", 
+      description: item.storeDescription || "" 
+    };
 
     navigate(`/${item.storeSlug}/blog/${item.id}`, { state: { product: productState, store: storeState, source: debouncedQuery.trim() ? "search" : "feed", searchMode: searchAnalysis.mode } });
   }, [navigate, prefs, stores, debouncedQuery, searchAnalysis.mode, query, selectedCategory, selectedStore, showFilters, pathname]);
 
   const handleStoreClick = useCallback((slug: string) => {
-    const store = stores.find(s => s.slug === slug);
+    const store = stores.find(s => s.slug === slug) as (StoreItem & { currency?: string }) | undefined;
     const next = { categories: prefs.categories, stores: bumpScore(prefs.stores, slug, 5), products: prefs.products, searches: prefs.searches };
     setPrefsState(next); idle(() => setPrefs(next));
     saveShowcaseStateNow({ query, selectedCategory, selectedStore, showFilters, pathname });
 
-    const storeState = store ? { id: store.id, slug: store.slug, name: store.name, whatsapp_number: store.whatsapp_number || null, settings: store.settings || { currency: "USD" }, logo_url: store.logoUrl || "", heroImage: store.heroImage || "", description: store.description || "" } : undefined;
+    const storeState = store ? { 
+      id: store.id, 
+      slug: store.slug, 
+      name: store.name, 
+      whatsapp_number: store.whatsapp_number || null, 
+      currency: store.currency || FALLBACK_CURRENCY,
+      settings: store.settings || { }, 
+      logo_url: store.logoUrl || "", 
+      description: store.description || "" 
+    } : undefined;
+
     navigate(`/${slug}`, { state: { store: storeState, source: debouncedQuery.trim() ? "search" : "feed", searchMode: searchAnalysis.mode } });
   }, [navigate, prefs, stores, debouncedQuery, searchAnalysis.mode, query, selectedCategory, selectedStore, showFilters, pathname]);
 
@@ -473,8 +505,8 @@ export const ShowcaseStores = () => {
     const result = await refetch(); const freshRows = result.data ?? [];
     if (freshRows.length) {
       const payload = writeStorelyCache(freshRows);
-      if (payload) { setExpiresAt(payload.expiresAt); setRemainingMs(Math.max(payload.expiresAt - Date.now(), 0)); setCacheSeed(seededHash(String(payload.savedAt), payload.savedAt)); }
-    } else { setExpiresAt(0); setRemainingMs(0); setCacheSeed(0); }
+      if (payload) { setExpiresAt(payload.expiresAt); setCacheSeed(seededHash(String(payload.savedAt), payload.savedAt)); }
+    } else { setExpiresAt(0); setCacheSeed(0); }
   }, [queryClient, refetch]);
 
   const handleCategoryRailLeft = useCallback(() => { smoothScrollBy(categoryRailRef.current, -CATEGORY_SCROLL_STEP); }, []);
@@ -483,14 +515,13 @@ export const ShowcaseStores = () => {
   if (isLoading && !rows.length) {
     return (
       <section className="w-full px-0 py-4">
-        <div className="space-y-5 animate-pulse">
+        <div className="space-y-5 animate-pulse-fast">
           <div className="h-11 rounded-full bg-zinc-200 dark:bg-zinc-800" />
           <div className="h-8 w-3/4 rounded-xl bg-zinc-200 dark:bg-zinc-800" />
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
-            {Array.from({ length: 8 }).map((_, i) => (
+            {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="overflow-hidden rounded-[1.4rem] border border-zinc-200 dark:border-zinc-800">
                 <div className="aspect-[4/4.8] bg-zinc-200 dark:bg-zinc-800" />
-                <div className="space-y-2 p-3"><div className="h-4 rounded bg-zinc-200 dark:bg-zinc-800" /><div className="h-3 w-2/3 rounded bg-zinc-200 dark:bg-zinc-800" /></div>
               </div>
             ))}
           </div>
@@ -502,124 +533,111 @@ export const ShowcaseStores = () => {
   return (
     <section className="w-full px-0 py-4">
       <div ref={stickySentinelRef} className="h-px w-full" />
-      <div className="space-y-5">
-        {!isEditorRoute && (
-          <div ref={searchRef} className={`sticky top-17 lg:top-16 z-20 border-zinc-200 bg-white/90 p-3 pb-2 dark:border-zinc-800 dark:bg-zinc-950/85 ${isCompact ? "lg:px-4 shadow-sm" : "lg:px-4"}`}>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1">
-                  <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-                  <input value={query} onChange={(e) => { setQuery(e.target.value); setShowDropdown(true); }} onFocus={() => setShowDropdown(true)} onKeyDown={(e) => { if (e.key === "Enter") submitSearch(); }} placeholder={t("storely_search_placeholder")} className="w-full rounded-full border border-zinc-200 bg-zinc-50 pl-10 pr-24 font-semibold text-zinc-900 outline-none transition dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 h-10 text-base md:text-[12px]" />
-                  <div className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center gap-1">
-                    {query ? <button type="button" onClick={() => setQuery("")} className="inline-flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-200/70 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"><X size={14} /></button> : null}
-                    <button type="button" onClick={() => submitSearch()} className="inline-flex h-8 items-center justify-center rounded-full bg-zinc-950 px-3 text-[10px] font-black uppercase tracking-[0.12em] text-white dark:bg-white dark:text-zinc-900">{t("storely_search")}</button>
-                  </div>
-                  {showDropdown && (searchSuggestions.length > 0 || limitedHistory.length > 0) && (
-                    <div className="absolute left-0 right-0 top-[calc(100%+10px)] overflow-hidden rounded-[1.35rem] border border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-950">
-                      {searchSuggestions.length > 0 && (
-                        <div className="p-2">
-                          <p className="px-2 pb-1 text-[8px] font-black uppercase tracking-[0.12em] text-zinc-400">{t("storely_suggestions")}</p>
-                          <div className="space-y-1">
-                            {searchSuggestions.map((item, idx) => (
-                              <button key={`${item.type}-${item.value}-${idx}`} type="button" onClick={() => submitSearch(item.value)} className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-900">
-                                <span className="truncate">{item.value}</span>
-                                <span className="ml-3 text-[10px] font-black uppercase tracking-[0.12em] text-zinc-400">{item.type}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      {!query && limitedHistory.length > 0 && (
-                        <div className="border-t border-zinc-100 p-2 dark:border-zinc-900">
-                          <p className="px-2 pb-1 text-[10px] font-black uppercase tracking-[0.12em] text-zinc-400">{t("storely_recent_searches")}</p>
-                          <div className="space-y-1">
-                            {limitedHistory.map((item) => (
-                              <button key={`${item.value}-${item.ts}`} type="button" onClick={() => submitSearch(item.value)} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-900">
-                                <Clock3 size={14} className="text-zinc-400" />
-                                <span className="truncate">{item.value}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-                <button type="button" onClick={() => setShowFilters(prev => !prev)} className="inline-flex shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 h-10 w-10"><SlidersHorizontal size={16} /></button>
-              </div>
+      
+      <div className="flex flex-col lg:flex-row lg:items-start gap-4 lg:px-4 xl:px-6">
 
-              {showFilters && (
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="text-[10px] mt-1 md:mt-0 font-black uppercase tracking-[0.12em] text-zinc-400">{t("storely_categories")}</div>
-                    <RailControls onLeft={handleCategoryRailLeft} onRight={handleCategoryRailRight} ariaLabel={t("storely_categories")} />
-                  </div>
-                  <div ref={categoryRailRef} className="overflow-x-auto pb-1 scrollbar-hide">
-                    <div className="flex min-w-max items-center gap-2">
-                      {horizontalCategories.map((cat) => (
-                        <button key={cat} type="button" onClick={() => setSelectedCategory(cat)} className={`shrink-0 rounded-full px-3 py-2 text-[8px] font-black uppercase tracking-[0.12em] transition ${selectedCategory === cat ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-900" : "bg-zinc-100 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300"}`}>{cat === "all" ? t("storely_all") : cat}</button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="md:flex hidden flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="h-10 rounded-full border border-zinc-200 bg-white px-3 text-[10px] font-semibold text-zinc-700 outline-none dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200">
-                        <option value="all">{t("storely_all_categories")}</option>
-                        {allCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                      </select>
-                      <select value={selectedStore} onChange={(e) => setSelectedStore(e.target.value)} className="h-10 rounded-full border border-zinc-200 bg-white px-3 text-[10px] font-semibold text-zinc-700 outline-none dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200">
-                        <option value="all">{t("storely_all_stores")}</option>
-                        {stores.map(st => <option key={st.slug} value={st.slug}>{st.name}</option>)}
-                      </select>
-                      {(query || selectedCategory !== "all" || selectedStore !== "all") && (
-                        <button type="button" onClick={clearSearchAndFilters} className="inline-flex h-10 items-center justify-center rounded-full border border-zinc-200 px-3 text-[8px] font-black uppercase bg-red-200 dark:bg-red-800 tracking-[0.12em] text-zinc-800 dark:border-zinc-800 dark:text-zinc-50">{t("storely_clear")}</button>
-                      )}
-                      <button type="button" onClick={refreshShowcaseCache} disabled={isFetching} className="inline-flex h-10 items-center justify-center rounded-full border border-zinc-200 px-4 text-[10px] font-black uppercase tracking-[0.12em] text-zinc-600 disabled:opacity-60 dark:border-zinc-800 dark:text-zinc-300"><RefreshCw size={10} className={isFetching ? "animate-spin" : ""} /></button>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2 text-[8px]">
-                      {searchStatusText && <span className="rounded-full bg-blue-50 px-3 py-1.5 font-black uppercase tracking-[0.12em] text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">{searchStatusText}</span>}
-                      <span className="rounded-full bg-zinc-100 px-3 py-1.5 font-black uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">{rows.length} {t("storely_products")}</span>
-                      <span className="rounded-full bg-zinc-100 px-3 py-1.5 font-black uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">{stores.length} {t("storely_stores")}</span>
-                      <span className="rounded-full bg-zinc-100 px-3 py-1.5 font-black uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">{formatRemainingShort(remainingMs, t("storely_cache_expired"))}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+        {/* TOP BAR - MOBILE */}
+        {!isEditorRoute && (
+          <ShowcaseMobileHeader
+            query={query}
+            setQuery={setQuery}
+            setShowDropdown={setShowDropdown}
+            showDropdown={showDropdown}
+            submitSearch={submitSearch}
+            searchSuggestions={searchSuggestions}
+            limitedHistory={limitedHistory}
+            showFilters={showFilters}
+            setShowFilters={setShowFilters}
+            horizontalCategories={horizontalCategories}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            selectedStore={selectedStore}
+            setSelectedStore={setSelectedStore}
+            stores={stores}
+            clearSearchAndFilters={clearSearchAndFilters}
+            refreshShowcaseCache={refreshShowcaseCache}
+            isFetching={isFetching}
+            isCompact={isCompact}
+            categoryRailRef={categoryRailRef}
+            handleCategoryRailLeft={handleCategoryRailLeft}
+            handleCategoryRailRight={handleCategoryRailRight}
+            t={t}
+          />
         )}
 
-        {sections.map((section) => {
-          if (section.type === "products-grid") {
-            return (
-              <section key={section.id} style={{ contentVisibility: "auto", containIntrinsicSize: "850px" }} className="px-2 md:px-4">
-                {section.title && <SectionHeader icon={<ShoppingBag size={15} />} title={section.title} subtle={`${section.items.length}`} />}
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
-                  {section.items.map(item => <ProductCard key={item.id} item={item} onClick={handleProductClick} locale={localeForPrice} />)}
-                </div>
-              </section>
-            );
-          }
-          if (section.type === "products-strip") {
-            return <HorizontalProductsStrip key={section.id} title={section.title} items={section.items} onProductClick={handleProductClick} locale={localeForPrice} />;
-          }
-          if (section.type === "stores-strip") {
-            return (
-              <section key={section.id} className="px-2 md:px-4">
-                <HorizontalStoresStrip title={section.title} items={section.items} onStoreClick={handleStoreClick} viewStore={t("storely_view_store")} />
-              </section>
-            );
-          }
-          if (section.type === "cta") {
-            return !hasSession && (
-              <section className="px-2 md:px-4" key={section.id}>
-                <SellerCTA title={t("storely_sell_cta_title")} subtitle={t("storely_sell_cta_subtitle")} cta={t("storely_sell_now")} onClick={() => navigate("/auth")} />
-              </section>
-            );
-          }
-          return <EmptyState key={section.id} title={t("storely_no_results_title")} subtitle={t("storely_no_results_subtitle")} suggestionTitle={t("storely_try_these")} suggestionItems={searchAnalysis.suggestionTerms} onSuggestionClick={submitSearch} />;
-        })}
+        {/* SIDEBAR - DESKTOP */}
+        {!isEditorRoute && (
+          <ShowcaseSidebar
+            query={query}
+            setQuery={setQuery}
+            setShowDropdown={setShowDropdown}
+            showDropdown={showDropdown}
+            submitSearch={submitSearch}
+            searchSuggestions={searchSuggestions}
+            limitedHistory={limitedHistory}
+            horizontalCategories={horizontalCategories}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            selectedStore={selectedStore}
+            setSelectedStore={setSelectedStore}
+            stores={stores}
+            searchStatusText={searchStatusText}
+            totalRows={rows.length}
+            clearSearchAndFilters={clearSearchAndFilters}
+            refreshShowcaseCache={refreshShowcaseCache}
+            isFetching={isFetching}
+            t={t}
+          />
+        )}
+
+        {/* FEED PRINCIPAL */}
+        <div className="flex-1 min-w-0 space-y-6 w-full pb-8">
+          {sections.map((section) => {
+            if (section.type === "products-grid") {
+              return (
+                <section key={section.id} style={{ contentVisibility: "auto", containIntrinsicSize: "auto 500px" }} className="px-2 ">
+                  {section.title && <SectionHeader icon={<LayoutGrid size={15} />} title={section.title} subtle={`${section.items.length}`} />}
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+                    {section.items.map(item => <ProductCard key={item.id} item={item} onClick={handleProductClick} locale={localeForPrice} />)}
+                  </div>
+                </section>
+              );
+            }
+            if (section.type === "products-strip") {
+              return <HorizontalProductsStrip key={section.id} title={section.title} items={section.items} onProductClick={handleProductClick} locale={localeForPrice} />;
+            }
+            if (section.type === "stores-strip") {
+              return (
+                <section key={section.id} className="px-2 md:px-0">
+                  <HorizontalStoresStrip title={section.title} items={section.items} onStoreClick={handleStoreClick} viewStore={t("storely_view_store")} />
+                </section>
+              );
+            }
+            if (section.type === "cta") {
+              return !hasSession && (
+                <section className="px-2 md:px-0" key={section.id}>
+                  <SellerCTA title={t("storely_sell_cta_title")} subtitle={t("storely_sell_cta_subtitle")} cta={t("storely_sell_now")} onClick={() => navigate("/auth")} />
+                </section>
+              );
+            }
+            return <EmptyState key={section.id} title={t("storely_no_results_title")} subtitle={t("storely_no_results_subtitle")} suggestionTitle={t("storely_try_these")} suggestionItems={searchAnalysis.suggestionTerms} onSuggestionClick={submitSearch} />;
+          })}
+        </div>
+
       </div>
+
+      <style>{`
+        .custom-v-scroll::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-v-scroll::-webkit-scrollbar-thumb {
+          background: #e4e4e7;
+          border-radius: 9999px;
+        }
+        .dark .custom-v-scroll::-webkit-scrollbar-thumb {
+          background: #3f3f46;
+        }
+      `}</style>
     </section>
   );
 };
