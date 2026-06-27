@@ -80,7 +80,7 @@ export const StorageDashboard: React.FC<StorageDashboardProps> = memo(({
               <button
                 onClick={onSync}
                 disabled={isSyncing || isSyncBlocked}
-                className={`w-full sm:w-auto px-4 py-2.5 rounded-lg text-[10px] font-black uppercase flex items-center justify-center gap-2 transition-all transform-gpu active:scale-95
+                className={`w-full sm:w-auto px-4 py-2.5 rounded-lg text-[10px] font-black uppercase flex items-center justify-center gap-2 transition-colors active:scale-95
                   ${isSyncBlocked 
                     ? 'bg-zinc-200 text-zinc-400 dark:bg-zinc-800 cursor-not-allowed' 
                     : 'bg-blue-600 hover:bg-blue-700 text-white'
@@ -97,7 +97,7 @@ export const StorageDashboard: React.FC<StorageDashboardProps> = memo(({
           disabled={isAtLimit || isSyncing}
           onClick={onUploadTrigger}
           className={`w-full sm:w-auto px-5 py-2.5 rounded-xl text-[10px] 
-            font-black uppercase tracking-wider transition-all shadow-md transform-gpu active:scale-95
+            font-black uppercase tracking-wider transition-colors shadow-md active:scale-95
             flex items-center justify-center gap-2
             ${
               isAtLimit
@@ -194,7 +194,7 @@ export const EmptyState: React.FC<EmptyStateProps> = memo(({ isEditable, onUploa
       </div>
 
       {isEditable && (
-        <button onClick={onUploadTrigger} className="group flex items-center gap-3 px-8 py-3.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] transition-all transform-gpu hover:scale-[1.02] active:scale-95 shadow-md">
+        <button onClick={onUploadTrigger} className="group flex items-center gap-3 px-8 py-3.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] transition-transform active:scale-95 shadow-md">
           <CloudUpload size={14} className="transition-transform duration-200 group-hover:-translate-y-0.5" />
           {t('gallery_add')}
         </button>
@@ -204,7 +204,7 @@ export const EmptyState: React.FC<EmptyStateProps> = memo(({ isEditable, onUploa
 ));
 EmptyState.displayName = 'EmptyState';
 
-// --- 4. Item da Grid (Refatorado para ser limpo e interativo) ---
+// --- 4. Item da Grid ---
 export interface GridItemProps {
   item: MediaItem;
   index: number;
@@ -218,7 +218,6 @@ export interface GridItemProps {
   onDragStart: (index: number) => void;
   onDrop: (index: number) => void;
   t: (key: string) => string;
-  // Types corretos e seguros para o componente funcionar com a Toolbar
   activeEditIndex?: number | null;
   setActiveEditIndex?: (index: number | null) => void;
 }
@@ -240,16 +239,15 @@ export const GridItem: React.FC<GridItemProps> = memo(({
   };
 
   const handleInteraction = (ev: React.MouseEvent) => {
-    ev.stopPropagation();
     if (isEditable && setActiveEditIndex) {
+      ev.stopPropagation();
       if (isSelected) {
-        // Se já está selecionado e toca de novo, remove a seleção (toggle clássico)
         setActiveEditIndex(null);
       } else {
-        // Foca para edição abrindo a barra inferior
         setActiveEditIndex(index);
       }
     } else {
+      // Fora da edição não precisamos do stopPropagation, deixamos fluir naturalmente
       onPreview(item);
     }
   };
@@ -257,12 +255,13 @@ export const GridItem: React.FC<GridItemProps> = memo(({
   return (
     <div
       draggable={isEditable}
-      onDragStart={() => onDragStart(index)}
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={() => onDrop(index)}
+      onDragStart={isEditable ? () => onDragStart(index) : undefined}
+      onDragOver={isEditable ? (e) => e.preventDefault() : undefined}
+      onDrop={isEditable ? () => onDrop(index) : undefined}
       onClick={handleInteraction}
       className={`relative rounded-xl overflow-hidden group border dark:border-zinc-800/50 
-        transition-all duration-200 transform-gpu will-change-transform touch-none select-none cursor-pointer
+        transition-all duration-200 cursor-pointer 
+        ${isEditable ? 'select-none' : ''}
         ${isSelected && isEditable ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-zinc-950 scale-[0.98]' : ''}
         ${isTooLarge && isEditable && !isSelected ? 'ring-2 ring-red-500' : 'bg-zinc-100 dark:bg-zinc-900'}
         ${getItemClass()}
@@ -275,11 +274,15 @@ export const GridItem: React.FC<GridItemProps> = memo(({
         />
       </div>
 
-      <div className="absolute top-2 left-2 bg-black/60 text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center  shadow border border-white/10 pointer-events-none">
-        {index + 1}
-      </div>
+      {/* Indicador Numérico de Posição (Só visível no Editor) */}
+      {isEditable && (
+        <div className="absolute top-2 left-2 bg-black/60 text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow border border-white/10 pointer-events-none z-20">
+          {index + 1}
+        </div>
+      )}
 
-{isEditable && (
+      {/* Badge de tamanho injetado com 'left-9' para não colidir com o número de ordem */}
+      {isEditable && (
         <div
           className={`absolute top-2 right-2 px-1.5 py-0.5 rounded text-[8px] font-black z-30 border border-white/10 pointer-events-none backdrop-blur-sm ${
             isTooLarge
@@ -290,21 +293,22 @@ export const GridItem: React.FC<GridItemProps> = memo(({
           {item.size ? `${itemMB.toFixed(1)} MB` : t('gallery_scanning')}
         </div>
       )}
+
       {isTooLarge && isEditable && (
-        <div className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-md shadow animate-pulse pointer-events-none">
+        <div className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-md shadow animate-pulse pointer-events-none z-20">
           <ShieldAlert size={12} />
         </div>
       )}
 
       {item.isTemp && isEditable && (
-        <div className="absolute bottom-2 left-2 bg-blue-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider pointer-events-none shadow-sm">
+        <div className="absolute bottom-2 left-2 bg-blue-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider pointer-events-none shadow-sm z-20">
           {t('gallery_new_badge')}
         </div>
       )}
 
-      {/* Overlay visual para saber qual está ativo */}
+      {/* Overlay visual de seleção */}
       {isSelected && isEditable && (
-        <div className="absolute inset-0 bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center pointer-events-none transition-opacity">
+        <div className="absolute inset-0 bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center pointer-events-none transition-opacity z-10">
           <div className="bg-blue-600 text-white p-2.5 rounded-xl shadow-lg transform scale-110">
             <SlidersHorizontal size={16} />
           </div>
@@ -339,16 +343,15 @@ export const GlobalEditToolbar: React.FC<GlobalEditToolbarProps> = memo(({
   const isTooLarge = (item.size || 0) > limit;
 
   return (
-    <div className="fixed bottom-6 left-4 right-4 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-[480px] z-[99] bg-zinc-950/98 dark:bg-zinc-900/98 text-white  rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.24)] border border-zinc-800 p-2 select-none animate-in slide-in-from-bottom-8 duration-200 fade-in">
+    <div className="fixed bottom-6 left-4 right-4 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-[480px] z-[99] bg-zinc-950/98 dark:bg-zinc-900/98 text-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.24)] border border-zinc-800 p-2 select-none animate-in slide-in-from-bottom-8 duration-200 fade-in">
       
-      {/* Alerta de Compressão (Aparece apenas quando necessário, no topo da barra) */}
       {isTooLarge && (
         <div className="mb-2 px-1">
           <a
             href={item.type === 'video' ? COMPRESS_VIDEO : COMPRESS_PHOTO}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 bg-red-600/90 hover:bg-red-600 text-white text-[10px] font-black py-2 rounded-xl transition-all shadow-sm w-full"
+            className="flex items-center justify-center gap-2 bg-red-600/90 hover:bg-red-600 text-white text-[10px] font-black py-2 rounded-xl transition-colors shadow-sm w-full"
           >
             <RefreshCcw size={12} className="animate-spin" style={{ animationDuration: '2s' }} />
             {t('gallery_compress').toUpperCase()} ({item.type === 'video' ? 'MAX 10MB' : 'MAX 1MB'})
@@ -356,15 +359,12 @@ export const GlobalEditToolbar: React.FC<GlobalEditToolbarProps> = memo(({
         </div>
       )}
 
-      {/* Controlos numa linha única */}
       <div className="flex items-center gap-2 w-full">
-        
-        {/* Bloco 1: Navegação (Sempre visível) */}
         <div className="flex items-center bg-zinc-800/80 p-1 rounded-xl shrink-0">
           <button
             onClick={() => onMove(index, index - 1)}
             disabled={index === 0}
-            className="p-2 hover:bg-zinc-700 text-white rounded-lg disabled:opacity-20 transition-all active:scale-95 transform-gpu"
+            className="p-2 hover:bg-zinc-700 text-white rounded-lg disabled:opacity-20 transition-colors active:scale-95"
           >
             <ChevronLeft size={16} />
           </button>
@@ -374,17 +374,15 @@ export const GlobalEditToolbar: React.FC<GlobalEditToolbarProps> = memo(({
           <button
             onClick={() => onMove(index, index + 1)}
             disabled={index === items.length - 1}
-            className="p-2 hover:bg-zinc-700 text-white rounded-lg disabled:opacity-20 transition-all active:scale-95 transform-gpu"
+            className="p-2 hover:bg-zinc-700 text-white rounded-lg disabled:opacity-20 transition-colors active:scale-95"
           >
             <ChevronRight size={16} />
           </button>
         </div>
 
-        {/* Bloco 2: Ações Principais (Camera + Lixo) expandem-se para preencher o espaço */}
         <div className="flex items-center gap-1.5 flex-1 justify-end">
-          <label className="flex items-center justify-center gap-2 h-10 px-3 md:px-4 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-xl cursor-pointer text-[10px] font-black uppercase tracking-wider transition-all shadow-md transform-gpu shrink-0">
+          <label className="flex items-center justify-center gap-2 h-10 px-3 md:px-4 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-xl cursor-pointer text-[10px] font-black uppercase tracking-wider transition-colors shadow-md shrink-0">
             <Camera size={16} />
-            {/* Texto escondido em ecrãs muito pequenos para salvar espaço */}
             <span className="hidden sm:inline">{t('changeMedia') || 'Trocar'}</span>
             <input
               type="file"
@@ -396,23 +394,20 @@ export const GlobalEditToolbar: React.FC<GlobalEditToolbarProps> = memo(({
 
           <button
             onClick={() => onRemove(index)}
-            className="flex items-center justify-center h-10 w-10 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white active:scale-95 rounded-xl transition-all shrink-0 transform-gpu"
+            className="flex items-center justify-center h-10 w-10 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white active:scale-95 rounded-xl transition-colors shrink-0"
           >
             <Trash2 size={16} />
           </button>
         </div>
 
-        {/* Separador vertical subtil */}
         <div className="w-px h-6 bg-zinc-800 shrink-0 mx-0.5"></div>
 
-        {/* Bloco 3: Fechar Toolbar */}
         <button 
           onClick={onClose}
-          className="flex items-center justify-center h-10 w-10 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl transition-all active:scale-95 shrink-0"
+          className="flex items-center justify-center h-10 w-10 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl transition-colors active:scale-95 shrink-0"
         >
           <X size={18} />
         </button>
-        
       </div>
     </div>
   );
