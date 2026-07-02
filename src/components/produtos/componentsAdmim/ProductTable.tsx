@@ -1,5 +1,5 @@
-import { memo } from 'react';
-import { Link } from 'react-router-dom';
+import { memo, useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Edit, Power, Trash2, Tag, Coins } from 'lucide-react';
 import type { TranslateFn } from '../../../dashboard/Products';
 
@@ -21,6 +21,84 @@ interface ProductTableProps {
   t: TranslateFn;
 }
 
+export const IOSToggle = ({ value, onChange, disabled }: { value: boolean; onChange: () => void; disabled: boolean }) => {
+  const [localValue, setLocalValue] = useState(value);
+  const [pending, setPending] = useState(false);
+
+  // Só sincroniza com o servidor quando NÃO está pendente
+  useEffect(() => {
+    if (!pending) {
+      setLocalValue(value);
+    }
+  }, [value]);
+
+  // Detecta quando o servidor confirmou a mudança
+  useEffect(() => {
+    if (pending && localValue === value) {
+      setPending(false);
+    }
+  }, [value, pending]);
+
+  const handleClick = async () => {
+    if (pending || disabled) return;
+    setPending(true);
+    setLocalValue((prev) => !prev); // reage imediatamente
+    onChange();
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={disabled || pending}
+      style={{
+        width: 51,
+        height: 31,
+        borderRadius: 999,
+        backgroundColor: localValue ? '#34C759' : '#E5E7EB',
+        border: 'none',
+        cursor: pending || disabled ? 'not-allowed' : 'pointer',
+        padding: 2,
+        display: 'flex',
+        alignItems: 'center',
+        transition: 'background-color 0.3s ease',
+        opacity: pending ? 0.7 : 1,
+        flexShrink: 0,
+        position: 'relative',
+      }}
+    >
+      <span
+        style={{
+          width: 27,
+          height: 27,
+          borderRadius: '50%',
+          backgroundColor: '#ffffff',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+          transform: localValue ? 'translateX(20px)' : 'translateX(0px)',
+          transition: 'transform 0.3s ease',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {/* Spinner enquanto aguarda servidor */}
+        {pending && (
+          <svg
+            style={{ animation: 'spin 0.8s linear infinite' }}
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+            <circle cx="12" cy="12" r="10" stroke="#9CA3AF" strokeWidth="3" strokeDasharray="31" strokeDashoffset="10" strokeLinecap="round"/>
+          </svg>
+        )}
+      </span>
+    </button>
+  );
+};
+
+
 export const ProductTable = memo(({
   products,
   storeCurrency,
@@ -29,6 +107,12 @@ export const ProductTable = memo(({
   togglePending,
   t,
 }: ProductTableProps) => {
+  const navigate = useNavigate();
+
+  const goToProduct = (product: Product) => {
+    navigate(`/admin/produtos/${product.id}`, { state: { fromStore: true } });
+  };
+
   return (
     <div 
       style={{ contentVisibility: 'auto', containIntrinsicSize: '400px' }}
@@ -46,9 +130,15 @@ export const ProductTable = memo(({
         </thead>
         <tbody className="divide-y divide-slate-200 bg-white">
           {products.map((product) => (
-            <tr key={product.id} className="hover:bg-slate-50/70 transition-colors">
-              <td className="px-6 py-3 font-medium text-slate-900 max-w-[280px]">
-                <div className="flex items-center gap-3 min-w-0">
+         <tr key={product.id} className="hover:bg-slate-50/70 transition-colors">           
+          <td className="px-6 py-3 font-medium text-slate-900 max-w-[280px]">
+  <Link
+    to={`/admin/produtos/${product.id}`}
+    state={{ fromStore: true }}
+    className="absolute inset-0 z-0"
+    aria-label={product.name}
+  />
+  <div className="flex items-center gap-3 min-w-0">
                   <img
                     src={product.main_image}
                     alt={product.name}
@@ -58,16 +148,15 @@ export const ProductTable = memo(({
                       e.currentTarget.src = 'https://antoniogaspar.pt/wp-content/uploads/2023/06/ag-blog-featured-img.svg';
                     }}
                   />
-                  <Link 
-                    to={`/admin/produtos/${product.id}`} 
-                    state={{ fromStore: true }} 
-                    className="hover:text-blue-600 font-bold truncate transition-colors"
-                  >
+                  <span className="hover:text-blue-600 font-bold truncate transition-colors">
                     {product.name}
-                  </Link>
+                  </span>
                 </div>
               </td>
-              <td className="px-6 py-3">
+              <td
+                className="px-6 py-3 text-right"
+                onClick={(e) => e.stopPropagation()}
+              >
                 {product.category ? (
                   <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
                     <Tag size={10} className="text-blue-500 shrink-0" />
@@ -88,19 +177,13 @@ export const ProductTable = memo(({
                   {product.is_active ? t('status_active') : t('status_paused')}
                 </span>
               </td>
-              <td className="px-6 py-3 text-right">
-                <div className="flex items-center justify-end gap-2">
-                  <button
-                    onClick={() => onToggle(product)}
+              <td className="px-6 py-3 text-right relative z-10">
+  <div className="flex items-center justify-end gap-2">
+                 <IOSToggle
+                    value={product.is_active}
+                    onChange={() => onToggle(product)}
                     disabled={togglePending}
-                    className={`p-2 rounded-xl border transition-all disabled:opacity-50 ${
-                      product.is_active 
-                        ? 'bg-green-50 border-green-200 text-green-600 hover:bg-green-100' 
-                        : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'
-                    }`}
-                  >
-                    <Power size={14} />
-                  </button>
+                  />
                   <Link
                     to={`/admin/produtos/${product.id}`}
                     state={{ fromStore: true }}

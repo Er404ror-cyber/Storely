@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Tag, Coins, Power, Edit, Trash2 } from 'lucide-react';
 import type { TranslateFn } from '../../../dashboard/Products';
+import { IOSToggle } from './ProductTable';
 
 interface Product {
   id: string;
@@ -90,20 +91,11 @@ export const ProductCard = memo(({
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <button
-          onClick={onToggle}
-          disabled={togglePending}
-          className={`inline-flex h-10 min-w-0 items-center justify-center gap-2 rounded-xl px-3 text-[11px] font-black uppercase tracking-[0.08em] transition disabled:opacity-50 ${
-            product.is_active
-              ? 'bg-green-50 text-green-700 hover:bg-green-100'
-              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-          }`}
-        >
-          <Power size={13} className="shrink-0" />
-          <span className="truncate">
-            {product.is_active ? t('pause_product') : t('activate_product')}
-          </span>
-        </button>
+         <IOSToggle
+                            value={product.is_active}
+                            onChange={() => onToggle(product)}
+                            disabled={togglePending}
+                          />
 
         <Link
           to={`/admin/produtos/${product.id}`}
