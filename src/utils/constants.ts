@@ -44,24 +44,36 @@ export const FALLBACK_PRODUCT = `data:image/svg+xml;utf8,${encodeURIComponent(`
     </svg>
   `)}`;
   export const FALLBACK_STORE = `data:image/svg+xml;utf8,${encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" fill="none">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
       <style>
-        rect { fill: #f4f4f5; }
-        circle { fill: #e4e4e7; }
-        path { stroke: #a1a1aa; }
+        .bg-card { fill: #f4f4f5; }
+        .store-roof { fill: #3b82f6; }
+        .store-body { fill: #0f172a; }
+        .store-window { fill: #ffffff; opacity: 0.4; }
+    
         @media (prefers-color-scheme: dark) {
-          rect { fill: #18181b; }
-          circle { fill: #27272a; }
-          path { stroke: #52525b; }
+          .bg-card { fill: #09090b; }
+          .store-roof { fill: #38bdf8; }
+          .store-body { fill: #f8fafc; }
+          .store-window { fill: #09090b; opacity: 0.3; }
         }
       </style>
-      <rect width="800" height="450"/>
-      <circle cx="400" cy="225" r="60"/>
-      <path d="M375 225H425" stroke-width="3" stroke-linecap="round"/>
-      <path d="M390 210L410 240" stroke-width="3" stroke-linecap="round"/>
-      <path d="M410 210L390 240" stroke-width="3" stroke-linecap="round"/>
+      
+      <!-- Fundo Sólido Premium com Cantos Arredondados -->
+      <rect width="100" height="100" rx="28" class="bg-card"/>
+      
+      <!-- O Toldo Dinâmico (Design Geométrico Limpo) -->
+      <path d="M20 44 L26 32 L74 32 L80 44 Z" class="store-roof"/>
+      
+      <!-- Fachada Principal / Paredes da Loja -->
+      <path d="M24 44 H76 V72 C76 75, 73 78, 70 78 H30 C27 78, 24 75, 24 72 Z" class="store-body"/>
+      
+      <!-- Vitrines / Janelas em Contraste Puro (Sem linhas a estragar) -->
+      <rect x="32" y="52" width="16" height="18" rx="3" class="store-window"/>
+      <rect x="52" y="52" width="16" height="18" rx="3" class="store-window"/>
     </svg>
-  `)}`;
+    `.trim())}`;
+  
 
 export const LS_PREFS = "storely-prefs-v12";
 export const LS_HISTORY = "storely-history-v12";

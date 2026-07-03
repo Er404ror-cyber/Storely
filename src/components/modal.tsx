@@ -8,6 +8,7 @@ import React, {
   type MouseEvent, // Individual type prefix
   type ChangeEvent  // Individual type prefix
 } from 'react';
+import { createPortal } from 'react-dom';
 
 interface MediaModalProps {
   media: MediaItem | null;
@@ -137,7 +138,7 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
 
   if (!media) return null;
 
-  return (
+  return createPortal(
     <div 
       ref={containerRef}
       className="fixed inset-0 z-[10000] bg-black overflow-hidden flex items-center justify-center touch-none"
@@ -237,6 +238,7 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
