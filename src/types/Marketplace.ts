@@ -21,6 +21,7 @@ export type ProductStore = {
     price: number | string | null;
     currency?: string | null;
     stores?: ProductStore | ProductStore[] | null;
+    store_id?: string | null; // Adiciona esta linha
   };
   
   export type ProductItem = {

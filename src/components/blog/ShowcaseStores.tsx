@@ -436,15 +436,18 @@ export const ShowcaseStores = () => {
 
     const matchedStore = stores.find(s => s.slug === item.storeSlug) as (StoreItem & { currency?: string }) | undefined;
     
+    // Obter todos os dados originais brutos para o ProductDetails
+    const originalRow = rows.find(r => r.id === item.id);
+    
     const productState = { 
       id: item.id, 
-      name: item.name, 
-      category: item.category, 
-      price: item.price, 
-      unit: item.unit || "un", 
-      full_description: item.description || "", 
-      main_image: item.image || "", 
-      gallery: item.gallery?.length ? item.gallery : item.image ? [item.image] : [], 
+      name: originalRow?.name || item.name, 
+      category: originalRow?.category || item.category, 
+      price: originalRow?.price || item.price, 
+      unit: originalRow?.unit || item.unit || "un", 
+      full_description: originalRow?.full_description || item.description || "", 
+      main_image: originalRow?.main_image || item.image || "", 
+      gallery: originalRow?.gallery || (item.gallery?.length ? item.gallery : item.image ? [item.image] : []), 
       store_id: matchedStore?.id || item.storeSlug 
     };
 
@@ -469,7 +472,7 @@ export const ShowcaseStores = () => {
     };
 
     navigate(`/${item.storeSlug}/blog/${item.id}`, { state: { product: productState, store: storeState, source: debouncedQuery.trim() ? "search" : "feed", searchMode: searchAnalysis.mode } });
-  }, [navigate, prefs, stores, debouncedQuery, searchAnalysis.mode, query, selectedCategory, selectedStore, showFilters, pathname]);
+  }, [navigate, prefs, stores, rows, debouncedQuery, searchAnalysis.mode, query, selectedCategory, selectedStore, showFilters, pathname]);
 
   const handleStoreClick = useCallback((slug: string) => {
     const store = stores.find(s => s.slug === slug) as (StoreItem & { currency?: string }) | undefined;

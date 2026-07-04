@@ -221,7 +221,7 @@ showcase_clear_all: "Clear Filters",
 
 
     product_details_visit_store: "Visit Store",
-    product_details_details: "Details",
+    product_details_details: "Product Details",
     product_details_final_value: "Final Value",
     product_details_confirm_whatsapp: "Confirm on WhatsApp",
     product_details_no_description: "No detailed description available for this product.",
@@ -1663,6 +1663,8 @@ noImage: "No Image",
   wa_confirm: "Could you confirm availability?",
 
   Vendedor_Verificado:"Verified Seller",
+  add_note_placeholder: "Add a note to your order (e.g., color, size...)",
+  related_products: "You might also like",
 
   },
 
@@ -1930,7 +1932,7 @@ showcase_defaultCategory: "Lançamentos",
 
 
       product_details_visit_store: "Ver Loja",
-  product_details_details: "Detalhes",
+  product_details_details: "Detalhes do Produto",
   product_details_final_value: "Valor Final",
   product_details_confirm_whatsapp: "Confirmar no WhatsApp",
   product_details_no_description: "Produto sem descrição detalhada disponível no momento.",
@@ -3357,6 +3359,8 @@ noImage: "Sem Imagem",
   wa_link: "Link",
   wa_confirm: "Pode confirmar a disponibilidade?",
   Vendedor_Verificado: "Vendedor Verificado",
+  add_note_placeholder: "Adicionar nota à encomenda (ex: cor, tamanho...)",
+  related_products: "Também pode gostar",
 }
 
 
