@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, Edit3, Loader2, Share2, X, AlignLeft } from "lucide-react";
+import { ChevronLeft, Edit3, Loader2, Share2, X, AlignLeft, Home, Check } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { createPortal } from "react-dom";
 
@@ -65,6 +65,8 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
   const [isEditing, setIsEditing] = useState(isCreating);
   const [quantity, setQuantity] = useState(1);
   const [customNote, setCustomNote] = useState("");
+  const [copied, setCopied] = useState(false);
+
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -153,39 +155,90 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
     return createPortal(<div className={`fixed inset-0 z-[10000] flex items-center justify-center ${pageBgClass}`}><Loader2 className="animate-spin text-slate-700" size={30} /></div>, document.body);
   }
 
+
+const handleShare = async () => {
+  const shareData = {
+    title: initialData?.name || "Storely",
+    text: `Confira ${initialData?.name || "este link"}!`,
+    url: window.location.href,
+  };
+
+  // Se for mobile / tiver suporte ao share nativo
+  if (navigator.share && navigator.canShare?.(shareData)) {
+    try {
+      await navigator.share(shareData);
+    } catch (err) {
+      console.log("Erro ao compartilhar nativamente", err);
+    }
+  } else {
+    // Fallback para Desktop: Copiar link
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // Reseta o ícone após 2 segundos
+    } catch (err) {
+      console.log("Erro ao copiar link", err);
+    }
+  }
+};
   return createPortal(
     <div className={`fixed inset-0 z-[10000] h-[100dvh] w-full overflow-y-auto overflow-x-hidden ${pageBgClass}`}>
-      <nav className={`sticky top-0 z-[10010] flex h-16 items-center justify-between border-b px-4 md:px-6 shadow-sm ${navClass}`}>
+<nav className={`sticky top-0 z-[10010] flex h-16 items-center justify-between border-b px-4 md:px-6 shadow-sm ${navClass}`}>
+               
         <button 
-          type="button" 
-          onClick={() => {
-            if (isCreating) {
-              onClose?.();
-            } else if (window.history.length > 2) {
-              navigate(-1);
-            } else {
-              navigate(`/${storeSlug}`, { replace: true });
-            }
-          }} 
-          className={`rounded-full p-2 transition ${hoverSoftClass}`} 
-          aria-label="back"
-        >
-          <ChevronLeft size={24} />
-        </button>
+      type="button" 
+      onClick={() => isCreating ? onClose?.() : navigate(-1)} 
+      className={`rounded-full p-2 transition ${hoverSoftClass}`} 
+      aria-label="back"
+    >
+      <ChevronLeft size={24} />
+    </button>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          
+        <button 
+  type="button" 
+  onClick={() => {
+    // Se a rota contiver "products" ou "p", volta para a home da loja
+    if (pathname.includes("products") || pathname.includes("/p/")) {
+      navigate(`/${storeSlug}`, { replace: true });
+    } 
+    // Se a rota contiver "blog", volta para o marketplace geral
+    else if (pathname.includes("blog")) {
+      navigate("/", { replace: true });
+    } 
+    // Fallback de segurança por precaução
+    else {
+      navigate(`/${storeSlug}`, { replace: true });
+    }
+  }} 
+  className="flex items-center justify-center rounded-full bg-slate-100 p-2.5 text-slate-700 shadow-sm transition hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transform-gpu active:scale-95" 
+  aria-label="home"
+  title={pathname.includes("blog") ? "Ir para o Início Geral" : "Ir para o Início da Loja"}
+>
+  <Home size={18} />
+</button>
+
+          <div className="h-6 w-px bg-slate-200 dark:bg-zinc-700"></div>
+
           {!isEditorRoute && (
-            <button 
-              type="button" 
-              onClick={() => navigator.share?.({ title: initialData.name, url: window.location.href }).catch(()=>{})} 
-              className={`rounded-full p-2.5 transition ${hoverSoftClass}`}
-            >
-              <Share2 size={20} />
-            </button>
-          )}
+  <button 
+    type="button" 
+    onClick={handleShare} 
+    className={`rounded-full p-2.5 transition ${hoverSoftClass}`}
+    aria-label={copied ? "Link copiado" : "Compartilhar"}
+    title={copied ? "Link copiado!" : "Compartilhar"}
+  >
+    {copied ? (
+      <Check size={20} className="text-green-600 dark:text-green-400" />
+    ) : (
+      <Share2 size={20} />
+    )}
+  </button>
+)}
 
           {isEditorRoute && !isEditing && (
-            <button type="button" onClick={() => setIsEditing(true)} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-white transition hover:bg-slate-800 shadow-sm">
+            <button type="button" onClick={() => setIsEditing(true)} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-white shadow-sm transition hover:bg-slate-800">
               <Edit3 size={16} />
               <span className="text-[11px] font-black uppercase tracking-wider">{t("product_details_edit" as any) || "Editar"}</span>
             </button>

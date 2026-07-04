@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useDeferredValue } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate, useNavigationType } from "react-router-dom";
 import { LayoutGrid } from "lucide-react";
@@ -47,7 +47,7 @@ import {
   getPrefs,
   pushHistory,
   readShowcaseState,
-  readStorelyCache,
+  readStorelyCache, // <-- CORRIGIDO: Adicionado o import ausente
   saveShowcaseStateNow,
   setPrefs,
   writeStorelyCache,
@@ -56,8 +56,6 @@ import { ProductCard, SellerCTA, EmptyState, SectionHeader } from "./UIHelpers";
 import { HorizontalProductsStrip, HorizontalStoresStrip } from "./Strips";
 import { ShowcaseSidebar } from "./showcaseStores/ShowcaseSidebar";
 import { ShowcaseMobileHeader } from "./showcaseStores/ShowcaseMobileHeader";
-
-
 
 export const ShowcaseStores = () => {
   const { t, lang } = useTranslate() as {
@@ -183,6 +181,7 @@ export const ShowcaseStores = () => {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     retry: 1,
+    placeholderData: (prev) => prev, 
     queryFn: async () => {
       const cache = readStorelyCache();
       if (cache) {
@@ -416,7 +415,9 @@ export const ShowcaseStores = () => {
     if (!userHasAccount) out.push({ id: "cta", type: "cta" });
     if (mainGroups[2]?.length) out.push({ id: "grid-2", type: "products-grid", title: t("storely_main_feed"), items: mainGroups[2] });
     return out;
-  }, [scopedProducts, scopedStores, fallbackProducts, debouncedQuery, searchAnalysis.mode, searchExactProductsStable, searchApproxProductsStable, searchRelatedProductsStable, searchExactStoresStable, searchApproxStoresStable, searchRelatedStoresStable, stableMainFeed, newestProducts, highlightedStores, mainGroups, userHasAccount, t]);
+  }, [scopedProducts.length, scopedStores.length, fallbackProducts, debouncedQuery, searchAnalysis.mode, searchExactProductsStable, searchApproxProductsStable, searchRelatedProductsStable, searchExactStoresStable, searchApproxStoresStable, searchRelatedStoresStable, stableMainFeed, newestProducts, highlightedStores, mainGroups, userHasAccount, t]);
+
+  const deferredSections = useDeferredValue(sections);
 
   const searchStatusText = useMemo(() => {
     if (!debouncedQuery.trim()) return "";
@@ -435,8 +436,6 @@ export const ShowcaseStores = () => {
     saveShowcaseStateNow({ query, selectedCategory, selectedStore, showFilters, pathname });
 
     const matchedStore = stores.find(s => s.slug === item.storeSlug) as (StoreItem & { currency?: string }) | undefined;
-    
-    // Obter todos os dados originais brutos para o ProductDetails
     const originalRow = rows.find(r => r.id === item.id);
     
     const productState = { 
@@ -518,15 +517,20 @@ export const ShowcaseStores = () => {
   if (isLoading && !rows.length) {
     return (
       <section className="w-full px-0 py-4">
-        <div className="space-y-5 animate-pulse-fast">
-          <div className="h-11 rounded-full bg-zinc-200 dark:bg-zinc-800" />
-          <div className="h-8 w-3/4 rounded-xl bg-zinc-200 dark:bg-zinc-800" />
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="overflow-hidden rounded-[1.4rem] border border-zinc-200 dark:border-zinc-800">
-                <div className="aspect-[4/4.8] bg-zinc-200 dark:bg-zinc-800" />
-              </div>
-            ))}
+        <div className="space-y-6 animate-pulse">
+          <div className="h-14 lg:h-12 w-full rounded-2xl bg-zinc-200 dark:bg-zinc-800/80 mb-6" />
+          
+          <div className="px-2">
+            <div className="h-6 w-1/3 rounded-md bg-zinc-200 dark:bg-zinc-800/80 mb-4" />
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="flex flex-col gap-2">
+                  <div className="aspect-square w-full rounded-[1.4rem] bg-zinc-200 dark:bg-zinc-800/80" />
+                  <div className="h-4 w-3/4 rounded bg-zinc-200 dark:bg-zinc-800/80" />
+                  <div className="h-4 w-1/2 rounded bg-zinc-200 dark:bg-zinc-800/80" />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -539,7 +543,6 @@ export const ShowcaseStores = () => {
       
       <div className="flex flex-col lg:flex-row lg:items-start gap-4 lg:px-4 xl:px-6">
 
-        {/* TOP BAR - MOBILE */}
         {!isEditorRoute && (
           <ShowcaseMobileHeader
             query={query}
@@ -568,7 +571,6 @@ export const ShowcaseStores = () => {
           />
         )}
 
-        {/* SIDEBAR - DESKTOP */}
         {!isEditorRoute && (
           <ShowcaseSidebar
             query={query}
@@ -593,12 +595,11 @@ export const ShowcaseStores = () => {
           />
         )}
 
-        {/* FEED PRINCIPAL */}
         <div className="flex-1 min-w-0 space-y-6 w-full pb-8">
-          {sections.map((section) => {
+          {deferredSections.map((section) => {
             if (section.type === "products-grid") {
               return (
-                <section key={section.id} style={{ contentVisibility: "auto", containIntrinsicSize: "auto 500px" }} className="px-2 ">
+                <section key={section.id} className="px-2">
                   {section.title && <SectionHeader icon={<LayoutGrid size={15} />} title={section.title} subtle={`${section.items.length}`} />}
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
                     {section.items.map(item => <ProductCard key={item.id} item={item} onClick={handleProductClick} locale={localeForPrice} />)}

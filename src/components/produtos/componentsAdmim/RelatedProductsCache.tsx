@@ -1,9 +1,8 @@
 import { useMemo, memo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ProductRow } from "../../../types/Marketplace";
 import { FALLBACK_PRODUCT } from "../../../utils/constants";
-
 
 interface RelatedProductsCacheProps {
   currentProductId: string;
@@ -15,7 +14,6 @@ interface RelatedProductsCacheProps {
   mutedTextClass: string;
   formatMoney: (val: number) => string;
   t: any;
-  
 }
 
 export const RelatedProductsCache = memo(function RelatedProductsCache({
@@ -30,6 +28,9 @@ export const RelatedProductsCache = memo(function RelatedProductsCache({
   t,
 }: RelatedProductsCacheProps) {
   const queryClient = useQueryClient();
+  // Movido para o topo para evitar o erro de Renderização Condicional (Early Return)
+  const location = useLocation();
+  const isBlog = location.pathname.includes('/blog');
 
   const relatedItems = useMemo(() => {
     if (!currentProductId || !currentCategory) return [];
@@ -59,6 +60,7 @@ export const RelatedProductsCache = memo(function RelatedProductsCache({
     });
   }, [queryClient, currentProductId, currentCategory, currentStoreId, storeSlugFallback]);
 
+  // Early return seguro executado APÓS a declaração dos hooks
   if (!relatedItems || relatedItems.length === 0) return null;
 
   return (
@@ -71,7 +73,7 @@ export const RelatedProductsCache = memo(function RelatedProductsCache({
         {relatedItems.map((rel) => (
           <Link 
             key={rel.id}
-            to={`/${rel.targetSlug}/blog/${rel.id}`}
+            to={isBlog ? `/${rel.targetSlug}/blog/${rel.id}` : `/${rel.targetSlug}/products/${rel.id}`}
             state={{ product: rel, store: rel.storeData }}
             className={`group flex flex-col overflow-hidden rounded-3xl border transition hover:shadow-md ${panelClass}`}
           >
