@@ -295,7 +295,7 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
 
   const handleNavigate = useCallback((slug: string, id: string) => {
     handleClose();
-    if (slug) navigate(`/${slug}/products/${id}`);
+    if (slug) navigate(`/${slug}/blog/${id}`);
   }, [handleClose, navigate]);
 
   const handleToggleGlobal = useCallback(() => setShowGlobalCats(p => !p), []);
@@ -309,7 +309,7 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[99999] flex h-14 w-14 items-center justify-center rounded-full shadow-xl transition-transform duration-200 hover:scale-105 active:scale-95 cursor-pointer bg-zinc-900 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-950 border border-zinc-200/10 dark:border-zinc-800/40 "
+        className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[20] flex h-14 w-14 items-center justify-center rounded-full shadow-xl transition-transform duration-200 hover:scale-105 active:scale-95 cursor-pointer bg-zinc-900 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-950 border border-zinc-200/10 dark:border-zinc-800/40 "
       >
         <Search size={22} />
       </button>

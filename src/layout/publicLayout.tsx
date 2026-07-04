@@ -2,7 +2,7 @@ import { Outlet, useParams, useNavigate, useLocation } from "react-router-dom";
 import { useId, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { StoreHeader } from "../components/header";
+import { StoreHeader } from "../components/public/header/header";
 import { StorePageLinksSection } from "../components/public/StorePageLinks";
 import { PublicBackgroundAudio } from "../components/public/audio/PublicBackgroundAudio";
 import { useStorePublic } from "../hooks/useStorePublic";

@@ -14,7 +14,7 @@ import {
   GalleryHeader, 
   EmptyState, 
   GridItem,
-  GlobalEditToolbar // <- NOVO COMPONENTE IMPORTADO AQUI
+  GlobalEditToolbar 
 } from '../../galeria/galeria';
 
 const MAX_ITEMS: number = 10;
@@ -40,16 +40,13 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   
-  // NOVO: Estado para controlar qual item está a ser editado
   const [activeEditIndex, setActiveEditIndex] = useState<number | null>(null);
 
-  // Memoiza itens com fallback seguro
   const items = useMemo<MediaItem[]>(() => {
     const rawImages = (content.images as MediaItem[]) || [];
     return rawImages.filter((i) => i?.url).slice(0, MAX_ITEMS);
   }, [content.images]);
 
-  // Cálculos de peso
   const stats = useMemo<StorageStats>(() => {
     const bytes = items.reduce((acc, curr) => acc + (curr.size || 0), 0);
     const individualErrors = items.some(item => {
@@ -91,11 +88,9 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
     const itemToRemove = items[index];
     if (!itemToRemove) return;
   
-    // Se o item a apagar é o que está ativo, fechamos a toolbar
     if (activeEditIndex === index) {
       setActiveEditIndex(null);
     } else if (activeEditIndex !== null && index < activeEditIndex) {
-      // Ajusta o index ativo se apagarmos algo antes dele
       setActiveEditIndex(activeEditIndex - 1);
     }
 
@@ -163,7 +158,6 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
     newItems.splice(to, 0, movedItem);
     onUpdate?.('images', newItems);
     
-    // Mantém a toolbar conectada ao item caso ele mude de posição
     if (activeEditIndex === from) {
       setActiveEditIndex(to);
     } else if (activeEditIndex === to) {
@@ -184,7 +178,7 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
   }
 
   return (
-    <section className={`py-6 md:py-10 px-2 transition-colors duration-300${getTheme(style.theme)}`}>
+    <section className={`py-6 md:py-10 px-2 transition-colors duration-300 ${getTheme(style.theme)} ${activeEditIndex !== null ? 'pb-32 sm:pb-24' : ''}`}>
       <div className="max-w-4xl mx-auto px-4 relative" ref={containerRef}>
         
         <input 
@@ -212,7 +206,6 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
           isEditable={isEditable}
           onUpdate={onUpdate}
           t={t as (key: string) => string}          
-
         />
 
         {items.length === 0 ? (
@@ -250,7 +243,6 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
           </div>
         )}
 
-        {/* TOOLBAR FLUTUANTE GLOBAL PARA EDIÇÃO */}
         {isEditable && (
           <GlobalEditToolbar
             items={items}
