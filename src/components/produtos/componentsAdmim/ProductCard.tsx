@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Link } from 'react-router-dom';
-import { Tag, Coins, Power, Edit, Trash2 } from 'lucide-react';
+import { Tag, Coins,  Edit, Trash2 } from 'lucide-react';
 import type { TranslateFn } from '../../../dashboard/Products';
 import { IOSToggle } from './ProductTable';
 
@@ -93,7 +93,7 @@ export const ProductCard = memo(({
       <div className="mt-3 grid grid-cols-2 gap-2">
          <IOSToggle
                             value={product.is_active}
-                            onChange={() => onToggle(product)}
+                            onChange={() => onToggle()}
                             disabled={togglePending}
                           />
 

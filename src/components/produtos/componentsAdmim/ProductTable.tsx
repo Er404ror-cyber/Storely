@@ -1,6 +1,6 @@
 import { memo, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Edit, Power, Trash2, Tag, Coins } from 'lucide-react';
+import { Link  } from 'react-router-dom';
+import { Edit,  Trash2, Tag, Coins } from 'lucide-react';
 import type { TranslateFn } from '../../../dashboard/Products';
 
 interface Product {
@@ -30,14 +30,14 @@ export const IOSToggle = ({ value, onChange, disabled }: { value: boolean; onCha
     if (!pending) {
       setLocalValue(value);
     }
-  }, [value]);
+  }, [value, pending]);
 
   // Detecta quando o servidor confirmou a mudança
   useEffect(() => {
     if (pending && localValue === value) {
       setPending(false);
     }
-  }, [value, pending]);
+  }, [value, pending, localValue]);
 
   const handleClick = async () => {
     if (pending || disabled) return;
@@ -107,11 +107,7 @@ export const ProductTable = memo(({
   togglePending,
   t,
 }: ProductTableProps) => {
-  const navigate = useNavigate();
 
-  const goToProduct = (product: Product) => {
-    navigate(`/admin/produtos/${product.id}`, { state: { fromStore: true } });
-  };
 
   return (
     <div 
@@ -130,7 +126,7 @@ export const ProductTable = memo(({
         </thead>
         <tbody className="divide-y divide-slate-200 bg-white">
           {products.map((product) => (
-         <tr key={product.id} className="hover:bg-slate-50/70 transition-colors">           
+         <tr key={product.id} className="hover:bg-slate-50/70 transition-colors relative">           
           <td className="px-6 py-3 font-medium text-slate-900 max-w-[280px]">
   <Link
     to={`/admin/produtos/${product.id}`}
