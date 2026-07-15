@@ -76,3 +76,19 @@ export interface GalleryHeaderProps<K extends string = string> { // <--- Adicion
   onUpdate?: (field: string, value: string) => void;
   t: (key: K) => string; // <--- Agora usamos o K aqui
 }
+
+// types/library.ts (ou onde estiverem os tipos)
+export interface EsportsProfileContent {
+  backgroundText: string;
+  alias: string;
+  fullName: string;
+  flagUrl: string;
+  playerImageUrl: string;
+  videoThumbnailUrl: string;
+  videoTitle: string;
+  matchesPlayed: string;
+  rolePlayer: string;
+  avgKda: string;
+  rank: string;
+  avgDmg: string;
+}

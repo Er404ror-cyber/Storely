@@ -1,13 +1,14 @@
-export type AiEffectType = 'NAVIGATE' | 'CHANGE_LANGUAGE';
+export type AiEffectType = 'NAVIGATE' | 'CHANGE_LANGUAGE' | 'EDIT_STORE_NAME' | 'LOGOUT' | 'OPEN_STORE';
 
 export interface AiEffect {
   type: AiEffectType;
-  payload: string;
+  payload?: string;
 }
 
 export interface AiAction {
   label: string;
-  route: string;
+  route?: string;
+  actionType?: AiEffectType;
   isExternal?: boolean;
 }
 
@@ -29,149 +30,163 @@ export interface AiResult {
 
 export const MOZ_SUPPORT_PHONE = "+258840000000";
 
+// --- FUNÇÕES AUXILIARES ---
 const cleanText = (str: string): string => 
   str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s]/g, "");
 
 const getRandom = (arr: string[]): string => arr[Math.floor(Math.random() * arr.length)];
 
-// Dicionário de Inteligência Expandido
+// A FUNÇÃO QUE FALTAVA:
+const checkIntent = (text: string, keywords: string[]): boolean => keywords.some(k => text.includes(k));
+
+// --- DICIONÁRIO DE INTELIGÊNCIA ---
 const KEYWORDS = {
-  langEn: ['en', 'ingle', 'english', 'usa', 'uk'],
-  langPt: ['pt', 'portugue', 'mocambique', 'mz', 'portugues'],
+  langToggle: ['lingua', 'idiom', 'languag', 'mudar a lingua', 'change language', 'traduzir', 'translate'],
+  logout: ['sair', 'logout', 'deslogar', 'terminar sessao', 'sign out', 'log out'],
+  openStore: ['ver loja', 'abrir loja', 'meu site', 'ir para o site', 'view store', 'open site'],
+  editName: ['mudar nome', 'alterar nome', 'edit name', 'store name', 'nome da loja'],
+  tips: ['dica', 'ajuda', 'vender mais', 'visibilidade', 'seo', 'melhorar', 'tip', 'improve', 'sell more', 'grow'],
+  
   whatsapp: ['whatsapp', 'whats', 'zap', 'numero', 'telefone', 'contacto', 'contato', 'telemovel', 'celular', 'ligar'],
   explore: ['explorar', 'blog', 'artigo', 'noticia', 'novidade', 'explore', 'post', 'publicacao'],
-  domain: ['dominio', 'link', 'url', 'site', 'endereco', 'nome da loja', 'slug', 'mudar o nome', 'seo'],
-  product: ['produt', 'artigo', 'item', 'catalog', 'preco', 'stock', 'inventario', 'moed', 'dinheir', 'pagament', 'meticais', 'cambio', 'currency', 'money', 'price', 'valor', 'custo'],
-  page: ['pagin', 'site', 'layout', 'design', 'construt', 'builder', 'aparenci', 'tema', 'cor', 'banner', 'logo', 'visual', 'websit', 'appearanc', 'theme', 'color', 'imagem', 'foto'],
-  setup: ['setup', 'inicializa', 'passo', 'inicia', 'wizard', 'start'],
-  settings: ['configur', 'definicoe', 'definic', 'opcao', 'opcoe', 'perfil', 'setting', 'preferenc', 'profile', 'conta', 'senha', 'password'],
-  music: ['music', 'audio', 'som', 'playlist', 'sound', 'tocar', 'play', 'musica'],
+  domain: ['dominio', 'link', 'url', 'site', 'endereco', 'slug', 'seo'],
+  product: ['produt', 'artigo', 'item', 'catalog', 'preco', 'stock', 'inventario', 'moed', 'dinheir', 'pagament', 'meticais', 'cambio', 'currency', 'money', 'price', 'valor', 'custo', 'adicionar produto'],
+  page: ['pagin', 'site', 'layout', 'design', 'construt', 'builder', 'aparenci', 'tema', 'cor', 'banner', 'logo', 'visual', 'websit', 'appearanc', 'theme', 'color', 'imagem', 'foto', 'criar pagina'],
+  settings: ['configur', 'definicoe', 'definic', 'opcao', 'opcoe', 'perfil', 'setting', 'preferenc', 'profile', 'conta'],
   orders: ['encomend', 'vend', 'pedid', 'faturacao', 'recibo', 'order', 'sale', 'purchas', 'billing', 'cliente', 'compr'],
-  shipping: ['envi', 'porte', 'entreg', 'transport', 'taxa', 'shipping', 'delivery', 'freight', 'zona', 'correio'],
-  discount: ['descont', 'cupao', 'cupoe', 'promoca', 'ofert', 'discount', 'coupon', 'promo', 'offer'],
-  analytics: ['estatistic', 'visit', 'relatorio', 'grafic', 'metric', 'analytic', 'report', 'chart', 'traffic', 'visualizaco']
+  shipping: ['envi', 'porte', 'entreg', 'transport', 'taxa', 'shipping', 'delivery', 'freight', 'zona'],
+  analytics: ['estatistic', 'visit', 'relatorio', 'grafic', 'metric', 'analytic', 'report', 'chart', 'traffic']
 };
 
-// Respostas Humanizadas (A IA escolhe uma aleatoriamente)
 const RESPONSES = {
   pt: {
-    langSwitched: ["🔄 Alterado! De agora em diante, falarei português contigo.", "✅ Feito! Vamos falar em português então."],
-    clarify: ["Consegues dar-me mais um detalhe? Queres mexer nos Artigos, Cores, Encomendas ou nas Definições?", "Podes ser um pouquinho mais específico? Do que precisas exatamente?"],
-    unknown: ["Hmm, confesso que me apanhaste! 🤖 Queres explorar as Definições ou falar com a nossa equipa humana?", "Essa pergunta baralhou-me um pouco os circuitos! Queres ajuda da nossa equipa no WhatsApp?"],
-    action_whatsapp: ["📱 A abrir as Definições! É aqui que podes atualizar o teu número de WhatsApp e contactos.", "Vem comigo às Definições. Podes alterar o teu WhatsApp logo ali na secção de contactos."],
-    action_domain: ["🔗 A redirecionar para as Definições! Lá podes alterar o nome da loja e o teu link.", "Vamos às Definições! É o local certo para mudares o teu endereço e o nome da tua marca."],
-    action_explore: ["📰 A abrir o Explorar! Espreita as novidades e publicações da loja.", "Vou levar-te ao Blog. Podes ver todas as atualizações lá!"],
-    action_product: ["💰 A caminho dos Produtos! Lembra-te: o preço e a moeda mudam-se ao editar cada artigo individualmente.", "Pronto! Vou abrir o Catálogo. Podes mudar os preços, moeda e stock diretamente nos teus artigos."],
-    action_page: ["🎨 Vamos ao Construtor! Clica em 'Editar' numa página para alterares as cores, imagens e banners.", "A preparar o estúdio de design... É nas Páginas que mudas todo o aspeto visual do teu site!"],
-    action_orders: ["📦 A carregar as Encomendas. Aqui consegues gerir os teus clientes e marcar vendas como enviadas.", "Vamos aos Pedidos! Tudo o que vendeste aparece aqui para organizares."],
-    action_settings: ["⚙️ A abrir as Definições globais. Tudo o que é configuração de base da tua conta está aqui.", "Vamos às configurações. Podes ajustar as tuas opções de perfil e loja nesta página."],
-    action_shipping: ["🚚 A preparar os Envios! Cria as tuas zonas de entrega e define as taxas de transporte por aqui.", "Vamos configurar as tuas entregas. É nesta página que defines os custos de envio."],
-    action_analytics: ["📈 A preparar os teus relatórios! Os teus números e visitas estão no Painel Principal.", "Vamos ver como estão as vendas! A redirecionar para as Estatísticas."],
-    action_discount: ["🎟️ A abrir a zona de Descontos! Podes criar e gerir os teus cupões de oferta aqui.", "Vamos aos Descontos. Cria promoções irresistíveis para os teus clientes!"]
+    clarify: ["Podes dar-me mais um detalhe? Estás a tentar mudar Artigos, Cores, Encomendas ou Definições?", "Para eu ser mais exato, diz-me: procuras ajuda com produtos, design ou a tua conta?"],
+    unknown: ["Essa apanhou-me desprevenido! 🤖 Queres explorar as Definições ou falar com a nossa equipa humana?", "Não tenho a certeza de como ajudar com isso. Queres falar com o Suporte no WhatsApp?"],
+    already_here: "✨ Já estás no lugar certo! Basta olhares para o ecrã e fazeres a alteração aqui mesmo.",
+    
+    action_lang: "🌍 A mudar o idioma do sistema para ti agora mesmo!",
+    action_logout: "👋 A terminar a tua sessão. Tem um excelente dia!",
+    action_openStore: "🌐 A abrir a tua loja pública num novo separador para veres como está a ficar!",
+    action_editName: "✏️ Ativei a edição do nome da tua loja no cabeçalho.\n\n⚠️ **Atenção:** Só podes alterar o nome da loja a cada 24 horas. Se vires o tempo a contar, terás de aguardar!",
+    
+    action_whatsapp: "📱 A abrir as Definições. Podes atualizar o teu número de WhatsApp logo ali na secção de contactos.",
+    action_product: "💰 Vamos ao Catálogo! **Dica:** Os preços e stock mudam-se dentro de cada artigo, mas a **Moeda** da loja configura-se no topo da página de Produtos.",
+    action_page: "🎨 A carregar o Construtor! Clica em 'Nova Página' para criar, ou 'Editar' para mudar cores e banners.",
+    action_orders: "📦 Vamos aos Pedidos! Tudo o que vendeste aparece aqui para organizares e marcares como enviado.",
+    action_settings: "⚙️ A abrir as Definições globais. Tudo o que é configuração de base está aqui.",
+    action_shipping: "🚚 A preparar os Envios! Cria as tuas zonas de entrega e define as taxas de transporte por aqui.",
+    action_analytics: "📈 Vamos ver os teus relatórios e visitas no Painel Principal.",
+    
+    tips: [
+      "💡 **Dica de Visibilidade:** Partilha o link da tua loja nas tuas redes sociais e coloca-o na bio do Instagram e WhatsApp. Usa imagens de alta qualidade nos produtos!",
+      "💡 **Dica de Vendas:** Cria descrições claras para os teus produtos e define taxas de envio justas (ou frete grátis) para evitar carrinhos abandonados.",
+      "💡 **Dica de Design:** Menos é mais! Mantém o design da tua página inicial limpo, usando no máximo 2 a 3 cores principais que combinem com o teu logótipo."
+    ]
   },
   en: {
-    langSwitched: ["🔄 Done! I'll speak English from now on.", "✅ All set! Switching to English."],
-    clarify: ["Could you give me a bit more detail? Are you looking for Items, Design, Orders, or Settings?", "Can you be a bit more specific? What exactly do you need?"],
-    unknown: ["Hmm, you caught me off guard! 🤖 Want to check Settings or talk to our human team?", "That question scrambled my circuits! Do you want to chat with support?"],
-    action_whatsapp: ["📱 Opening Settings! You can update your WhatsApp and contacts right there.", "Let's go to Settings. Your WhatsApp number can be changed in the contacts section."],
-    action_domain: ["🔗 Redirecting to Settings! Change your store name and URL here.", "Let's check your Settings to change your domain and store name."],
-    action_explore: ["📰 Opening Explore! Check out the latest news and posts.", "I'll take you to the Blog. You can manage publications there!"],
-    action_product: ["💰 On our way to Products! Remember: prices and currency are changed by editing each item.", "Done! Opening Catalog. Edit any product to change its price and stock."],
-    action_page: ["🎨 Let's go to the Builder! Click 'Edit' on any page to change colors, images, and banners.", "Preparing the design studio... Change your site's visual appearance here!"],
-    action_orders: ["📦 Loading Orders. Manage your sales and mark items as shipped here.", "Let's see your Orders! Everything you sold is organized on this page."],
-    action_settings: ["⚙️ Opening global Settings. All your base configurations are here.", "Let's go to Settings. Adjust your profile and store options on this page."],
-    action_shipping: ["🚚 Preparing Shipping! Create delivery zones and rates here.", "Let's set up your deliveries. Define shipping costs on this page."],
-    action_analytics: ["📈 Preparing your reports! Your numbers are on the Dashboard.", "Let's see how sales are doing! Redirecting to Analytics."],
-    action_discount: ["🎟️ Opening Discounts! Create and manage your promo coupons here.", "Let's go to Discounts. Create irresistible promos for your customers!"]
+    clarify: ["Could you give me a bit more detail? Are you looking for Items, Design, Orders, or Settings?", "Can you be more specific? Do you need help with products, pages, or settings?"],
+    unknown: ["Hmm, you caught me off guard! 🤖 Want to check Settings or talk to our human team?", "I'm a bit lost on that one! Do you want to chat with our Support?"],
+    already_here: "✨ You are already in the right place! Just look at your screen and make the changes right here.",
+    
+    action_lang: "🌍 Switching the system language for you right now!",
+    action_logout: "👋 Signing you out. Have a great day!",
+    action_openStore: "🌐 Opening your public store in a new tab so you can see how it looks!",
+    action_editName: "✏️ I've enabled store name editing in the header.\n\n⚠️ **Note:** You can only change the store name every 24 hours. If there's a countdown, you'll need to wait!",
+    
+    action_whatsapp: "📱 Opening Settings. You can update your WhatsApp in the contacts section.",
+    action_product: "💰 Let's go to Catalog! **Tip:** Prices are set inside each item, but the store **Currency** is configured at the top of the Products page.",
+    action_page: "🎨 Loading Builder! Click 'New Page' to create one, or 'Edit' to change colors and banners.",
+    action_orders: "📦 Let's see your Orders! Manage sales and mark them as shipped here.",
+    action_settings: "⚙️ Opening Settings. All your base configurations are here.",
+    action_shipping: "🚚 Preparing Shipping! Create delivery zones and rates here.",
+    action_analytics: "📈 Let's check your numbers and visits on the Dashboard.",
+    
+    tips: [
+      "💡 **Visibility Tip:** Share your store link on your social media and put it in your Instagram/WhatsApp bio. Always use high-quality product images!",
+      "💡 **Sales Tip:** Write clear product descriptions and offer fair shipping rates (or free shipping) to reduce abandoned carts.",
+      "💡 **Design Tip:** Less is more! Keep your homepage clean, using a maximum of 2 to 3 main colors that match your logo."
+    ]
   }
 };
 
 const ALL_FAQS = {
-  pt: [
-    "Onde mudo a minha moeda?", "Como altero o meu WhatsApp?", "Onde posso mudar as cores da loja?", 
-    "Como configuro as taxas de entrega?", "Onde vejo as minhas vendas?", "Como alterar o nome do meu link?"
-  ],
-  en: [
-    "Where do I change my currency?", "How do I update my WhatsApp?", "Where can I change store colors?",
-    "How do I set up shipping rates?", "Where can I see my sales?", "How do I change my store URL?"
-  ]
+  pt: ["Como mudar a moeda?", "Dicas para vender mais", "Onde mudo o WhatsApp?", "Como criar uma página?", "Ver a minha loja"],
+  en: ["How to change currency?", "Tips to sell more", "Where to update WhatsApp?", "How to create a page?", "View my store"]
 };
 
-// Devolve 3 FAQs aleatórias e únicas
 export const getRandomFAQs = (lang: 'pt' | 'en'): string[] => {
-  const shuffled = [...ALL_FAQS[lang]].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, 3);
+  return [...ALL_FAQS[lang]].sort(() => 0.5 - Math.random()).slice(0, 3);
 };
-const checkIntent = (text: string, keywords: string[]): boolean => keywords.some(k => text.includes(k));
-
 
 export const processAiQuery = (
   query: string, 
   systemLang: 'pt' | 'en',
-  history: ChatMessage[] = []
+  history: ChatMessage[] = [],
+  currentPath: string = ''
 ): AiResult => {
   const text = cleanText(query);
   const effects: AiEffect[] = [];
-  let responseLang = systemLang;
+  const res = RESPONSES[systemLang];
 
-  const targetEn = checkIntent(text, KEYWORDS.langEn);
-  const targetPt = checkIntent(text, KEYWORDS.langPt);
-
-  if (targetEn || targetPt) {
-    responseLang = targetEn ? 'en' : 'pt';
-    effects.push({ type: 'CHANGE_LANGUAGE', payload: responseLang });
-    return { text: getRandom(RESPONSES[responseLang].langSwitched), actions: [], effects };
+  // --- MEMÓRIA DE CONTEXTO ---
+  if (history.length > 0 && history[history.length - 1].expectsClarification && text.length < 15) {
+    if (text.includes('cor') || text.includes('design')) return { text: res.action_page, actions: [], effects: [{ type: 'NAVIGATE', payload: '/admin/paginas' }] };
+    if (text.includes('preco') || text.includes('moeda')) return { text: res.action_product, actions: [], effects: [{ type: 'NAVIGATE', payload: '/admin/produtos' }] };
   }
 
-  const res = RESPONSES[responseLang];
+  // --- AUTOMAÇÕES DO SISTEMA ---
+  if (checkIntent(text, KEYWORDS.langToggle)) {
+    const targetLang = systemLang === 'pt' ? 'en' : 'pt';
+    effects.push({ type: 'CHANGE_LANGUAGE', payload: targetLang });
+    return { text: RESPONSES[targetLang].action_lang, actions: [], effects };
+  }
+  if (checkIntent(text, KEYWORDS.logout)) {
+    effects.push({ type: 'LOGOUT' });
+    return { text: res.action_logout, actions: [], effects };
+  }
+  if (checkIntent(text, KEYWORDS.openStore)) {
+    effects.push({ type: 'OPEN_STORE' });
+    return { text: res.action_openStore, actions: [], effects };
+  }
+  if (checkIntent(text, KEYWORDS.editName)) {
+    effects.push({ type: 'EDIT_STORE_NAME' });
+    return { text: res.action_editName, actions: [], effects };
+  }
 
-  if (checkIntent(text, KEYWORDS.whatsapp)) {
-    effects.push({ type: 'NAVIGATE', payload: '/admin/configuracoes' });
-    return { text: getRandom(res.action_whatsapp), actions: [], effects };
+  // --- MODO ASSISTENTE / CONSULTOR ---
+  if (checkIntent(text, KEYWORDS.tips)) {
+    return { text: getRandom(res.tips), actions: [], effects: [] };
   }
-  if (checkIntent(text, KEYWORDS.explore)) {
-    effects.push({ type: 'NAVIGATE', payload: '/admin/explore' });
-    return { text: getRandom(res.action_explore), actions: [], effects };
-  }
-  if (checkIntent(text, KEYWORDS.domain)) {
-    effects.push({ type: 'NAVIGATE', payload: '/admin/configuracoes' });
-    return { text: getRandom(res.action_domain), actions: [], effects };
-  }
-  if (checkIntent(text, KEYWORDS.product)) {
-    effects.push({ type: 'NAVIGATE', payload: '/admin/produtos' });
-    return { text: getRandom(res.action_product), actions: [], effects };
-  }
-  if (checkIntent(text, KEYWORDS.page)) {
-    effects.push({ type: 'NAVIGATE', payload: '/admin/paginas' });
-    return { text: getRandom(res.action_page), actions: [], effects };
-  }
-  if (checkIntent(text, KEYWORDS.orders)) {
-    effects.push({ type: 'NAVIGATE', payload: '/admin/encomendas' }); 
-    return { text: getRandom(res.action_orders), actions: [], effects };
-  }
-  if (checkIntent(text, KEYWORDS.analytics)) {
-    effects.push({ type: 'NAVIGATE', payload: '/admin/estatisticas' });
-    return { text: getRandom(res.action_analytics), actions: [], effects };
-  }
-  if (checkIntent(text, KEYWORDS.settings) || checkIntent(text, KEYWORDS.setup) || checkIntent(text, KEYWORDS.music) || checkIntent(text, KEYWORDS.shipping)) {
-    effects.push({ type: 'NAVIGATE', payload: '/admin/configuracoes' });
-    if (checkIntent(text, KEYWORDS.shipping)) {
-      return { text: getRandom(res.action_shipping), actions: [], effects };
+
+  // --- NAVEGAÇÃO INTELIGENTE (Location Aware) ---
+  const handleNav = (targetRoute: string, textResponse: string): AiResult => {
+    if (currentPath.includes(targetRoute) && targetRoute !== '/admin') {
+      return { text: res.already_here, actions: [], effects: [] };
     }
-    return { text: getRandom(res.action_settings), actions: [], effects };
-  }
+    effects.push({ type: 'NAVIGATE', payload: targetRoute });
+    return { text: textResponse, actions: [], effects };
+  };
 
+  if (checkIntent(text, KEYWORDS.whatsapp) || checkIntent(text, KEYWORDS.domain)) return handleNav('/admin/configuracoes', res.action_whatsapp);
+  if (checkIntent(text, KEYWORDS.product)) return handleNav('/admin/produtos', res.action_product);
+  if (checkIntent(text, KEYWORDS.page)) return handleNav('/admin/paginas', res.action_page);
+  if (checkIntent(text, KEYWORDS.orders)) return handleNav('/admin/encomendas', res.action_orders);
+  if (checkIntent(text, KEYWORDS.analytics)) return handleNav('/admin/estatisticas', res.action_analytics);
+  if (checkIntent(text, KEYWORDS.settings) || checkIntent(text, KEYWORDS.shipping)) return handleNav('/admin/configuracoes', checkIntent(text, KEYWORDS.shipping) ? res.action_shipping : res.action_settings);
+
+  // --- CLARIFICAÇÃO ---
   const words = text.split(/\s+/).filter(Boolean);
   if (words.length <= 2) {
     return { text: getRandom(res.clarify), actions: [], effects: [], expectsClarification: true };
   }
 
+  // --- FALLBACK ---
   const cleanPhone = MOZ_SUPPORT_PHONE.replace('+', '');
   return {
     text: getRandom(res.unknown),
     actions: [
-      { label: responseLang === 'pt' ? "Falar no WhatsApp" : "WhatsApp Support", route: `https://wa.me/${cleanPhone}`, isExternal: true },
-      { label: responseLang === 'pt' ? "Ir para Configurações" : "Store Settings", route: "/admin/configuracoes" }
+      { label: systemLang === 'pt' ? "Falar no WhatsApp" : "WhatsApp Support", route: `https://wa.me/${cleanPhone}`, isExternal: true },
+      { label: systemLang === 'pt' ? "Abrir Definições" : "Open Settings", route: "/admin/configuracoes" }
     ],
     effects: []
   };

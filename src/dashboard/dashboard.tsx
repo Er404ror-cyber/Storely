@@ -9,7 +9,6 @@ import { useTranslate } from '../context/LanguageContext';
 import { type DashboardData, type Product, type Page, type StepItem, resolveCurrency } from '../types/dashboard';
 
 // Importando Componentes Separados
-import AiAssistant from '../components/dashboard/AiAssistant';
 import { 
   StatCard, SetupStepCard, ProductRow, PageRow, 
   HeroBanner, SystemNodeDetails, ActionBanner 

@@ -14,6 +14,7 @@ import {
 import type { UseMutationResult } from '@tanstack/react-query';
 import type { AdminPage, AdminStore } from '../../types/admin';
 import type { useTranslate } from '../../context/LanguageContext';
+import toast from 'react-hot-toast';
 type TranslateFn = ReturnType<typeof useTranslate>['t'];
 
 interface MenuItem {
@@ -237,6 +238,45 @@ export function AdminSidebar({
   const handleSaveName = useCallback(() => {
     updateStoreMutation.mutate(newName);
   }, [updateStoreMutation, newName]);
+
+
+    // =========================================================================
+  // PONTE DE COMUNICAÇÃO COM A INTELIGÊNCIA ARTIFICIAL (Eventos Globais)
+  // =========================================================================
+  useEffect(() => {
+    const handleAiEditName = () => {
+      if (timeLeft) {
+        // Se houver tempo de espera, avisa o user e abre a sidebar para ele ver o relógio
+        toast.error(`Aguarde ${timeLeft} para mudar o nome.`);
+        setIsOpen(true);
+        return;
+      }
+      if (store) {
+        setNewName(store.name);
+        setIsEditingName(true);
+        setIsOpen(true); // <--- ISTO ABRE A SIDEBAR NO TELEMÓVEL
+      }
+    };
+
+    const handleAiLogout = () => {
+      handleLogout();
+    };
+
+    const handleAiOpenStore = () => {
+      if (storeUrl) window.open(storeUrl, '_blank', 'noopener,noreferrer');
+    };
+
+    window.addEventListener('ai:edit-name', handleAiEditName);
+    window.addEventListener('ai:logout', handleAiLogout);
+    window.addEventListener('ai:open-store', handleAiOpenStore);
+
+    return () => {
+      window.removeEventListener('ai:edit-name', handleAiEditName);
+      window.removeEventListener('ai:logout', handleAiLogout);
+      window.removeEventListener('ai:open-store', handleAiOpenStore);
+    };
+  }, [timeLeft, store, setNewName, setIsEditingName, setIsOpen, handleLogout, storeUrl]);
+  // =========================================================================
 
   useEffect(() => {
     setConfirmLogout(false);

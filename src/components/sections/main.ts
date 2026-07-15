@@ -9,6 +9,7 @@ import { TextoNarrativo } from './components/TextoNarrativo';
 import { TextoImagemShowcase } from './components/TextoImagemShowcase';
 import { MediaLinksCompact } from './components/MediaEmbeds';
 import { ProductsCatalog } from './components/ProductsCatalog';
+import { PortfolioHero } from './components/EsportsProfileHero';
 
 export const SectionLibrary = {
   hero_comercial: HeroComercial,
@@ -22,6 +23,7 @@ export const SectionLibrary = {
   texto_imagem_showcase: TextoImagemShowcase,
   media_embeds: MediaLinksCompact,
   products_catalog: ProductsCatalog,
+  esports_profile: PortfolioHero, // Nova secção registada!
 };
 
 export * from '../../types/library';
