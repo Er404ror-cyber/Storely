@@ -1725,7 +1725,34 @@ noImage: "No Image",
   ai_answer_music: "Background musical tracks, media files, and active storefront sound can be customized inside your store settings.",
   ai_answer_security_profile: "Credential resets, primary e-mail changes, official logo graphics, store name, and bio descriptions are centralized inside settings.",
   ai_answer_languages: "The administration language toggle switcher (English/Portuguese) is pinned right at the bottom of your left sidebar.",
-  ai_answer_unknown: "Hmm, I'm still learning and haven't indexed that exact path yet."
+  ai_answer_unknown: "Hmm, I'm still learning and haven't indexed that exact path yet.",
+
+
+
+
+
+
+
+
+  common_photo: "Photo",
+  common_country: "Country",
+  common_links: "Links",
+  common_search: "Search country...",
+  common_add: "Add",
+  portfolio_projects: "Projects",
+  portfolio_specialty: "Specialty",
+  portfolio_experience: "Experience",
+  portfolio_change_photo: "Change Photo",
+  portfolio_save_cloud: "Save",
+  portfolio_photo_limit: "Photo exceeds 1MB. Too slow!",
+  portfolio_go_settings_wa: "Set the number in Settings.",
+  error_upload: "Upload error.",
+  portfolio_user_or_url: "Username or URL",
+  portfolio_default_dev: "DEV",
+  portfolio_default_role: "Software Engineer",
+  portfolio_default_bg: "PORTFOLIO",
+  current_lang: "en",
+
   },
 
 
@@ -3482,6 +3509,27 @@ noImage: "Sem Imagem",
     ai_answer_security_profile: "A tua password, e-mail de acesso, logótipo da marca, nome e descrição oficial mudam-se na área de perfil.",
     ai_answer_languages: "O seletor principal de línguas (Português/Inglês) encontra-se fixado no fim da barra lateral.",
     ai_answer_unknown: "Hum, ainda estou a aprender e não localizei esse caminho exato.",
+
+
+    common_photo: "Foto",
+  common_country: "País",
+  common_links: "Links",
+  common_search: "Pesquisar país...",
+  common_add: "Adicionar",
+  portfolio_projects: "Projetos",
+  portfolio_specialty: "Especialidade",
+  portfolio_experience: "Experiência",
+  portfolio_change_photo: "Alterar Foto",
+  portfolio_save_cloud: "Salvar",
+  portfolio_photo_limit: "Foto excede 1MB. Fica lento!",
+  portfolio_go_settings_wa: "Configure o nº nas Definições.",
+  error_upload: "Erro no upload.",
+  portfolio_user_or_url: "Usuário ou URL",
+  portfolio_default_dev: "DEV",
+  portfolio_default_role: "Engenheiro de Software",
+  portfolio_default_bg: "PORTFOLIO",
+
+  current_lang: "pt",
 }
 
 

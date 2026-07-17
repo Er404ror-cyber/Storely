@@ -39,7 +39,7 @@ export const HeaderAssistButton = memo(function HeaderAssistButton({
   variant?: 'primary' | 'secondary'; 
 }) {
   // Whitespace-nowrap e leading-none evitam saltos de layout e quebras de texto
-  const baseStyle = "inline-flex min-h-[40px] md:min-h-[44px] items-center gap-2 rounded-full px-5 py-2.5 text-[12px] font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap leading-none focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-1";
+  const baseStyle = "inline-flex min-h-[40px] md:min-h-[40px] items-center gap-2 rounded-full px-5 py-2.5 text-[11px] xl:text-[12px] font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap leading-none focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-1";
   
   // Design CTA Primário
   const primaryStyle = "bg-slate-900 text-white shadow-sm hover:bg-slate-800 hover:shadow-md hover:-translate-y-0.5 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200";

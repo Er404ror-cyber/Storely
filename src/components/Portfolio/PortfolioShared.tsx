@@ -1,19 +1,18 @@
 import React from 'react';
 
 export const TITLE_SIZES = {
-  small: 'text-[clamp(1.5rem,3vw,2rem)]',
-  base: 'text-[clamp(2rem,4vw,2.75rem)]',
-  medium: 'text-[clamp(2.5rem,5vw,3.5rem)]',
-  large: 'text-[clamp(2.75rem,6vw,4rem)]' // Tamanho contido e profissional
+  small: 'text-[clamp(1.15rem,2.2vw,1.5rem)]',
+  base: 'text-[clamp(1.45rem,3vw,1.95rem)]',
+  medium: 'text-[clamp(1.75rem,4vw,2.4rem)]',
+  large: 'text-[clamp(2.1rem,5vw,2.85rem)]' // Ajustado para máxima segurança em duas linhas
 };
 
 export const SUBTITLE_SIZES = {
-  small: 'text-sm',
-  base: 'text-sm md:text-base',
-  medium: 'text-base md:text-lg',
-  large: 'text-lg md:text-xl'
+  small: 'text-[12px]',
+  base: 'text-[12px] md:text-[13px]',
+  medium: 'text-[13px] md:text-sm',
+  large: 'text-sm md:text-base'
 };
-
 export const COUNTRIES = [
   { code: 'mz', name: 'Moçambique' },
   { code: 'pt', name: 'Portugal' },

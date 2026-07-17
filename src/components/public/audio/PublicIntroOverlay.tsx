@@ -1,5 +1,5 @@
-import { memo, useEffect, useState } from "react";
-import { ArrowRight, ShoppingBag, MapPin, Globe, Tag, Volume2 } from "lucide-react";
+import React, { memo, useEffect, useState } from "react";
+import { ArrowRight, MapPin, Globe, Tag, Volume2, Sparkles } from "lucide-react";
 import type { IntroPhase } from "../../../types/publicAudio";
 import { useTranslate } from "../../../context/LanguageContext";
 
@@ -11,14 +11,6 @@ interface PublicIntroOverlayProps {
   onActivate: () => void;
 }
 
-const PHASE_CLASSES: Record<IntroPhase, string> = {
-  hidden: "hidden",
-  entering: "opacity-0 pointer-events-none",
-  visible: "opacity-100",
-  pressed: "opacity-95 scale-[0.995]",
-  leaving: "opacity-0 pointer-events-none",
-};
-
 export const PublicIntroOverlay = memo(function PublicIntroOverlay({
   introPhase,
   storeName,
@@ -29,6 +21,10 @@ export const PublicIntroOverlay = memo(function PublicIntroOverlay({
   const { t } = useTranslate();
   const [isMinimalMode, setIsMinimalMode] = useState<boolean>(false);
   const [showMinimalButton, setShowMinimalButton] = useState<boolean>(true);
+  
+  // Estados locais para controlar rigorosamente a física de entrada e saída
+  const [isMounted, setIsMounted] = useState<boolean>(false);
+  const [isLeavingLocal, setIsLeavingLocal] = useState<boolean>(false);
 
   const storeId = storeName ? storeName.toLowerCase().replace(/[^a-z0-9]/g, "-") : "default-store";
   const storageKey = `storely_intro_dismissed_${storeId}`;
@@ -50,156 +46,169 @@ export const PublicIntroOverlay = memo(function PublicIntroOverlay({
     }
   }, [storageKey, storeName]);
 
-  // 2. Bloqueio rígido de scroll do Body (Apenas no modo ecrã cheio)
+  // 2. Dispara a animação de chegada (Fade In & Slide Up) um frame após a montagem
   useEffect(() => {
-    if (!isMinimalMode && introPhase !== "hidden" && introPhase !== "leaving") {
-      const originalOverflowY = document.documentElement.style.overflowY;
-      const originalBodyOverflow = document.body.style.overflow;
-      
-      document.documentElement.style.overflowY = "hidden";
-      document.body.style.overflow = "hidden";
-      
+    if (introPhase === "visible" && !isMinimalMode) {
+      const raf = requestAnimationFrame(() => {
+        setIsMounted(true);
+      });
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [introPhase, isMinimalMode]);
+
+  // 3. Bloqueio nativo do scroll do corpo
+  useEffect(() => {
+    if (!isMinimalMode && introPhase !== "hidden" && introPhase !== "leaving" && !isLeavingLocal) {
+      const originalOverflow = document.documentElement.style.overflow;
+      document.documentElement.style.overflow = "hidden";
       return () => {
-        document.documentElement.style.overflowY = originalOverflowY;
-        document.body.style.overflow = originalBodyOverflow;
+        document.documentElement.style.overflow = originalOverflow;
       };
     }
-  }, [isMinimalMode, introPhase]);
+  }, [isMinimalMode, introPhase, isLeavingLocal]);
 
   if (introPhase === "hidden") return null;
 
-  // Ativação síncrona nativa com tipagem estrita para o React
-  const handleFullModeActivation = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleActivation = (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    onActivate(); 
+    
+    onActivate();
     localStorage.setItem(storageKey, String(Date.now()));
-    setIsMinimalMode(true);
-    setShowMinimalButton(false);
-  };
-
-  const handleMinimalModeActivation = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onActivate(); 
-    localStorage.setItem(storageKey, String(Date.now()));
-    setShowMinimalButton(false);
+    
+    // Inicia a transição de saída invertendo o estado de montagem e ativando a saída
+    setIsLeavingLocal(true);
+    setIsMounted(false);
+    
+    // Aguarda os 500ms da animação de saída nativa por hardware antes de chavear para o mini-botão
+    setTimeout(() => {
+      setIsMinimalMode(true);
+      setShowMinimalButton(false);
+    }, 500); 
   };
 
   // =========================================================================
-  // CASO 1: MODO DISCRETO / MINIMALISTA (Entrou nos últimos 10 min)
+  // MODO DISCRETO / MINIMALISTA
   // =========================================================================
   if (isMinimalMode) {
     if (!showMinimalButton) return null;
 
     return (
-      <div className="fixed inset-x-0 bottom-10 z-[2147483646] p-0 pointer-events-none w-full flex justify-center items-center">
+      <div className="fixed inset-x-0 bottom-6 z-[2147483646] p-0 pointer-events-none w-full flex justify-center items-center">
         <button
-          onClick={handleMinimalModeActivation}
+          onClick={handleActivation}
           type="button"
-          className="pointer-events-auto flex items-center gap-3 rounded-full border border-white/20 bg-slate-950/95 px-6 py-3.5 text-white shadow-2xl  transition-all active:scale-95 hover:bg-slate-900 cursor-pointer animate-fade-in"
-          style={{ willChange: "transform, opacity" }}
+          className="pointer-events-auto flex items-center gap-3 rounded-full bg-[#090A0F]/95 px-5 py-3 text-white shadow-2xl transition-all active:scale-95 text-[10px] font-black uppercase tracking-[0.2em] border border-[#7B61FF]/40 backdrop-blur-sm dynamic-gpu animate-[brandSlideUp_0.4s_ease-out]"
         >
-          <Volume2 size={14} className="text-white shrink-0 animate-pulse" />
-          <span className="text-[11px] font-black uppercase tracking-wider whitespace-nowrap">
-            {t("activate_audio") || "Ativar Som"}
-          </span>
-          <ArrowRight size={12} strokeWidth={2.5} />
+          <Volume2 size={13} className="text-[#7B61FF] shrink-0" />
+          <span>{t("activate_audio") || "Ativar Som"}</span>
+          <ArrowRight size={11} strokeWidth={2.5} className="text-[#7B61FF]" />
         </button>
       </div>
     );
   }
 
-  // =========================================================================
-  // CASO 2: CAPA COMPLETA DE ENTRADA (Primeiro acesso)
-  // =========================================================================
+  // Define os gatilhos dinâmicos baseados no frame de montagem e desmontagem real
+  const isLayerActive = isMounted && !isLeavingLocal && introPhase !== "leaving";
+
   return (
     <div
-      onClick={handleFullModeActivation}
-      className={`fixed inset-0 z-[2147483646] overflow-hidden touch-none select-none cursor-pointer transition-all duration-300 ease-out will-change-[opacity,transform] ${PHASE_CLASSES[introPhase]}`}
-      style={{ transform: "translateZ(0)" }}
+      className={`fixed inset-0 z-[2147483646] flex flex-col justify-end md:justify-center p-6 sm:p-12 md:p-24 select-none dynamic-gpu transition-all duration-500 ease-in-out ${
+        isLayerActive ? "opacity-100" : "opacity-0 pointer-events-none"
+      }`}
     >
-      <div className="absolute inset-0 bg-slate-950/80 pointer-events-none" />
+      {/* Película Protetora Gradiente Transparente */}
+      <div 
+        onClick={handleActivation}
+        className="absolute inset-0 bg-gradient-to-t from-[#090A0F]/98 via-[#090A0F]/80 to-transparent md:bg-gradient-to-r md:from-[#090A0F]/98 md:via-[#090A0F]/75 md:to-transparent cursor-pointer touch-none z-0"
+      />
 
-      <div className="relative flex h-full flex-col justify-between p-6 md:p-12 text-white max-w-xl mx-auto pointer-events-none">
-        
-        {/* Topo */}
-        <div className="flex items-center justify-between border-b border-white/10 pb-4 w-full">
-          <div className="flex items-center gap-2 text-white/30">
-            <ShoppingBag size={12} strokeWidth={2.5} />
-            <span className="text-[9px] font-black tracking-[0.25em] uppercase">
-              {t("official_store") || "Official Store / Loja Oficial"}
-            </span>
-          </div>
+      {/* Bloco Narrativo de Marca - Efeito Simétrico de Entrada e Saída (Slide & Scale) */}
+      <div
+        className={`relative w-full max-w-[500px] text-left z-10 transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) dynamic-gpu ${
+          isLayerActive 
+            ? "opacity-100 translate-y-0 scale-100" 
+            : "opacity-0 translate-y-6 scale-[0.98]"
+        }`}
+      >
+        {/* Micro Tag */}
+        <div className="flex items-center gap-2 text-[#7B61FF] text-[10px] font-black uppercase tracking-[0.3em] mb-3">
+          <Sparkles size={12} className="shrink-0 text-[#7B61FF] animate-pulse" />
+          <span>{t("official_store") || "Espaço Verificado"}</span>
+        </div>
+
+        {/* Título Principal */}
+        <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white uppercase leading-[0.95] break-words drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
+          {storeName || "Storely Boutique"}
+        </h1>
+
+        {/* Linha Neon */}
+        <div className="w-12 h-[2.5px] bg-[#7B61FF] my-5" />
+
+        {/* Detalhes do Catálogo */}
+        <div className="space-y-4 max-w-sm">
+          {shortDescription && (
+            <div className="flex gap-3 items-start">
+              <Tag size={13} className="text-[#7B61FF]/80 mt-0.5 shrink-0" />
+              <p className="text-[11px] sm:text-xs font-semibold leading-relaxed text-slate-200/95 break-words drop-shadow-sm antialiased">
+                {shortDescription}
+              </p>
+            </div>
+          )}
+
           {currencyInfo && (
-            <div className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-white/50 uppercase">
-              <span role="img" aria-label={currencyInfo.country} className="text-xs">
-                {currencyInfo.flag}
-              </span>
-              <span>{currencyInfo.code}</span>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1 text-[9px] font-black uppercase tracking-[0.25em] text-slate-400">
+              <div className="flex items-center gap-1.5 max-w-full truncate">
+                <MapPin size={12} className="text-slate-500 shrink-0" />
+                <span role="img" aria-label={currencyInfo.country} className="text-xs shrink-0">{currencyInfo.flag}</span>
+                <span className="truncate text-slate-200">{currencyInfo.country}</span>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <Globe size={12} className="text-slate-500 shrink-0" />
+                <span className="text-white tracking-wider">
+                  {currencyInfo.code} {currencyInfo.symbol ? `(${currencyInfo.symbol})` : ""}
+                </span>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Centro */}
-        <div className="w-full py-6 my-auto flex flex-col justify-center text-left overflow-hidden">
-          <h1 className="text-4xl font-black tracking-tighter text-white uppercase sm:text-5xl md:text-6xl leading-[0.9] break-words line-clamp-3">
-            {storeName || "Storely Boutique"}
-          </h1>
+        {/* CTA Principal */}
+        <div className="mt-8 w-full max-w-xs flex flex-col items-start shrink-0 pb-safari-dynamic">
+          <button
+            onClick={handleActivation}
+            type="button"
+            className="group w-full flex items-center justify-between rounded-full bg-white text-black pl-7 pr-1.5 py-1.5 font-black text-[10px] sm:text-[11px] uppercase tracking-[0.25em] shadow-[0_20px_50px_rgba(123,97,255,0.25)] hover:bg-[#7B61FF] hover:text-white transition-all duration-300 ease-out cursor-pointer touch-manipulation active:scale-[0.985]"
+          >
+            <span>{t("enter_btn") || "Ver Catálogo"}</span>
+            <div className="w-9 h-9 rounded-full bg-black flex items-center justify-center text-white transition-transform group-hover:translate-x-0.5 duration-300">
+              <ArrowRight size={13} strokeWidth={2.5} />
+            </div>
+          </button>
 
-          <div className="mt-8 space-y-4 border-t border-b border-white/10 py-6 w-full">
-            {shortDescription && (
-              <div className="flex gap-4 items-start pb-1">
-                <Tag size={14} className="text-white/40 mt-0.5 shrink-0" />
-                <p className="text-xs md:text-sm font-medium leading-relaxed text-white/70 line-clamp-4 overflow-hidden break-words">
-                  {shortDescription}
-                </p>
-              </div>
-            )}
-
-            {currencyInfo && (
-              <>
-                <div className="h-px bg-white/5 w-full" />
-                <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-wider text-white/60">
-                  <MapPin size={14} className="text-white/40 shrink-0" />
-                  <div className="flex items-center gap-2 max-w-full truncate">
-                    <span role="img" aria-label={currencyInfo.country} className="text-sm shrink-0">
-                      {currencyInfo.flag}
-                    </span>
-                    <span className="truncate">{currencyInfo.country}</span>
-                  </div>
-                </div>
-
-                <div className="h-px bg-white/5 w-full" />
-                <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-wider text-white/60">
-                  <Globe size={14} className="text-white/40 shrink-0" />
-                  <span className="text-[11px] truncate">
-                    {t("currency_label") || "Catálogo em:"}{" "}
-                    <span className="text-white">
-                      {currencyInfo.code} {currencyInfo.symbol ? `(${currencyInfo.symbol})` : ""}
-                    </span>
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Rodapé */}
-        <div className="mt-auto w-full pt-4 flex flex-col items-center shrink-0">
-          <div className="group relative flex items-center justify-center gap-3 rounded-full border border-white/20 bg-white/10 px-8 py-3.5 text-white shadow-2xl  transition-all duration-150 w-auto max-w-xs">
-            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-center leading-none whitespace-nowrap">
-              {t("enter_btn") || "Entrar na Loja"}
-            </span>
-            <ArrowRight size={13} strokeWidth={2.5} className="text-white transition-transform group-hover:translate-x-1 shrink-0" />
-          </div>
-
-          <p className="text-center text-[8px] font-bold uppercase tracking-[0.3em] text-white/20 mt-6 max-w-full truncate">
-            {t("click_anywhere") || "Clique para acessar"}
-          </p>
+          <button
+            onClick={handleActivation}
+            type="button"
+            className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400/80 hover:text-white transition-colors mt-5 bg-transparent border-none p-0 cursor-pointer hidden sm:block"
+          >
+            {t("click_anywhere") || "Ou clique na vitrine exposta para entrar"}
+          </button>
         </div>
 
       </div>
+
+      <style>{`
+        .dynamic-gpu {
+          transform: translateZ(0);
+          backface-visibility: hidden;
+          perspective: 1000px;
+        }
+        @keyframes brandSlideUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 });

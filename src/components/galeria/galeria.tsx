@@ -1,20 +1,18 @@
-import React, { memo } from 'react';
-import type { ChangeEvent } from 'react';
+import  { memo } from 'react';
+import type { ChangeEvent, JSX } from 'react';
 import { 
   Camera, X, Trash2, RefreshCcw, ShieldAlert, 
-  Database, ChevronLeft, ChevronRight, 
-  Tag, CloudUpload, SlidersHorizontal 
+  Database, ChevronLeft, ChevronRight, Tag, CloudUpload 
 } from 'lucide-react';
 import { editableProps, getFontSize } from '../sections/helpers';
 import type { GalleryHeaderProps, MediaItem } from '../sections/main';
-import { MediaRenderer } from '../sections/mediarender';
 
 const PHOTO_LIMIT = 1 * 1024 * 1024;
 const VIDEO_LIMIT = 10 * 1024 * 1024;
 const COMPRESS_PHOTO = "https://www.iloveimg.com/compress-image";
 const COMPRESS_VIDEO = "https://videocompress.ai/";
 
-// --- 1. Dashboard de Armazenamento ---
+// --- 1. DASHBOARD DE ARMAZENAMENTO ---
 export interface StorageDashboardProps {
   stats: {
     totalWeightMB: number;
@@ -29,9 +27,9 @@ export interface StorageDashboardProps {
   t: (key: string) => string;
 }
 
-export const StorageDashboard: React.FC<StorageDashboardProps> = memo(({ 
+export const StorageDashboard = memo(function StorageDashboard({ 
   stats, isSyncing, onSync, onUploadTrigger, t 
-}) => {
+}: StorageDashboardProps): JSX.Element {
   const { totalWeightMB, isOverTotalLimit, hasPendingUploads, isAtLimit, hasIndividualErrors } = stats;
   const isSyncBlocked = isOverTotalLimit || hasIndividualErrors;
 
@@ -139,187 +137,75 @@ export const StorageDashboard: React.FC<StorageDashboardProps> = memo(({
     </div>
   );
 });
-StorageDashboard.displayName = 'StorageDashboard';
 
-// --- 2. Cabeçalho da Galeria ---
-export const GalleryHeader = memo(<K extends string,>({ content, style, isEditable, onUpdate, t }: GalleryHeaderProps<K>) => (
-  <header className={`mb-6 flex flex-col gap-0.5 ${style.align === 'center' ? 'items-center text-center' : 'items-start text-left'}`}>
-    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 mb-2 select-none">
-      <Tag size={12} />
-      <span {...editableProps(isEditable, (v) => onUpdate?.('category', v))} className="text-[9px] font-black uppercase tracking-[0.2em] focus:outline-none">
-        {(content.category as string) || t('gallery_default_category' as K)}
-      </span>
-    </div>
+// --- 2. CABEÇALHO DA GALERIA ---
+export const GalleryHeader = memo(function GalleryHeader<K extends string>({ 
+  content, style, isEditable, onUpdate, t 
+}: GalleryHeaderProps<K>): JSX.Element {
+  return (
+    <header className={`mb-6 flex flex-col gap-0.5 ${style.align === 'center' ? 'items-center text-center' : 'items-start text-left'}`}>
+      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 mb-2 select-none">
+        <Tag size={12} />
+        <span {...editableProps(isEditable, (v) => onUpdate?.('category', v))} className="text-[9px] font-black uppercase tracking-[0.2em] focus:outline-none">
+          {(content.category as string) || t('gallery_default_category' as K)}
+        </span>
+      </div>
 
-    <h1 {...editableProps(isEditable, (v) => onUpdate?.('title', v))} className={`font-black uppercase tracking-tight leading-none focus:outline-none ${getFontSize(style.fontSize, 'h2')}`}>
-      {(content.title as string) || t('gallery_default_title' as K)}
-    </h1>
+      <h1 {...editableProps(isEditable, (v) => onUpdate?.('title', v))} className={`font-black uppercase tracking-tight leading-none focus:outline-none ${getFontSize(style.fontSize, 'h2')}`}>
+        {(content.title as string) || t('gallery_default_title' as K)}
+      </h1>
 
-    <p {...editableProps(isEditable, (v) => onUpdate?.('description', v))} className="opacity-40 dark:opacity-50 text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-bold focus:outline-none">
-      {(content.description as string) || t('gallery_default_desc' as K)}
-    </p>
-  </header>
-));
-GalleryHeader.displayName = 'GalleryHeader';
+      <p {...editableProps(isEditable, (v) => onUpdate?.('description', v))} className="opacity-40 dark:opacity-50 text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-bold focus:outline-none">
+        {(content.description as string) || t('gallery_default_desc' as K)}
+      </p>
+    </header>
+  );
+});
 
-// --- 3. Estado Vazio ---
+// --- 3. ESTADO VAZIO (TUTORIAL) ---
 export interface EmptyStateProps {
   isEditable: boolean;
   onUploadTrigger: () => void;
   t: (key: string) => string;
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = memo(({ isEditable, onUploadTrigger, t }) => (
-  <div className="relative py-14 md:py-20 mt-4 flex flex-col items-center overflow-hidden select-none">
-    <div className="absolute inset-0 flex items-center justify-center opacity-20 dark:opacity-10 pointer-events-none">
-      <div className="grid grid-cols-3 gap-4 w-full max-w-2xl px-6">
-        <div className="aspect-[4/3] border border-current rounded-2xl flex items-center justify-center"><Camera size={24} className="opacity-20" /></div>
-        <div className="aspect-[4/3] border border-current rounded-2xl border-dashed" />
-        <div className="aspect-[4/3] border border-current rounded-2xl" />
-      </div>
-    </div>
-
-    <div className="relative z-10 text-center flex flex-col items-center gap-8">
-      <div className="space-y-2">
-        <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-40">{t('gallery_tutorial_subtitle')}</h3>
-        <p className="text-sm md:text-base font-bold max-w-[280px] md:max-w-md mx-auto leading-snug">{t('gallery_tutorial_title')}</p>
-      </div>
-
-      <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8 py-3 px-6 rounded-2xl md:rounded-full border border-current/10 bg-zinc-50/50 dark:bg-zinc-900/30">
-        <div className="flex flex-col items-center"><span className="text-[8px] font-black opacity-40 uppercase tracking-tighter">{t('gallery_limit_label')}</span><span className="text-[10px] font-bold">10 {t('gallery_items')}</span></div>
-        <div className="hidden sm:block w-px h-6 bg-current opacity-10" />
-        <div className="flex flex-col items-center"><span className="text-[8px] font-black opacity-40 uppercase tracking-tighter">{t('gallery_type_photos')}</span><span className="text-[10px] font-bold">{t('gallery_max_1mb')}</span></div>
-        <div className="hidden sm:block w-px h-6 bg-current opacity-10" />
-        <div className="flex flex-col items-center"><span className="text-[8px] font-black opacity-40 uppercase tracking-tighter">{t('gallery_type_videos')}</span><span className="text-[10px] font-bold">{t('gallery_max_10mb')}</span></div>
-      </div>
-
-      {isEditable && (
-        <button onClick={onUploadTrigger} className="group flex items-center gap-3 px-8 py-3.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] transition-transform active:scale-95 shadow-md">
-          <CloudUpload size={14} className="transition-transform duration-200 group-hover:-translate-y-0.5" />
-          {t('gallery_add')}
-        </button>
-      )}
-    </div>
-  </div>
-));
-EmptyState.displayName = 'EmptyState';
-
-// --- 4. Item da Grid ---
-export interface GridItemProps {
-  item: MediaItem;
-  index: number;
-  totalItems: number;
-  isEditable: boolean;
-  cols: string;
-  onPreview: (item: MediaItem) => void;
-  onRemove: (index: number) => void;
-  onUpload: (e: ChangeEvent<HTMLInputElement>, index: number) => void;
-  onMove: (from: number, to: number) => void;
-  onDragStart: (index: number) => void;
-  onDrop: (index: number) => void;
-  t: (key: string) => string;
-  activeEditIndex?: number | null;
-  setActiveEditIndex?: (index: number | null) => void;
-}
-
-export const GridItem: React.FC<GridItemProps> = memo(({ 
-  item, index, isEditable, cols, 
-  onPreview, onDragStart, onDrop, t,
-  activeEditIndex = null, setActiveEditIndex
-}) => {
-  const itemMB = (item.size || 0) / (1024 * 1024);
-  const limit = item.type === 'video' ? VIDEO_LIMIT : PHOTO_LIMIT;
-  const isTooLarge = (item.size || 0) > limit;
-  const isSelected = activeEditIndex === index;
-
-  const getItemClass = (): string => {
-    if (cols === '1') return index === 0 ? 'col-span-4 md:row-span-3 md:col-span-5 aspect-[16/9]' : 'col-span-2 md:col-span-1 aspect-[4/3] md:aspect-[9/8]';
-    if (cols === '2') return index === 0 ? 'col-span-3 row-span-3 aspect-[4/3]' : 'col-span-1 aspect-[4/3]';
-    return 'break-inside-avoid mb-2 aspect-[4/3]';
-  };
-
-  const handleInteraction = (ev: React.MouseEvent) => {
-    if (isEditable && setActiveEditIndex) {
-      ev.stopPropagation();
-      if (isSelected) {
-        setActiveEditIndex(null);
-      } else {
-        setActiveEditIndex(index);
-      }
-    } else {
-      // Fora da edição não precisamos do stopPropagation, deixamos fluir naturalmente
-      onPreview(item);
-    }
-  };
-
+export const EmptyState = memo(function EmptyState({ isEditable, onUploadTrigger, t }: EmptyStateProps): JSX.Element {
   return (
-    <div
-      draggable={isEditable}
-      onDragStart={isEditable ? () => onDragStart(index) : undefined}
-      onDragOver={isEditable ? (e) => e.preventDefault() : undefined}
-      onDrop={isEditable ? () => onDrop(index) : undefined}
-      onClick={handleInteraction}
-      className={`relative rounded-xl overflow-hidden group border dark:border-zinc-800/50 
-        transition-all duration-200 cursor-pointer 
-        ${isEditable ? 'select-none' : ''}
-        ${isSelected && isEditable ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-zinc-950 scale-[0.98]' : ''}
-        ${isTooLarge && isEditable && !isSelected ? 'ring-2 ring-red-500' : 'bg-zinc-100 dark:bg-zinc-900'}
-        ${getItemClass()}
-      `}
-    >
-      <div className="w-full h-full overflow-hidden pointer-events-none">
-        <MediaRenderer
-          media={{ url: item.url, type: item.type }}
-          className="w-full h-full object-cover backface-hidden"
-        />
+    <div className="relative py-14 md:py-20 mt-4 flex flex-col items-center overflow-hidden select-none">
+      <div className="absolute inset-0 flex items-center justify-center opacity-20 dark:opacity-10 pointer-events-none">
+        <div className="grid grid-cols-3 gap-4 w-full max-w-2xl px-6">
+          <div className="aspect-[4/3] border border-current rounded-2xl flex items-center justify-center"><Camera size={24} className="opacity-20" /></div>
+          <div className="aspect-[4/3] border border-current rounded-2xl border-dashed" />
+          <div className="aspect-[4/3] border border-current rounded-2xl" />
+        </div>
       </div>
 
-      {/* Indicador Numérico de Posição (Só visível no Editor) */}
-      {isEditable && (
-        <div className="absolute top-2 left-2 bg-black/60 text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow border border-white/10 pointer-events-none z-20">
-          {index + 1}
+      <div className="relative z-10 text-center flex flex-col items-center gap-8">
+        <div className="space-y-2">
+          <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-40">{t('gallery_tutorial_subtitle')}</h3>
+          <p className="text-sm md:text-base font-bold max-w-[280px] md:max-w-md mx-auto leading-snug">{t('gallery_tutorial_title')}</p>
         </div>
-      )}
 
-      {/* Badge de tamanho injetado com 'left-9' para não colidir com o número de ordem */}
-      {isEditable && (
-        <div
-          className={`absolute top-2 right-2 px-1.5 py-0.5 rounded text-[8px] font-black z-30 border border-white/10 pointer-events-none backdrop-blur-sm ${
-            isTooLarge
-              ? 'bg-red-600 text-white'
-              : 'bg-black/50 text-white/90'
-          }`}
-        >
-          {item.size ? `${itemMB.toFixed(1)} MB` : t('gallery_scanning')}
+        <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8 py-3 px-6 rounded-2xl md:rounded-full border border-current/10 bg-zinc-50/50 dark:bg-zinc-900/30">
+          <div className="flex flex-col items-center"><span className="text-[8px] font-black opacity-40 uppercase tracking-tighter">{t('gallery_limit_label')}</span><span className="text-[10px] font-bold">10 {t('gallery_items')}</span></div>
+          <div className="hidden sm:block w-px h-6 bg-current opacity-10" />
+          <div className="flex flex-col items-center"><span className="text-[8px] font-black opacity-40 uppercase tracking-tighter">{t('gallery_type_photos')}</span><span className="text-[10px] font-bold">{t('gallery_max_1mb')}</span></div>
+          <div className="hidden sm:block w-px h-6 bg-current opacity-10" />
+          <div className="flex flex-col items-center"><span className="text-[8px] font-black opacity-40 uppercase tracking-tighter">{t('gallery_type_videos')}</span><span className="text-[10px] font-bold">{t('gallery_max_10mb')}</span></div>
         </div>
-      )}
 
-      {isTooLarge && isEditable && (
-        <div className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-md shadow animate-pulse pointer-events-none z-20">
-          <ShieldAlert size={12} />
-        </div>
-      )}
-
-      {item.isTemp && isEditable && (
-        <div className="absolute bottom-2 left-2 bg-blue-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider pointer-events-none shadow-sm z-20">
-          {t('gallery_new_badge')}
-        </div>
-      )}
-
-      {/* Overlay visual de seleção */}
-      {isSelected && isEditable && (
-        <div className="absolute inset-0 bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center pointer-events-none transition-opacity z-10">
-          <div className="bg-blue-600 text-white p-2.5 rounded-xl shadow-lg transform scale-110">
-            <SlidersHorizontal size={16} />
-          </div>
-        </div>
-      )}
+        {isEditable && (
+          <button onClick={onUploadTrigger} className="group flex items-center gap-3 px-8 py-3.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] transition-transform active:scale-95 shadow-md">
+            <CloudUpload size={14} className="transition-transform duration-200 group-hover:-translate-y-0.5" />
+            {t('gallery_add')}
+          </button>
+        )}
+      </div>
     </div>
   );
 });
-GridItem.displayName = 'GridItem';
 
-// --- 5. BOTTOM TOOLBAR (O Painel Global de Ações) ---
+// --- 4. BARRA DE EDIÇÃO GLOBAL (BOTTOM TOOLBAR) ---
 export interface GlobalEditToolbarProps {
   items: MediaItem[];
   selectedIndex: number | null;
@@ -330,9 +216,9 @@ export interface GlobalEditToolbarProps {
   t: (key: string) => string;
 }
 
-export const GlobalEditToolbar: React.FC<GlobalEditToolbarProps> = memo(({
+export const GlobalEditToolbar = memo(function GlobalEditToolbar({
   items, selectedIndex, onClose, onRemove, onUpload, onMove, t
-}) => {
+}: GlobalEditToolbarProps): JSX.Element | null {
   if (selectedIndex === null || !items || items.length === 0 || !items[selectedIndex]) {
     return null;
   }
@@ -362,6 +248,7 @@ export const GlobalEditToolbar: React.FC<GlobalEditToolbarProps> = memo(({
       <div className="flex items-center gap-2 w-full">
         <div className="flex items-center bg-zinc-800/80 p-1 rounded-xl shrink-0">
           <button
+            type="button"
             onClick={() => onMove(index, index - 1)}
             disabled={index === 0}
             className="p-2 hover:bg-zinc-700 text-white rounded-lg disabled:opacity-20 transition-colors active:scale-95"
@@ -372,6 +259,7 @@ export const GlobalEditToolbar: React.FC<GlobalEditToolbarProps> = memo(({
             {index + 1} / {items.length}
           </span>
           <button
+            type="button"
             onClick={() => onMove(index, index + 1)}
             disabled={index === items.length - 1}
             className="p-2 hover:bg-zinc-700 text-white rounded-lg disabled:opacity-20 transition-colors active:scale-95"
@@ -393,6 +281,7 @@ export const GlobalEditToolbar: React.FC<GlobalEditToolbarProps> = memo(({
           </label>
 
           <button
+            type="button"
             onClick={() => onRemove(index)}
             className="flex items-center justify-center h-10 w-10 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white active:scale-95 rounded-xl transition-colors shrink-0"
           >
@@ -400,9 +289,10 @@ export const GlobalEditToolbar: React.FC<GlobalEditToolbarProps> = memo(({
           </button>
         </div>
 
-        <div className="w-px h-6 bg-zinc-800 shrink-0 mx-0.5"></div>
+        <div className="w-px h-6 bg-zinc-800 shrink-0 mx-0.5" />
 
         <button 
+          type="button"
           onClick={onClose}
           className="flex items-center justify-center h-10 w-10 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl transition-colors active:scale-95 shrink-0"
         >
@@ -412,4 +302,3 @@ export const GlobalEditToolbar: React.FC<GlobalEditToolbarProps> = memo(({
     </div>
   );
 });
-GlobalEditToolbar.displayName = 'GlobalEditToolbar';

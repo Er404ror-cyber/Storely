@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useId, useRef, useMemo, useCallback } from 'react';
-import type { ChangeEvent } from 'react';
+import type { ChangeEvent, JSX } from 'react'; 
 import { toast } from 'react-hot-toast';
 import { 
   getTheme, handleMultipleUploads, 
@@ -13,9 +13,9 @@ import {
   StorageDashboard, 
   GalleryHeader, 
   EmptyState, 
-  GridItem,
   GlobalEditToolbar 
 } from '../../galeria/galeria';
+import { GridItem } from '../../galeria/GridItem';
 
 const MAX_ITEMS: number = 10;
 const PHOTO_LIMIT: number = 1 * 1024 * 1024;
@@ -30,7 +30,7 @@ interface StorageStats {
   isAtLimit: boolean;
 }
 
-export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }) => {
+export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }): JSX.Element | null => {
   const { t } = useTranslate();
   const isEditable: boolean = !!onUpdate;
   const uniqueId: string = useId().replace(/:/g, '');
@@ -177,9 +177,16 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
     return null;
   }
 
+  const isPinterestLayout = style.cols !== '1' && style.cols !== '2';
+
+  // Configuração balanceada de colunas nativas para evitar espaços vazios
+  const containerLayoutClass = isPinterestLayout
+    ? 'columns-2 sm:columns-3 md:columns-4 xl:columns-5 gap-4 w-full block'
+    : 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 w-full';
+
   return (
     <section className={`py-6 md:py-10 px-2 transition-colors duration-300 ${getTheme(style.theme)} ${activeEditIndex !== null ? 'pb-32 sm:pb-24' : ''}`}>
-      <div className="max-w-4xl mx-auto px-4 relative" ref={containerRef}>
+      <div className="max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-4 relative" ref={containerRef}>
         
         <input 
           id={`up-${uniqueId}`} 
@@ -215,7 +222,7 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
             t={t as (key: string) => string}          
           />
         ) : (
-          <div className={style.cols === '4' ? 'columns-2 sm:columns-3 md:columns-4 gap-2' : 'grid grid-cols-4 md:grid-cols-6 gap-2'}>
+          <div className={containerLayoutClass}>
             {items.map((item, i) => (
               <GridItem 
                 key={item.id || item.url || i}
@@ -225,9 +232,6 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
                 isEditable={isEditable}
                 cols={style.cols || '4'}
                 onPreview={setPreviewMedia}
-                onRemove={handleRemove}
-                onUpload={handleUpload}
-                onMove={moveItem}
                 onDragStart={setDraggedIdx}
                 onDrop={() => { 
                   if (draggedIdx !== null) { 

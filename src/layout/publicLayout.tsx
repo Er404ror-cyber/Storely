@@ -23,13 +23,11 @@ export function PublicLayout() {
   const { lang } = useTranslate();
   const isPt = lang.startsWith("pt");
 
-  // Reset Global Absoluto: Limpa Cache Pai, varre localStorage dos filhos, limpa React Query.
   const handleGlobalRefresh = useCallback(async () => {
     if (storeSlug) {
       clearStoreCache(storeSlug);
     }
     
-    // Varredura forçada de Caches Filhos no LocalStorage
     try {
       const keys = Object.keys(localStorage);
       for (const key of keys) {
@@ -47,7 +45,6 @@ export function PublicLayout() {
       console.warn("Falha na limpeza dos sub-caches", e);
     }
     
-    // Invalida todos os dados em memória (React Query)
     await queryClient.invalidateQueries({
       predicate: (query) => {
         const keyStr = query.queryKey.join("-").toLowerCase();
@@ -60,7 +57,7 @@ export function PublicLayout() {
 
   if (isLoading && !store) {
     return (
-      <div className="h-screen w-full bg-white dark:bg-black flex flex-col items-center justify-center gap-3 antialiased">
+      <div className="h-dvh w-full bg-white dark:bg-black flex flex-col items-center justify-center gap-3 antialiased">
         <div className="h-6 w-6 border-2 border-slate-200 dark:border-slate-800 border-t-slate-900 dark:border-t-white rounded-full animate-spin" />
         <span className="text-slate-400 dark:text-slate-500 font-bold uppercase tracking-[0.3em] text-[9px]">
           {isPt ? "Carregando..." : "Loading..."}
@@ -71,7 +68,7 @@ export function PublicLayout() {
 
   if (isError || !store) {
     return (
-      <div className="h-screen w-full bg-white dark:bg-black flex flex-col items-center justify-center px-6 text-center antialiased">
+      <div className="h-dvh w-full bg-white dark:bg-black flex flex-col items-center justify-center px-6 text-center antialiased">
         <div className="space-y-2">
           <div className="text-4xl font-black tracking-widest text-slate-100 dark:text-slate-900 select-none">404</div>
           <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-800 dark:text-slate-200">
@@ -88,14 +85,14 @@ export function PublicLayout() {
           <button
             type="button"
             onClick={() => window.history.length > 1 ? navigate(-1) : navigate("/")}
-            className="flex-1 px-4 py-2 text-[10px] uppercase tracking-[0.15em] font-bold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 rounded-md hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer"
+            className="flex-1 px-4 py-2 text-[10px] uppercase tracking-[0.15em] font-bold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 rounded-md hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer touch-manipulation"
           >
             {isPt ? "Voltar" : "Go Back"}
           </button>
           <button
             type="button"
             onClick={handleGlobalRefresh}
-            className="flex-1 px-4 py-2 text-[10px] uppercase tracking-[0.15em] font-bold text-white bg-black dark:bg-white dark:text-black rounded-md hover:opacity-80 transition-opacity cursor-pointer shadow-sm"
+            className="flex-1 px-4 py-2 text-[10px] uppercase tracking-[0.15em] font-bold text-white bg-black dark:bg-white dark:text-black rounded-md hover:opacity-80 transition-opacity cursor-pointer shadow-sm touch-manipulation"
           >
             {isPt ? "Repetir" : "Retry"}
           </button>
@@ -105,33 +102,42 @@ export function PublicLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black flex flex-col antialiased">
+    <div className="h-dvh w-screen bg-white dark:bg-black flex flex-col antialiased overflow-hidden fixed inset-0 select-none">
+      
+      {/* O Header fica fixo, nunca é empurrado nem cortado */}
       <StoreHeader storeId={store.id} />
 
+      {/* 
+        A mágica acontece aqui: mudamos para 'pb-safari-dynamic' e garantimos que 
+        o motor de renderização acompanhe a retração da barra móvel em tempo real.
+      */}
       <main 
         key={`${layoutKey}-${location.pathname}`}
-        className="flex-1 w-full min-h-[75vh] flex flex-col style-layer"
+        className="flex-1 w-full overflow-y-auto overflow-x-hidden bg-white dark:bg-black flex flex-col style-layer dynamic-scroll pb-safari-dynamic select-text "
         style={{ animation: 'quickFadeIn 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards', willChange: 'opacity' }}
       >
-        <Outlet context={{ storeId: store.id, store }} />
+        <div className="flex-1 flex flex-col w-full min-h-fit">
+          <Outlet context={{ storeId: store.id, store }} />
+        </div>
+
+        <StorePageLinksSection storeId={store.id} />
+
+        <StoreFooter
+          store={store} 
+          source={source} 
+          isFetching={isFetching} 
+          storeSlug={storeSlug} 
+          forceRefresh={handleGlobalRefresh} 
+        />
       </main>
 
-      <StorePageLinksSection storeId={store.id} />
-
+      {/* Elementos flutuantes independentes do fluxo de rolagem */}
       <PublicBackgroundAudio
         settings={store?.settings?.background_audio}
         storeName={store?.name}
         storeId={store?.id}
         storeDescription={store?.description}
         storeCurrency={store?.currency}
-      />
-
-      <StoreFooter
-        store={store} 
-        source={source} 
-        isFetching={isFetching} 
-        storeSlug={storeSlug} 
-        forceRefresh={handleGlobalRefresh} 
       />
 
       <FloatingSearch 
