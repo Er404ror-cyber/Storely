@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 
+// ============================================================================
+// CONSTANTES DE TIPOGRAFIA
+// ============================================================================
 export const TITLE_SIZES = {
   small: 'text-[clamp(1.15rem,2.2vw,1.5rem)]',
   base: 'text-[clamp(1.45rem,3vw,1.95rem)]',
@@ -13,17 +16,45 @@ export const SUBTITLE_SIZES = {
   medium: 'text-[13px] md:text-sm',
   large: 'text-sm md:text-base'
 };
-export const COUNTRIES = [
-  { code: 'mz', name: 'Moçambique' },
-  { code: 'pt', name: 'Portugal' },
-  { code: 'br', name: 'Brasil' },
-  { code: 'ao', name: 'Angola' },
-  { code: 'us', name: 'Estados Unidos' },
-  { code: 'gb', name: 'Reino Unido' },
-  { code: 'za', name: 'África do Sul' },
-];
 
-// Ícones SVG Otimizados e lógicas de URL centralizados
+// ============================================================================
+// DADOS DE PAÍSES E BUSCA INTELIGENTE
+// ============================================================================
+export const ISO_COUNTRIES = ["AF","AL","DZ","AS","AD","AO","AI","AQ","AG","AR","AM","AW","AU","AT","AZ","BS","BH","BD","BB","BY","BE","BZ","BJ","BM","BT","BO","BA","BW","BR","IO","VG","BN","BG","BF","BI","CV","KH","CM","CA","KY","CF","TD","CL","CN","CX","CC","CO","KM","CD","CG","CK","CR","HR","CU","CW","CY","CZ","CI","DK","DJ","DM","DO","EC","EG","SV","GQ","ER","EE","SZ","ET","FK","FO","FJ","FI","FR","GF","PF","TF","GA","GM","GE","DE","GH","GI","GR","GL","GD","GP","GU","GT","GG","GN","GW","GY","HT","HN","HK","HU","IS","IN","ID","IR","IQ","IE","IM","IL","IT","JM","JP","JE","JO","KZ","KE","KI","KP","KR","KW","KG","LA","LV","LB","LS","LR","LY","LI","LT","LU","MO","MG","MW","MY","MV","ML","MT","MH","MQ","MR","MU","YT","MX","FM","MD","MC","MN","ME","MS","MA","MZ","MM","NA","NR","NP","NL","NC","NZ","NI","NE","NG","NU","NF","MP","NO","OM","PK","PW","PS","PA","PG","PY","PE","PH","PN","PL","PT","PR","QA","MK","RO","RU","RW","RE","BL","SH","KN","LC","MF","PM","VC","WS","SM","ST","SA","SN","RS","SC","SL","SG","SX","SK","SI","SB","SO","ZA","GS","SS","ES","LK","SD","SR","SJ","SE","CH","SY","TW","TJ","TZ","TH","TL","TG","TK","TO","TT","TN","TR","TM","TC","TV","UG","UA","AE","GB","US","UM","VI","UY","UZ","VU","VA","VE","VN","WF","EH","YE","ZM","ZW"];
+
+export const COUNTRY_ALIASES: Record<string, string> = {
+  mz: 'moz moza mozambique moçambique mocambique',
+  ao: 'angola',
+  cv: 'cabo verde',
+  gw: 'guine bissau',
+  st: 'sao tome e principe',
+  br: 'brasil brazil br',
+  pt: 'portugal pt',
+  us: 'usa united states estados unidos eua america',
+  gb: 'uk reino unido inglaterra england britain',
+  cn: 'china',
+  in: 'india',
+  za: 'south africa africa do sul',
+  es: 'spain espanha',
+  fr: 'france franca frança',
+  de: 'germany alemanha',
+  it: 'italy italia',
+  jp: 'japan japao',
+};
+
+export const getFlagEmoji = (countryCode: string) => {
+  if (!countryCode) return '🌍';
+  const codePoints = countryCode.toUpperCase().split('').map(char => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+};
+
+export const normalizeText = (text: string) => {
+  return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+};
+
+// ============================================================================
+// ÍCONES E LINKS SOCIAIS (SVGs Otimizados)
+// ============================================================================
 export const PLATFORMS: Record<string, { name: string, getUrl: (v: string) => string, icon: React.ReactNode }> = {
   whatsapp: {
     name: 'WhatsApp',
@@ -56,3 +87,66 @@ export const PLATFORMS: Record<string, { name: string, getUrl: (v: string) => st
     icon: <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
   }
 };
+
+// ============================================================================
+// COMPONENTES DE UI COMPARTILHADOS (Alta Performance)
+// ============================================================================
+export const ContentEditableField = React.memo(({ value, fallback, tagName: Tag = 'p', className, isEditor, maxLength, onUpdate }: any) => {
+  const elementRef = useRef<HTMLElement>(null);
+  const isFocused = useRef(false);
+
+  const safeValue = (value || '').trim() === '' ? fallback : value;
+
+  useEffect(() => {
+    if (elementRef.current && !isFocused.current) {
+      if (elementRef.current.textContent !== safeValue) {
+        elementRef.current.textContent = safeValue;
+      }
+    }
+  }, [safeValue]);
+
+  return (
+    <Tag
+      ref={elementRef}
+      className={className}
+      contentEditable={isEditor}
+      suppressContentEditableWarning
+      onFocus={() => { isFocused.current = true; }}
+      onBlur={(e: React.FocusEvent<HTMLElement>) => {
+        isFocused.current = false;
+        let text = (e.currentTarget.textContent || '').trim();
+        
+        // Bloqueia campos vazios
+        if (!text) {
+          text = fallback;
+          e.currentTarget.textContent = fallback;
+        }
+        
+        // Corta limites
+        if (text.length > maxLength) {
+          text = text.slice(0, maxLength);
+          e.currentTarget.textContent = text;
+        }
+
+        if (text !== value) {
+          onUpdate(text);
+        }
+      }}
+      onKeyDown={(e: React.KeyboardEvent<HTMLElement>) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          e.currentTarget.blur();
+        }
+        if ((e.currentTarget.textContent || '').length >= maxLength && e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+          e.preventDefault();
+        }
+      }}
+      onPaste={(e: React.ClipboardEvent<HTMLElement>) => {
+        e.preventDefault();
+        const paste = e.clipboardData.getData('text/plain');
+        document.execCommand('insertText', false, paste.slice(0, maxLength));
+      }}
+      dangerouslySetInnerHTML={{ __html: safeValue }}
+    />
+  );
+}, (prev, next) => prev.value === next.value && prev.isEditor === next.isEditor && prev.className === next.className);

@@ -34,11 +34,15 @@ export const PortfolioLayout2: React.FC<LayoutProps> = ({
   // Memorização estrita dos handlers do editor para evitar processamento inútil de CPU na digitação
   const onKeyDownAlias = useMemo(() => handleKeyDown(20), [handleKeyDown]);
   const onBlurAlias = useMemo(() => handleTextEdit('alias'), [handleTextEdit]);
-  const onKeyDownFullName = useMemo(() => handleKeyDown(40), [handleKeyDown]);
+  const onKeyDownFullName = useMemo(() => handleKeyDown(35), [handleKeyDown]);
   const onBlurFullName = useMemo(() => handleTextEdit('fullName'), [handleTextEdit]);
 
+  // FIX: Previne auto-zoom no iOS/Android forçando um mínimo de 16px apenas no modo de edição no mobile.
+  const mobileZoomFixClass = isEditor ? 'max-md:!text-[16px]' : '';
+
   return (
-    <div className="relative z-10 flex flex-col lg:flex-row h-full min-h-[75vh] lg:min-h-[700px] w-full overflow-hidden will-change-transform">
+    // Removido "will-change-transform" (sugava memória VRAM e bateria desnecessariamente)
+    <div className="relative z-10 flex flex-col lg:flex-row h-full min-h-[75vh] lg:min-h-[700px] w-full overflow-hidden content-visibility-auto">
       
       {/* LADO DIREITO / TOPO (Imagem) - Renderização plana e leve para navegadores mobile */}
       <div className="absolute inset-x-0 top-0 h-[58vh] lg:h-full lg:w-[60%] lg:left-auto lg:right-0 z-0 pointer-events-none overflow-hidden">
@@ -59,7 +63,7 @@ export const PortfolioLayout2: React.FC<LayoutProps> = ({
         {/* TEXTO NA PARTE INFERIOR DA FOTO NO CELULAR - Removido sombras pesadas de texto para rodar liso */}
         <div className="absolute lg:hidden bottom-[4vh] inset-x-0 z-30 px-6 flex flex-col items-center text-center pointer-events-auto">
           <h1 
-            className={`${TITLE_SIZES[fontSize]} leading-[1] font-black uppercase tracking-wider ${editableClass} ${isDark ? 'text-white' : 'text-gray-900'}`} 
+            className={`${TITLE_SIZES[fontSize || 'base']} ${mobileZoomFixClass} leading-[1] font-black uppercase tracking-wider ${editableClass} ${isDark ? 'text-white' : 'text-gray-900'} transition-colors`} 
             contentEditable={isEditor} 
             suppressContentEditableWarning 
             onKeyDown={onKeyDownAlias} 
@@ -69,7 +73,7 @@ export const PortfolioLayout2: React.FC<LayoutProps> = ({
             {c.alias || 'DEV'}
           </h1>
           <p 
-            className={`${SUBTITLE_SIZES[fontSize]} font-light mt-2 mb-4 ${editableClass} ${isDark ? 'text-gray-300' : 'text-gray-600'}`} 
+            className={`${SUBTITLE_SIZES[fontSize || 'base']} ${mobileZoomFixClass} font-light mt-2 mb-4 ${editableClass} ${isDark ? 'text-gray-300' : 'text-gray-600'} transition-colors`} 
             contentEditable={isEditor} 
             suppressContentEditableWarning 
             onKeyDown={onKeyDownFullName} 
@@ -87,9 +91,9 @@ export const PortfolioLayout2: React.FC<LayoutProps> = ({
       <div className="relative z-20 flex flex-col w-full lg:w-[40%] h-full mt-auto lg:mt-0 pt-[58vh] lg:pt-24 px-4 sm:px-6 md:px-12 lg:pl-16 pb-8 mr-auto max-w-[1600px]">
         
         {/* Bloco de Título e Nome para Desktop */}
-        <div className="hidden lg:flex w-[150%] xl:w-[170%] z-35 relative pointer-events-auto flex flex-col items-start select-text">
+        <div className="hidden lg:flex w-[150%] xl:w-[170%] z-35 relative pointer-events-auto flex-col items-start select-text">
           <h1 
-            className={`${TITLE_SIZES[fontSize]} leading-[0.95] font-black uppercase tracking-wider ${editableClass} ${isDark ? 'text-white' : 'text-gray-900'} whitespace-nowrap md:whitespace-normal`} 
+            className={`${TITLE_SIZES[fontSize || 'base']} ${mobileZoomFixClass} leading-[0.95] font-black uppercase tracking-wider ${editableClass} ${isDark ? 'text-white' : 'text-gray-900'} whitespace-nowrap md:whitespace-normal transition-colors`} 
             contentEditable={isEditor} 
             suppressContentEditableWarning 
             onKeyDown={onKeyDownAlias} 
@@ -100,7 +104,7 @@ export const PortfolioLayout2: React.FC<LayoutProps> = ({
           </h1>
           
           <p 
-            className={`${SUBTITLE_SIZES[fontSize]} font-light mt-2 mb-4 ${editableClass} ${isDark ? 'text-gray-300' : 'text-gray-600'}`} 
+            className={`${SUBTITLE_SIZES[fontSize || 'base']} ${mobileZoomFixClass} font-light mt-2 mb-4 ${editableClass} ${isDark ? 'text-gray-300' : 'text-gray-600'} transition-colors`} 
             contentEditable={isEditor} 
             suppressContentEditableWarning 
             onKeyDown={onKeyDownFullName} 

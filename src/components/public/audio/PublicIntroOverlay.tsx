@@ -98,7 +98,7 @@ export const PublicIntroOverlay = memo(function PublicIntroOverlay({
         <button
           onClick={handleActivation}
           type="button"
-          className="pointer-events-auto flex items-center gap-3 rounded-full bg-[#090A0F]/95 px-5 py-3 text-white shadow-2xl transition-all active:scale-95 text-[10px] font-black uppercase tracking-[0.2em] border border-[#7B61FF]/40 backdrop-blur-sm dynamic-gpu animate-[brandSlideUp_0.4s_ease-out]"
+          className="pointer-events-auto flex items-center gap-3 rounded-full bg-[#090A0F]/95 px-5 py-3 text-white shadow-2xl transition-all active:scale-95 text-[10px] font-black uppercase tracking-[0.2em] border border-[#7B61FF]/40  dynamic-gpu animate-[brandSlideUp_0.4s_ease-out]"
         >
           <Volume2 size={13} className="text-[#7B61FF] shrink-0" />
           <span>{t("activate_audio") || "Ativar Som"}</span>

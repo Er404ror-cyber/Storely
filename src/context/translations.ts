@@ -1753,6 +1753,61 @@ noImage: "No Image",
   portfolio_default_bg: "PORTFOLIO",
   current_lang: "en",
 
+
+  gallery_toast_uploading: "Uploading to the cloud...",
+gallery_toast_success: "Successfully saved to the cloud!",
+gallery_toast_error: "Network error. Please try again.",
+gallery_toast_removed: "Item removed locally.",
+gallery_console_remove_error: "Error removing:",
+gallery_toast_fix_limits: "Please fix weight limits before syncing.",
+
+
+
+    label_beta: "Beta",
+    filter_all: "All",
+    
+    // Full Categories
+    cat_hero: "Heroes & Headers",
+    cat_media: "Media & Images",
+    cat_features: "Features & Pricing",
+    cat_content: "Content & Texts",
+    cat_contact: "Contact & Footer",
+    cat_other: "Other Elements",
+    
+    // Short Categories (for filters)
+    cat_short_hero: "Heroes",
+    cat_short_media: "Media",
+    cat_short_features: "Features",
+    cat_short_content: "Content",
+    cat_short_contact: "Contact",
+    cat_short_other: "Others",
+    
+    // Section Names
+ 
+    section_media_embeds: "Media Embeds",
+    section_esports_profile: "eSports Profile",
+    section_hero_minimalista: "Minimalist Hero",
+    section_tabela_precos: "Pricing Table",
+    section_depoimentos_clientes: "Customer Testimonials",
+    section_faq_acordion: "Accordion FAQ",
+    section_rodape_simples: "Simple Footer",
+
+
+
+
+    editor_delete_success: "Section deleted!",
+    error_cant_delete_catalog: "This section is fixed and cannot be deleted.",
+    
+    // Navigation and Layout
+  
+    editor_locked_block: "Locked Section",
+    
+    // Confirmation Modal (Soft UI)
+    modal_delete_title: "Delete Section?",
+    modal_delete_desc: "Are you sure? This action cannot be undone.",
+    modal_cancel: "Cancel",
+    modal_confirm_delete: "Delete"
+
   },
 
 
@@ -3530,6 +3585,63 @@ noImage: "Sem Imagem",
   portfolio_default_bg: "PORTFOLIO",
 
   current_lang: "pt",
+
+  gallery_toast_uploading: "Subindo para a nuvem...",
+gallery_toast_success: "Tudo salvo na nuvem!",
+gallery_toast_error: "Erro na rede. Tente novamente.",
+gallery_toast_removed: "Item removido localmente.",
+gallery_console_remove_error: "Erro ao remover:",
+gallery_toast_fix_limits: "Corrija os limites de peso antes de sincronizar.",
+
+
+
+    label_beta: "Beta",
+    filter_all: "Todos",
+    
+    // Categorias Completas
+    cat_hero: "Heróis & Cabeçalhos",
+    cat_media: "Mídia & Imagens",
+    cat_features: "Recursos & Preços",
+    cat_content: "Conteúdo & Textos",
+    cat_contact: "Contato & Rodapé",
+    cat_other: "Outros Elementos",
+    
+    // Categorias Curtas (para os filtros)
+    cat_short_hero: "Heróis",
+    cat_short_media: "Mídia",
+    cat_short_features: "Recursos",
+    cat_short_content: "Conteúdo",
+    cat_short_contact: "Contato",
+    cat_short_other: "Outros",
+    
+    // Nomes das Secções
+   
+    section_media_embeds: "Mídia Embutida",
+    section_esports_profile: "Perfil eSports",
+    section_hero_minimalista: "Hero Minimalista",
+    section_tabela_precos: "Tabela de Preços",
+    section_depoimentos_clientes: "Depoimentos de Clientes",
+    section_faq_acordion: "FAQ Sanfona",
+    section_rodape_simples: "Rodapé Simples",
+
+    
+    editor_delete_success: "Secção apagada!",
+    error_cant_delete_catalog: "Esta secção é fixa e não pode ser apagada.",
+    
+    // Navegação e Layout
+  
+    
+    // Configurações de Estilo
+   
+    // Ações de Apagar
+    editor_locked_block: "Secção Bloqueada",
+    
+    // Modal de Confirmação (Soft UI)
+    modal_delete_title: "Apagar Secção?",
+    modal_delete_desc: "Tens a certeza? Esta ação não pode ser desfeita.",
+    modal_cancel: "Cancelar",
+    modal_confirm_delete: "Apagar"
+
 }
 
 

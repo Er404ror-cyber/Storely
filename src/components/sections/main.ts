@@ -23,7 +23,7 @@ export const SectionLibrary = {
   texto_imagem_showcase: TextoImagemShowcase,
   media_embeds: MediaLinksCompact,
   products_catalog: ProductsCatalog,
-  esports_profile: PortfolioHero, // Nova secção registada!
+  esports_profile: PortfolioHero, 
 };
 
 export * from '../../types/library';

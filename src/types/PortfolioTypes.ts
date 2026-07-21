@@ -47,4 +47,7 @@ export interface LayoutProps {
   handleKeyDown: (maxLength: number) => (e: React.KeyboardEvent<HTMLDivElement>) => void;
   RenderStats: React.FC<{ isVertical?: boolean }>;
   RenderSocialsAndFlag: React.FC;
+  style?: {
+    theme?: 'light' | 'dark';
+  };
 }

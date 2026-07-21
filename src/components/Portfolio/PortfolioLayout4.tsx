@@ -5,18 +5,25 @@ import type { LayoutProps } from '../../types/PortfolioTypes';
 export function PortfolioLayout4({
   c,
   isEditor,
-  fontSize,
+  isDark,
+  fontSize = 'medium',
   displayImage,
   editableClass,
   handleTextEdit,
   handleKeyDown,
   RenderStats,
-  RenderSocialsAndFlag
+  RenderSocialsAndFlag,
+  style
 }: LayoutProps): JSX.Element {
   
-  // Altera para HTMLDivElement para casar com o que o pai espera
+  // Resolução correta do tema ativo (Dark vs Light)
+  const currentTheme = style?.theme || (isDark ? 'dark' : 'light');
+  const isThemeDark = currentTheme === 'dark';
+
+  // Fallback seguro para o tamanho do texto
+  const activeFontSize = (fontSize && TITLE_SIZES[fontSize]) ? fontSize : 'medium';
+
   const onBlurHandler = (field: keyof typeof c) => (e: FocusEvent<HTMLDivElement>) => {
-    // Forçamos o cast apenas se necessário, mas aqui o tipo já deve ser compatível
     handleTextEdit(field as string)(e as unknown as React.FormEvent<HTMLDivElement>);
   };
 
@@ -24,20 +31,24 @@ export function PortfolioLayout4({
     handleKeyDown(maxChars)(e);
   };
 
-  // 💡 FORÇA DUAS LINHAS SEM CORTES: Removemos qualquer line-clamp ou truncate herdado
+  // FIX: Previne auto-zoom no iOS/Android forçando um mínimo de 16px apenas no modo de edição no mobile.
+  const mobileZoomFixClass = isEditor ? 'max-md:!text-[16px]' : '';
+
+  // Cores dinâmicas injetadas com base no tema (Escuro no Light / Claro no Dark)
   const h1Class = useMemo(() => {
-    return `${TITLE_SIZES[fontSize]} font-black uppercase tracking-tighter text-slate-900 dark:text-white ${editableClass}`;
-  }, [fontSize, editableClass]);
+    const textThemeColor = isThemeDark ? 'text-white' : 'text-slate-900';
+    return `${TITLE_SIZES[activeFontSize]} ${mobileZoomFixClass} font-black uppercase tracking-tighter ${textThemeColor} ${editableClass} transition-colors`;
+  }, [activeFontSize, isThemeDark, editableClass, mobileZoomFixClass]);
 
   const pClass = useMemo(() => {
-    return `${SUBTITLE_SIZES[fontSize]} font-semibold text-slate-600 dark:text-slate-300 mt-4 break-words ${editableClass}`;
-  }, [fontSize, editableClass]);
+    const subThemeColor = isThemeDark ? 'text-slate-300' : 'text-slate-600';
+    return `${SUBTITLE_SIZES[activeFontSize]} ${mobileZoomFixClass} font-semibold ${subThemeColor} mt-4 break-words ${editableClass} transition-colors`;
+  }, [activeFontSize, isThemeDark, editableClass, mobileZoomFixClass]);
 
   return (
     <div 
-      className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 w-full max-w-[1400px] mx-auto pt-24 md:pt-28 px-4 sm:px-6 pb-12 items-center"
+      className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 w-full max-w-[1400px] mx-auto pt-24 md:pt-28 px-4 sm:px-6 pb-12 items-center content-visibility-auto"
       style={{ 
-        contentVisibility: 'auto', 
         containIntrinsicSize: '600px',
         isolation: 'isolate'
       }}
@@ -47,11 +58,6 @@ export function PortfolioLayout4({
       <div className="col-span-1 lg:col-span-4 flex flex-col justify-center z-40 order-2 lg:order-1 select-text">
         <div className="flex flex-col space-y-4 md:space-y-6 text-left drop-shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:drop-shadow-none">
           <div>
-            {/* 💡 OVERRIDE ABSOLUTO NO STYLE: 
-                - normal-case/break-words impede o estouro horizontal
-                - lineClamp: 'none' e webkitLineClamp: 'none' destroem os três pontinhos (...)
-                - maxLines: 'none' limpa restrições de leitura do Safari
-            */}
             <h1 
               className={h1Class}
               style={{
@@ -66,7 +72,7 @@ export function PortfolioLayout4({
               }}
               contentEditable={isEditor} 
               suppressContentEditableWarning 
-              onKeyDown={onKeyDownHandler(60)} // Aumentei para 60 para poderes testar textos bem longos à vontade
+              onKeyDown={onKeyDownHandler(20)} 
               onBlur={onBlurHandler('alias')}
             >
               {c.alias || 'DEV'}
@@ -76,7 +82,7 @@ export function PortfolioLayout4({
               className={pClass}
               contentEditable={isEditor} 
               suppressContentEditableWarning 
-              onKeyDown={onKeyDownHandler(40)} 
+              onKeyDown={onKeyDownHandler(35)} 
               onBlur={onBlurHandler('fullName')}
             >
               {c.fullName || 'Software Engineer'}
@@ -89,14 +95,14 @@ export function PortfolioLayout4({
         </div>
       </div>
 
-      {/* Caixa Hero da Imagem Destaque */}
-      <div className="col-span-1 lg:col-span-5 relative h-[45vh] sm:h-[50vh] lg:h-[60vh] min-h-[320px] max-h-[650px] w-full z-10 order-1 lg:order-2 rounded-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-slate-200/50 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 group transform-gpu transition-all duration-500 hover:scale-[1.01] will-change-[transform] aspect-[4/5] sm:aspect-[1/1] lg:aspect-auto">
+      {/* Caixa Hero da Imagem Destaque - Removido will-change e transform-gpu pesados */}
+      <div className="col-span-1 lg:col-span-5 relative h-[45vh] sm:h-[50vh] lg:h-[60vh] min-h-[320px] max-h-[650px] w-full z-10 order-1 lg:order-2 rounded-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-slate-200/50 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 group transition-transform duration-300 hover:scale-[1.01] aspect-[4/5] sm:aspect-[1/1] lg:aspect-auto">
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent lg:hidden z-20 pointer-events-none" />
         
         <img 
           src={displayImage} 
           alt="Profile Showcase" 
-          className="w-full h-full object-cover object-[50%_25%] transform-gpu transition-transform duration-700 ease-out group-hover:scale-103 will-change-[transform]"
+          className="w-full h-full object-cover object-[50%_25%] transition-transform duration-500 ease-out group-hover:scale-[1.03]"
           loading="eager"
           decoding="async"
         />
@@ -104,7 +110,7 @@ export function PortfolioLayout4({
 
       {/* Bloco Lateral de Métricas/Stats */}
       <div className="col-span-1 lg:col-span-3 flex flex-col justify-center z-30 order-3 lg:order-3 w-full">
-         <div className="w-full bg-slate-50/60 dark:bg-slate-900/30 backdrop-blur-sm lg:bg-transparent lg:dark:bg-transparent p-5 lg:p-0 rounded-2xl border border-slate-100 dark:border-slate-800/40 lg:border-none">
+         <div className="w-full bg-slate-50/60 dark:bg-slate-900/30  lg:bg-transparent lg:dark:bg-transparent p-5 lg:p-0 rounded-2xl border border-slate-100 dark:border-slate-800/40 lg:border-none transition-colors">
             <RenderStats isVertical={true} />
          </div>
       </div>
