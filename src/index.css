@@ -12,32 +12,24 @@
 
 @layer base {
   html {
-    min-height: 100%;
-    height: 100%;
+    min-height: 100dvh;
     -webkit-text-size-adjust: 100%;
-    
-    /* SOLUÇÃO DO SAFARI: Bloqueia o arrasto elástico na janela principal 
-       sem usar position:fixed, permitindo que formulários rolem nativamente. */
-    overscroll-behavior: none;
   }
 
   body {
-    min-height: 100%;
     min-height: 100dvh;
     margin: 0;
     padding: 0;
-    overscroll-behavior: none;
-    /* Cores base para evitar que a tela fique transparente na transição */
     @apply bg-[#f9fafb] text-slate-900 dark:bg-[#020617] dark:text-slate-50;
   }
 
   #root {
-    min-height: 100%;
     min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
   }
 
   *, ::after, ::before {
-    /* Transições de cores individuais suaves */
     transition-property: background-color, color, border-color;
     transition-duration: 300ms;
     transition-timing-function: linear;
@@ -47,55 +39,19 @@
 
 /* Utilitários de safe area */
 @layer utilities {
-  .pt-safe {
-    padding-top: var(--safe-top);
-  }
+  .pt-safe { padding-top: var(--safe-top); }
+  .pb-safe { padding-bottom: var(--safe-bottom); }
+  .pl-safe { padding-left: var(--safe-left); }
+  .pr-safe { padding-right: var(--safe-right); }
+  .px-safe { padding-left: var(--safe-left); padding-right: var(--safe-right); }
+  .py-safe { padding-top: var(--safe-top); padding-bottom: var(--safe-bottom); }
 
-  .pb-safe {
-    padding-bottom: var(--safe-bottom);
-  }
+  .h-dvh { height: 100dvh; }
+  .min-h-dvh { min-height: 100dvh; }
 
-  /* Suporte dinâmico para a transparência e barra do iOS 26 */
-  .pb-safari-dynamic {
-    padding-bottom: calc(var(--safe-bottom) + env(safe-area-inset-bottom, 16px));
-  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-  .pl-safe {
-    padding-left: var(--safe-left);
-  }
-
-  .pr-safe {
-    padding-right: var(--safe-right);
-  }
-
-  .px-safe {
-    padding-left: var(--safe-left);
-    padding-right: var(--safe-right);
-  }
-
-  .py-safe {
-    padding-top: var(--safe-top);
-    padding-bottom: var(--safe-bottom);
-  }
-
-  .h-dvh {
-    height: 100dvh;
-  }
-
-  .min-h-dvh {
-    min-height: 100dvh;
-  }
-
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  /* Aplica esta classe apenas nos blocos que precisam de rolagem independente (como os teus formulários) */
   .form-scroll-fix {
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
@@ -126,15 +82,10 @@
 }
 
 @keyframes diagonal-sweep {
-  from {
-    clip-path: polygon(0% 0%, 0% 0%, 0% 0%);
-  }
-  to {
-    clip-path: polygon(0% 0%, 250% 0%, 0% 250%);
-  }
+  from { clip-path: polygon(0% 0%, 0% 0%, 0% 0%); }
+  to { clip-path: polygon(0% 0%, 250% 0%, 0% 250%); }
 }
 
-/* Bloqueia qualquer bug de clique durante o movimento */
 html.view-transitioning * {
   pointer-events: none !important;
   transition: none !important;
@@ -142,12 +93,8 @@ html.view-transitioning * {
 
 /* --- FLOAT ANIMATION (Mascote no Footer) --- */
 @keyframes float {
-  0%, 100% {
-    transform: translateX(-50%) translateY(0);
-  }
-  50% {
-    transform: translateX(-50%) translateY(-6px);
-  }
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-6px); }
 }
 
 .animate-float {
@@ -162,12 +109,6 @@ html.view-transitioning * {
     padding-right: 0;
   }
 }
-/* Garante que o elemento em fullscreen ocupe toda a tela no mobile */
-:fullscreen {
-  width: 100vw;
-  height: 100vh;
-}
-:-webkit-full-screen {
-  width: 100vw;
-  height: 100vh;
-}
+
+:fullscreen { width: 100vw; height: 100vh; }
+:-webkit-full-screen { width: 100vw; height: 100vh; }

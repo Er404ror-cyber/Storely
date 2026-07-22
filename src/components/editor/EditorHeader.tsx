@@ -5,7 +5,7 @@ interface EditorHeaderProps {
   isSaving: boolean;
   setEditingId: (id: string | null) => void;
   setShowMobileSidebar: (show: boolean) => void;
-  handlePreview: () => void;
+  handlePreview: () => void | Promise<void>; // Aceita funções normais ou assíncronas
   setActiveModal: (modal: any) => void;
 }
 
@@ -17,6 +17,19 @@ export function EditorHeader({
   handlePreview,
   setActiveModal
 }: EditorHeaderProps) {
+
+  // Handler seguro para mitigar falhas no servidor e bloqueadores de pop-ups
+  const onPreviewClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    try {
+      // Executa a lógica de preview passada via prop
+      await handlePreview();
+    } catch (error) {
+      console.error("Erro ao tentar visualizar site:", error);
+    }
+  };
+
   return (
     <header className="h-16 bg-white/80 border-b flex items-center justify-end px-4 md:px-6 z-40">
       <div className="flex items-center gap-3">
@@ -29,7 +42,7 @@ export function EditorHeader({
         </button>
 
         <button 
-          onClick={handlePreview} 
+          onClick={onPreviewClick} 
           className="p-2.5 text-slate-500 hover:text-blue-600 bg-slate-50 rounded-full active:scale-90 transition-all"
           title="Visualizar Site"
         >

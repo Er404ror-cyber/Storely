@@ -1,4 +1,4 @@
-import  { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -79,7 +79,7 @@ export function AdminLayout() {
 
   if (storeLoading && !store) {
     return (
-      <div className="h-dvh w-full flex items-center justify-center bg-[#F8F9FA]">
+      <div className="min-h-dvh w-full flex items-center justify-center bg-[#F8F9FA]">
         <Loader2 className="animate-spin text-[#7B61FF]" size={36} />
       </div>
     );
@@ -95,7 +95,7 @@ export function AdminLayout() {
   ];
 
   return (
-    <div className="flex h-dvh w-screen bg-[#F8F9FA] font-sans text-slate-900 overflow-hidden fixed inset-0 select-none">
+    <div className="flex min-h-dvh w-full bg-[#F8F9FA] font-sans text-slate-900 select-none relative">
       <AdminSidebar
         t={t}
         isOpen={isOpen}
@@ -121,12 +121,12 @@ export function AdminLayout() {
         handleLangChange={handleLangChange}
       />
 
-      <main className="flex-1 flex flex-col min-w-0 h-full bg-white shadow-[-4px_0_24px_rgba(0,0,0,0.02)] relative overflow-hidden  lg:rounded-none">
+      <main className="flex-1 flex flex-col min-w-0 min-h-dvh bg-white shadow-[-4px_0_24px_rgba(0,0,0,0.02)] relative lg:rounded-none">
         
         {isEditorRoute && !isOpen && (
           <button
             onClick={() => setIsOpen(true)}
-            className="fixed top-3 sm:top-5 left-5 z-[70] w-11 h-11 flex items-center justify-center bg-white/90  border border-slate-200/60 shadow-[0_4px_16px_rgba(0,0,0,0.06)] rounded-2xl text-slate-600 hover:text-[#7B61FF] transition-all transform-gpu active:scale-95 touch-manipulation"
+            className="fixed top-3 sm:top-5 left-5 z-[70] w-11 h-11 flex items-center justify-center bg-white/90 border border-slate-200/60 shadow-[0_4px_16px_rgba(0,0,0,0.06)] rounded-2xl text-slate-600 hover:text-[#7B61FF] transition-all transform-gpu active:scale-95 touch-manipulation"
           >
             <PanelLeftOpen size={22} strokeWidth={2.5} />
           </button>
@@ -143,10 +143,10 @@ export function AdminLayout() {
           />
         )}
 
-        {/* Zona de scroll isolada com padding seguro para a barra inferior dinâmica do iOS */}
+        {/* Zona de conteúdo agora expande naturalmente com a página */}
         <div 
           data-scroll-container="admin" 
-          className="flex-1 overflow-y-auto overflow-x-hidden bg-white pb-safe dynamic-scroll select-text"
+          className="flex-1 w-full bg-white pb-safe flex flex-col select-text"
         >
           <Outlet context={{ store, pages, pagesLoading }} />
         </div>
