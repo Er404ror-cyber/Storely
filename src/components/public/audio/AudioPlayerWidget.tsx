@@ -22,7 +22,7 @@ export const AudioPlayerWidget = React.memo(function AudioPlayerWidget({
   };
 
   return (
-    <div ref={rootRef} className="fixed bottom-0 left-0 z-[2147483647] pointer-events-auto">
+    <div ref={rootRef} className="fixed bottom-2 left-0 z-[2147483647] pointer-events-auto">
       <div 
         className={`flex items-center shadow-[0_4px_20px_rgba(0,0,0,0.3)] rounded-r-full border border-l-0 transition-all duration-200 ease-in-out ${
           isPlaying 
