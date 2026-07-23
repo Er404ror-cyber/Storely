@@ -107,9 +107,23 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
   const { data: localProducts = [] } = useQuery({
     queryKey: ["search-local-products-list", currentStoreId],
     queryFn: () => {
-      const cached = readCache<any[]>(targetCacheKey, activeStoreSlug);
-      if (cached) return cached;
+      // 1. Resgatar do State (se o utilizador navegou via ProductsCatalog)
+      const stateProducts = (location.state as any)?.initialProducts;
+      if (stateProducts && Array.isArray(stateProducts) && stateProducts.length > 0) {
+        // Sincroniza ativamente o state recebido com os caches!
+        writeCache(targetCacheKey, stateProducts, activeStoreSlug);
+        queryClient.setQueryData(
+          ["catalog-products-full", currentStoreId, storeCurrency], 
+          stateProducts
+        );
+        return stateProducts;
+      }
 
+      // 2. Ler do Cache Persistente (Local Storage)
+      const cached = readCache<any[]>(targetCacheKey, activeStoreSlug);
+      if (cached && cached.length > 0) return cached;
+
+      // 3. Ler do Cache em Memória do React Query
       const liveCatalogData = queryClient.getQueryData<any[]>([
         "catalog-products-full", 
         currentStoreId, 
@@ -120,6 +134,7 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
         writeCache(targetCacheKey, liveCatalogData, activeStoreSlug);
         return liveCatalogData;
       }
+      
       return [];
     },
     enabled: isOpen && isProductsRoute,

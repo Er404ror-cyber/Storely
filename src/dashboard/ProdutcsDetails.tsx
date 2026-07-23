@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, Edit3, Loader2, Share2, X, AlignLeft, Home, Check } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { ChevronLeft, Edit3,  Share2, X, AlignLeft, Home, Check } from "lucide-react";
 import { createPortal } from "react-dom";
 
 import { useAdminStore } from "../hooks/useAdminStore";
@@ -16,8 +15,8 @@ import { ProductCheckout } from "../components/produtos/componentsAdmim/ProductC
 import { StoreTrustCard } from "../components/produtos/componentsAdmim/StoreTrustCard";
 import { RelatedProductsCache } from "../components/produtos/componentsAdmim/RelatedProductsCache";
 import { MobileStickyBar } from "../components/produtos/componentsAdmim/MobileStickyBar";
+import { useWhatsAppOrder } from "../hooks/useWhatsAppOrder";
 
-// Componentes importados
 
 
 // [As tuas interfaces mantêm-se iguais]
@@ -47,6 +46,7 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
   const { data: adminStore } = useAdminStore();
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const { sendWhatsAppOrder } = useWhatsAppOrder(); // <-- Hook já importado
   const isEditorRoute = pathname.includes("admin");
   const forceLightUI = isEditorRoute;
   const showVisitStore = !pageState?.fromStore;
@@ -66,6 +66,7 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
   const [quantity, setQuantity] = useState(1);
   const [customNote, setCustomNote] = useState("");
   const [copied, setCopied] = useState(false);
+  
 
 
   useEffect(() => {
@@ -75,7 +76,7 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
 
   const { data: publicStore } = useStorePublic(storeSlug);
 
-  const { data: product, isLoading } = useQuery({
+  const { data: product } = useQuery({
     queryKey: ["product", productId],
     queryFn: async (): Promise<ProductRow | null> => {
       if (isCreating || !productId) return null;
@@ -132,28 +133,30 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
   const translatedUnit = UNIT_TRANSLATION_KEY_MAP[initialData.unit as keyof typeof UNIT_TRANSLATION_KEY_MAP] ? t(UNIT_TRANSLATION_KEY_MAP[initialData.unit as keyof typeof UNIT_TRANSLATION_KEY_MAP] as any) : initialData.unit;
 
   const handleWhatsAppOrder = useCallback(() => {
-    const whatsapp = resolvedStore?.whatsapp_number || adminStore?.whatsapp_number;
-    if (!whatsapp) { toast.error(t("product_details_whatsapp_unavailable" as any) || "WhatsApp indisponível."); return; }
-
-    const lines = [
-      `*Storely*`, "",
-      t("wa_greeting" as any) || "Olá! Tenho interesse neste produto.", "",
-      `📦 *${t("wa_product" as any) || "Produto"}:* ${initialData.name}`,
-      `🏪 *${t("wa_store" as any) || "Loja"}:* ${resolvedStore?.name || storeSlug}`,
-      `🔢 *${t("wa_quantity" as any) || "Quantidade"}:* ${quantity} ${translatedUnit}`,
-      `💰 *${t("wa_total" as any) || "Total"}:* ${formatMoney(totalPrice)}`, "",
-      customNote.trim() ? `📝 *Nota:* "${customNote.trim()}"\n` : "",
-      `🔗 *${t("wa_link" as any) || "Link"}:* ${window.location.href}`,
-      previews[0] ? `🖼️ *Imagem:* ${previews[0]}` : "", "",
-      t("wa_confirm" as any) || "Pode confirmar a disponibilidade?"
-    ].filter(Boolean);
-
-    window.open(`https://wa.me/${whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(lines.join("\n"))}`, "_blank");
-  }, [resolvedStore, adminStore, initialData.name, storeSlug, quantity, translatedUnit, totalPrice, formatMoney, customNote, previews, t]);
-
-  if (isLoading && !isCreating && !resolvedProduct) {
-    return createPortal(<div className={`fixed inset-0 z-[10000] flex items-center justify-center ${pageBgClass}`}><Loader2 className="animate-spin text-slate-700" size={30} /></div>, document.body);
-  }
+    // 💡 SOLUÇÃO: Passamos initialData.main_image para ter o link direto do Cloudinary
+    sendWhatsAppOrder({
+      storeName: resolvedStore?.name || storeSlug,
+      whatsappNumber: resolvedStore?.whatsapp_number || adminStore?.whatsapp_number,
+      productName: initialData.name,
+      quantity,
+      unit: translatedUnit,
+      totalPrice: formatMoney(totalPrice),
+      customNote,
+      imageUrl: initialData.main_image, // <-- ADICIONADO AQUI: Link direto da foto
+    });
+  }, [
+    sendWhatsAppOrder, 
+    resolvedStore, 
+    adminStore, 
+    storeSlug, 
+    initialData.name, 
+    quantity, 
+    translatedUnit, 
+    totalPrice, 
+    formatMoney, 
+    customNote,
+    initialData.main_image // <-- Adicionado ao array de dependências
+  ]);
 
 
 const handleShare = async () => {

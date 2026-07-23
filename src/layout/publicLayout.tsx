@@ -32,7 +32,6 @@ export function PublicLayout() {
   useEffect(() => {
     const currentHost = window.location.hostname;
     
-    // Se for modo debug e não houver registo, forçamos um cenário de aterragem externa
     if (DEBUG_SHOW_BACK && !sessionStorage.getItem("storely_ext_origin")) {
       sessionStorage.setItem("storely_ext_origin", "http://debug-origin.com");
       sessionStorage.setItem("storely_landing_path", location.pathname);
@@ -41,7 +40,6 @@ export function PublicLayout() {
     let extOrigin = sessionStorage.getItem("storely_ext_origin");
     let landingPath = sessionStorage.getItem("storely_landing_path");
     
-    // 1. Regista a origem e a página de aterragem apenas na primeira visita
     if (!extOrigin) {
       const referrer = document.referrer;
       if (referrer && !referrer.includes(currentHost)) {
@@ -54,7 +52,6 @@ export function PublicLayout() {
       }
     }
 
-    // 2. Só mostra o botão se tiver origem externa E estiver na página onde aterrou inicialmente
     if (extOrigin && extOrigin !== "none") {
       if (location.pathname === landingPath) {
         setShowExternalBackButton(true);
@@ -65,7 +62,6 @@ export function PublicLayout() {
       setShowExternalBackButton(false);
     }
 
-    // O useEffect vai correr sempre que o utilizador mudar de rota (location.pathname)
   }, [location.pathname]);
 
   const handleExternalGoBack = useCallback(() => {
@@ -188,19 +184,25 @@ export function PublicLayout() {
       <StoreHeader storeId={store.id} />
 
       <main className="flex-1 w-full bg-white dark:bg-black flex flex-col select-text">
-        <div className="flex-1 flex flex-col w-full">
+        
+        {/* CORREÇÃO AQUI: Removido 'flex-1'. Agora a altura é definida pelo conteúdo real do Outlet. */}
+        <div className="w-full flex flex-col">
           <Outlet context={{ storeId: store.id, store }} />
         </div>
 
-        <StorePageLinksSection storeId={store.id} />
+        {/* CORREÇÃO AQUI: mt-auto empurra o rodapé para baixo se a página for curta,
+            mas deixa-o fluir naturalmente depois do conteúdo se a página for longa. */}
+        <div className="mt-auto w-full flex flex-col">
+          <StorePageLinksSection storeId={store.id} />
 
-        <StoreFooter
-          store={store} 
-          source={source} 
-          isFetching={isFetching} 
-          storeSlug={storeSlug} 
-          forceRefresh={handleGlobalRefresh} 
-        />
+          <StoreFooter
+            store={store} 
+            source={source} 
+            isFetching={isFetching} 
+            storeSlug={storeSlug} 
+            forceRefresh={handleGlobalRefresh} 
+          />
+        </div>
       </main>
 
       <PublicBackgroundAudio

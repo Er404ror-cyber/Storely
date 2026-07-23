@@ -414,79 +414,84 @@ function ListComponent({ products, onAction, isDark }: LayoutProps) {
 
         {/* 💡 CORREÇÃO 2: Grid-rows-3 impõe divisão exata de espaço independentemente do tamanho da imagem/texto */}
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-1 lg:grid-rows-3 lg:h-full">
-          {sideItems.map((p, index) => {
-            const name = safeText(p.name);
-            const isThirdItem = index === 2;
+  {sideItems.map((p, index) => {
+    const name = safeText(p.name);
+    const isThirdItem = index === 2;
 
-            return (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => handleAction(p.id)}
-                className={[
-                  // 💡 CORREÇÃO 3: Substitui grid por flex-row no desktop e limita o vazamento com flex-1/overflow-hidden
-                  "group flex min-w-0 flex-col overflow-hidden rounded-[1.1rem] border text-left active:scale-[0.99] transition-all h-full lg:flex-row",
-                  isThirdItem ? "col-span-2 sm:col-span-1" : "col-span-1",
-                  cardBase,
-                ].join(" ")}
-                style={{ contain: "layout paint" }}
-              >
-                {/* Imagem do Produto */}
-                <div className={[
-                  "relative shrink-0 overflow-hidden bg-zinc-100 dark:bg-zinc-800",
-                  "w-full lg:h-full lg:w-[40%] xl:w-[45%]", // No desktop assume % controlada e ocupa a altura total do card
-                  isThirdItem ? "aspect-[21/9] sm:aspect-square lg:aspect-auto" : "aspect-square lg:aspect-auto"
-                ].join(" ")}>
-                  <ProductImage
-                    src={p.main_image}
-                    alt={name}
-                    priority={index < 2}
-                    width={420}
-                    height={420}
-                    className="absolute inset-0 h-full w-full object-cover" // Inset-0 evita distorção de aspecto
-                  />
-                </div>
-
-                {/* Informações: Flex-1 garante que o texto não empurra a imagem */}
-                <div className="flex flex-1 min-w-0 flex-col justify-between overflow-hidden p-2.5 lg:p-3">
-                  <div className="min-w-0">
-                    {p.category && (
-                      <p className="mb-1 truncate text-[8px] font-black uppercase tracking-[0.1em] text-blue-500">
-                        {safeText(p.category)}
-                      </p>
-                    )}
-
-                    <h3
-                      className={[
-                        "line-clamp-2 min-w-0 text-[12px] font-extrabold leading-snug sm:text-sm",
-                        isDark ? "text-zinc-100" : "text-zinc-950",
-                      ].join(" ")}
-                      title={name}
-                    >
-                      {name}
-                    </h3>
-                  </div>
-
-                  <div className="mt-2 flex items-center justify-between gap-2 pt-1">
-                    <span
-                      className={`min-w-0 truncate rounded-full px-2 py-1 text-[10px] font-black ${
-                        isDark
-                          ? "bg-white/10 text-zinc-100"
-                          : "bg-zinc-100 text-zinc-950"
-                      }`}
-                    >
-                      {formatPrice(p.currency, p.price)}
-                    </span>
-
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
-                      <ArrowRight size={12} />
-                    </span>
-                  </div>
-                </div>
-              </button>
-            );
-          })}
+    return (
+      <button
+        key={p.id}
+        type="button"
+        onClick={() => handleAction(p.id)}
+        className={[
+          "group flex min-w-0 flex-col overflow-hidden rounded-[1.1rem] border text-left active:scale-[0.99] transition-all h-full lg:flex-row",
+          isThirdItem ? "col-span-2 sm:col-span-1" : "col-span-1",
+          cardBase,
+        ].join(" ")}
+        style={{ contain: "layout paint" }}
+      >
+        {/* Imagem do Produto */}
+        <div className={[
+          "relative shrink-0 overflow-hidden bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center",
+          "w-full lg:h-full lg:w-[40%] xl:w-[45%]",
+          // 💡 SOLUÇÃO 1: Removemos o aspect forçado no mobile para o 3º item. O contentor vai ajustar-se à foto.
+          isThirdItem ? "sm:aspect-square lg:aspect-auto" : "aspect-square lg:aspect-auto"
+        ].join(" ")}>
+          <ProductImage
+            src={p.main_image}
+            alt={name}
+            priority={index < 2}
+            width={420}
+            height={420}
+            // 💡 SOLUÇÃO 2: w-full e h-auto fazem a imagem ditar a altura. O max-h-[280px] garante o controlo do tamanho.
+            className={
+              isThirdItem 
+                ? "w-full h-auto max-h-[280px] object-contain sm:absolute sm:inset-0 sm:h-full sm:object-cover" 
+                : "absolute inset-0 h-full w-full object-cover"
+            }
+          />
         </div>
+
+        {/* Informações: Flex-1 garante que o texto não empurra a imagem */}
+        <div className="flex flex-1 min-w-0 flex-col justify-between overflow-hidden p-2.5 lg:p-3">
+          <div className="min-w-0">
+            {p.category && (
+              <p className="mb-1 truncate text-[8px] font-black uppercase tracking-[0.1em] text-blue-500">
+                {safeText(p.category)}
+              </p>
+            )}
+
+            <h3
+              className={[
+                "line-clamp-2 min-w-0 text-[12px] font-extrabold leading-snug sm:text-sm",
+                isDark ? "text-zinc-100" : "text-zinc-950",
+              ].join(" ")}
+              title={name}
+            >
+              {name}
+            </h3>
+          </div>
+
+          <div className="mt-2 flex items-center justify-between gap-2 pt-1">
+            <span
+              className={`min-w-0 truncate rounded-full px-2 py-1 text-[10px] font-black ${
+                isDark
+                  ? "bg-white/10 text-zinc-100"
+                  : "bg-zinc-100 text-zinc-950"
+              }`}
+            >
+              {formatPrice(p.currency, p.price)}
+            </span>
+
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
+              <ArrowRight size={12} />
+            </span>
+          </div>
+        </div>
+      </button>
+    );
+  })}
+</div>
       </div>
 
       {!!restItems.length && (

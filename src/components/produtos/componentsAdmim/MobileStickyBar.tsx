@@ -17,7 +17,7 @@ export const MobileStickyBar = memo(function MobileStickyBar({
   t,
 }: MobileStickyBarProps) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[10020] border-t border-slate-200 bg-white/90 p-4 pb-safe md:hidden dark:border-zinc-800 dark:bg-zinc-950/90 transform-gpu">
+    <div className="fixed bottom-0 left-0 right-0 z-[10020] border-t border-slate-200 bg-white/80 p-3 pb-safe md:hidden dark:border-zinc-800 dark:bg-zinc-950/80 transform-gpu">
       <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
         <div className="flex flex-col">
           <span className={`text-[10px] font-bold uppercase ${mutedTextClass}`}>

@@ -1,52 +1,62 @@
 <!doctype html>
-<html lang="pt-br">
+<html lang="pt">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- maximum-scale=5.0 permite acessibilidade (zoom) sem quebrar o layout inicial, melhorando a nota de SEO no Lighthouse -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5.0, viewport-fit=cover" />
 
-    <title>Storely — Sem código / Sem limites</title>
+    <!-- SEO Básico: Bilíngue para captar tráfego global e local -->
+    <title>Storely — Website Builder | Sem código, Sem limites</title>
+    <meta name="title" content="Storely — Website Builder | Sem código, Sem limites" />
     <meta
       name="description"
-      content="A plataforma definitiva para quem busca performance extrema, Sem código, Sem limites"
+      content="A plataforma definitiva para criar sites com performance extrema. Build fast, professional websites with no code. Storely: No code, no limits."
     />
+    <meta name="keywords" content="website builder, no code, criar site, ecommerce, storely, performance, fast" />
+    <meta name="author" content="Storely" />
+    <meta name="robots" content="index, follow" />
 
     <link rel="canonical" href="https://storelyy.vercel.app/" />
     <link rel="manifest" href="/manifest.webmanifest" />
 
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#030303" />
 
     <!-- iOS PWA -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Storely" />
 
+    <!-- Favicons -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
-    <!-- Open Graph -->
+    <!-- Open Graph / Facebook / LinkedIn (Bilíngue) -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Storely — Sem código / Sem limites" />
+    <meta property="og:url" content="https://storelyy.vercel.app/" />
+    <meta property="og:title" content="Storely — Website Builder | Sem código, Sem limites" />
     <meta
       property="og:description"
-      content="A plataforma definitiva para quem busca performance extrema, Sem código, Sem limites"
+      content="Crie sites profissionais em tempo real sem saber programar. Build professional websites in real-time with zero coding."
     />
-    <meta property="og:url" content="https://storelyy.vercel.app/" />
     <meta property="og:image" content="https://storelyy.vercel.app/social-preview.png" />
+    <meta property="og:locale" content="pt_PT" />
+    <meta property="og:locale:alternate" content="en_US" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Storely — Sem código / Sem limites" />
+    <meta name="twitter:url" content="https://storelyy.vercel.app/" />
+    <meta name="twitter:title" content="Storely — Website Builder | Sem código, Sem limites" />
     <meta
       name="twitter:description"
-      content="A plataforma definitiva para quem busca performance extrema, Sem código, Sem limites"
+      content="A plataforma definitiva para criar sites com performance extrema. No code, no limits."
     />
     <meta name="twitter:image" content="https://storelyy.vercel.app/social-preview.png" />
 
+    <!-- Segurança -->
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
-    <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=()" />
 
     <style>
       :root {
@@ -165,17 +175,19 @@
   </head>
 
   <body class="is-loading">
-    <div id="app-splash">
+    <div id="app-splash" aria-hidden="true">
       <div class="splash-container">
         <div class="logo-box">
-          <img src="/img/Mascote.png" alt="Logo Storely" />
+          <!-- Adicionado ?v=storely_1 para forçar o cache a não partilhar a imagem com outros projetos locais -->
+          <img src="/img/Mascote.png?v=storely_1" alt="Storely Loading..." fetchpriority="high" />
         </div>
         <div class="brand-text">
           <h1 class="name">Storely</h1>
         </div>
-        <div class="loader-wrapper">
+                <div class="loader-wrapper">
           <div class="loader-line"></div>
         </div>
+        
       </div>
     </div>
 
@@ -185,20 +197,42 @@
 
     <script>
       (function () {
+        // 1. Limpeza de Service Workers antigos em ambiente Local (evita bugs de "portas partilhadas")
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+              for (let registration of registrations) {
+                registration.unregister();
+              }
+            });
+          }
+          // Limpa caches de armazenamento local se o projeto na mesma porta tiver mudado
+          if(sessionStorage.getItem('last_project') !== 'storely') {
+            sessionStorage.clear();
+            sessionStorage.setItem('last_project', 'storely');
+          }
+        }
+
+        // 2. Lógica de remoção otimizada do Splash Screen
         const splash = document.getElementById('app-splash');
         const body = document.body;
 
         window.addEventListener('load', () => {
+          // Pequeno atraso para garantir que o React fez o mount
           setTimeout(() => {
             if (splash) {
               splash.classList.add('exit-active');
             }
             body.classList.remove('is-loading');
 
+            // Liberta a RAM removendo os nós completamente do DOM em vez de apenas esconder
             setTimeout(() => {
-              if (splash) splash.remove();
-            }, 500);
-          }, 1200);
+              if (splash) {
+                splash.innerHTML = ''; // Limpa os filhos primeiro
+                splash.remove();       // Remove o container
+              }
+            }, 450); // Tempo igual ao da transição CSS (0.4s) + margem
+          }, 800);
         });
       })();
     </script>

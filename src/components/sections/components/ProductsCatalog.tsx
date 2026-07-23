@@ -10,6 +10,7 @@ import { useAdminStore } from "../../../hooks/useAdminStore";
 
 import { cacheKey, readCache, writeCache, CACHE_VERSION } from "../../../utils/text";
 import { useStoreProducts, SUPER_CACHE_CONFIG } from "../../../hooks/useStoreProducts"; // AJUSTA O PATH AQUI
+import { useQueryClient } from "@tanstack/react-query"; // <- Adicionar
 
 const EDITOR_PREVIEW_LIMIT = 5; 
 const MAX_TITLE = 60;
@@ -114,6 +115,7 @@ export function ProductsCatalog(props: CatalogProps) {
 
   const storeCurrency = isReadOnly ? (publicStore?.currency || "MZN") : (adminStore?.currency || "MZN");
   const activeStoreSlug = isReadOnly ? (storeSlug || publicStore?.slug) : adminStore?.slug;
+  
 
   const designPalette = useMemo(() => {
     if (!effectiveStoreId) return isDark ? HERO_PALETTES.dark[0] : HERO_PALETTES.light[0];
@@ -130,6 +132,25 @@ export function ProductsCatalog(props: CatalogProps) {
     activeStoreSlug, 
     t
   );
+  const queryClient = useQueryClient();
+
+  // Sincronização Silenciosa de Cache:
+  // Assim que o catálogo tiver produtos (via API ou State), injetamos 
+  // nas chaves exatas que o FloatingSearch utiliza, mantendo ambos em perfeita sincronia.
+  useEffect(() => {
+    if (products.length > 0 && effectiveStoreId) {
+      const searchCacheKey = cacheKey("store_catalog", CACHE_VERSION, effectiveStoreId);
+      
+      // Atualiza Cache Local
+      writeCache(searchCacheKey, products, activeStoreSlug);
+      
+      // Atualiza Cache do React Query para o Floating Search
+      queryClient.setQueryData(
+        ["catalog-products-full", effectiveStoreId, storeCurrency],
+        products
+      );
+    }
+  }, [products, effectiveStoreId, storeCurrency, activeStoreSlug, queryClient]);
 
   const isLoading = (isLoadingPublicStore || isLoadingProducts) && products.length === 0;
 
@@ -159,6 +180,7 @@ export function ProductsCatalog(props: CatalogProps) {
       } 
     });
   }, [isEditor, activeStoreSlug, navigate, pageSlug, products, storeCurrency, effectiveStoreId]);
+  
 
   const handleBlurText = (field: "title" | "subtitle", value: string) => {
     let sanitized = value.trim();
@@ -177,6 +199,8 @@ export function ProductsCatalog(props: CatalogProps) {
   };
 
   if (!effectiveStoreId) return null;
+
+  
 
   const alignClass = props.style?.align === 'center' ? 'text-center items-center mx-auto' : props.style?.align === 'justify' ? 'text-left items-stretch w-full' : 'text-left items-start';
 
