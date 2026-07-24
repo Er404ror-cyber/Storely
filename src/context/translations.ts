@@ -1806,8 +1806,26 @@ gallery_toast_fix_limits: "Please fix weight limits before syncing.",
     modal_delete_title: "Delete Section?",
     modal_delete_desc: "Are you sure? This action cannot be undone.",
     modal_cancel: "Cancel",
-    modal_confirm_delete: "Delete"
+    modal_confirm_delete: "Delete",
 
+
+
+
+
+
+
+
+    logo_missing: "Add Logo",
+change: "Change",
+logo_title: "Symbol / Logo",
+logo_subtitle: "Square Format (1:1)",
+upload_logo: "Choose File",
+file_too_large_title: "File too large",
+crop_error: "Error cropping the image.",
+adjust_logo: "Adjust Logo",
+
+zoom: "Zoom",
+zoom_instruction: "Slide to Zoom"
   },
 
 
@@ -3640,7 +3658,19 @@ gallery_toast_fix_limits: "Corrija os limites de peso antes de sincronizar.",
     modal_delete_title: "Apagar Secção?",
     modal_delete_desc: "Tens a certeza? Esta ação não pode ser desfeita.",
     modal_cancel: "Cancelar",
-    modal_confirm_delete: "Apagar"
+    modal_confirm_delete: "Apagar",
+    logo_missing: "Adicionar Logo",
+
+change: "Mudar",
+logo_title: "Símbolo / Logotipo",
+logo_subtitle: "Formato Quadrado (1:1)",
+upload_logo: "Escolher Ficheiro",
+file_too_large_title: "Ficheiro muito grande",
+crop_error: "Erro ao recortar a imagem.",
+adjust_logo: "Ajustar Logo",
+
+zoom: "Zoom",
+zoom_instruction: "Desliza para fazer Zoom"
 
 }
 

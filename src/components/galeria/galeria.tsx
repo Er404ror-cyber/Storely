@@ -116,16 +116,25 @@ export const GalleryHeader = memo(function GalleryHeader<K extends string>({
     <header className={`mb-6 flex flex-col gap-1 ${style.align === 'center' ? 'items-center text-center' : 'items-start text-left'}`}>
       <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 mb-1 select-none">
         <Tag size={10} />
-        <span {...editableProps(isEditable, (v) => onUpdate?.('category', v))} className="text-[9px] font-bold uppercase tracking-wider focus:outline-none">
+        <span 
+          {...editableProps(isEditable, (v) => onUpdate?.('category', v))} 
+          className="text-[9px] focus:text-[16px] md:focus:text-[9px] transition-all duration-200 font-bold uppercase tracking-wider focus:outline-none"
+        >
           {(content.category as string) || t('gallery_default_category' as K)}
         </span>
       </div>
 
-      <h1 {...editableProps(isEditable, (v) => onUpdate?.('title', v))} className={`font-black uppercase tracking-tight focus:outline-none ${getFontSize(style.fontSize, 'h2')}`}>
+      <h1 
+        {...editableProps(isEditable, (v) => onUpdate?.('title', v))} 
+        className={`font-black uppercase tracking-tight focus:outline-none ${getFontSize(style.fontSize, 'h2')}`}
+      >
         {(content.title as string) || t('gallery_default_title' as K)}
       </h1>
 
-      <p {...editableProps(isEditable, (v) => onUpdate?.('description', v))} className="opacity-50 text-[10px] md:text-[11px] uppercase tracking-wide font-medium focus:outline-none">
+      <p 
+        {...editableProps(isEditable, (v) => onUpdate?.('description', v))} 
+        className="opacity-50 text-[10px] md:text-[11px] focus:text-[16px] md:focus:text-[11px] transition-all duration-200 uppercase tracking-wide font-medium focus:outline-none"
+      >
         {(content.description as string) || t('gallery_default_desc' as K)}
       </p>
     </header>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOutletContext as useReactRouterOutletContext } from 'react-router-dom';
 import { useTranslate } from '../../../context/LanguageContext';
@@ -37,11 +37,12 @@ export function StoreTab({ store: propStore }: StoreTabProps) {
   const [isEditingDesc, setIsEditingDesc] = useState(false);
   const [isEditingAudio, setIsEditingAudio] = useState(false);
 
+  // 1. OTIMIZAÇÃO: Evita sobrescrever o texto digitado caso haja um refetch em background
   useEffect(() => {
-    if (store?.description !== undefined) {
+    if (store?.description !== undefined && !isEditingDesc) {
       setDescValue(store?.description || '');
     }
-  }, [store?.description, store]);
+  }, [store?.description, isEditingDesc]);
 
   const audio = useStoreAudio({ store, t });
 
@@ -54,19 +55,19 @@ export function StoreTab({ store: propStore }: StoreTabProps) {
       const updatedValue = variables.value;
       const fieldName = variables.field;
 
-      // 💡 1. Atualiza diretamente a cache do AdminLayout (sem disparar novo fetch)
+      // Atualiza diretamente a cache do AdminLayout (sem disparar novo fetch - poupa API)
       queryClient.setQueryData(['admin-store'], (oldData: any) => {
         if (!oldData) return oldData;
         return { ...oldData, [fieldName]: updatedValue };
       });
 
-      // 💡 2. Atualiza diretamente a cache do AdminSettings
+      // Atualiza diretamente a cache do AdminSettings
       queryClient.setQueryData(['admin-full-settings'], (oldData: any) => {
         if (!oldData) return oldData;
         return { ...oldData, [fieldName]: updatedValue };
       });
 
-      // 💡 3. Sincroniza o LocalStorage local usado no AdminLayout para evitar inconsistência visual
+      // Sincroniza o LocalStorage local usado no AdminLayout para evitar inconsistência visual
       const cached = localStorage.getItem('storelyy_admin_store_cache');
       if (cached) {
         try {
@@ -88,12 +89,12 @@ export function StoreTab({ store: propStore }: StoreTabProps) {
   });
 
   // GESTÃO DE DELETETOKEN DO LOGO EM CACHE LOCAL (10 MINUTOS)
-  const setPendingLogoDeleteToken = (token: string) => {
+  const setPendingLogoDeleteToken = useCallback((token: string) => {
     const item = { token, expiresAt: Date.now() + 10 * 60 * 1000 };
     localStorage.setItem(`pending_delete_logo_${store?.id}`, JSON.stringify(item));
-  };
+  }, [store?.id]);
 
-  const deletePendingLogo = async () => {
+  const deletePendingLogo = useCallback(async () => {
     const cached = localStorage.getItem(`pending_delete_logo_${store?.id}`);
     if (!cached) return;
     try {
@@ -101,19 +102,21 @@ export function StoreTab({ store: propStore }: StoreTabProps) {
       if (Date.now() < item.expiresAt) {
         const body = new URLSearchParams();
         body.append('token', item.token);
-        await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/delete_by_token`, {
+        // Fire and forget sem bloquear a CPU
+        fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/delete_by_token`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: body.toString(),
-        });
+        }).catch(console.error);
       }
       localStorage.removeItem(`pending_delete_logo_${store?.id}`);
     } catch (e) {
       console.error('Erro ao remover logo pendente:', e);
     }
-  };
+  }, [store?.id]);
 
-  const handleLogoUploadAction = async (file: File) => {
+  // 2. OTIMIZAÇÃO: Callback estável para upload
+  const handleLogoUploadAction = useCallback(async (file: File) => {
     try {
       setIsUploadingLogo(true);
       await deletePendingLogo(); 
@@ -144,12 +147,33 @@ export function StoreTab({ store: propStore }: StoreTabProps) {
     } finally {
       setIsUploadingLogo(false);
     }
-  };
+  }, [deletePendingLogo, setPendingLogoDeleteToken, updateField, t]);
 
-  if (!store) return <div className="p-10 text-center text-sm font-medium text-slate-400">A carregar dados do painel...</div>;
+  // 3. OTIMIZAÇÃO: Estabilização de Callbacks para não re-renderizar os Forms
+  const handleSaveDescription = useCallback(() => {
+    updateField.mutate({ field: 'description', value: descValue });
+  }, [updateField, descValue]);
+
+  const handleCancelDescription = useCallback(() => {
+    setIsEditingDesc(false);
+    setDescValue(store?.description || '');
+  }, [store?.description]);
+
+  const handleCancelAudio = useCallback(() => {
+    setIsEditingAudio(false);
+    audio.restoreAudioFromStore();
+  }, [audio]);
+
+  const setAudioVolumeNoop = useCallback(() => {}, []);
+
+  if (!store) return <div className="p-10 text-center text-sm font-medium text-slate-400">{t("loading_engine")}</div>;
 
   return (
-    <div className="animate-in slide-in-from-left-4 space-y-6 pb-10 duration-500 max-w-5xl mx-auto w-full px-2 sm:px-4">
+    // 4. OTIMIZAÇÃO GPU/BATERIA: Adicionado transform-gpu e will-change para a animação inicial rodar lisa na placa de vídeo
+    <div 
+      className="animate-in slide-in-from-left-4 space-y-6 pb-10 duration-500 max-w-5xl mx-auto w-full px-2 sm:px-4 transform-gpu will-change-[transform,opacity]"
+      style={{ contentVisibility: 'auto' }} // Pula a renderização profunda se estiver fora da tela
+    >
       <SectionInfo title={t('store_required_title')} subtitle={t('store_required_subtitle')} />
 
       <div className="space-y-4 w-full">
@@ -160,7 +184,6 @@ export function StoreTab({ store: propStore }: StoreTabProps) {
             imageTooLarge={imageTooLarge}
             setImageTooLarge={setImageTooLarge}
             onUpload={handleLogoUploadAction}
-            t={t as any}
           />
         </div>
 
@@ -183,8 +206,8 @@ export function StoreTab({ store: propStore }: StoreTabProps) {
           isEditingDesc={isEditingDesc}
           setIsEditingDesc={setIsEditingDesc}
           isPending={updateField.isPending && updateField.variables?.field === 'description'}
-          onSave={() => updateField.mutate({ field: 'description', value: descValue })}
-          onCancel={() => { setIsEditingDesc(false); setDescValue(store?.description || ''); }}
+          onSave={handleSaveDescription}
+          onCancel={handleCancelDescription}
           t={t as any}
         />
 
@@ -220,10 +243,7 @@ export function StoreTab({ store: propStore }: StoreTabProps) {
           togglePreviewPlayback={audio.togglePreviewPlayback}
           onChangeStartAt={audio.handleChangeStartAt}
           onRemoveSavedAudio={audio.handleRemoveSavedAudio}
-          onCancel={() => {
-            setIsEditingAudio(false);
-            audio.restoreAudioFromStore();
-          }}
+          onCancel={handleCancelAudio}
           onDeletePending={audio.deletePendingUploadedAudio}
           onSave={audio.onSaveAudio}
           t={t}
@@ -234,7 +254,7 @@ export function StoreTab({ store: propStore }: StoreTabProps) {
           }}
           onTogglePublicStatus={audio.handleTogglePublicStatus}
           audioVolume={0.05}
-          setAudioVolume={() => {}}
+          setAudioVolume={setAudioVolumeNoop}
           MIN_AUDIO_VOLUME={0.05}
           MAX_AUDIO_VOLUME={0.05}
         />

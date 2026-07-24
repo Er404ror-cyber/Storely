@@ -9,7 +9,6 @@ import {
 import { useTranslate } from '../../../context/LanguageContext';
 import { MediaModal } from '../../modal';
 import type { SectionProps, MediaItem } from '../../../types/library';
-
 import { 
   StorageDashboard, 
   GalleryHeader, 
@@ -17,6 +16,7 @@ import {
   GlobalEditToolbar 
 } from '../../galeria/galeria';
 import { GridItem } from '../../galeria/GridItem';
+import { GallerySkeleton } from '../../galeria/GallerySkeleton';
 
 const MAX_ITEMS: number = 10;
 const PHOTO_LIMIT: number = 1 * 1024 * 1024;
@@ -31,7 +31,13 @@ interface StorageStats {
   isAtLimit: boolean;
 }
 
-export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }): JSX.Element | null => {
+// CORREÇÃO 2: Estendemos o SectionProps para incluir o isLoading opcional
+export const GaleriaGrid: React.FC<SectionProps & { isLoading?: boolean }> = ({ 
+  content, 
+  style, 
+  onUpdate, 
+  isLoading = false 
+}): JSX.Element | null => {
   const { t } = useTranslate();
   const isEditable: boolean = !!onUpdate;
   const uniqueId: string = useId().replace(/:/g, '');
@@ -41,13 +47,20 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
   const [activeEditIndex, setActiveEditIndex] = useState<number | null>(null);
 
-  // 1. ITENS DIRETOS DA PROP (O estado global do teu construtor é a única fonte de verdade)
+  const itemsRef = useRef<MediaItem[]>([]);
+  const onUpdateRef = useRef(onUpdate);
+  const activeEditIndexRef = useRef(activeEditIndex);
+
+  onUpdateRef.current = onUpdate;
+  activeEditIndexRef.current = activeEditIndex;
+
   const items = useMemo<MediaItem[]>(() => {
     const rawImages = (content.images as MediaItem[]) || [];
-    return rawImages.filter((i) => i?.url).slice(0, MAX_ITEMS);
+    const sliced = rawImages.filter((i) => i?.url).slice(0, MAX_ITEMS);
+    itemsRef.current = sliced; 
+    return sliced;
   }, [content.images]);
 
-  // Estatísticas leves para a CPU
   const stats = useMemo<StorageStats>(() => {
     let bytes = 0;
     let individualErrors = false;
@@ -70,12 +83,11 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
     };
   }, [items]);
 
-  // 2. REACT QUERY: Sync com Cloudinary e Remoção
   const syncMutation = useMutation({
-    mutationFn: async (itemsToSync: MediaItem[]) => await saveAllToCloudinary(itemsToSync),
+    mutationFn: async () => await saveAllToCloudinary(itemsRef.current),
     onMutate: () => toast.loading(t('gallery_toast_uploading') || "Subindo para a nuvem...", { id: 'syncToast' }),
     onSuccess: (uploadedItems) => {
-      onUpdate?.('images', uploadedItems); // Atualiza estado global do builder localmente
+      onUpdateRef.current?.('images', uploadedItems);
       toast.success(t('gallery_toast_success') || "Tudo salvo na nuvem!", { id: 'syncToast' });
     },
     onError: (error) => {
@@ -94,17 +106,17 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
     onError: (error) => console.error(t('gallery_console_remove_error') || "Erro ao remover:", error)
   });
 
-  // 3. AÇÕES LOCAIS (Rápidas, atualizam apenas a RAM do Builder via onUpdate)
   const handleSyncToCloud = useCallback(() => {
     if (stats.isOverTotalLimit || stats.hasIndividualErrors) {
       toast.error(t('gallery_toast_fix_limits') || "Corrija os limites de peso antes de sincronizar.");
       return;
     }
-    syncMutation.mutate(items);
-  }, [items, stats, syncMutation, t]);
+    syncMutation.mutate(); 
+  }, [stats, syncMutation, t]);
 
   const handleRemove = useCallback((index: number) => {
-    const itemToRemove = items[index];
+    const currentItems = itemsRef.current;
+    const itemToRemove = currentItems[index];
     if (!itemToRemove) return;
   
     setActiveEditIndex(prev => {
@@ -113,38 +125,44 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
       return prev;
     });
 
-    const newItems = items.filter((_, idx) => idx !== index);
-    onUpdate?.('images', newItems); // Local state update imediato
+    const newItems = currentItems.filter((_, idx) => idx !== index);
+    onUpdateRef.current?.('images', newItems); 
     removeMutation.mutate(itemToRemove);
-  }, [items, onUpdate, removeMutation]);
+  }, [removeMutation]);
 
   const moveItem = useCallback((from: number, to: number): void => {
-    if (to < 0 || to >= items.length || from === to) return;
-    const newItems = [...items];
+    const currentItems = itemsRef.current;
+    if (to < 0 || to >= currentItems.length || from === to) return;
+    
+    const newItems = [...currentItems];
     const [movedItem] = newItems.splice(from, 1);
     newItems.splice(to, 0, movedItem);
     
-    onUpdate?.('images', newItems); // Local state update imediato
+    onUpdateRef.current?.('images', newItems); 
     
     setActiveEditIndex(prev => {
       if (prev === from) return to;
       if (prev === to) return from;
       return prev;
     });
-  }, [items, onUpdate]);
+  }, []);
 
   const handleUpload = useCallback((e: ChangeEvent<HTMLInputElement>, index: number | null = null): void => {
     if (e.target.files) {
-      handleMultipleUploads(e.target.files, items, index, (imgs: MediaItem[]) => {
-        onUpdate?.('images', imgs.slice(0, MAX_ITEMS)); // Local state update imediato
+      handleMultipleUploads(e.target.files, itemsRef.current, index, (imgs: MediaItem[]) => {
+        onUpdateRef.current?.('images', imgs.slice(0, MAX_ITEMS)); 
       });
     }
-  }, [items, onUpdate]);
+  }, []);
 
-  // 4. REACT QUERY: Fetch do tamanho (em Cache, gasta pouquíssima rede/bateria)
-  const missingSizes = useMemo(() => items.filter((img) => 
-    img.url && !img.size && !img.url.startsWith('blob:') && !img.url.startsWith('data:')
-  ), [items]);
+  const missingSizes = useMemo(() => items.filter((img) => {
+    if (!img.url || img.size || img.url.startsWith('blob:') || img.url.startsWith('data:')) return false;
+    
+    const urlLower = img.url.toLowerCase();
+    if (urlLower.includes('supabase.co') || urlLower.includes('cloudinary.com')) return false;
+    
+    return true;
+  }), [items]);
 
   const sizeQueries = useQueries({
     queries: missingSizes.map((img) => ({
@@ -156,7 +174,7 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
       },
       staleTime: Infinity, 
       gcTime: Infinity,
-      enabled: isEditable 
+      enabled: isEditable && missingSizes.length > 0
     }))
   });
 
@@ -167,7 +185,9 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
     if (resolvedQueries.length === 0) return;
 
     let hasChanges = false;
-    const newItems = items.map((item) => {
+    const currentItems = itemsRef.current;
+    
+    const newItems = currentItems.map((item) => {
       const match = resolvedQueries.find(q => q.data!.url === item.url);
       if (match && !item.size) {
         hasChanges = true;
@@ -177,33 +197,42 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
     });
 
     if (hasChanges) {
-      onUpdate?.('images', newItems); // Atualiza os tamanhos em RAM
+      onUpdateRef.current?.('images', newItems); 
     }
-  }, [sizeQueries, items, isEditable, onUpdate]);
+  }, [sizeQueries, isEditable]);
 
-  // Observer da Toolbar: Fecha ao perder o foco (poupa muita CPU)
   useEffect(() => {
-    if (activeEditIndex === null) return;
     const observer = new IntersectionObserver(
-      (entries) => { if (!entries[0].isIntersecting) setActiveEditIndex(null); },
+      (entries) => { 
+        if (!entries[0].isIntersecting && activeEditIndexRef.current !== null) {
+          setActiveEditIndex(null); 
+        }
+      },
       { threshold: 0 } 
     );
     if (containerRef.current) observer.observe(containerRef.current);
+    
     return () => observer.disconnect();
-  }, [activeEditIndex]);
+  }, []);
 
   const handleUploadTrigger = useCallback(() => document.getElementById(`up-${uniqueId}`)?.click(), [uniqueId]);
 
-  if (!isEditable && items.length === 0) return null;
+  // CORREÇÃO 1: Mover os Hooks (useMemo) para ANTES de qualquer `return` condicional
+  const containerLayoutClass = useMemo(() => {
+    if (style.cols === '1') return 'grid grid-cols-4 md:grid-cols-8 gap-2 w-full';
+    if (style.cols === '2') return 'grid grid-cols-3 md:grid-cols-4 gap-2 w-full';
+    return 'columns-2 sm:columns-3 lg:columns-4 xl:columns-4 gap-3 w-full block';
+  }, [style.cols]);
 
-  const isPinterestLayout = style.cols !== '1' && style.cols !== '2';
-  const containerLayoutClass = isPinterestLayout
-    ? 'columns-2 sm:columns-3 md:columns-4 xl:columns-5 gap-3 w-full block'
-    : 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 w-full';
+  // O early return de componente vazio agora está seguro, pois todos os Hooks já foram declarados
+  if (!isEditable && items.length === 0 && !isLoading) return null;
 
   return (
-    <section className={`py-6 md:py-10 px-2 transition-colors duration-300 ${getTheme(style.theme)} ${activeEditIndex !== null ? 'pb-32 sm:pb-24' : ''}`}>
-      <div className="max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-4 relative" ref={containerRef}>
+    <section 
+      style={{ contentVisibility: 'auto', contain: 'layout paint' }}
+      className={`py-6 md:py-10 px-1 md:px-2 transition-colors duration-300 ${getTheme(style.theme)} ${activeEditIndex !== null ? 'pb-32 sm:pb-24' : ''}`}
+    >
+      <div className="max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto px-2 relative" ref={containerRef}>
         
         <input 
           id={`up-${uniqueId}`} 
@@ -232,7 +261,9 @@ export const GaleriaGrid: React.FC<SectionProps> = ({ content, style, onUpdate }
           t={t as (key: string) => string}          
         />
 
-        {items.length === 0 ? (
+        {isLoading ? (
+          <GallerySkeleton cols={style.cols || '4'} count={6} />
+        ) : items.length === 0 ? (
           <EmptyState 
             isEditable={isEditable} 
             onUploadTrigger={handleUploadTrigger}
