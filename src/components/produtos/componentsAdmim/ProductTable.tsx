@@ -1,15 +1,20 @@
 import { memo, useEffect, useState } from 'react';
 import { Link  } from 'react-router-dom';
 import { Edit,  Trash2, Tag, Coins } from 'lucide-react';
-import type { TranslateFn } from '../../../dashboard/Products';
+import type { TranslateFn } from '../../../types/TextTypes';
 
+
+// Update this interface at the top of ProductTable
 interface Product {
   id: string;
   name: string;
   category?: string | null;
   price: number;
+  currency?: string | null;
   is_active: boolean;
   main_image: string;
+  store_id: string; // <-- Added this to fix the error
+  created_at?: string;
 }
 
 interface ProductTableProps {
@@ -19,7 +24,9 @@ interface ProductTableProps {
   onDelete: (product: Product) => void;
   togglePending: boolean;
   t: TranslateFn;
+  onClick?: (product: Product) => void; // <-- Add this line
 }
+
 
 export const IOSToggle = ({ value, onChange, disabled }: { value: boolean; onChange: () => void; disabled: boolean }) => {
   const [localValue, setLocalValue] = useState(value);

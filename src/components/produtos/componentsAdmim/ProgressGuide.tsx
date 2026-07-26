@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { CheckCircle2, Circle } from 'lucide-react';
-import type { TranslateFn } from '../../../dashboard/Products';
+import type { TranslateFn } from '../../../types/TextTypes';
 
 interface ProgressGuideProps {
   hasCurrency: boolean;

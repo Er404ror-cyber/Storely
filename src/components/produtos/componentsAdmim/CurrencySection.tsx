@@ -2,7 +2,7 @@ import { memo } from 'react';
 import Select from 'react-select';
 import type { StylesConfig, FilterOptionOption} from 'react-select';
 import { Coins, Loader2, Save } from 'lucide-react';
-import type { TranslateFn } from '../../../dashboard/Products';
+import type { TranslateFn } from '../../../types/TextTypes';
 
 interface CurrencyOption {
   value: string;

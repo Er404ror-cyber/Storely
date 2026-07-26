@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { AlertTriangle, Loader2, Trash2 } from 'lucide-react';
-import type { TranslateFn } from '../../../dashboard/Products';
+import type { TranslateFn } from '../../../types/TextTypes';
 
 interface ConfirmDeleteModalProps {
   open: boolean;

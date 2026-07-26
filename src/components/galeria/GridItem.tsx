@@ -76,7 +76,6 @@ const GridItemComponent = ({
       onDragOver={isEditable ? handleDragOver : undefined}
       onDrop={isEditable ? handleDrop : undefined}
       onClick={handleInteraction}
-      style={{ contentVisibility: 'auto' }} // Otimização extrema para bateria (pula itens fora da tela)
       className={`relative rounded-2xl overflow-hidden group border border-zinc-600/60 dark:border-zinc-800/50 
         transition-[transform,box-shadow,border-color,ring-width] duration-300 cursor-pointer shadow-sm 
         transform-gpu will-change-transform contain-paint

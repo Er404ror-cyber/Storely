@@ -54,7 +54,7 @@ interface ProductFormProps {
   isCreating?: boolean;
   initialData: ProductFormData;
   onCancel?: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (updatedProduct?: any) => void; 
 }
 
 type PersistedSlotToken = {
@@ -659,23 +659,26 @@ export const ProductForm = memo(function ProductForm({
       };
 
       if (isCreating) {
-        const { error } = await supabase.from('products').insert([payload]);
+        const { data, error } = await supabase.from('products').insert([payload]).select().single();
         if (error) throw error;
-        return;
+        return data; // 🚀 Retorna o produto recém-criado
       }
 
       if (!productId) {
         throw new Error(t('product_form_product_not_found'));
       }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('products')
         .update(payload)
-        .eq('id', productId);
+        .eq('id', productId)
+        .select()
+        .single();
 
       if (error) throw error;
+      return data; // 🚀 Retorna o produto atualizado
     },
-    onSuccess: async () => {
+    onSuccess: async (updatedProduct) => {
       // Limpa os objetos locais pós-sucesso absoluto
       localUrlsRef.current.forEach((url) => {
         if (url && url.startsWith('blob:')) URL.revokeObjectURL(url);
@@ -693,7 +696,9 @@ export const ProductForm = memo(function ProductForm({
       toast.success(
         isCreating ? t('product_form_created_success') : t('product_form_updated_success')
       );
-      onSuccess?.();
+      
+      // 🚀 Passa o produto atualizado para o componente pai atualizar o estado instantaneamente
+      onSuccess?.(updatedProduct);
     },
     onError: (error: unknown) => {
       const message =
