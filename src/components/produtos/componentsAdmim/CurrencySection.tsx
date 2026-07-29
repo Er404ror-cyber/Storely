@@ -1,6 +1,6 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 import Select from 'react-select';
-import type { StylesConfig, FilterOptionOption} from 'react-select';
+import type { StylesConfig, FilterOptionOption } from 'react-select';
 import { Coins, Loader2, Save } from 'lucide-react';
 import type { TranslateFn } from '../../../types/TextTypes';
 
@@ -20,16 +20,57 @@ interface CurrencySectionProps {
   hasCurrencyChanges: boolean;
   saveCurrencyPending: boolean;
   geoCurrencySuggestion: { currency: string } | null;
-  selectStyles: StylesConfig<CurrencyOption, false>;
   setIsCurrencyEditing: (val: boolean) => void;
   setSelectedCurrency: (val: string) => void;
   setIsDirtyCurrency: (val: boolean) => void;
   handleCurrencyChange: (val: CurrencyOption | null) => void;
   filterCurrencyOption: (option: FilterOptionOption<CurrencyOption>, rawInput: string) => boolean;
-  formatCurrencyOptionLabel: (option: CurrencyOption) => React.ReactNode;
   handleSaveCurrency: () => void;
-   t: TranslateFn;
+  t: TranslateFn;
 }
+
+// 1. O componente de Label movido para cá
+const CurrencyOptionLabel = memo(({ option }: { option: CurrencyOption }) => (
+  <div className="flex items-center gap-2 min-w-0">
+    <span className="text-sm leading-none shrink-0">{option.flag}</span>
+    <span className="truncate font-semibold text-[12px] text-slate-900">{option.label}</span>
+  </div>
+));
+CurrencyOptionLabel.displayName = 'CurrencyOptionLabel';
+
+// 2. Os Estilos do Select movidos para cá
+const SELECT_STYLES: StylesConfig<CurrencyOption, false> = {
+  control: (base, state) => ({
+    ...base,
+    minHeight: 42,
+    borderRadius: 14,
+    borderColor: state.isFocused ? '#2563eb' : '#e2e8f0',
+    boxShadow: state.isFocused ? '0 0 0 3px rgba(37,99,235,0.08)' : 'none',
+    backgroundColor: '#fff',
+    cursor: 'text',
+    transition: 'all 160ms ease',
+    '&:hover': { borderColor: state.isFocused ? '#2563eb' : '#cbd5e1' },
+  }),
+  valueContainer: (base) => ({ ...base, padding: '0 8px' }),
+  input: (base) => ({ ...base, margin: 0, padding: 0, color: '#0f172a', fontSize: 12, fontWeight: 700 }),
+  placeholder: (base) => ({ ...base, color: '#94a3b8', fontSize: 12, fontWeight: 600 }),
+  singleValue: (base) => ({ ...base, color: '#0f172a', fontSize: 12, fontWeight: 700 }),
+  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+  menu: (base) => ({ ...base, zIndex: 9999, borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 12px 28px rgba(15,23,42,0.12)' }),
+  menuList: (base) => ({ ...base, padding: 6, maxHeight: 280 }),
+  option: (base, state) => ({
+    ...base,
+    borderRadius: 10,
+    fontSize: 12,
+    fontWeight: 700,
+    backgroundColor: state.isSelected ? '#eff6ff' : state.isFocused ? '#f8fafc' : '#fff',
+    color: '#0f172a',
+    cursor: 'pointer',
+    padding: '8px 10px',
+  }),
+  indicatorSeparator: () => ({ display: 'none' }),
+  dropdownIndicator: (base) => ({ ...base, color: '#94a3b8', '&:hover': { color: '#64748b' } }),
+};
 
 export const CurrencySection = memo(({
   backendCurrency,
@@ -39,16 +80,20 @@ export const CurrencySection = memo(({
   hasCurrencyChanges,
   saveCurrencyPending,
   geoCurrencySuggestion,
-  selectStyles,
   setIsCurrencyEditing,
   setSelectedCurrency,
   setIsDirtyCurrency,
   handleCurrencyChange,
   filterCurrencyOption,
-  formatCurrencyOptionLabel,
   handleSaveCurrency,
   t,
 }: CurrencySectionProps) => {
+
+  // 3. Callback de renderização declarado internamente
+  const formatCurrencyOptionLabel = useCallback((option: CurrencyOption) => (
+    <CurrencyOptionLabel option={option} />
+  ), []);
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
       <div className="flex items-start gap-3">
@@ -114,7 +159,7 @@ export const CurrencySection = memo(({
               <div className="mt-3 space-y-2">
                 <Select<CurrencyOption, false>
                   options={currencyOptions}
-                  styles={selectStyles}
+                  styles={SELECT_STYLES}
                   value={selectedCurrencyOption}
                   onChange={handleCurrencyChange}
                   filterOption={filterCurrencyOption}

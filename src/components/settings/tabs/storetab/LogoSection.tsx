@@ -4,6 +4,7 @@ import Cropper from 'react-easy-crop';
 import { CLOUDINARY_CONFIG, MAX_IMAGE_FILE_SIZE } from '../../../../types/storeTab';
 import { notify } from '../../../../utils/toast';
 import { useTranslate } from '../../../../context/LanguageContext';
+import { FALLBACK_STORE } from '../../../../utils/constants';
 
 // ----------------------------------------------------------------------
 // FUNÇÕES AUXILIARES DE ALTA PERFORMANCE (Canvas Nativo)
@@ -169,11 +170,14 @@ export const LogoSection = memo(function LogoSection({
             </div>
           ) : logoUrl ? (
             <img
-              src={logoUrl}
-              className="w-full h-full object-contain p-2 relative z-10"
-              alt="Logo"
-              loading="lazy"
-            />
+            src={logoUrl || FALLBACK_STORE}
+            className="w-full  rounded-3xl h-full object-contain p-2 relative z-10"
+            alt="Logo"
+            loading="lazy"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = FALLBACK_STORE;
+            }}
+          />
           ) : (
             <div className="flex flex-col items-center justify-center text-slate-400 group-hover:text-indigo-500 transition-colors relative z-10">
               <ImageIcon size={32} strokeWidth={1.5} className="mb-2" />

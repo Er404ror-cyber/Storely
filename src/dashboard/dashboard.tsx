@@ -13,6 +13,9 @@ import {
   StatCard, SetupStepCard, ProductRow, PageRow, 
   HeroBanner, SystemNodeDetails, ActionBanner 
 } from '../components/dashboard/DashboardWidgets';
+import { BlogPromoWidget } from '../components/produtos/componentsAdmim/BlogPromoWidget';
+
+// Importando o NOVO Componente do Blog
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -134,8 +137,8 @@ function Dashboard() {
   if (error || !data) return null;
 
   return (
-    <div className="min-h-screen flex items-center justify-center font-sans  bg-[#DED6EB]  selection:bg-[#B9D5F6]">
-      <div className="w-full max-w-[1100px] bg-slate-50 shadow-sm p-4 sm:p-8 md:p-10 flex flex-col gap-6 sm:gap-8 overflow-hidden" style={{ contain: 'layout' }}>
+    <div className="min-h-screen flex items-center justify-center font-sans bg-[#DED6EB] selection:bg-[#B9D5F6]">
+      <div className="w-full bg-slate-50 shadow-sm p-4 sm:p-8 md:p-10 flex flex-col gap-6 sm:gap-8 overflow-hidden" style={{ contain: 'layout' }}>
         
         {/* CABEÇALHO */}
         <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-50">
@@ -261,6 +264,9 @@ function Dashboard() {
 
         {/* CALL TO ACTION FINAL */}
         <ActionBanner onNavigate={handleNavigate} t={t} />
+
+        {/* SECÇÃO DO BLOG / NOVIDADES DA PLATAFORMA */}
+        <BlogPromoWidget onNavigate={handleNavigate} />
 
       </div>
     </div>

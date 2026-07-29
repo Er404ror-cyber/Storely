@@ -1709,7 +1709,7 @@ noImage: "No Image",
   
   pages_created: "Pages Created",
   pages_active_online: "active online",
-  node_details_title: "Node Details (System)",
+  node_details_title: "User Details",
   node_master_email: "Master Email",
   node_store_id: "Store ID",
   node_activity: "Activity",
@@ -1825,7 +1825,27 @@ crop_error: "Error cropping the image.",
 adjust_logo: "Adjust Logo",
 
 zoom: "Zoom",
-zoom_instruction: "Slide to Zoom"
+zoom_instruction: "Slide to Zoom",
+
+no_search_results: "We couldn't find any products matching your search",
+
+portal_edition: "GLOBAL EDITION • BLOG",
+portal_badge: "News & Updates",
+portal_title: "Explore the ecosystem, templates, and the future of web design.",
+portal_desc: "An immersive Blog built for creators. Discover new features like background audio and our brand-new local AI assistant.",
+portal_explore_btn: "Enter Blog",
+portal_card1_tag: "New Update • Audio",
+portal_card1_time: "Just Released",
+portal_card1_title: "Immersive background music and dynamic soundscapes for your store",
+portal_card2_tag: "Beta • Local AI",
+portal_card2_engine: "Engine v5",
+portal_card2_title: "New local AI assistant to help you streamline your business workflow",
+portal_footer_hub: "Content Hub",
+portal_footer_more: "+ Articles & Guides",
+
+promo_title: "Promotions & Blog Portal",
+    promo_desc: "View updates, posts, and campaigns published on Storely"
+
   },
 
 
@@ -2227,7 +2247,7 @@ modal_library_subtitle: "Selecione um bloco para construir",
 
   // Empty States
   empty_products_title: "Seu estoque está vazio",
-  empty_products_desc: "Adicione seu primeiro produto para começar a vender.",
+  no_search_results: "Nenhum produto encontrado para esta pesquisa",
   btn_start_catalog: "Começar Cadastro",
   empty_pages_title: "Nenhuma página criada",
   empty_pages_desc: "Crie páginas para dar identidade à sua loja.",
@@ -3565,7 +3585,7 @@ noImage: "Sem Imagem",
     
     pages_created: "Páginas Criadas",
     pages_active_online: "ativas online",
-    node_details_title: "Detalhes do Nó (Sistema)",
+    node_details_title: "Detalhes do Usuário",
     node_master_email: "Email Mestre",
     node_store_id: "Store ID",
     node_activity: "Atividade",
@@ -3670,8 +3690,24 @@ crop_error: "Erro ao recortar a imagem.",
 adjust_logo: "Ajustar Logo",
 
 zoom: "Zoom",
-zoom_instruction: "Desliza para fazer Zoom"
+zoom_instruction: "Desliza para fazer Zoom",
+empty_products_desc: "Adicione seu primeiro produto para começar a vender.",
+portal_edition: "EDIÇÃO GLOBAL • BLOG",
+portal_badge: "Novidades & Updates",
+portal_title: "Explora o ecossistema, templates e o futuro do design web.",
+portal_desc: "Um Blog imersivo desenhado para criadores. Descobre as novas funcionalidades, como áudio imersivo e a nova IA local de assistência.",
+portal_explore_btn: "Entrar no Blog",
+portal_card1_tag: "Novo Update • Áudio",
+portal_card1_time: "Lançado Agora",
+portal_card1_title: "Música de fundo imersiva e bandas sonoras dinâmicas nas lojas",
+portal_card2_tag: "Beta • IA Local",
+portal_card2_engine: "Engine v5",
+portal_card2_title: "Nova Inteligência Artificial local para te ajudar a gerir o negócio",
+portal_footer_hub: "Hub de Conteúdo",
+portal_footer_more: "+ Artigos & Guias",
 
+promo_title: "Portal de Promoções & Blog",
+  promo_desc: "Consulte as novidades, posts e campanhas divulgadas na Storely.",
 }
 
 

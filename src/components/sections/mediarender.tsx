@@ -131,7 +131,6 @@ const MediaRendererComponent: React.FC<MediaRendererProps> = ({ media, className
     typeof window !== 'undefined' && /^\/admin\/editor\/[^/]+/.test(window.location.pathname), 
   []);
 
-  /* ===== Normal pages (Intersection) ===== */
   useEffect(() => {
     if (!media?.url || media.type !== 'video' || isEditor) return;
   
@@ -140,6 +139,8 @@ const MediaRendererComponent: React.FC<MediaRendererProps> = ({ media, className
 
     videoOrderMap.set(video, order.current);
     const observer = getObserver();
+    if (!observer) return;
+    
     observer.observe(video);
   
     video.onended = playNext;
