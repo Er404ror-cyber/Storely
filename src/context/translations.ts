@@ -1847,6 +1847,120 @@ promo_title: "Promotions & Blog Portal",
     promo_desc: "View updates, posts, and campaigns published on Storely",
     cat_bakery: "Bakery & Sweets",
 
+
+
+    Homem: "Men",
+  Mulher: "Women",
+  Criança: "Kids",
+
+  Baby: "Baby",
+  Clothing: "Clothing",
+  Bakery: "Bakery",
+  Groceries: "Groceries",
+  Beauty: "Beauty",
+  "Catálogo Geral": "General Catalog",
+
+  "Roupa de Bebé": "Baby Clothing",
+  "Acessórios de Bebé": "Baby Accessories",
+  "Vestidos & Macacões": "Dresses & Jumpsuits",
+  Saias: "Skirts",
+  "Bodies & Íntima": "Bodysuits & Intimates",
+  "Casacos & Frio": "Jackets & Outerwear",
+  Calções: "Shorts",
+  Calças: "Pants & Trousers",
+  "Camisas & Tops": "Shirts & Tops",
+  Calçado: "Footwear",
+  
+  "Bolos & Tortas": "Cakes & Pies",
+  "Salgados & Snacks": "Snacks & Savory",
+  Maquilhagem: "Makeup",
+
+  "Tam:": "Size:",
+  "Plus Size": "Plus Size",
+  "Tam: Único": "One Size",
+
+  Preto: "Black",
+  Branco: "White",
+  Azul: "Blue",
+  Vermelho: "Red",
+  Verde: "Green",
+  Amarelo: "Yellow",
+  Lima: "Lime",
+  Laranja: "Orange",
+  Rosa: "Pink",
+  Roxo: "Purple",
+  Castanho: "Brown",
+  Cinza: "Grey",
+
+  Chocolate: "Chocolate",
+  Baunilha: "Vanilla",
+  Morango: "Strawberry",
+  "Massa Folhada": "Puff Pastry",
+
+  Couro: "Leather",
+  Jeans: "Denim",
+  Chiffon: "Chiffon",
+  Seda: "Silk",
+  Linho: "Linen",
+  Algodão: "Cotton",
+
+
+  Tecnologia: "Technology",
+  ArteDecoracao: "Art & Decor",
+  
+  // NOVAS SUBCATEGORIAS
+  MiniBolosCupcakes: "Mini Cakes & Cupcakes",
+  DocesSobremesas: "Sweets & Desserts",
+  SmartphonesAcessorios: "Smartphones & Accessories",
+  ComputadoresLaptops: "Computers & Laptops",
+  AudioSom: "Audio & Sound",
+  SmartwatchesGadgets: "Smartwatches & Gadgets",
+  QuadrosTelas: "Paintings & Canvas",
+  EsculturasArtesanato: "Sculptures & Crafts",
+  DecoracaoInteriores: "Home Decor",
+
+  // NOVOS SABORES / ATRIBUTOS / MATERIAIS
+  Limão: "Lemon",
+  Cenoura: "Carrot",
+  RedVelvet: "Red Velvet",
+  DoceDeLeite: "Dulce de Leche",
+  Madeira: "Wood",
+  Vidro: "Glass",
+  Metal: "Metal",
+  Dourado: "Gold",
+  Wireless: "Wireless",
+
+  // NOVOS TAMANHOS / PORÇÕES
+  Mini: "Mini",
+  Pequeno: "Small",
+  Médio: "Medium",
+  Grande: "Large",
+  Fatia: "Slice",
+  Inteiro: "Whole Cake",
+
+  ChiffonChocolate: "Chocolate Chiffon Cake",
+  ChiffonMisto: "Marble Chiffon Cake",
+  ChiffonSimples: "Plain Chiffon Cake",
+
+  // NOVOS ATRIBUTOS DE SABORES
+  Misto: "Mixed / Marble",
+  Simples: "Plain / Traditional",
+
+  // RESTANTES CHAVES DA ATUALIZAÇÃO ANTERIOR
+
+  BolosTortas: "Cakes & Pies",
+  SalgadosSnacks: "Snacks & Savory",
+  
+  RoupaDeBebe: "Baby Clothing",
+  AcessoriosDeBebe: "Baby Accessories",
+  VestidosMacacoes: "Dresses & Jumpsuits",
+  BodiesIntima: "Bodysuits & Intimates",
+  CasacosFrio: "Jackets & Outerwear",
+  Calcoes: "Shorts",
+  Calcas: "Pants & Trousers",
+  CamisasTops: "Shirts & Tops",
+  Calcado: "Footwear",
+ 
   },
 
 
@@ -3710,6 +3824,122 @@ portal_footer_more: "+ Artigos & Guias",
 promo_title: "Portal de Promoções & Blog",
   promo_desc: "Consulte as novidades, posts e campanhas divulgadas na Storely.",
   cat_bakery: "Padaria & Doces",
+
+
+
+  Homem: "Homem",
+  Mulher: "Mulher",
+  Criança: "Criança",
+
+  Baby: "Bebé & Criança",
+  Clothing: "Vestuário",
+  Bakery: "Pastelaria",
+  Groceries: "Mercearia",
+  Beauty: "Beleza",
+  "Catálogo Geral": "Catálogo Geral",
+
+  "Roupa de Bebé": "Roupa de Bebé",
+  "Acessórios de Bebé": "Acessórios de Bebé",
+  "Vestidos & Macacões": "Vestidos & Macacões",
+  Saias: "Saias",
+  "Bodies & Íntima": "Bodies & Íntima",
+  "Casacos & Frio": "Casacos & Frio",
+  Calções: "Calções",
+  Calças: "Calças",
+  "Camisas & Tops": "Camisas & Tops",
+  Calçado: "Calçado",
+  
+  "Bolos & Tortas": "Bolos & Tortas",
+  "Salgados & Snacks": "Salgados & Snacks",
+  Maquilhagem: "Maquilhagem",
+
+  "Tam:": "Tam:",
+  "Plus Size": "Plus Size",
+  "Tam: Único": "Tam: Único",
+
+  Preto: "Preto",
+  Branco: "Branco",
+  Azul: "Azul",
+  Vermelho: "Vermelho",
+  Verde: "Verde",
+  Amarelo: "Amarelo",
+  Lima: "Lima",
+  Laranja: "Laranja",
+  Rosa: "Rosa",
+  Roxo: "Roxo",
+  Castanho: "Castanho",
+  Cinza: "Cinza",
+
+  Chocolate: "Chocolate",
+  Baunilha: "Baunilha",
+  Morango: "Morango",
+  "Massa Folhada": "Massa Folhada",
+
+  Couro: "Couro",
+  Jeans: "Jeans",
+  Chiffon: "Chiffon",
+  Seda: "Seda",
+  Linho: "Linho",
+  Algodão: "Algodão",
+
+
+
+  Tecnologia: "Tecnologia",
+  ArteDecoracao: "Arte & Décor",
+  
+  // NOVAS SUBCATEGORIAS
+  MiniBolosCupcakes: "Mini Bolos & Cupcakes",
+  DocesSobremesas: "Doces & Sobremesas",
+  SmartphonesAcessorios: "Smartphones & Acessórios",
+  ComputadoresLaptops: "Computadores & Laptops",
+  AudioSom: "Áudio & Som",
+  SmartwatchesGadgets: "Smartwatches & Gadgets",
+  QuadrosTelas: "Quadros & Telas",
+  EsculturasArtesanato: "Esculturas & Artesanato",
+  DecoracaoInteriores: "Decoração de Interiores",
+
+  // NOVOS SABORES / ATRIBUTOS / MATERIAIS
+  Limão: "Limão",
+  Cenoura: "Cenoura",
+  RedVelvet: "Red Velvet",
+  DoceDeLeite: "Doce de Leite",
+  Madeira: "Madeira",
+  Vidro: "Vidro",
+  Metal: "Metal",
+  Dourado: "Dourado",
+  Wireless: "Wireless",
+
+  // NOVOS TAMANHOS / PORÇÕES
+  Mini: "Mini",
+  Pequeno: "Pequeno",
+  Médio: "Médio",
+  Grande: "Grande",
+  Fatia: "Fatia",
+  Inteiro: "Inteiro",
+
+  ChiffonChocolate: "Chiffon de Chocolate",
+  ChiffonMisto: "Chiffon Misto",
+  ChiffonSimples: "Chiffon Simples",
+
+  // NOVOS ATRIBUTOS DE SABORES
+  Misto: "Misto",
+  Simples: "Simples",
+
+  // RESTANTES CHAVES DA ATUALIZAÇÃO ANTERIOR
+  
+  BolosTortas: "Bolos & Tortas",
+  SalgadosSnacks: "Salgados & Snacks",
+ 
+  RoupaDeBebe: "Roupa de Bebé",
+  AcessoriosDeBebe: "Acessórios de Bebé",
+  VestidosMacacoes: "Vestidos & Macacões",
+  BodiesIntima: "Bodies & Íntima",
+  CasacosFrio: "Casacos & Frio",
+  Calcoes: "Calções",
+  Calcas: "Calças",
+  CamisasTops: "Camisas & Tops",
+  Calcado: "Calçado",
+ 
 }
 
 
