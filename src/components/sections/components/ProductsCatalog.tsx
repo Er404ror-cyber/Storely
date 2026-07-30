@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Package, Sparkles } from "lucide-react";
 
 import { LayoutGrid, LayoutList, ProductShowcaseSkeleton } from "../../produtos/layouts";
@@ -9,8 +9,11 @@ import { supabase } from "../../../lib/supabase";
 import { useAdminStore } from "../../../hooks/useAdminStore";
 
 import { cacheKey, readCache, writeCache, CACHE_VERSION } from "../../../utils/text";
-import { useStoreProducts, SUPER_CACHE_CONFIG } from "../../../hooks/useStoreProducts"; // AJUSTA O PATH AQUI
-import { useQueryClient } from "@tanstack/react-query"; // <- Adicionar
+import { useStoreProducts, SUPER_CACHE_CONFIG } from "../../../hooks/useStoreProducts"; 
+import { FONT_SIZE_MAPS, HERO_PALETTES } from "../../produtos/componentsAdmim/theme";
+
+import { enrichProductsIntelligently } from "../../../utils/ProductIntelligence";
+import { CatalogFilters } from "../../produtos/componentsAdmim/CatalogFilters";
 
 const EDITOR_PREVIEW_LIMIT = 5; 
 const MAX_TITLE = 60;
@@ -32,51 +35,26 @@ export interface CatalogProps {
   onUpdate?: (field: string, value: string) => void;
 }
 
-const HERO_PALETTES = {
-  dark: [
-    { bg: "bg-[#110d1a]", border: "border-purple-900/30", badge: "bg-purple-500/10 text-purple-300 border-purple-800/20" },
-    { bg: "bg-[#061414]", border: "border-teal-900/30", badge: "bg-teal-500/10 text-teal-300 border-teal-800/20" },
-    { bg: "bg-[#16100b]", border: "border-amber-900/30", badge: "bg-amber-500/10 text-amber-300 border-amber-800/20" },
-    { bg: "bg-[#080d1a]", border: "border-indigo-900/30", badge: "bg-indigo-500/10 text-indigo-300 border-indigo-800/20" },
-    { bg: "bg-[#140b10]", border: "border-pink-900/30", badge: "bg-pink-500/10 text-pink-300 border-pink-800/20" },
-    { bg: "bg-[#06140b]", border: "border-emerald-900/30", badge: "bg-emerald-500/10 text-emerald-300 border-emerald-800/20" },
-    { bg: "bg-[#1c0d0d]", border: "border-red-900/30", badge: "bg-red-500/10 text-red-300 border-red-800/20" },
-    { bg: "bg-[#121315]", border: "border-zinc-800/40", badge: "bg-zinc-700/30 text-zinc-300 border-zinc-700/20" }
-  ],
-  light: [
-    { bg: "bg-purple-50/50", border: "border-purple-100/70", badge: "bg-purple-100/90 text-black border-purple-200" },
-    { bg: "bg-teal-50/50", border: "border-teal-100/70", badge: "bg-teal-100/90 text-black border-teal-200" },
-    { bg: "bg-amber-50/40", border: "border-amber-100/70", badge: "bg-amber-100/90 text-black border-amber-200" },
-    { bg: "bg-sky-50/50", border: "border-sky-100/70", badge: "bg-sky-100/90 text-black border-sky-200" },
-    { bg: "bg-rose-50/40", border: "border-rose-100/70", badge: "bg-rose-100/90 text-black border-rose-200" },
-    { bg: "bg-emerald-50/40", border: "border-emerald-100/70", badge: "bg-emerald-100/90 text-black border-emerald-200" },
-    { bg: "bg-orange-50/40", border: "border-orange-100/70", badge: "bg-orange-100/90 text-black border-orange-200" },
-    { bg: "bg-zinc-50/60", border: "border-zinc-200/60", badge: "bg-zinc-200/90 text-black border-zinc-300/60" }
-  ]
-};
-
-const FONT_SIZE_MAPS = {
-  small: { title: "text-base sm:text-lg md:text-xl font-bold", subtitle: "text-[11px] leading-normal" },
-  base: { title: "text-lg sm:text-xl md:text-2xl font-extrabold", subtitle: "text-xs leading-relaxed" },
-  medium: { title: "text-xl sm:text-2xl md:text-3xl font-black", subtitle: "text-xs sm:text-sm leading-relaxed" },
-  large: { title: "text-2xl sm:text-3xl md:text-4xl font-black tracking-tight", subtitle: "text-sm leading-relaxed" }
-};
-
 export function ProductsCatalog(props: CatalogProps) {
   const { t } = useTranslate();
+  const currentLang = "pt"; 
+
   const navigate = useNavigate();
   const location = useLocation();
   const { storeSlug, pageSlug } = useParams();
+  const queryClient = useQueryClient();
   
   const isEditor = location.pathname.includes("/editor/");
   const isReadOnly = !isEditor;
   const isDark = props.style?.theme === "dark";
-  const allLabel = t("common_all") || "Todos";
+
+  const [activeParent, setActiveParent] = useState<string>("Todos");
+  const [activeChild, setActiveChild] = useState<string>("");
+  const [activeAttribute, setActiveAttribute] = useState<string>("");
 
   const fallbackTitle = useMemo(() => t("catalog_default_title") || "Catálogo Completo", [t]);
   const fallbackSubtitle = useMemo(() => t("catalog_default_subtitle") || "Confira os nossos produtos disponíveis", [t]);
 
-  const [selectedCategory, setSelectedCategory] = useState<string>(allLabel);
   const [editableTitle, setEditableTitle] = useState(props.content?.title || fallbackTitle);
   const [editableSubtitle, setEditableSubtitle] = useState(props.content?.subtitle || fallbackSubtitle);
 
@@ -97,11 +75,20 @@ export function ProductsCatalog(props: CatalogProps) {
       const key = cacheKey("storely_public_store", CACHE_VERSION, storeSlug);
       const cached = readCache<{ id: string; currency: string | null; slug: string }>(key, storeSlug);
       if (cached) return cached;
-
-      const { data, error } = await supabase.from("stores").select("id, currency, slug").eq("slug", storeSlug).maybeSingle();
+      
+      const { data, error } = await supabase
+        .from("stores")
+        .select("id, currency, slug")
+        .eq("slug", storeSlug)
+        .maybeSingle();
+        
       if (error || !data) return null;
-
-      const safeStore = { id: String(data.id), currency: data.currency ? String(data.currency) : null, slug: String(data.slug) };
+      
+      const safeStore = { 
+        id: String(data.id), 
+        currency: data.currency ? String(data.currency) : null, 
+        slug: String(data.slug) 
+      };
       writeCache(key, safeStore, storeSlug);
       return safeStore;
     },
@@ -116,7 +103,6 @@ export function ProductsCatalog(props: CatalogProps) {
   const storeCurrency = isReadOnly ? (publicStore?.currency || "MZN") : (adminStore?.currency || "MZN");
   const activeStoreSlug = isReadOnly ? (storeSlug || publicStore?.slug) : adminStore?.slug;
   
-
   const designPalette = useMemo(() => {
     if (!effectiveStoreId) return isDark ? HERO_PALETTES.dark[0] : HERO_PALETTES.light[0];
     let hash = 0;
@@ -125,62 +111,78 @@ export function ProductsCatalog(props: CatalogProps) {
     return HERO_PALETTES[isDark ? "dark" : "light"][index];
   }, [effectiveStoreId, isDark]);
 
-  // 💡 CENTRALIZADO: Consulta exata à da Home
-  const { data: products = [], isLoading: isLoadingProducts } = useStoreProducts(
+  const { data: rawProducts = [], isLoading: isLoadingProducts } = useStoreProducts(
     effectiveStoreId, 
     storeCurrency, 
     activeStoreSlug, 
     t
   );
-  const queryClient = useQueryClient();
 
-  // Sincronização Silenciosa de Cache:
-  // Assim que o catálogo tiver produtos (via API ou State), injetamos 
-  // nas chaves exatas que o FloatingSearch utiliza, mantendo ambos em perfeita sincronia.
+  const processedProducts = useMemo(() => {
+    return enrichProductsIntelligently(rawProducts, currentLang as "pt" | "en");
+  }, [rawProducts, currentLang]);
+
   useEffect(() => {
-    if (products.length > 0 && effectiveStoreId) {
+    if (processedProducts.length > 0 && effectiveStoreId) {
       const searchCacheKey = cacheKey("store_catalog", CACHE_VERSION, effectiveStoreId);
-      
-      // Atualiza Cache Local
-      writeCache(searchCacheKey, products, activeStoreSlug);
-      
-      // Atualiza Cache do React Query para o Floating Search
-      queryClient.setQueryData(
-        ["catalog-products-full", effectiveStoreId, storeCurrency],
-        products
-      );
+      writeCache(searchCacheKey, processedProducts, activeStoreSlug);
+      queryClient.setQueryData(["catalog-products-full", effectiveStoreId, storeCurrency], processedProducts);
     }
-  }, [products, effectiveStoreId, storeCurrency, activeStoreSlug, queryClient]);
+  }, [processedProducts, effectiveStoreId, storeCurrency, activeStoreSlug, queryClient]);
 
-  const isLoading = (isLoadingPublicStore || isLoadingProducts) && products.length === 0;
+  const isLoading = (isLoadingPublicStore || isLoadingProducts) && processedProducts.length === 0;
 
-  const categories = useMemo(() => {
-    const set = new Set<string>();
-    products.forEach(p => { if (p.category) set.add(p.category); });
-    return [allLabel, ...Array.from(set)];
-  }, [products, allLabel]);
-
+  // ==========================================
+  // LÓGICA DE FILTRAGEM ATUALIZADA (UNISSEXO)
+  // ==========================================
   const displayProducts = useMemo(() => {
-    const filtered = (isReadOnly && selectedCategory !== allLabel) ? products.filter(p => p.category === selectedCategory) : products;
+    let filtered = processedProducts;
+
+    if (activeParent !== "Todos") {
+      filtered = filtered.filter(p => p.metadata?.parentCategory === activeParent);
+    }
+    
+    if (activeChild) {
+      filtered = filtered.filter(p => p.metadata?.subCategory === activeChild);
+    }
+    
+    if (activeAttribute) {
+      // 1. Dicionário de Géneros Conhecidos
+      const genderFilters = ["Homem", "Mulher", "Criança", "Men", "Women", "Kids"];
+      const isGenderFilter = genderFilters.includes(activeAttribute);
+
+      filtered = filtered.filter(p => {
+        if (isGenderFilter) {
+          // REGRA DE OURO: Mostra se o produto for do género selecionado OU se não tiver nenhum género (Unissexo/Neutro)
+          return p.metadata?.gender === activeAttribute || !p.metadata?.gender;
+        }
+        
+        // Se for um tamanho, cor ou material, tem de corresponder exatamente.
+        return (
+          (p.metadata?.sizes || []).includes(activeAttribute) ||
+          (p.metadata?.attributes || []).includes(activeAttribute)
+        );
+      });
+    }
+
     if (isEditor) return filtered.slice(0, EDITOR_PREVIEW_LIMIT);
     return filtered;
-  }, [products, selectedCategory, allLabel, isReadOnly, isEditor]);
+  }, [processedProducts, activeParent, activeChild, activeAttribute, isEditor]);
 
   const handleProductClick = useCallback((productId: string) => {
     if (isEditor || !activeStoreSlug) return;
-    const clickedProduct = products.find(p => p.id === productId);
+    const clickedProduct = processedProducts.find(p => p.id === productId);
 
     navigate(`/${activeStoreSlug}/${pageSlug || "products"}/${productId}`, { 
       state: { 
         fromStore: true,
         product: clickedProduct,
-        initialProducts: products,
+        initialProducts: processedProducts,
         storeCurrency: storeCurrency,
         effectiveStoreId: effectiveStoreId
       } 
     });
-  }, [isEditor, activeStoreSlug, navigate, pageSlug, products, storeCurrency, effectiveStoreId]);
-  
+  }, [isEditor, activeStoreSlug, navigate, pageSlug, processedProducts, storeCurrency, effectiveStoreId]);
 
   const handleBlurText = (field: "title" | "subtitle", value: string) => {
     let sanitized = value.trim();
@@ -200,66 +202,77 @@ export function ProductsCatalog(props: CatalogProps) {
 
   if (!effectiveStoreId) return null;
 
-  
-
   const alignClass = props.style?.align === 'center' ? 'text-center items-center mx-auto' : props.style?.align === 'justify' ? 'text-left items-stretch w-full' : 'text-left items-start';
 
   return (
-    <>
-      <section className={`w-full overflow-hidden select-none subpixel-antialiased ${isDark ? "bg-[#050505] text-zinc-100" : "bg-white text-black"}`} style={{ contentVisibility: 'auto', containIntrinsicSize: '650px', isolation: "isolate", transform: "translateZ(0)" }}>
-        <div className={`relative w-full border-b px-4 py-6 md:px-8 md:py-10 flex flex-col justify-center transition-all duration-200 ${designPalette.bg} ${designPalette.border}`}>
-          <div className="mx-auto w-full max-w-[1400px] relative z-10">
-            <div className={`flex flex-col max-w-3xl ${alignClass}`}>
-              <div className={`inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-widest mb-3 shadow-sm ${designPalette.badge}`}><Sparkles size={9} className="shrink-0" /><span>{t("catalog_collection") || "Coleção"}</span></div>
-              <div className="w-full relative group mb-1.5 will-change-[transform,opacity]">
-                <h2 className={`transition-all outline-none ${currentFonts.title} ${isDark ? "text-white" : "text-black"} ${isEditor ? "border border-dashed border-zinc-400/20 hover:border-amber-500/40 bg-amber-500/[0.01] focus:bg-amber-500/[0.03] rounded-lg px-2.5 py-1 cursor-text focus:border-solid focus:border-amber-500 focus:ring-1 focus:ring-amber-500/10" : ""}`} contentEditable={isEditor} suppressContentEditableWarning={true} onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); if (e.currentTarget.textContent!.length >= MAX_TITLE && e.key !== "Backspace" && !e.key.startsWith("Arrow")) e.preventDefault(); }} onPaste={(e) => handlePaste(e, MAX_TITLE)} onBlur={(e) => { const text = e.currentTarget.textContent?.slice(0, MAX_TITLE) || ""; const final = text.trim() || fallbackTitle; setEditableTitle(final); handleBlurText("title", final); }}>{editableTitle}</h2>
-                {isEditor && <span className={`absolute right-2 bottom-0.5 text-[8px] font-mono opacity-30 pointer-events-none ${isDark ? "text-zinc-400" : "text-black"}`}>{editableTitle.length}/{MAX_TITLE}</span>}
-              </div>
-              <div className="w-full relative group will-change-[transform,opacity]">
-                <p data-placeholder={t("catalog_add_description") || "Adicione uma descrição..."} className={`transition-all outline-none font-medium empty:before:text-zinc-400/60 empty:before:content-[attr(data-placeholder)] ${currentFonts.subtitle} ${isDark ? "text-zinc-400" : "text-zinc-800"} ${isEditor ? "border border-dashed border-zinc-400/20 hover:border-amber-500/40 bg-amber-500/[0.01] focus:bg-amber-500/[0.03] rounded-lg px-2.5 py-1 cursor-text focus:border-solid focus:border-amber-500 focus:ring-1 focus:ring-amber-500/10 min-h-[2em]" : ""}`} contentEditable={isEditor} suppressContentEditableWarning={true} onKeyDown={(e) => { const currentText = e.currentTarget.innerText || ""; if (e.key === "Enter") { const lineCount = (currentText.match(/\n/g) || []).length; if (lineCount >= 1) e.preventDefault(); } if (currentText.length >= MAX_SUBTITLE && e.key !== "Backspace" && !e.key.startsWith("Arrow")) e.preventDefault(); }} onPaste={(e) => handlePaste(e, MAX_SUBTITLE)} onBlur={(e) => { const text = e.currentTarget.innerText || ""; const final = text.trim() || fallbackSubtitle; setEditableSubtitle(final); handleBlurText("subtitle", final); }}>{editableSubtitle === fallbackSubtitle && isEditor ? "" : editableSubtitle}</p>
-                {isEditor && <span className={`absolute right-2 bottom-0.5 text-[8px] font-mono opacity-30 pointer-events-none ${isDark ? "text-zinc-400" : "text-black"}`}>{editableSubtitle.length}/{MAX_SUBTITLE}</span>}
-              </div>
+    <section className={`w-full overflow-hidden subpixel-antialiased ${isDark ? "bg-[#050505] text-zinc-100" : "bg-white text-black"}`} style={{ contentVisibility: 'auto', containIntrinsicSize: '650px', isolation: "isolate", transform: "translateZ(0)" }}>
+      
+      {/* HEADER DA SECÇÃO */}
+      <div className={`relative w-full border-b px-4 py-6 md:px-8 md:py-10 flex flex-col justify-center transition-all duration-200 ${designPalette.bg} ${designPalette.border}`}>
+        <div className="mx-auto w-full max-w-[1400px] relative z-10">
+          <div className={`flex flex-col max-w-3xl ${alignClass}`}>
+            <div className={`inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-widest mb-3 shadow-sm ${designPalette.badge}`}>
+              <Sparkles size={9} className="shrink-0" /><span>{t("catalog_collection") || "Coleção"}</span>
+            </div>
+            
+            <div className="w-full relative group mb-1.5 will-change-[transform,opacity]">
+              <h2 className={`transition-all outline-none ${currentFonts.title} ${isDark ? "text-white" : "text-black"} ${isEditor ? "border border-dashed border-zinc-400/20 hover:border-amber-500/40 bg-amber-500/[0.01] focus:bg-amber-500/[0.03] rounded-lg px-2.5 py-1 cursor-text focus:border-solid focus:border-amber-500 focus:ring-1 focus:ring-amber-500/10" : ""}`} contentEditable={isEditor} suppressContentEditableWarning={true} onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); if (e.currentTarget.textContent!.length >= MAX_TITLE && e.key !== "Backspace" && !e.key.startsWith("Arrow")) e.preventDefault(); }} onPaste={(e) => handlePaste(e, MAX_TITLE)} onBlur={(e) => { const text = e.currentTarget.textContent?.slice(0, MAX_TITLE) || ""; const final = text.trim() || fallbackTitle; setEditableTitle(final); handleBlurText("title", final); }}>{editableTitle}</h2>
+              {isEditor && <span className={`absolute right-2 bottom-0.5 text-[8px] font-mono opacity-30 pointer-events-none ${isDark ? "text-zinc-400" : "text-black"}`}>{editableTitle.length}/{MAX_TITLE}</span>}
+            </div>
+
+            <div className="w-full relative group will-change-[transform,opacity]">
+              <p data-placeholder={t("catalog_add_description") || "Adicione uma descrição..."} className={`transition-all outline-none font-medium empty:before:text-zinc-400/60 empty:before:content-[attr(data-placeholder)] ${currentFonts.subtitle} ${isDark ? "text-zinc-400" : "text-zinc-800"} ${isEditor ? "border border-dashed border-zinc-400/20 hover:border-amber-500/40 bg-amber-500/[0.01] focus:bg-amber-500/[0.03] rounded-lg px-2.5 py-1 cursor-text focus:border-solid focus:border-amber-500 focus:ring-1 focus:ring-amber-500/10 min-h-[2em]" : ""}`} contentEditable={isEditor} suppressContentEditableWarning={true} onKeyDown={(e) => { const currentText = e.currentTarget.innerText || ""; if (e.key === "Enter") { const lineCount = (currentText.match(/\n/g) || []).length; if (lineCount >= 1) e.preventDefault(); } if (currentText.length >= MAX_SUBTITLE && e.key !== "Backspace" && !e.key.startsWith("Arrow")) e.preventDefault(); }} onPaste={(e) => handlePaste(e, MAX_SUBTITLE)} onBlur={(e) => { const text = e.currentTarget.innerText || ""; const final = text.trim() || fallbackSubtitle; setEditableSubtitle(final); handleBlurText("subtitle", final); }}>{editableSubtitle === fallbackSubtitle && isEditor ? "" : editableSubtitle}</p>
+              {isEditor && <span className={`absolute right-2 bottom-0.5 text-[8px] font-mono opacity-30 pointer-events-none ${isDark ? "text-zinc-400" : "text-black"}`}>{editableSubtitle.length}/{MAX_SUBTITLE}</span>}
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="mx-auto w-full max-w-[1400px] px-4 py-6 md:px-8 md:py-10">
-          {isReadOnly && !isLoading && categories.length > 1 && (
-            <div className="mb-6 flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1" style={{ transform: "translateZ(0)" }}>
-              {categories.map((cat) => (
-                <button key={cat} type="button" onClick={() => setSelectedCategory(cat)} className={`shrink-0 rounded-lg px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide transition-all active:scale-[0.97] border ${selectedCategory === cat ? (isDark ? "bg-white border-white text-black" : "bg-zinc-950 border-zinc-950 text-white shadow-xs") : (isDark ? "bg-zinc-900/40 border-zinc-800/60 text-zinc-400 hover:bg-zinc-800/80" : "bg-white border-zinc-200 text-slate-600 hover:bg-zinc-50")}`}>{cat}</button>
-              ))}
-            </div>
-          )}
+      <div className="mx-auto w-full max-w-[1400px] px-4 py-6 md:px-8 md:py-10">
+        
+        {/* FILTROS HIERÁRQUICOS */}
+        {isReadOnly && !isLoading && processedProducts.length > 0 && (
+          <CatalogFilters
+            products={processedProducts}
+            activeParent={activeParent}
+            setActiveParent={setActiveParent}
+            activeChild={activeChild}
+            setActiveChild={setActiveChild}
+            activeAttribute={activeAttribute}
+            setActiveAttribute={setActiveAttribute}
+            isDark={isDark}
+          />
+        )}
 
-          {isEditor && products.length > 0 && (
-            <div className="mb-3.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 flex items-center gap-1.5 select-none pointer-events-none">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />{t("catalog_layout_sample") || "Amostra de Layout"} ({displayProducts.length} {t("common_of") || "de"} {products.length} {t("catalog_actives") || "ativos"})
-            </div>
-          )}
-
-          <div className="w-full grid grid-cols-1 min-h-[220px]" style={{ contain: "layout style" }}>
-            {isLoading ? (
-              <div className="w-full"><ProductShowcaseSkeleton cols={layoutCols} isDark={isDark} /></div>
-            ) : (
-              <div className="w-full animate-in fade-in duration-200 select-text">
-                {layoutCols === 1 ? (
-                  <LayoutList products={displayProducts} onAction={handleProductClick} isDark={isDark} t={t} />
-                ) : (
-                  <LayoutGrid products={displayProducts} onAction={handleProductClick} cols={layoutCols} isDark={isDark} t={t} />
-                )}
-              </div>
-            )}
-
-            {!isLoading && products.length === 0 && (
-              <div className={`rounded-xl border border-dashed py-12 flex flex-col items-center justify-center ${isDark ? "border-zinc-800 bg-zinc-900/5" : "border-zinc-200 bg-zinc-50/30"}`}>
-                <Package size={30} className="mb-2 text-zinc-500 opacity-25" />
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">{props.content?.empty_text || t("catalog_no_products") || "Nenhum produto cadastrado"}</p>
-              </div>
-            )}
+        {isEditor && processedProducts.length > 0 && (
+          <div className="mb-3.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 flex items-center gap-1.5 select-none pointer-events-none">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />{t("catalog_layout_sample") || "Amostra de Layout"} ({displayProducts.length} {t("common_of") || "de"} {processedProducts.length} {t("catalog_actives") || "ativos"})
           </div>
+        )}
+
+        {/* LISTA DE PRODUTOS */}
+        <div className="w-full grid grid-cols-1 min-h-[220px]" style={{ contain: "layout style" }}>
+          {isLoading ? (
+            <div className="w-full"><ProductShowcaseSkeleton cols={layoutCols} isDark={isDark} /></div>
+          ) : (
+            <div className="w-full animate-in fade-in duration-200 select-text">
+              {layoutCols === 1 ? (
+                <LayoutList products={displayProducts} onAction={handleProductClick} isDark={isDark} t={t} />
+              ) : (
+                <LayoutGrid products={displayProducts} onAction={handleProductClick} cols={layoutCols} isDark={isDark} t={t} />
+              )}
+            </div>
+          )}
+
+          {/* EMPTY STATE */}
+          {!isLoading && displayProducts.length === 0 && (
+            <div className={`rounded-xl border border-dashed py-12 flex flex-col items-center justify-center ${isDark ? "border-zinc-800 bg-zinc-900/5" : "border-zinc-200 bg-zinc-50/30"}`}>
+              <Package size={30} className="mb-2 text-zinc-500 opacity-25" />
+              <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">{props.content?.empty_text || "Nenhum produto encontrado com estes filtros"}</p>
+            </div>
+          )}
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }

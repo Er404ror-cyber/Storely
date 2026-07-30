@@ -1844,7 +1844,8 @@ portal_footer_hub: "Content Hub",
 portal_footer_more: "+ Articles & Guides",
 
 promo_title: "Promotions & Blog Portal",
-    promo_desc: "View updates, posts, and campaigns published on Storely"
+    promo_desc: "View updates, posts, and campaigns published on Storely",
+    cat_bakery: "Bakery & Sweets",
 
   },
 
@@ -3708,6 +3709,7 @@ portal_footer_more: "+ Artigos & Guias",
 
 promo_title: "Portal de Promoções & Blog",
   promo_desc: "Consulte as novidades, posts e campanhas divulgadas na Storely.",
+  cat_bakery: "Padaria & Doces",
 }
 
 
