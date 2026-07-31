@@ -634,7 +634,8 @@ export const ProductForm = memo(function ProductForm({
         </div>
 
         <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {/* AQUI ESTÁ A CORREÇÃO DA GRELHA (grid-cols-2 no mobile) */}
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
             {visibleSlots.map((index) => {
               const preview = previews[index];
               const isCover = index === 0;
@@ -709,7 +710,7 @@ export const ProductForm = memo(function ProductForm({
                           )}
                           
                           {isUnsynced && !isProcessing && (
-                            <div className="rounded-xl bg-amber-500 px-2 py-1 text-[8px] font-black uppercase text-white shadow-sm">
+                            <div className="rounded-xl bg-amber-500 px-1 py-1 text-[7px] sm:text-[8px] font-black uppercase text-white ">
                               {t('editor_modal_pending_media_title', { defaultValue: 'Pendente' })}
                             </div>
                           )}
