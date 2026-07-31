@@ -8,7 +8,7 @@ export interface CloudinaryUploadResult {
 
 export interface CloudinaryDeleteResult {
   ok: boolean;
-  status: 'deleted' | 'expired_or_failed' | 'unknown';
+  status: 'deleted' | 'expired_or_failed' | 'network_blocked' | 'unknown';
   message?: string;
   raw?: unknown;
 }
@@ -20,24 +20,33 @@ export const uploadToCloudinary = async (
   formData.append('file', file);
   formData.append('upload_preset', UPLOAD_PRESET);
 
-  const response = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-    {
-      method: 'POST',
-      body: formData,
+  try {
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+      {
+        method: 'POST',
+        body: formData,
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data?.error?.message || 'Falha no upload para o Cloudinary');
     }
-  );
 
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data?.error?.message || 'Cloudinary upload failed');
+    return {
+      url: data.secure_url,
+      delete_token: data.delete_token,
+    };
+  } catch (error: any) {
+    // Deteta se o erro foi de rede (CORS bloqueado pelo ISP da Jio / AdBlock / Antivírus)
+    if (error instanceof TypeError && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError'))) {
+      console.error('[Cloudinary] Network/ISP Blocked (Upload):', error);
+      throw new Error('ERR_NETWORK_BLOCKED');
+    }
+    throw error; // Lança outros erros normalmente
   }
-
-  return {
-    url: data.secure_url,
-    delete_token: data.delete_token,
-  };
 };
 
 export const deleteFromCloudinary = async (
@@ -46,36 +55,53 @@ export const deleteFromCloudinary = async (
   const formData = new FormData();
   formData.append('token', token);
 
-  const response = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/delete_by_token`,
-    {
-      method: 'POST',
-      body: formData,
-    }
-  );
-
-  let data: any = null;
-
   try {
-    data = await response.json();
-  } catch {
-    data = null;
-  }
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/delete_by_token`,
+      {
+        method: 'POST',
+        body: formData,
+      }
+    );
 
-  console.log('[Cloudinary] delete_by_token response:', data);
+    let data: any = null;
+    try {
+      data = await response.json();
+    } catch {
+      data = null;
+    }
 
-  if (response.ok) {
+    console.log('[Cloudinary] delete_by_token response:', data);
+
+    if (response.ok) {
+      return {
+        ok: true,
+        status: 'deleted',
+        raw: data,
+      };
+    }
+
     return {
-      ok: true,
-      status: 'deleted',
+      ok: false,
+      status: 'expired_or_failed',
+      message: data?.error?.message || 'Cloudinary delete failed',
       raw: data,
     };
-  }
+  } catch (error: any) {
+    // Deteta se a operadora bloqueou também o pedido de apagar a imagem
+    if (error instanceof TypeError && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError'))) {
+      console.error('[Cloudinary] Network/ISP Blocked (Delete):', error);
+      return {
+        ok: false,
+        status: 'network_blocked',
+        message: 'ERR_NETWORK_BLOCKED',
+      };
+    }
 
-  return {
-    ok: false,
-    status: 'expired_or_failed',
-    message: data?.error?.message || 'Cloudinary delete failed',
-    raw: data,
-  };
+    return {
+      ok: false,
+      status: 'unknown',
+      message: error?.message || 'Erro de conexão desconhecido',
+    };
+  }
 };

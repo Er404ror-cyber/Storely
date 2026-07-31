@@ -169,7 +169,7 @@ export function ProductsList() {
 
               {/* LISTA PRODUTOS ATIVOS */}
               {activeProducts.length > 0 && (
-                <div className="content-visibility-auto"> {/* Alivia a GPU e CPU forçando lazy render do CSS */}
+                <div className="content-visibility-auto space-y-2"> {/* Alivia a GPU e CPU forçando lazy render do CSS */}
                   <SectionHeader icon={<Boxes size={17} />} title={t('active_products_title')} count={activeProducts.length} action={addButton} />
                   {layoutMode === 'table' ? (
                     <ProductTable 
@@ -191,7 +191,7 @@ export function ProductsList() {
 
               {/* LISTA PRODUTOS PAUSADOS */}
               {pausedProducts.length > 0 && (
-                <div className="opacity-80 content-visibility-auto mt-6">
+                <div className="opacity-80 content-visibility-auto space-y-2 mt-6">
                   <SectionHeader icon={<PauseCircle size={17} />} title={t('paused_products_title')} count={pausedProducts.length} action={addButton} />
                   {layoutMode === 'table' ? (
                     <ProductTable 

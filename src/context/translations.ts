@@ -1961,6 +1961,29 @@ promo_title: "Promotions & Blog Portal",
   CamisasTops: "Shirts & Tops",
   Calcado: "Footwear",
  
+
+
+
+
+
+
+  product_form_photo_removed: "Photo removed successfully.",
+  product_form_photo_removed_cloud: "Photo permanently removed from the cloud.",
+  product_form_photo_removed_cloud_failed: "Photo removed locally, but cloud deletion failed or expired.",
+  product_form_upload_error: "Failed to upload this image.",
+  product_form_sync_general_error: "A general error occurred while syncing images to the cloud.",
+  product_form_sync_required: "Action not allowed: Sync photos before proceeding.",
+  product_form_sync_before_saving: "Sync local photos before saving.",
+  product_form_photos_synced_success: "Photos synced successfully!",
+
+
+
+  sync_uploading: "Syncing...",
+  sync_cloud_btn: "Cloud Sync",
+  portfolio_pending_sync: "Pending Sync",
+  portfolio_pending_sync_desc: "Upload (Cloud Sync) before publishing the page.",
+  saveBlockedLargeSection: "Action Blocked: The block \"{{section}}\" has exceeded the maximum storage limit (15MB).",
+
   },
 
 
@@ -3939,7 +3962,28 @@ promo_title: "Portal de Promoções & Blog",
   Calcas: "Calças",
   CamisasTops: "Camisas & Tops",
   Calcado: "Calçado",
- 
+
+
+
+
+
+  product_form_photo_removed: "Foto removida com sucesso.",
+  product_form_photo_removed_cloud: "Foto removida permanentemente da nuvem.",
+  product_form_photo_removed_cloud_failed: "Foto removida localmente, mas a exclusão na nuvem falhou ou expirou.",
+  product_form_upload_error: "Falha ao enviar esta imagem.",
+  product_form_sync_general_error: "Ocorreu um erro geral ao sincronizar as imagens com a nuvem.",
+  product_form_sync_required: "Ação não permitida: Sincronize as fotos antes de prosseguir.",
+  product_form_sync_before_saving: "Sincronize as fotos locais antes de salvar.",
+  product_form_photos_synced_success: "Fotos sincronizadas com sucesso!",
+
+
+
+  sync_uploading: "A Sincronizar...",
+  sync_cloud_btn: "Sync Nuvem",
+  portfolio_pending_sync: "Sincronização Pendente",
+  portfolio_pending_sync_desc: "Faça o upload (Sync Nuvem) antes de publicar a página.",
+  saveBlockedLargeSection: "Ação Bloqueada: O bloco \"{{section}}\" ultrapassou o limite máximo de armazenamento (15MB).",
+
 }
 
 
