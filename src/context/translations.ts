@@ -1984,6 +1984,18 @@ promo_title: "Promotions & Blog Portal",
   portfolio_pending_sync_desc: "Upload (Cloud Sync) before publishing the page.",
   saveBlockedLargeSection: "Action Blocked: The block \"{{section}}\" has exceeded the maximum storage limit (15MB).",
 
+
+
+
+
+
+auth_email_invalid_format: "The entered email format is invalid.",
+  auth_cooldown_message: "Too many attempts. For security, please wait for the countdown.",
+  auth_cooldown_support: "Are you locked out? Click here to speak with support via WhatsApp.",
+  auth_cooldown_wait: "Too many attempts. Please wait for the lockout period to end.",
+
+  auth_invalid_credentials: "Incorrect email or password.",
+auth_change_data_try_again: "Please change the data before trying again.",
   },
 
 
@@ -3983,6 +3995,21 @@ promo_title: "Portal de Promoções & Blog",
   portfolio_pending_sync: "Sincronização Pendente",
   portfolio_pending_sync_desc: "Faça o upload (Sync Nuvem) antes de publicar a página.",
   saveBlockedLargeSection: "Ação Bloqueada: O bloco \"{{section}}\" ultrapassou o limite máximo de armazenamento (15MB).",
+
+
+
+
+
+
+
+
+
+  auth_cooldown_message: "Tentativas excessivas. Por segurança, aguarde a contagem decrescente.",
+  auth_cooldown_support: "Está bloqueado? Clique aqui para falar com o suporte via WhatsApp.",
+  auth_cooldown_wait: "Muitas tentativas. Aguarde o tempo de bloqueio terminar.",
+  auth_email_invalid_format: "O formato do email introduzido não é válido.",
+  auth_invalid_credentials: "Email ou palavra-passe incorretos.",
+auth_change_data_try_again: "Por favor, altere os dados antes de tentar novamente.",
 
 }
 
