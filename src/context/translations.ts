@@ -1996,6 +1996,20 @@ auth_email_invalid_format: "The entered email format is invalid.",
 
   auth_invalid_credentials: "Incorrect email or password.",
 auth_change_data_try_again: "Please change the data before trying again.",
+
+
+
+
+
+
+
+
+  product_form_images_title: "Image Gallery",
+
+  product_form_blobs_prevent_save: "Action not allowed: There are local images that need to be uploaded to the cloud or replaced.",
+  editor_modal_orphan_media: "Invalid / Reupload",
+  product_form_orphan_blob: "Replace invalid or local images",
+  product_form_orphan_blob_desc: "This local preview link has expired. Please remove or reupload the photo.",
   },
 
 
@@ -4010,6 +4024,17 @@ promo_title: "Portal de Promoções & Blog",
   auth_email_invalid_format: "O formato do email introduzido não é válido.",
   auth_invalid_credentials: "Email ou palavra-passe incorretos.",
 auth_change_data_try_again: "Por favor, altere os dados antes de tentar novamente.",
+
+
+
+
+  product_form_images_title: "Galeria de Imagens",
+ 
+  product_form_blobs_prevent_save: "Ação não permitida: Existem imagens locais que precisam ser enviadas para a nuvem ou substituídas.",
+  editor_modal_orphan_media: "Inválida / Reenvie",
+  product_form_orphan_blob: "Substitua as imagens inválidas/locais",
+  product_form_orphan_blob_desc: "Este link local já expirou. Por favor, apague ou reenvie uma nova foto.",
+
 
 }
 
