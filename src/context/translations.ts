@@ -2010,6 +2010,24 @@ auth_change_data_try_again: "Please change the data before trying again.",
   editor_modal_orphan_media: "Invalid / Reupload",
   product_form_orphan_blob: "Replace invalid or local images",
   product_form_orphan_blob_desc: "This local preview link has expired. Please remove or reupload the photo.",
+
+ 
+  product_form_unit_conjunto: "Set",
+ 
+  product_form_unit_fardo: "Bale",
+  product_form_unit_cento: "Hundred",
+ 
+  product_form_unit_ano: "Year",
+  
+  product_form_unit_mm: "Millimeter (mm)",
+  product_form_unit_rolo: "Roll",
+ 
+  product_form_unit_t: "Ton (t)",
+
+
+  version_update_title: "Update Available",
+  version_update_desc: "The system has been updated with improvements. Please refresh the page to continue.",
+  version_update_button: "Update Now",
   },
 
 
@@ -4035,6 +4053,22 @@ auth_change_data_try_again: "Por favor, altere os dados antes de tentar novament
   product_form_orphan_blob: "Substitua as imagens inválidas/locais",
   product_form_orphan_blob_desc: "Este link local já expirou. Por favor, apague ou reenvie uma nova foto.",
 
+
+
+  product_form_unit_fardo: "Fardo",
+  product_form_unit_cento: "Cento",
+ 
+  product_form_unit_ano: "Ano",
+  product_form_unit_mm: "Milímetro (mm)",
+  product_form_unit_rolo: "Rolo",
+ 
+  product_form_unit_t: "Tonelada (t)",
+
+  product_form_unit_conjunto: "Conjunto",
+
+  version_update_title: "Atualização Disponível",
+  version_update_desc: "O sistema foi atualizado com melhorias. Por favor, atualize a página para continuar.",
+  version_update_button: "Atualizar Agora",
 
 }
 

@@ -2,11 +2,31 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import fs from 'fs'
+import path from 'path'
+import pkg from './package.json' // <-- Lê o package.json
 
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    
+    // --- PLUGIN AUTOMÁTICO DE VERSÃO ---
+    {
+      name: 'generate-version-json',
+      writeBundle() {
+        // Usa o timestamp como gatilho lógico, e a versão apenas para exibição
+        const versionData = { 
+          version: Date.now(), 
+          packageVersion: pkg.version 
+        };
+        // process.cwd() acha a raiz do projeto de forma segura
+        const distPath = path.resolve(process.cwd(), 'dist', 'version.json');
+        
+        fs.writeFileSync(distPath, JSON.stringify(versionData));
+        console.log(`✅ version.json gerado com sucesso (Gatilho: ${versionData.version}, Exibição: v${versionData.packageVersion})`);
+      }
+    },
 
     VitePWA({
       registerType: 'autoUpdate',

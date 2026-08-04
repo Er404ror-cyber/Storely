@@ -1,8 +1,7 @@
-import { useState, useEffect, useMemo, memo } from "react";
+import { useState, useEffect, useMemo, memo, useCallback } from "react";
 import { ImageOff, Maximize2 } from "lucide-react";
 import type { MediaItem } from "../../sections/main";
 import { MediaModal } from "../../modal";
-
 
 interface ProductGalleryProps {
   images: string[];
@@ -28,6 +27,7 @@ export const ProductGallery = memo(function ProductGallery({
 
   useEffect(() => {
     setActiveIndex(0);
+    setNoImg(false); // Reseta o estado de erro caso as imagens do produto principal mudem
   }, [images]);
 
   useEffect(() => {
@@ -36,18 +36,27 @@ export const ProductGallery = memo(function ProductGallery({
     return () => window.clearInterval(timer);
   }, [previews.length, pauseCarousel]);
 
-  const openImagePreview = () => {
+  // Memoizado para evitar recriação em cada ciclo
+  const openImagePreview = useCallback(() => {
     const url = previews[activeIndex];
     if (!url || url === fallbackImage) return;
     setPreviewMedia({ url, type: "image", id: String(activeIndex) });
-  };
+  }, [activeIndex, previews, fallbackImage]);
 
-  const handleImgError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+  // Handler de erro para a imagem principal (aciona o aviso de texto)
+  const handleMainImgError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
     if (e.currentTarget.src !== fallbackImage) {
       e.currentTarget.src = fallbackImage;
       setNoImg(true);
     }
-  };
+  }, [fallbackImage]);
+
+  // Handler de erro leve para as miniaturas (apenas substitui a fonte)
+  const handleThumbError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    if (e.currentTarget.src !== fallbackImage) {
+      e.currentTarget.src = fallbackImage;
+    }
+  }, [fallbackImage]);
 
   return (
     <>
@@ -56,7 +65,7 @@ export const ProductGallery = memo(function ProductGallery({
       <div className="flex flex-col md:sticky md:top-24 h-max">
         <div className={`overflow-hidden md:rounded-3xl shadow-sm ${imageWrapClass}`}>
           <div
-            className="relative aspect-square w-full sm:aspect-[4/3] md:aspect-square"
+            className="relative w-full aspect-square sm:aspect-[4/3] md:aspect-square"
             onMouseEnter={() => setPauseCarousel(true)}
             onMouseLeave={() => setPauseCarousel(false)}
           >
@@ -67,7 +76,7 @@ export const ProductGallery = memo(function ProductGallery({
               loading={activeIndex === 0 ? "eager" : "lazy"}
               fetchPriority={activeIndex === 0 ? "high" : "low"}
               className="h-full w-full object-cover object-center transform-gpu transition-opacity duration-300"
-              onError={handleImgError}
+              onError={handleMainImgError}
             />
             {noImg && (
               <div className="absolute right-3 bottom-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] bg-white/90 shadow-sm">
@@ -79,7 +88,7 @@ export const ProductGallery = memo(function ProductGallery({
               <button
                 type="button"
                 onClick={openImagePreview}
-                className="absolute right-4 top-4 z-20 rounded-full bg-black/40 p-2.5 text-white transition hover:bg-black/60  shadow-sm"
+                className="absolute right-4 top-4 z-20 rounded-full bg-black/40 p-2.5 text-white transition hover:bg-black/60 shadow-sm"
               >
                 <Maximize2 size={20} />
               </button>
@@ -101,7 +110,12 @@ export const ProductGallery = memo(function ProductGallery({
                       : "border-slate-200 hover:border-slate-400 opacity-70 hover:opacity-100 dark:border-zinc-700"
                   }`}
                 >
-                  <img src={img} alt="Thumb" className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                  <img 
+                    src={img} 
+                    alt="Thumb" 
+                    className="h-full w-full object-cover transition duration-300 group-hover:scale-105" 
+                    onError={handleThumbError}
+                  />
                 </button>
               ))}
             </div>

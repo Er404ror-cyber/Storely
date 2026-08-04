@@ -9,26 +9,45 @@ export const PRODUCT_LIMITS = {
 };
 
 export const PRODUCT_UNIT_OPTIONS = [
+  // 1. Ultra Comuns
   'un',
-  'par',
-  'kit',
-  'pacote',
   'peca',
+  'pacote',
   'caixa',
+  'kit',
+  'conjunto',
+  'par',
+
+  // 2. Peso e Volume Fluido
   'kg',
+  'g',
+  'l',
+  'ml',
+
+  // 3. Atacado e Quantidades Maiores
+  'fardo',
+  'cento',
+
+  // 4. Serviços
+  'servico',
+
+  // 5. Tempo
   'hora',
   'dia',
   'semana',
   'mes',
-  'servico',
-  'g',
-  'l',
-  'ml',
+  'ano',
+
+  // 6. Metragem e Medidas Lineares
   'm',
   'cm',
+  'mm',
+  'rolo',
+
+  // 7. Área e Volume Espacial
   'm2',
   'm3',
-
+  't',
 ] as const;
 
 export function sanitizeMajor(value: string): string {
