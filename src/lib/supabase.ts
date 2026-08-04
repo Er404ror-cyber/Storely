@@ -5,7 +5,8 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
-    persistSession: true, // Garante que o login não se perde ao dar F5
+    persistSession: true, 
     autoRefreshToken: true,
+    storageKey: 'storely_auth_token', 
   }
 });
