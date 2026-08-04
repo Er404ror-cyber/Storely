@@ -31,7 +31,6 @@ interface StorageStats {
   isAtLimit: boolean;
 }
 
-// CORREÇÃO 2: Estendemos o SectionProps para incluir o isLoading opcional
 export const GaleriaGrid: React.FC<SectionProps & { isLoading?: boolean }> = ({ 
   content, 
   style, 
@@ -44,8 +43,9 @@ export const GaleriaGrid: React.FC<SectionProps & { isLoading?: boolean }> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   
   const [previewMedia, setPreviewMedia] = useState<MediaItem | null>(null);
-  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
   const [activeEditIndex, setActiveEditIndex] = useState<number | null>(null);
+
+  const draggedIdxRef = useRef<number | null>(null);
 
   const itemsRef = useRef<MediaItem[]>([]);
   const onUpdateRef = useRef(onUpdate);
@@ -147,6 +147,18 @@ export const GaleriaGrid: React.FC<SectionProps & { isLoading?: boolean }> = ({
     });
   }, []);
 
+  const handleDragStart = useCallback((index: number) => {
+    draggedIdxRef.current = index;
+  }, []);
+
+  const handleDrop = useCallback((index: number) => {
+    const from = draggedIdxRef.current;
+    if (from !== null && from !== index) {
+      moveItem(from, index);
+    }
+    draggedIdxRef.current = null;
+  }, [moveItem]);
+
   const handleUpload = useCallback((e: ChangeEvent<HTMLInputElement>, index: number | null = null): void => {
     if (e.target.files) {
       handleMultipleUploads(e.target.files, itemsRef.current, index, (imgs: MediaItem[]) => {
@@ -157,10 +169,8 @@ export const GaleriaGrid: React.FC<SectionProps & { isLoading?: boolean }> = ({
 
   const missingSizes = useMemo(() => items.filter((img) => {
     if (!img.url || img.size || img.url.startsWith('blob:') || img.url.startsWith('data:')) return false;
-    
     const urlLower = img.url.toLowerCase();
     if (urlLower.includes('supabase.co') || urlLower.includes('cloudinary.com')) return false;
-    
     return true;
   }), [items]);
 
@@ -201,14 +211,17 @@ export const GaleriaGrid: React.FC<SectionProps & { isLoading?: boolean }> = ({
     }
   }, [sizeQueries, isEditable]);
 
+  // CORREÇÃO DOS PULOS: rootMargin de 800px impede que o React faça re-render enquanto passas os olhos pela secção
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => { 
         if (!entries[0].isIntersecting && activeEditIndexRef.current !== null) {
-          setActiveEditIndex(null); 
+          requestAnimationFrame(() => {
+            setActiveEditIndex(null); 
+          });
         }
       },
-      { threshold: 0 } 
+      { threshold: 0, rootMargin: '800px 0px' } 
     );
     if (containerRef.current) observer.observe(containerRef.current);
     
@@ -217,21 +230,16 @@ export const GaleriaGrid: React.FC<SectionProps & { isLoading?: boolean }> = ({
 
   const handleUploadTrigger = useCallback(() => document.getElementById(`up-${uniqueId}`)?.click(), [uniqueId]);
 
-  // CORREÇÃO 1: Mover os Hooks (useMemo) para ANTES de qualquer `return` condicional
   const containerLayoutClass = useMemo(() => {
     if (style.cols === '1') return 'grid grid-cols-4 md:grid-cols-8 gap-2 w-full';
     if (style.cols === '2') return 'grid grid-cols-3 md:grid-cols-4 gap-2 w-full';
     return 'columns-2 sm:columns-3 lg:columns-4 xl:columns-4 gap-3 w-full block';
   }, [style.cols]);
 
-  // O early return de componente vazio agora está seguro, pois todos os Hooks já foram declarados
   if (!isEditable && items.length === 0 && !isLoading) return null;
 
   return (
-    <section 
-      style={{ contentVisibility: 'auto', contain: 'layout paint' }}
-      className={`py-6 md:py-10 px-1 md:px-2 transition-colors duration-300 ${getTheme(style.theme)} ${activeEditIndex !== null ? 'pb-32 sm:pb-24' : ''}`}
-    >
+    <section className={`py-6 md:py-10 px-1 md:px-2 transition-colors duration-300 ${getTheme(style.theme)}`}>
       <div className="max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto px-2 relative" ref={containerRef}>
         
         <input 
@@ -261,37 +269,6 @@ export const GaleriaGrid: React.FC<SectionProps & { isLoading?: boolean }> = ({
           t={t as (key: string) => string}          
         />
 
-        {isLoading ? (
-          <GallerySkeleton cols={style.cols || '4'} count={6} />
-        ) : items.length === 0 ? (
-          <EmptyState 
-            isEditable={isEditable} 
-            onUploadTrigger={handleUploadTrigger}
-            t={t as (key: string) => string}          
-          />
-        ) : (
-          <div className={containerLayoutClass}>
-            {items.map((item, i) => (
-              <GridItem 
-                key={item.id || item.url || i}
-                item={item}
-                index={i}
-                totalItems={items.length}
-                isEditable={isEditable}
-                cols={style.cols || '4'}
-                onPreview={setPreviewMedia}
-                onDragStart={setDraggedIdx}
-                onDrop={() => { 
-                  if (draggedIdx !== null) { moveItem(draggedIdx, i); setDraggedIdx(null); }
-                }}
-                t={t as (key: string) => string}              
-                activeEditIndex={activeEditIndex}
-                setActiveEditIndex={setActiveEditIndex}
-              />
-            ))}
-          </div>
-        )}
-
         {isEditable && (
           <GlobalEditToolbar
             items={items}
@@ -302,6 +279,39 @@ export const GaleriaGrid: React.FC<SectionProps & { isLoading?: boolean }> = ({
             onMove={moveItem}
             t={t as (key: string) => string}
           />
+        )}
+
+        {isLoading ? (
+          <GallerySkeleton cols={style.cols || '4'} count={6} />
+        ) : items.length === 0 ? (
+          <EmptyState 
+            isEditable={isEditable} 
+            onUploadTrigger={handleUploadTrigger}
+            t={t as (key: string) => string}          
+          />
+        ) : (
+          <div className={containerLayoutClass}>
+            {items.map((item, i) => {
+              const stableKey = item.id || `${item.url}-${item.isTemp ? 'temp' : 'cloud'}`;
+              
+              return (
+                <GridItem 
+                  key={stableKey}
+                  item={item}
+                  index={i}
+                  totalItems={items.length}
+                  isEditable={isEditable}
+                  cols={style.cols || '4'}
+                  onPreview={setPreviewMedia}
+                  onDragStart={handleDragStart}
+                  onDrop={handleDrop}
+                  t={t as (key: string) => string}              
+                  activeEditIndex={activeEditIndex}
+                  setActiveEditIndex={setActiveEditIndex}
+                />
+              );
+            })}
+          </div>
         )}
       </div>
 

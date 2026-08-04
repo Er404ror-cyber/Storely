@@ -28,8 +28,16 @@ export function forceMp4(url: string): string {
   const parts = url.split('/upload/');
   if (parts.length < 2) return url;
 
+  // Remove qualquer extensão antiga
   const basePath = parts[1].replace(/\.(mp4|webm|ogg|mov|mkv|avi)$/i, '');
-  const transformations = 'f_mp4,vc_h264:main,q_auto,fl_streaming_attachment';
+  
+  // CORREÇÃO AQUI: 
+  // Removido o "fl_streaming_attachment" que forçava o download e quebrava o player.
+  // Agora usamos apenas:
+  // f_mp4 -> converte para mp4
+  // vc_h264:main -> garante compatibilidade máxima com celulares/navegadores
+  // q_auto -> otimiza o peso
+  const transformations = 'f_mp4,vc_h264:main,q_auto';
 
   return `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/${transformations}/${basePath}.mp4`;
 }
@@ -84,10 +92,11 @@ async function uploadToCloudinary(
 
     return {
       id: crypto.randomUUID(),
+      // Se for vídeo, passa pelo forceMp4 para arrumar o formato para todos os celulares
       url: resourceType === 'video' ? forceMp4(data.secure_url) : data.secure_url,
       type: resourceType,
       size: data.bytes || file.size,
-      delete_token: data.delete_token,
+      delete_token: data.delete_token, // Guardado para apagar via token de 10 mins se preciso
       isTemp: false,
     };
   } catch (error) {
@@ -126,33 +135,34 @@ export const handleMultipleUploads = async (
   callback(finalMedia);
 };
 
-export const handleFileUpload = async (
+export const handleFileUpload = (
   file: File,
   callback: (media: MediaItem) => void,
   t?: (key: string, vars?: Record<string, string>) => string
 ) => {
   if (!file) return;
 
-  const reader = new FileReader();
+  try {
+    const isVideo = file.type.startsWith('video');
+    let url = URL.createObjectURL(file);
+    
+    // Força o navegador a mostrar a thumbnail (primeiro frame) instantaneamente
+    if (isVideo) url = `${url}#t=0.001`;
 
-  reader.onload = () => {
     const tempMedia: MediaItem = {
       id: crypto.randomUUID(),
-      url: URL.createObjectURL(file),
-      type: file.type.startsWith('video') ? 'video' : 'image',
+      url,
+      type: isVideo ? 'video' : 'image',
       size: file.size,
       file,
       isTemp: true,
     };
 
+    // Callback instantâneo (sem FileReader para não travar a memória)
     callback(tempMedia);
-  };
-
-  reader.onerror = () => {
+  } catch (error) {
     toast.error(t?.('fileReadError') || 'Erro ao ler o arquivo.');
-  };
-
-  reader.readAsArrayBuffer(file);
+  }
 };
 
 export const saveAllToCloudinary = async (
@@ -165,7 +175,8 @@ export const saveAllToCloudinary = async (
     const uploaded = await uploadToCloudinary(item.file, item.type);
 
     if (uploaded) {
-      URL.revokeObjectURL(item.url);
+      // Limpa a URL temporária da memória ao salvar para evitar duplicação ou travamentos
+      URL.revokeObjectURL(item.url); 
       toast.success(t?.('uploadSuccess') || 'Upload concluído com sucesso.');
       return uploaded;
     }
@@ -189,8 +200,10 @@ export const editableProps = (
     onUpdate(e.currentTarget.innerText);
   },
   className: isEditable
-    ? 'outline-none focus:ring-2 focus:ring-blue-500/30 rounded px-1 cursor-text'
-    : '',
+    ? 'outline-none focus:ring-2 focus:ring-blue-500/30 rounded px-1 cursor-text touch-manipulation'
+    : 'touch-manipulation',
+  // Protege o mobile de dar zoom descontrolado ou exibir menus errados
+  style: isEditable ? { WebkitUserModify: 'read-write-plaintext-only' as const } : undefined,
 });
 
 export const getTheme = (theme?: 'light' | 'dark') => {

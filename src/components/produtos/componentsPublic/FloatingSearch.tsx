@@ -8,7 +8,9 @@ import { supabase } from "../../../lib/supabase";
 import { getCategoryStyle, normalizeCategory, getSmartSynonyms } from "../../../utils/categories";
 import { STORE_CACHE_TTL } from "../../../utils/storeCache"; 
 import { readCache, writeCache, cacheKey, CACHE_VERSION } from "../../../utils/text";
-import { enrichProductsIntelligently } from "../../../utils/ProductIntelligence"; 
+
+// 1. IMPORTAMOS O NOVO HOOK EM VEZ DA FUNÇÃO DIRETA
+import { useProductIntelligence } from "../../../utils/ProductIntelligence"; 
 
 // Importações Modulares Nativas
 import { SearchSuggestionsView } from "./SearchSuggestionsView";
@@ -51,7 +53,10 @@ function getTypoDistance(a: string, b: string, maxLimit = 2): number {
 
 export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug }: FloatingSearchProps) {
   const { t } = useTranslate();
-  const currentLang = "pt"; 
+  
+  // 2. INICIALIZAMOS O MOTOR DE INTELIGÊNCIA AQUI
+  const { enrichProductsIntelligently } = useProductIntelligence();
+  
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -132,12 +137,14 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
     refetchOnWindowFocus: false,
   });
 
+  // 3. ATUALIZAMOS O USEMEMO PARA USAR O NOVO HOOK
   const localProducts = useMemo(() => {
     if (rawLocalProducts.length > 0 && !rawLocalProducts[0].metadata) {
-      return enrichProductsIntelligently(rawLocalProducts, currentLang as "pt" | "en");
+      // Já não precisamos passar a linguagem, o Hook trata disso!
+      return enrichProductsIntelligently(rawLocalProducts);
     }
     return rawLocalProducts;
-  }, [rawLocalProducts, currentLang]);
+  }, [rawLocalProducts, enrichProductsIntelligently]);
 
   const { data: globalProducts = [], isLoading: isLoadingGlobal } = useQuery({
     queryKey: ["search-global-products-list", smartQueryString],
@@ -167,29 +174,41 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
     refetchOnWindowFocus: false,
   });
 
+  // ==========================================
+  // CAPTURA DA IMAGEM PARA A CATEGORIA
+  // ==========================================
   const categories = useMemo(() => {
-    const categoryMap = new Map<string, string>();
+    const categoryMap = new Map<string, { name: string; image: string | null }>();
+    
     localProducts.forEach(p => {
       const parent = p.metadata?.parentCategory;
       const child = p.metadata?.subCategory;
+      // Pega a foto principal do produto
+      const prodImage = p.main_image || null; 
       
       if (parent) {
         const normParent = normalizeCategory(parent);
-        if (!categoryMap.has(normParent)) categoryMap.set(normParent, parent);
+        // Se a categoria ainda não existe no Map ou existe mas ainda não tem foto, adicionamos
+        if (!categoryMap.has(normParent) || (categoryMap.has(normParent) && !categoryMap.get(normParent)?.image)) {
+          categoryMap.set(normParent, { name: parent, image: prodImage });
+        }
       }
       if (child) {
         const normChild = normalizeCategory(child);
-        if (!categoryMap.has(normChild)) categoryMap.set(normChild, child);
+        if (!categoryMap.has(normChild) || (categoryMap.has(normChild) && !categoryMap.get(normChild)?.image)) {
+          categoryMap.set(normChild, { name: child, image: prodImage });
+        }
       }
     });
 
-    return Array.from(categoryMap.entries()).map(([norm, original]) => {
-      const style = getCategoryStyle(original);
+    return Array.from(categoryMap.entries()).map(([norm, data]) => {
+      const style = getCategoryStyle(data.name);
       return { 
-        name: original, 
+        name: data.name, 
         searchKey: norm, 
-        emoji: style.emoji,
-        color: style.color
+        emoji: style.emoji, // Mantemos o emoji como fallback caso não haja foto
+        color: style.color,
+        image: data.image   // <-- Nova propriedade de imagem!
       };
     });
   }, [localProducts]);
@@ -310,19 +329,16 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
     setTimeout(() => setSearchTerm(""), 300);
   }, []);
 
-  // NAVEGAÇÃO OTIMIZADA: Envia o state completo e corrige a rota de "/blog/" para "/products/"
   const handleNavigate = useCallback((slug: string, id: string) => {
     handleClose();
     if (slug) {
-      // 1. Procura o produto clicado na lista local ou na lista global
       const clickedProduct = localProducts.find(p => p.id === id) || globalProducts.find(p => p.id === id);
 
-      // 2. Navega para a página de produtos injetando todos os dados necessários no state
       navigate(`/${slug}/products/${id}`, {
         state: {
           fromStore: true,
           product: clickedProduct,
-          initialProducts: localProducts, // Evita re-fetch ao voltar
+          initialProducts: localProducts, 
           storeCurrency: storeCurrency,
           effectiveStoreId: currentStoreId
         }
@@ -351,9 +367,7 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
   const isDark = document.documentElement.classList.contains("dark");
 
   return (
-    <div 
-      className="fixed inset-0 z-[99999] flex flex-col transition-colors duration-200 isolation-isolate h-[100dvh] overflow-hidden select-none bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-100 "
-    >
+    <div className="fixed inset-0 z-[99999] flex flex-col transition-colors duration-200 isolation-isolate h-[100dvh] overflow-hidden select-none bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-100 ">
       <div className="order-1 flex shrink-0 items-center justify-between px-6 py-4 border-b border-zinc-200/50 dark:border-zinc-800/50 bg-white/40 dark:bg-zinc-950/40 text-zinc-800 dark:text-zinc-100">
         <h2 className="text-base font-black tracking-widest uppercase opacity-90">{t("search_title") || "Pesquisa"}</h2>
         <button 
@@ -398,7 +412,7 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
             isDark={isDark}
             t={t as any}
             onTriggerGlobal={handleTriggerGlobal}
-            onNavigateProduct={handleNavigate} // Agora passa a informação completa!
+            onNavigateProduct={handleNavigate} 
             activeStoreSlug={activeStoreSlug}
           />
         )}

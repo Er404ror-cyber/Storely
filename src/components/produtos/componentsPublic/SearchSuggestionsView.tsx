@@ -6,7 +6,6 @@ import { MOCK_GLOBAL_CATEGORIES, type MockCategory } from "./SearchMocks";
 interface SearchSuggestionsViewProps {
   showGlobalCats: boolean;
   categories: any[];
-  // Ajustada a assinatura para aceitar a função estrita do useTranslate sem conflitos
   t: (key: any, variables?: any) => string; 
   isDark: boolean;
   onToggleGlobal: () => void;
@@ -41,7 +40,6 @@ export const SearchSuggestionsView = React.memo(function SearchSuggestionsView({
           MOCK_GLOBAL_CATEGORIES.map((cat: MockCategory, idx: number) => (
             <SearchCategoryCard
               key={cat.slug + idx}
-              // Usa t() dinâmico na nameKey convertida em any e passa a searchQuery como instruído para o filtro interno
               name={t(cat.nameKey as any) || cat.slug}
               emoji={cat.emoji}
               color={cat.color}
@@ -56,6 +54,7 @@ export const SearchSuggestionsView = React.memo(function SearchSuggestionsView({
               name={cat.name}
               emoji={cat.emoji || "📦"}
               color={cat.color}
+              image={cat.image} // <-- Passamos a imagem real do produto aqui!
               index={idx}
               onClick={() => onSelectCategory(cat.name)}
             />

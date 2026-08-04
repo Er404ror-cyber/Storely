@@ -424,7 +424,7 @@ export const StoreHeader = memo(function StoreHeader({
   const toggleMenu = () => setIsOpen((prev) => !prev);
 
   const authPath = "/auth";
-  const explorePath = hasSession ? "/admin/explore" : "/";
+  const explorePath = hasSession ? "/" : "/";
 
   return (
     <header className="sticky top-0 z-[100] border-b border-slate-200/70 bg-white/82 text-slate-900 shadow-[0_8px_30px_rgba(15,23,42,0.05)]   dark:border-white/10 dark:bg-slate-950/78 dark:text-white dark:shadow-[0_8px_30px_rgba(2,6,23,0.22)] ">

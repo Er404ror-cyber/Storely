@@ -24,6 +24,8 @@ interface BlockItemProps {
 }
 
 // Constantes estáticas fora do render para poupar memória RAM
+
+
 const SECTION_PREVIEWS: Record<string, string> = {
   hero_comercial: '/img/hero_comercial.png',
   galeria_grid: '/img/galeria_grid.png',
@@ -43,7 +45,6 @@ const SECTION_PREVIEWS: Record<string, string> = {
   faq_acordion: '',
   rodape_simples: '',
 };
-
 const SECTION_CATEGORIES: Record<string, string> = {
   hero_comercial: 'hero',
   hero_minimalista: 'hero',

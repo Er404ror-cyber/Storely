@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast";
 import { LanguageProvider } from "./context/LanguageContext";
 import { Helmet, HelmetProvider } from "react-helmet-async"; 
 import { useTranslate } from "./context/LanguageContext";
+import VersionChecker from "./utils/VersionChecker";
 
 // Componente interno para acessar o contexto de tradução
 const AppContent = () => {
@@ -71,6 +72,7 @@ const App = () => {
   return (
     <HelmetProvider>
       <LanguageProvider>
+      <VersionChecker />
         <AppContent />
       </LanguageProvider>
     </HelmetProvider>

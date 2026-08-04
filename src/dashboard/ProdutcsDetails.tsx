@@ -33,7 +33,45 @@ type ProductRow = {
 type ProductLocationState = { product?: ProductRow; store?: PublicStoreData; source?: string; searchMode?: string; fromStore?: boolean; };
 
 const UNIT_TRANSLATION_KEY_MAP = {
-  un: "product_form_unit_un", par: "product_form_unit_par", kit: "product_form_unit_kit", pacote: "product_form_unit_pacote", caixa: "product_form_unit_caixa", kg: "product_form_unit_kg", g: "product_form_unit_g", l: "product_form_unit_l", ml: "product_form_unit_ml", m: "product_form_unit_m", cm: "product_form_unit_cm", m2: "product_form_unit_m2", m3: "product_form_unit_m3", hora: "product_form_unit_hora", dia: "product_form_unit_dia", semana: "product_form_unit_semana", mes: "product_form_unit_mes", servico: "product_form_unit_servico", peca: "product_form_unit_peca",
+  // === 1. ULTRA COMUNS (Qualquer tipo de produto físico/varejo) ===
+  un: "product_form_unit_un",
+  peca: "product_form_unit_peca",
+  pacote: "product_form_unit_pacote",
+  caixa: "product_form_unit_caixa",
+  kit: "product_form_unit_kit",
+  conjunto: "product_form_unit_conjunto", // Roupas, móveis, louças
+  par: "product_form_unit_par",         // Calçados, brincos, luvas
+
+  // === 2. PESO E VOLUME FLUIDO (Alimentos, cosméticos, químicos, petshop) ===
+  kg: "product_form_unit_kg",
+  g: "product_form_unit_g",
+  l: "product_form_unit_l",
+  ml: "product_form_unit_ml",
+
+  // === 3. ATACADO E QUANTIDADES MAIORES (Distribuição e alimentação) ===
+  fardo: "product_form_unit_fardo",
+  cento: "product_form_unit_cento",       // Doces, impressos, brindes
+
+  // === 4. SERVIÇOS E PRODUTOS DIGITAIS ===
+  servico: "product_form_unit_servico",
+
+  // === 5. TEMPO (Diárias, agendamentos, assinaturas e contratos) ===
+  hora: "product_form_unit_hora",
+  dia: "product_form_unit_dia",
+  semana: "product_form_unit_semana",
+  mes: "product_form_unit_mes",
+  ano: "product_form_unit_ano",
+
+  // === 6. METRAGEM E MEDIDAS LINEARES (Tecidos, cabos, fitas, construção) ===
+  m: "product_form_unit_m",
+  cm: "product_form_unit_cm",
+  mm: "product_form_unit_mm",
+  rolo: "product_form_unit_rolo",         // Fios, fitas, papel de parede
+
+  // === 7. ÁREA E VOLUME ESPACIAL (Imóveis, terrenos, materiais brutos) ===
+  m2: "product_form_unit_m2",             // Pisos, terrenos
+  m3: "product_form_unit_m3",             // Areia, brita, madeira
+  t: "product_form_unit_t",               // Tonelada (Cargas pesadas)
 } as const;
 
 export function ProductDetails({ isCreating = false, onClose }: ProductDetailsProps) {

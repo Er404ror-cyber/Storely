@@ -1,13 +1,14 @@
-import React, { useRef, useEffect, memo } from 'react';
+import React, { useRef, useEffect, memo, useState } from 'react';
 
 export interface MediaData {
   url: string; 
   type: 'image' | 'video';
 }
 
-interface MediaRendererProps {
+export interface MediaRendererProps {
   media?: MediaData;
   className?: string;
+  isEditable?: boolean;
 }
 
 /* =========================
@@ -15,7 +16,7 @@ interface MediaRendererProps {
 ========================= */
 
 const visibleMap = new Map<HTMLVideoElement, number>();
-const videoOrderMap = new WeakMap<HTMLVideoElement, number>(); // Otimização: Mapeamento sem poluir o DOM
+const videoOrderMap = new WeakMap<HTMLVideoElement, number>();
 
 let playing: HTMLVideoElement | null = null;
 let playIndex = 0;
@@ -28,7 +29,7 @@ const hardPauseAll = () => {
   visibleMap.forEach((_, v) => {
     if (!v.paused) {
       v.pause();
-      v.removeAttribute('controls'); // Segurança extra para evitar repinturas de UI nativa
+      v.removeAttribute('controls'); 
     }
   });
 };
@@ -58,11 +59,10 @@ const flush = () => {
   hardPauseAll();
   playing = next;
 
-  // Usa requestAnimationFrame para iniciar o vídeo sincronizado com a taxa de atualização da tela (poupa bateria)
   requestAnimationFrame(() => {
     if (my !== token) return;
     next.play().catch(() => {
-      // Ignora erros de autoplay (ex: usuário ainda não interagiu com a página)
+      // Evita erros no console caso o autoplay seja bloqueado pelo celular
     });
   });
 };
@@ -90,8 +90,7 @@ const playNext = () => {
   schedule();
 };
 
-/* ===== Global Observer (Otimização de CPU) ===== */
-// Instância única para toda a aplicação. Muito mais leve do que um por componente.
+/* ===== Global Observer ===== */
 let globalObserver: IntersectionObserver | null = null;
 
 const getObserver = () => {
@@ -109,7 +108,7 @@ const getObserver = () => {
           }
         });
       },
-      { threshold: 0.6, rootMargin: '160px' }
+      { threshold: 0.5, rootMargin: '100px' } 
     );
   }
   return globalObserver;
@@ -121,18 +120,17 @@ const getObserver = () => {
 
 let orderCounter = 0;
 
-const MediaRendererComponent: React.FC<MediaRendererProps> = ({ media, className = '' }) => {
+const MediaRendererComponent: React.FC<MediaRendererProps> = ({ media, className = '', isEditable = false }) => {
   const ref = useRef<HTMLVideoElement | HTMLImageElement>(null);
   const order = useRef(orderCounter++);
-  const hoverTimer = useRef<number | null>(null);
-
-  // Memoiza a verificação da rota para não rodar regex em todo render
-  const isEditor = React.useMemo(() => 
-    typeof window !== 'undefined' && /^\/admin\/editor\/[^/]+/.test(window.location.pathname), 
-  []);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    if (!media?.url || media.type !== 'video' || isEditor) return;
+    setHasError(false);
+  }, [media?.url]);
+
+  useEffect(() => {
+    if (!media?.url || media.type !== 'video' || isEditable || hasError) return;
   
     const video = ref.current as HTMLVideoElement;
     if (!video) return;
@@ -142,53 +140,15 @@ const MediaRendererComponent: React.FC<MediaRendererProps> = ({ media, className
     if (!observer) return;
     
     observer.observe(video);
-  
-    video.onended = playNext;
+    video.onended = playNext; 
   
     return () => {
       observer.unobserve(video);
       unregister(video);
       video.pause();
     };
-  }, [media?.url, media?.type, isEditor]);
+  }, [media?.url, media?.type, isEditable, hasError]);
   
-
-  /* ===== Editor hover (Mouse events) ===== */
-  useEffect(() => {
-    if (!media?.url || media.type !== 'video' || !isEditor) return;
-  
-    const video = ref.current as HTMLVideoElement;
-    if (!video) return;
-  
-    const onEnter = () => {
-      hoverTimer.current = window.setTimeout(() => {
-        register(video, order.current);
-      }, 1000); // Reduzi para 1s para parecer mais responsivo no editor
-    };
-  
-    const onLeave = () => {
-      if (hoverTimer.current) {
-        clearTimeout(hoverTimer.current);
-        hoverTimer.current = null;
-      }
-      unregister(video);
-      video.pause();
-    };
-  
-    video.addEventListener('mouseenter', onEnter, { passive: true });
-    video.addEventListener('mouseleave', onLeave, { passive: true });
-    video.onended = playNext;
-  
-    return () => {
-      video.removeEventListener('mouseenter', onEnter);
-      video.removeEventListener('mouseleave', onLeave);
-      if (hoverTimer.current) clearTimeout(hoverTimer.current);
-      unregister(video);
-      video.pause();
-    };
-  }, [media?.url, media?.type, isEditor]);
-  
-
   /* =========================
           RENDER
   ========================= */
@@ -197,41 +157,65 @@ const MediaRendererComponent: React.FC<MediaRendererProps> = ({ media, className
     return <div className={`${className} bg-zinc-200 dark:bg-zinc-800`} />;
   }
 
-  // Estilos comuns focados em performance
+  // OTIMIZAÇÃO SEGURA: Acelera GPU sem quebrar o layout do celular
   const sharedStyles: React.CSSProperties = {
     width: '100%',
     height: '100%',
     objectFit: 'cover',
     display: 'block',
-    // 'contentVisibility' diz ao browser para não renderizar o que está fora da tela (Salva muita GPU)
-    contentVisibility: 'auto',
-    contain: 'layout paint style'
+    transform: 'translateZ(0)', // Força GPU acceleration
+    backfaceVisibility: 'hidden',
+    pointerEvents: isEditable ? 'none' : 'auto'
   };
 
   if (media.type === 'video') {
-    // Truque do Fragmento (#t=0.001) para forçar o thumbnail sem baixar tudo
-    const videoSrc = media.url.includes('#t=') ? media.url : `${media.url}#t=0.001`;
+    const isBlob = media.url.startsWith('blob:');
+    
+    const videoSrc = isBlob 
+      ? media.url.split('#')[0] 
+      : (media.url.includes('#t=') ? media.url : `${media.url}#t=0.001`);
+
+    if (hasError && isEditable) {
+      return (
+        <div className={`${className} bg-slate-900 flex flex-col items-center justify-center p-6 text-center`} style={sharedStyles}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-2">
+            <polygon points="23 7 16 12 23 17 23 7"></polygon>
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+          </svg>
+          <span className="text-white text-[11px] font-bold">Pré-visualização Indisponível</span>
+          <span className="text-slate-400 text-[10px] mt-1 max-w-[80%] leading-tight">
+            Formato não suportado localmente.<br/>Funcionará perfeitamente após sincronizar.
+          </span>
+        </div>
+      );
+    }
 
     return (
       <video
+        key={videoSrc} 
         ref={ref as React.RefObject<HTMLVideoElement>}
+        src={videoSrc}
         className={className}
         muted
-        playsInline
-        preload="metadata" // Essencial: não baixa o vídeo inteiro à toa
-        crossOrigin="anonymous"
-        disablePictureInPicture // Poupa recursos no background
-        disableRemotePlayback   // Evita buscas de dispositivos (AirPlay/Chromecast)
+        playsInline 
+        preload={isBlob ? "auto" : "metadata"}
+        crossOrigin={isBlob ? undefined : "anonymous"}
+        disablePictureInPicture
+        disableRemotePlayback
         style={sharedStyles}
-        onLoadedMetadata={(e) => {
-          // Fallback para iOS/Safari garantirem a pintura do primeiro frame
-          if (e.currentTarget.currentTime === 0) {
-            e.currentTarget.currentTime = 0.001;
+        autoPlay={false} 
+        controls={false} 
+        onError={() => setHasError(true)} 
+        onLoadedData={(e) => {
+          try {
+            if (e.currentTarget.currentTime === 0) {
+              e.currentTarget.currentTime = 0.001;
+            }
+          } catch (err) {
+            // Ignora silenciosamente se o navegador bloquear o salto de frame
           }
         }}
-      >
-        <source src={videoSrc} type="video/mp4" />
-      </video>
+      />
     );
   }
 
@@ -240,15 +224,18 @@ const MediaRendererComponent: React.FC<MediaRendererProps> = ({ media, className
       ref={ref as React.RefObject<HTMLImageElement>}
       src={media.url}
       className={className}
-      alt="Media content"
+      alt="Hero media"
       loading="lazy"
-      decoding="async" // Tira o trabalho de decodificação de imagem da thread principal
+      decoding="async" 
       style={sharedStyles}
     />
   );
 };
 
-// Exportamos usando React.memo para evitar que a Galeria re-renderize as mídias à toa
 export const MediaRenderer = memo(MediaRendererComponent, (prev, next) => {
-  return prev.media?.url === next.media?.url && prev.className === next.className;
+  return (
+    prev.media?.url === next.media?.url && 
+    prev.className === next.className &&
+    prev.isEditable === next.isEditable
+  );
 });

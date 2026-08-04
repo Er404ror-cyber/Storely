@@ -48,22 +48,43 @@ const PortfolioEditorDock: React.FC<{ c: PortfolioContent, onUpdate: any, t: any
     if (e.target.files && e.target.files[0] && onUpdate) {
       const file = e.target.files[0];
       if (file.size > 1024 * 1024) { setFileError('compress'); setActiveTab('photo'); return; }
-      const reader = new FileReader();
-      reader.onloadend = () => { onUpdate('playerImageUrl', reader.result as string); setPendingFile(file); setActiveTab('photo'); };
-      reader.readAsDataURL(file);
+      
+      if (c.playerImageUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(c.playerImageUrl);
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+      onUpdate('playerImageUrl', objectUrl);
+      setPendingFile(file);
+      setActiveTab('photo');
     }
-  }, [onUpdate]);
+  }, [onUpdate, c.playerImageUrl]);
 
   const handleCloudUpload = useCallback(async () => {
     if (!pendingFile || !onUpdate) return;
     setIsUploading(true);
-    const formData = new FormData(); formData.append('file', pendingFile); formData.append('upload_preset', 'ProfileHero'); 
+    
+    const formData = new FormData(); 
+    formData.append('file', pendingFile); 
+    formData.append('upload_preset', 'ProfileHero'); 
+    
     try {
       const res = await fetch('https://api.cloudinary.com/v1_1/dcffpnzxn/image/upload', { method: 'POST', body: formData });
       const data = await res.json();
-      if (data.secure_url) { onUpdate('playerImageUrl', data.secure_url); setPendingFile(null); setActiveTab('none'); }
-    } catch { alert(t('error_upload') || 'Erro no upload.'); } finally { setIsUploading(false); }
-  }, [pendingFile, onUpdate, t]);
+      
+      if (data.secure_url) { 
+        if (c.playerImageUrl?.startsWith('blob:')) URL.revokeObjectURL(c.playerImageUrl);
+        
+        onUpdate('playerImageUrl', data.secure_url); 
+        setPendingFile(null); 
+        setActiveTab('none'); 
+      }
+    } catch { 
+      alert(t('error_upload') || 'Erro no upload. Tente novamente.'); 
+    } finally { 
+      setIsUploading(false); 
+    }
+  }, [pendingFile, onUpdate, t, c.playerImageUrl]);
 
   const handleCountrySelect = useCallback((code: string) => { onUpdate('countryCode', code); setActiveTab('none'); }, [onUpdate]);
   
@@ -79,14 +100,24 @@ const PortfolioEditorDock: React.FC<{ c: PortfolioContent, onUpdate: any, t: any
     <div className="absolute z-[60] flex flex-col md:items-end gap-2 right-3 top-1/2 -translate-y-1/2 md:top-8 md:right-8 md:translate-y-0 pointer-events-none">
       <input type="file" accept="image/*" ref={imageInputRef} onChange={handleFileSelect} className="hidden" />
 
-      {/* DOCK LATERAL - Cor 100% Sólida. Sem transparência, Sem blur. Custo GPU: 0 */}
-      <div className="flex flex-col md:flex-row-reverse gap-2 bg-[#111318] p-1.5 rounded-full shadow-xl pointer-events-auto border border-gray-800">
-        <button onClick={() => setActiveTab(activeTab === 'photo' ? 'none' : 'photo')} className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors active:scale-95 touch-manipulation ${activeTab === 'photo' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800'}`}><ImageIcon size={18} /></button>
+      {/* DOCK LATERAL */}
+      <div className="relative flex flex-col md:flex-row-reverse gap-2 bg-[#111318] p-1.5 rounded-full shadow-xl pointer-events-auto border border-gray-800">
+        
+        <button onClick={() => setActiveTab(activeTab === 'photo' ? 'none' : 'photo')} className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-colors active:scale-95 touch-manipulation ${activeTab === 'photo' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800'}`}>
+          <ImageIcon size={18} />
+          {pendingFile && (
+            <span className="absolute top-0 right-0 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500 border-2 border-[#111318]"></span>
+            </span>
+          )}
+        </button>
+
         <button onClick={() => setActiveTab(activeTab === 'country' ? 'none' : 'country')} className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors active:scale-95 touch-manipulation ${activeTab === 'country' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800'}`}><Globe size={18} /></button>
         <button onClick={() => setActiveTab(activeTab === 'social' ? 'none' : 'social')} className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors active:scale-95 touch-manipulation ${activeTab === 'social' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800'}`}><LinkIcon size={18} /></button>
       </div>
 
-      {/* PAINEL EXPANSIVO - Cor 100% Sólida */}
+      {/* PAINEL EXPANSIVO */}
       {activeTab !== 'none' && (
         <div className="w-[75vw] max-w-[280px] sm:max-w-[320px] bg-[#1A1C23] rounded-2xl p-3 shadow-2xl border border-gray-800 flex flex-col gap-2 overflow-hidden pointer-events-auto">
           <div className="flex justify-between items-center mb-1 px-1">
@@ -98,8 +129,21 @@ const PortfolioEditorDock: React.FC<{ c: PortfolioContent, onUpdate: any, t: any
             <div className="flex flex-col gap-2">
               <div className="flex gap-2">
                 <button onClick={() => imageInputRef.current?.click()} className="flex-1 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-[11px] font-bold transition-colors active:scale-95 flex justify-center items-center gap-1.5 touch-manipulation"><ImageIcon size={14} /> {t('portfolio_change_photo') || 'Alterar'}</button>
-                {pendingFile && <button onClick={handleCloudUpload} disabled={isUploading} className="flex-1 py-2.5 rounded-xl bg-green-600 hover:bg-green-500 text-white text-[11px] font-bold transition-colors active:scale-95 flex justify-center items-center gap-1.5 touch-manipulation"><CloudUpload size={14} className={isUploading ? 'animate-bounce' : ''} /> {isUploading ? '⌛...' : (t('portfolio_save_cloud') || 'Salvar')}</button>}
+                {pendingFile && (
+                  <button onClick={handleCloudUpload} disabled={isUploading} className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold transition-colors active:scale-95 flex justify-center items-center gap-1.5 shadow-[0_0_15px_rgba(37,99,235,0.4)] touch-manipulation">
+                    <CloudUpload size={14} className={isUploading ? 'animate-bounce' : ''} /> 
+                    {isUploading ? (t('sync_uploading') || 'A Sincronizar...') : (t('sync_cloud_btn') || 'Sync Nuvem')}
+                  </button>
+                )}
               </div>
+
+              {pendingFile && (
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-2 mt-1 text-center">
+                   <p className="text-[10px] text-amber-400 font-bold mb-1">{t('portfolio_pending_sync') || 'Sincronização Pendente'}</p>
+                   <p className="text-[9px] text-amber-400/80 leading-tight">{t('portfolio_pending_sync_desc') || 'Faça o upload (Sync Nuvem) antes de publicar a página.'}</p>
+                </div>
+              )}
+
               {fileError === 'compress' && <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-2 mt-1 text-center"><p className="text-[10px] text-red-400 mb-1.5">{t('portfolio_photo_limit') || 'Foto > 1MB. Fica lento!'}</p><a href="https://squoosh.app/" target="_blank" rel="noreferrer" className="text-[10px] font-bold text-white bg-red-600 px-3 py-1 rounded-lg touch-manipulation">Squoosh.app</a></div>}
             </div>
           )}
@@ -146,7 +190,6 @@ const PortfolioEditorDock: React.FC<{ c: PortfolioContent, onUpdate: any, t: any
     </div>
   );
 });
-
 
 // ============================================================================
 // COMPONENTE PRINCIPAL MÃE
@@ -205,8 +248,6 @@ export const PortfolioHero: React.FC<SectionProps> = ({ content, style, onUpdate
   const RenderStats: React.FC<{ isVertical?: boolean }> = useCallback(({ isVertical = false }) => {
     const scope = latestScope.current;
     
-    // REDUÇÃO RIGOROSA DOS LIMITES MAXLENGTH (mLabel e mVal): 
-    // Garante que o input bloqueia fisicamente a escrita antes de quebrar o layout.
     const statsData = [
       { lKey: 's1Label', vKey: 's1Val', dLabel: scope.t('portfolio_projects') || 'Projetos', dVal: '+45', mLabel: 12, mVal: 10 },
       { lKey: 's2Label', vKey: 's2Val', dLabel: scope.t('portfolio_specialty') || 'Especialidade', dVal: 'Full-Stack', highlight: true, mLabel: 14, mVal: 12 },

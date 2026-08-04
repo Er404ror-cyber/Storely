@@ -1,4 +1,5 @@
-import { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { ChangeEvent, JSX } from 'react';
 import { 
   Camera, X, Trash2, RefreshCcw, ShieldAlert, 
@@ -193,7 +194,11 @@ export interface GlobalEditToolbarProps {
 export const GlobalEditToolbar = memo(function GlobalEditToolbar({
   items, selectedIndex, onClose, onRemove, onUpload, onMove, t
 }: GlobalEditToolbarProps): JSX.Element | null {
-  if (selectedIndex === null || !items || items.length === 0 || !items[selectedIndex]) {
+  
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted || selectedIndex === null || !items || items.length === 0 || !items[selectedIndex]) {
     return null;
   }
 
@@ -202,13 +207,16 @@ export const GlobalEditToolbar = memo(function GlobalEditToolbar({
   const limit = item.type === 'video' ? VIDEO_LIMIT : PHOTO_LIMIT;
   const isTooLarge = (item.size || 0) > limit;
 
-  return (
-    <div className="fixed top-20 left-4 right-4 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-[480px] z-[100] select-none flex flex-col items-center">
+  // CORREÇÃO: "top-24 md:top-28" baixa a tool para não colidir com o Header fixo.
+  const toolbarContent = (
+    <div className="fixed top-24 left-1/2 -translate-x-1/2 md:left-auto md:right-6 md:translate-x-0 z-[999999] flex flex-col items-center w-[90vw] sm:w-[480px] max-w-full select-none animate-in slide-in-from-top-4 fade-in duration-200 mx-auto drop-shadow-2xl rounded-2xl pointer-events-auto">
       
-      {/* ALERTA ACOPLADO (Se arquivo for muito pesado) */}
       {isTooLarge && (
-        <div className="bg-red-600 text-white w-full max-w-[95%] px-4 py-2 rounded-t-xl flex items-center justify-between text-[10px] font-bold border-b border-red-700 shadow-sm">
-          <span className="flex items-center gap-1.5"><ShieldAlert size={12}/>            {t('gallery_compress').toUpperCase()} ({item.type === 'video' ? 'MAX 10MB' : 'MAX 1MB'})</span>
+        <div className="bg-red-600 text-white w-full px-4 py-2 rounded-t-xl flex items-center justify-between text-[10px] font-bold border-b border-red-700 shadow-sm">
+          <span className="flex items-center gap-1.5">
+            <ShieldAlert size={12}/> 
+            {t('gallery_compress').toUpperCase()} ({item.type === 'video' ? 'MAX 10MB' : 'MAX 1MB'})
+          </span>
           <a
             href={item.type === 'video' ? COMPRESS_VIDEO : COMPRESS_PHOTO}
             target="_blank"
@@ -220,37 +228,34 @@ export const GlobalEditToolbar = memo(function GlobalEditToolbar({
         </div>
       )}
 
-      {/* BARRA PRINCIPAL (Command Bar) */}
-      <div className={`w-full bg-zinc-950 dark:bg-zinc-900 border border-zinc-800 p-1.5 flex items-center justify-between shadow-md
-        ${isTooLarge ? 'rounded-b-xl rounded-t-sm' : 'rounded-xl'}
+      <div className={`w-full bg-zinc-950/90 backdrop-blur-xl dark:bg-zinc-900/95 border border-zinc-800/80 p-2 flex items-center justify-between shadow-2xl
+        ${isTooLarge ? 'rounded-b-2xl rounded-t-sm' : 'rounded-2xl'}
       `}>
         
-        {/* NAVEGAÇÃO: Info clara da posição */}
-        <div className="flex items-center bg-zinc-900 dark:bg-zinc-950 border border-zinc-800 rounded-lg p-0.5">
+        <div className="flex items-center bg-zinc-900/50 dark:bg-zinc-950/50 border border-zinc-800/50 rounded-xl p-0.5">
           <button
             type="button"
             onClick={() => onMove(index, index - 1)}
             disabled={index === 0}
-            className="p-2 text-zinc-300 hover:text-white disabled:opacity-20 active:scale-90 transition-transform"
+            className="p-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg disabled:opacity-20 active:scale-95 transition-colors"
           >
             <ChevronLeft size={16} />
           </button>
-          <div className="px-2 text-[10px] font-bold text-zinc-400 whitespace-nowrap min-w-[3rem] text-center">
-            {index + 1} <span className="opacity-50">/</span> {items.length}
+          <div className="px-3 text-[11px] font-bold text-zinc-300 whitespace-nowrap min-w-[3.5rem] text-center">
+            {index + 1} <span className="opacity-40">/</span> {items.length}
           </div>
           <button
             type="button"
             onClick={() => onMove(index, index + 1)}
             disabled={index === items.length - 1}
-            className="p-2 text-zinc-300 hover:text-white disabled:opacity-20 active:scale-90 transition-transform"
+            className="p-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg disabled:opacity-20 active:scale-95 transition-colors"
           >
             <ChevronRight size={16} />
           </button>
         </div>
 
-        {/* AÇÕES CENTRALIZADAS */}
-        <div className="flex items-center gap-1 mx-2 flex-1 justify-end">
-          <label className="flex items-center gap-1.5 h-9 px-3 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white active:scale-95 rounded-lg cursor-pointer text-[10px] font-bold uppercase transition-colors">
+        <div className="flex items-center gap-2 mx-3 flex-1 justify-end">
+          <label className="flex items-center gap-2 h-10 px-4 bg-blue-600/15 text-blue-400 hover:bg-blue-600 hover:text-white active:scale-95 rounded-xl cursor-pointer text-[11px] font-bold uppercase transition-colors">
             <Camera size={14} />
             <span className="hidden sm:inline">{t('changeMedia') || 'Trocar'}</span>
             <input type="file" className="hidden" accept="image/*,video/*" onChange={(ev) => onUpload(ev, index)} />
@@ -259,23 +264,24 @@ export const GlobalEditToolbar = memo(function GlobalEditToolbar({
           <button
             type="button"
             onClick={() => onRemove(index)}
-            className="flex items-center justify-center h-9 w-9 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white active:scale-95 rounded-lg transition-colors"
+            className="flex items-center justify-center h-10 w-10 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white active:scale-95 rounded-xl transition-colors"
           >
-            <Trash2 size={14} />
+            <Trash2 size={16} />
           </button>
         </div>
 
-        <div className="w-px h-6 bg-zinc-800 shrink-0 mx-1" />
+        <div className="w-px h-7 bg-zinc-800 shrink-0 mx-1" />
 
-        {/* BOTÃO FECHAR */}
         <button 
           type="button"
           onClick={onClose}
-          className="flex items-center justify-center h-9 w-9 text-zinc-400 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg active:scale-95 transition-transform"
+          className="flex items-center justify-center h-10 w-10 ml-2 text-zinc-400 hover:text-white bg-zinc-800/50 hover:bg-zinc-700 border border-zinc-700/50 rounded-xl active:scale-95 transition-colors"
         >
-          <X size={16} />
+          <X size={18} />
         </button>
       </div>
     </div>
   );
+
+  return createPortal(toolbarContent, document.body);
 });

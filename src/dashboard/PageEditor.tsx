@@ -41,15 +41,15 @@ export function Editor() {
 
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const scrollRafRef = useRef<number | null>(null);
-  // Ref essencial para saber se a seção clicada mudou ou é a mesma
   const lastFocusedIdRef = useRef<string | null>(null); 
 
   const hasChanges = useMemo(() => {
     return JSON.stringify(sections) !== JSON.stringify(originalSections);
   }, [sections, originalSections]);
 
+  // COMBINAÇÃO INVENCÍVEL: Usa a validação antiga + Validação profunda por texto para apanhar QUALQUER blob escondido
   const hasPendingUploads = useMemo(() => {
-    return sections.some(sectionHasPendingUploads);
+    return sections.some(s => sectionHasPendingUploads(s) || JSON.stringify(s.content).includes('blob:'));
   }, [sections]);
 
   const blocker = useBlocker(
@@ -73,10 +73,8 @@ export function Editor() {
     return visibleHeight >= threshold;
   }, []);
 
-  // Lógica de FOCO otimizada conforme sua regra
   const focusSection = useCallback(
     (id: string) => {
-      // Verifica se o usuário está trocando de secção ou clicando na mesma
       const isNewFocus = lastFocusedIdRef.current !== id;
       
       setEditingId(id);
@@ -90,12 +88,10 @@ export function Editor() {
         const element = document.getElementById(`section-${id}`);
         if (!element) return;
 
-        // SE for a mesma secção que já estava selecionada E ela estiver visível, cancela o "puxão"
         if (!isNewFocus && isSectionVisible(element)) {
           return; 
         }
 
-        // Caso contrário (é uma secção NOVA, ou é a mesma que saiu da visão), PUXA AO CENTRO.
         element.scrollIntoView({
           behavior: 'smooth',
           block: 'center',
@@ -118,7 +114,6 @@ export function Editor() {
     [focusSection]
   );
 
-  // O uso cuidadoso de useEffects previne renders excessivos (CPU leak)
   useEffect(() => {
     return () => {
       if (scrollRafRef.current) window.cancelAnimationFrame(scrollRafRef.current);
@@ -140,7 +135,6 @@ export function Editor() {
     if (blocker.state === 'blocked') setActiveModal('NAVIGATION');
   }, [blocker.state]);
 
-  // Carregamento inicial limpo (Uso mínimo da API do Supabase - Plano Free)
   useEffect(() => {
     const controller = new AbortController();
 
@@ -217,18 +211,33 @@ export function Editor() {
   const handleManualSave = useCallback(async () => {
     if (!pageId || isSaving) return;
 
-    const problematicSections = sections.filter((section) => {
-      return sectionHasPendingUploads(section) || sectionTotalPendingBytes(section) > MAX_TOTAL_SECTION_MEDIA_BYTES;
-    });
-
-    if (problematicSections.length > 0) {
-      return toast.error(
-        t('saveBlockedPendingSection', { section: problematicSections[0].type.toUpperCase() }) ||
-          `Ação bloqueada: a secção possui uploads pendentes ou muito grandes.`,
-        { duration: 5000 }
+    // 1. Identificar e bloquear (Garante que apanha pela função antiga OU pela procura exata do blob)
+    const pendingSection = sections.find(s => sectionHasPendingUploads(s) || JSON.stringify(s.content).includes('blob:'));
+    
+    if (pendingSection) {
+      handleSetEditingId(pendingSection.id);
+      toast.error(
+        t('saveBlockedPendingSection', { section: pendingSection.type }) ||
+          `Ação Bloqueada: Faça "Sync" das imagens no bloco "${pendingSection.type.toUpperCase()}" antes de gravar.`,
+        { duration: 5000, icon: '🛑' }
       );
+      return; // ⛔ Bloqueia imediatamente o save
     }
 
+    // 2. Identificar e bloquear secções pesadas
+    const heavySection = sections.find((section) => sectionTotalPendingBytes(section) > MAX_TOTAL_SECTION_MEDIA_BYTES);
+    
+    if (heavySection) {
+      handleSetEditingId(heavySection.id);
+      toast.error(
+        t('saveBlockedLargeSection', { section: heavySection.type }) ||
+          `O bloco "${heavySection.type.toUpperCase()}" possui imagens demasiado pesadas.`,
+        { duration: 5000, icon: '📦' }
+      );
+      return; // ⛔ Bloqueia imediatamente
+    }
+
+    // Avança apenas se não houver bloqueios pendentes
     setIsSaving(true);
     const loadingToast = toast.loading(t('savingPage') || 'Salvando página...');
 
@@ -258,7 +267,7 @@ export function Editor() {
     } finally {
       setIsSaving(false);
     }
-  }, [pageId, isSaving, sections, t, blocker]);
+  }, [pageId, isSaving, sections, handleSetEditingId, t, blocker]);
 
   const handleDiscard = useCallback(() => {
     setSections(cloneSections(originalSections));

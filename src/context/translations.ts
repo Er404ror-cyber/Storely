@@ -1847,6 +1847,187 @@ promo_title: "Promotions & Blog Portal",
     promo_desc: "View updates, posts, and campaigns published on Storely",
     cat_bakery: "Bakery & Sweets",
 
+
+
+    Homem: "Men",
+  Mulher: "Women",
+  Criança: "Kids",
+
+  Baby: "Baby",
+  Clothing: "Clothing",
+  Bakery: "Bakery",
+  Groceries: "Groceries",
+  Beauty: "Beauty",
+  "Catálogo Geral": "General Catalog",
+
+  "Roupa de Bebé": "Baby Clothing",
+  "Acessórios de Bebé": "Baby Accessories",
+  "Vestidos & Macacões": "Dresses & Jumpsuits",
+  Saias: "Skirts",
+  "Bodies & Íntima": "Bodysuits & Intimates",
+  "Casacos & Frio": "Jackets & Outerwear",
+  Calções: "Shorts",
+  Calças: "Pants & Trousers",
+  "Camisas & Tops": "Shirts & Tops",
+  Calçado: "Footwear",
+  
+  "Bolos & Tortas": "Cakes & Pies",
+  "Salgados & Snacks": "Snacks & Savory",
+  Maquilhagem: "Makeup",
+
+  "Tam:": "Size:",
+  "Plus Size": "Plus Size",
+  "Tam: Único": "One Size",
+
+  Preto: "Black",
+  Branco: "White",
+  Azul: "Blue",
+  Vermelho: "Red",
+  Verde: "Green",
+  Amarelo: "Yellow",
+  Lima: "Lime",
+  Laranja: "Orange",
+  Rosa: "Pink",
+  Roxo: "Purple",
+  Castanho: "Brown",
+  Cinza: "Grey",
+
+  Chocolate: "Chocolate",
+  Baunilha: "Vanilla",
+  Morango: "Strawberry",
+  "Massa Folhada": "Puff Pastry",
+
+  Couro: "Leather",
+  Jeans: "Denim",
+  Chiffon: "Chiffon",
+  Seda: "Silk",
+  Linho: "Linen",
+  Algodão: "Cotton",
+
+
+  Tecnologia: "Technology",
+  ArteDecoracao: "Art & Decor",
+  
+  // NOVAS SUBCATEGORIAS
+  MiniBolosCupcakes: "Mini Cakes & Cupcakes",
+  DocesSobremesas: "Sweets & Desserts",
+  SmartphonesAcessorios: "Smartphones & Accessories",
+  ComputadoresLaptops: "Computers & Laptops",
+  AudioSom: "Audio & Sound",
+  SmartwatchesGadgets: "Smartwatches & Gadgets",
+  QuadrosTelas: "Paintings & Canvas",
+  EsculturasArtesanato: "Sculptures & Crafts",
+  DecoracaoInteriores: "Home Decor",
+
+  // NOVOS SABORES / ATRIBUTOS / MATERIAIS
+  Limão: "Lemon",
+  Cenoura: "Carrot",
+  RedVelvet: "Red Velvet",
+  DoceDeLeite: "Dulce de Leche",
+  Madeira: "Wood",
+  Vidro: "Glass",
+  Metal: "Metal",
+  Dourado: "Gold",
+  Wireless: "Wireless",
+
+  // NOVOS TAMANHOS / PORÇÕES
+  Mini: "Mini",
+  Pequeno: "Small",
+  Médio: "Medium",
+  Grande: "Large",
+  Fatia: "Slice",
+  Inteiro: "Whole Cake",
+
+  ChiffonChocolate: "Chocolate Chiffon Cake",
+  ChiffonMisto: "Marble Chiffon Cake",
+  ChiffonSimples: "Plain Chiffon Cake",
+
+  // NOVOS ATRIBUTOS DE SABORES
+  Misto: "Mixed / Marble",
+  Simples: "Plain / Traditional",
+
+  // RESTANTES CHAVES DA ATUALIZAÇÃO ANTERIOR
+
+  BolosTortas: "Cakes & Pies",
+  SalgadosSnacks: "Snacks & Savory",
+  
+  RoupaDeBebe: "Baby Clothing",
+  AcessoriosDeBebe: "Baby Accessories",
+  VestidosMacacoes: "Dresses & Jumpsuits",
+  BodiesIntima: "Bodysuits & Intimates",
+  CasacosFrio: "Jackets & Outerwear",
+  Calcoes: "Shorts",
+  Calcas: "Pants & Trousers",
+  CamisasTops: "Shirts & Tops",
+  Calcado: "Footwear",
+ 
+
+
+
+
+
+
+  product_form_photo_removed: "Photo removed successfully.",
+  product_form_photo_removed_cloud: "Photo permanently removed from the cloud.",
+  product_form_photo_removed_cloud_failed: "Photo removed locally, but cloud deletion failed or expired.",
+  product_form_upload_error: "Failed to upload this image.",
+  product_form_sync_general_error: "A general error occurred while syncing images to the cloud.",
+  product_form_sync_required: "Action not allowed: Sync photos before proceeding.",
+  product_form_sync_before_saving: "Sync local photos before saving.",
+  product_form_photos_synced_success: "Photos synced successfully!",
+
+
+
+  sync_uploading: "Syncing...",
+  sync_cloud_btn: "Cloud Sync",
+  portfolio_pending_sync: "Pending Sync",
+  portfolio_pending_sync_desc: "Upload (Cloud Sync) before publishing the page.",
+  saveBlockedLargeSection: "Action Blocked: The block \"{{section}}\" has exceeded the maximum storage limit (15MB).",
+
+
+
+
+
+
+auth_email_invalid_format: "The entered email format is invalid.",
+  auth_cooldown_message: "Too many attempts. For security, please wait for the countdown.",
+  auth_cooldown_support: "Are you locked out? Click here to speak with support via WhatsApp.",
+  auth_cooldown_wait: "Too many attempts. Please wait for the lockout period to end.",
+
+  auth_invalid_credentials: "Incorrect email or password.",
+auth_change_data_try_again: "Please change the data before trying again.",
+
+
+
+
+
+
+
+
+  product_form_images_title: "Image Gallery",
+
+  product_form_blobs_prevent_save: "Action not allowed: There are local images that need to be uploaded to the cloud or replaced.",
+  editor_modal_orphan_media: "Invalid / Reupload",
+  product_form_orphan_blob: "Replace invalid or local images",
+  product_form_orphan_blob_desc: "This local preview link has expired. Please remove or reupload the photo.",
+
+ 
+  product_form_unit_conjunto: "Set",
+ 
+  product_form_unit_fardo: "Bale",
+  product_form_unit_cento: "Hundred",
+ 
+  product_form_unit_ano: "Year",
+  
+  product_form_unit_mm: "Millimeter (mm)",
+  product_form_unit_rolo: "Roll",
+ 
+  product_form_unit_t: "Ton (t)",
+
+
+  version_update_title: "Update Available",
+  version_update_desc: "The system has been updated with improvements. Please refresh the page to continue.",
+  version_update_button: "Update Now",
   },
 
 
@@ -3710,6 +3891,185 @@ portal_footer_more: "+ Artigos & Guias",
 promo_title: "Portal de Promoções & Blog",
   promo_desc: "Consulte as novidades, posts e campanhas divulgadas na Storely.",
   cat_bakery: "Padaria & Doces",
+
+
+
+  Homem: "Homem",
+  Mulher: "Mulher",
+  Criança: "Criança",
+
+  Baby: "Bebé & Criança",
+  Clothing: "Vestuário",
+  Bakery: "Pastelaria",
+  Groceries: "Mercearia",
+  Beauty: "Beleza",
+  "Catálogo Geral": "Catálogo Geral",
+
+  "Roupa de Bebé": "Roupa de Bebé",
+  "Acessórios de Bebé": "Acessórios de Bebé",
+  "Vestidos & Macacões": "Vestidos & Macacões",
+  Saias: "Saias",
+  "Bodies & Íntima": "Bodies & Íntima",
+  "Casacos & Frio": "Casacos & Frio",
+  Calções: "Calções",
+  Calças: "Calças",
+  "Camisas & Tops": "Camisas & Tops",
+  Calçado: "Calçado",
+  
+  "Bolos & Tortas": "Bolos & Tortas",
+  "Salgados & Snacks": "Salgados & Snacks",
+  Maquilhagem: "Maquilhagem",
+
+  "Tam:": "Tam:",
+  "Plus Size": "Plus Size",
+  "Tam: Único": "Tam: Único",
+
+  Preto: "Preto",
+  Branco: "Branco",
+  Azul: "Azul",
+  Vermelho: "Vermelho",
+  Verde: "Verde",
+  Amarelo: "Amarelo",
+  Lima: "Lima",
+  Laranja: "Laranja",
+  Rosa: "Rosa",
+  Roxo: "Roxo",
+  Castanho: "Castanho",
+  Cinza: "Cinza",
+
+  Chocolate: "Chocolate",
+  Baunilha: "Baunilha",
+  Morango: "Morango",
+  "Massa Folhada": "Massa Folhada",
+
+  Couro: "Couro",
+  Jeans: "Jeans",
+  Chiffon: "Chiffon",
+  Seda: "Seda",
+  Linho: "Linho",
+  Algodão: "Algodão",
+
+
+
+  Tecnologia: "Tecnologia",
+  ArteDecoracao: "Arte & Décor",
+  
+  // NOVAS SUBCATEGORIAS
+  MiniBolosCupcakes: "Mini Bolos & Cupcakes",
+  DocesSobremesas: "Doces & Sobremesas",
+  SmartphonesAcessorios: "Smartphones & Acessórios",
+  ComputadoresLaptops: "Computadores & Laptops",
+  AudioSom: "Áudio & Som",
+  SmartwatchesGadgets: "Smartwatches & Gadgets",
+  QuadrosTelas: "Quadros & Telas",
+  EsculturasArtesanato: "Esculturas & Artesanato",
+  DecoracaoInteriores: "Decoração de Interiores",
+
+  // NOVOS SABORES / ATRIBUTOS / MATERIAIS
+  Limão: "Limão",
+  Cenoura: "Cenoura",
+  RedVelvet: "Red Velvet",
+  DoceDeLeite: "Doce de Leite",
+  Madeira: "Madeira",
+  Vidro: "Vidro",
+  Metal: "Metal",
+  Dourado: "Dourado",
+  Wireless: "Wireless",
+
+  // NOVOS TAMANHOS / PORÇÕES
+  Mini: "Mini",
+  Pequeno: "Pequeno",
+  Médio: "Médio",
+  Grande: "Grande",
+  Fatia: "Fatia",
+  Inteiro: "Inteiro",
+
+  ChiffonChocolate: "Chiffon de Chocolate",
+  ChiffonMisto: "Chiffon Misto",
+  ChiffonSimples: "Chiffon Simples",
+
+  // NOVOS ATRIBUTOS DE SABORES
+  Misto: "Misto",
+  Simples: "Simples",
+
+  // RESTANTES CHAVES DA ATUALIZAÇÃO ANTERIOR
+  
+  BolosTortas: "Bolos & Tortas",
+  SalgadosSnacks: "Salgados & Snacks",
+ 
+  RoupaDeBebe: "Roupa de Bebé",
+  AcessoriosDeBebe: "Acessórios de Bebé",
+  VestidosMacacoes: "Vestidos & Macacões",
+  BodiesIntima: "Bodies & Íntima",
+  CasacosFrio: "Casacos & Frio",
+  Calcoes: "Calções",
+  Calcas: "Calças",
+  CamisasTops: "Camisas & Tops",
+  Calcado: "Calçado",
+
+
+
+
+
+  product_form_photo_removed: "Foto removida com sucesso.",
+  product_form_photo_removed_cloud: "Foto removida permanentemente da nuvem.",
+  product_form_photo_removed_cloud_failed: "Foto removida localmente, mas a exclusão na nuvem falhou ou expirou.",
+  product_form_upload_error: "Falha ao enviar esta imagem.",
+  product_form_sync_general_error: "Ocorreu um erro geral ao sincronizar as imagens com a nuvem.",
+  product_form_sync_required: "Ação não permitida: Sincronize as fotos antes de prosseguir.",
+  product_form_sync_before_saving: "Sincronize as fotos locais antes de salvar.",
+  product_form_photos_synced_success: "Fotos sincronizadas com sucesso!",
+
+
+
+  sync_uploading: "A Sincronizar...",
+  sync_cloud_btn: "Sync Nuvem",
+  portfolio_pending_sync: "Sincronização Pendente",
+  portfolio_pending_sync_desc: "Faça o upload (Sync Nuvem) antes de publicar a página.",
+  saveBlockedLargeSection: "Ação Bloqueada: O bloco \"{{section}}\" ultrapassou o limite máximo de armazenamento (15MB).",
+
+
+
+
+
+
+
+
+
+  auth_cooldown_message: "Tentativas excessivas. Por segurança, aguarde a contagem decrescente.",
+  auth_cooldown_support: "Está bloqueado? Clique aqui para falar com o suporte via WhatsApp.",
+  auth_cooldown_wait: "Muitas tentativas. Aguarde o tempo de bloqueio terminar.",
+  auth_email_invalid_format: "O formato do email introduzido não é válido.",
+  auth_invalid_credentials: "Email ou palavra-passe incorretos.",
+auth_change_data_try_again: "Por favor, altere os dados antes de tentar novamente.",
+
+
+
+
+  product_form_images_title: "Galeria de Imagens",
+ 
+  product_form_blobs_prevent_save: "Ação não permitida: Existem imagens locais que precisam ser enviadas para a nuvem ou substituídas.",
+  editor_modal_orphan_media: "Inválida / Reenvie",
+  product_form_orphan_blob: "Substitua as imagens inválidas/locais",
+  product_form_orphan_blob_desc: "Este link local já expirou. Por favor, apague ou reenvie uma nova foto.",
+
+
+
+  product_form_unit_fardo: "Fardo",
+  product_form_unit_cento: "Cento",
+ 
+  product_form_unit_ano: "Ano",
+  product_form_unit_mm: "Milímetro (mm)",
+  product_form_unit_rolo: "Rolo",
+ 
+  product_form_unit_t: "Tonelada (t)",
+
+  product_form_unit_conjunto: "Conjunto",
+
+  version_update_title: "Atualização Disponível",
+  version_update_desc: "O sistema foi atualizado com melhorias. Por favor, atualize a página para continuar.",
+  version_update_button: "Atualizar Agora",
+
 }
 
 

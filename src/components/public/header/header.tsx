@@ -96,7 +96,7 @@ export const StoreHeader = memo(function StoreHeader({ storeId }: { storeId: str
   const currentPageLabel = activeItem ? normalizeLabel(activeItem.fullLabel, MAX_CURRENT_PAGE_MOBILE) : t("store_header_menu");
 
   const authPath = "/auth";
-  const explorePath = hasSession ? "/admin/explore" : "/";
+  const explorePath = hasSession ? "/admin" : "/";
 
   // Função para lidar com imagens partidas ou URLs corrompidas sem quebrar a UI
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {

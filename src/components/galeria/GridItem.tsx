@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import type { JSX, MouseEvent, DragEvent } from 'react';
 import { ShieldAlert, SlidersHorizontal } from 'lucide-react';
 import type { MediaItem } from '../sections/main';
@@ -27,7 +27,9 @@ const GridItemComponent = ({
   activeEditIndex = null, setActiveEditIndex
 }: GridItemProps): JSX.Element => {
   
-  // Memoização de cálculos matemáticos e condicionais
+  const [isDragging, setIsDragging] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+
   const isSelected = activeEditIndex === index;
   const isPinterest = cols !== '1' && cols !== '2';
 
@@ -38,7 +40,6 @@ const GridItemComponent = ({
 
   const itemMB = useMemo(() => (item.size || 0) / (1024 * 1024), [item.size]);
 
-  // Memoização das classes de layout (evita recálculo a cada render)
   const itemClass = useMemo(() => {
     if (cols === '1') {
       return index === 0 
@@ -55,7 +56,6 @@ const GridItemComponent = ({
     return 'break-inside-avoid-column inline-block w-full mb-2 min-h-[100px] h-auto';
   }, [cols, index]);
 
-  // Callbacks fixos para evitar Garbage Collection na CPU
   const handleInteraction = useCallback((ev: MouseEvent<HTMLDivElement>) => {
     if (isEditable && setActiveEditIndex) {
       ev.stopPropagation();
@@ -65,23 +65,55 @@ const GridItemComponent = ({
     }
   }, [isEditable, setActiveEditIndex, isSelected, index, onPreview, item]);
 
-  const handleDragStart = useCallback(() => onDragStart(index), [onDragStart, index]);
-  const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => e.preventDefault(), []);
-  const handleDrop = useCallback(() => onDrop(index), [onDrop, index]);
+  // EVENTOS LEVES (Não há "scale" ou alteração de Box-Model para evitar que as Colunas saltem)
+  const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>) => {
+    setIsDragging(true);
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', index.toString());
+    }
+    onDragStart(index);
+  }, [onDragStart, index]);
+
+  const handleDragEnd = useCallback(() => {
+    setIsDragging(false);
+    setIsDragOver(false);
+  }, []);
+
+  const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault(); 
+    e.dataTransfer.dropEffect = 'move';
+    if (!isDragOver) setIsDragOver(true);
+  }, [isDragOver]);
+
+  const handleDragLeave = useCallback(() => {
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    setIsDragging(false);
+    onDrop(index);
+  }, [onDrop, index]);
 
   return (
     <div
       draggable={isEditable}
       onDragStart={isEditable ? handleDragStart : undefined}
+      onDragEnd={isEditable ? handleDragEnd : undefined}
       onDragOver={isEditable ? handleDragOver : undefined}
+      onDragLeave={isEditable ? handleDragLeave : undefined}
       onDrop={isEditable ? handleDrop : undefined}
       onClick={handleInteraction}
       className={`relative rounded-2xl overflow-hidden group border border-zinc-600/60 dark:border-zinc-800/50 
-        transition-[transform,box-shadow,border-color,ring-width] duration-300 cursor-pointer shadow-sm 
-        transform-gpu will-change-transform contain-paint
-        bg-zinc-200 dark:bg-zinc-900 
+        cursor-pointer bg-zinc-200 dark:bg-zinc-900 
+        transition-colors duration-200 ease-in-out
         ${isEditable ? 'select-none' : ''}
-        ${isSelected && isEditable ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-zinc-950 scale-[0.98]' : 'hover:scale-[1.01] hover:shadow-md'}
+        ${isDragging ? 'opacity-40 z-0' : 'opacity-100 z-10'}
+        ${isDragOver ? 'ring-2 ring-blue-500 bg-blue-500/20' : ''}
+        ${isSelected && isEditable && !isDragOver ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-zinc-950' : ''}
+        ${!isSelected && !isDragOver ? 'hover:border-zinc-500/80 dark:hover:border-zinc-700' : ''}
         ${isTooLarge && isEditable && !isSelected ? 'ring-2 ring-red-500' : ''}
         ${itemClass}
       `}
@@ -89,9 +121,7 @@ const GridItemComponent = ({
       <div className={`${isPinterest ? 'relative w-full' : 'absolute inset-0'} pointer-events-none flex items-center justify-center`}>
         <MediaRenderer
           media={{ url: item.url, type: item.type }}
-          className={`w-full transform-gpu will-change-transform group-hover:scale-[1.03] transition-transform duration-500 ease-out block ${
-            isPinterest ? 'h-auto object-contain' : 'h-full object-cover'
-          }`}
+          className={`w-full block ${isPinterest ? 'h-auto object-contain' : 'h-full object-cover'}`}
         />
       </div>
 
@@ -123,9 +153,9 @@ const GridItemComponent = ({
         </div>
       )}
 
-      {isSelected && isEditable && (
-        <div className="absolute inset-0 bg-blue-500/15 dark:bg-blue-500/25 flex items-center justify-center pointer-events-none z-10 transition-opacity">
-          <div className="bg-blue-600 text-white p-2.5 rounded-xl shadow-lg transform scale-105">
+      {isSelected && isEditable && !isDragging && (
+        <div className="absolute inset-0 bg-blue-500/15 dark:bg-blue-500/25 flex items-center justify-center pointer-events-none z-10">
+          <div className="bg-blue-600 text-white p-2.5 rounded-xl shadow-lg">
             <SlidersHorizontal size={14} />
           </div>
         </div>
@@ -136,17 +166,12 @@ const GridItemComponent = ({
 
 GridItemComponent.displayName = 'GridItem';
 
-// Comparador customizado: Impede que a Grid inteira re-renderize quando editamos APENAS 1 item.
 export const GridItem = memo(GridItemComponent, (prev, next) => {
-  // 1. Verifica se a prop responsável pela seleção mudou apenas para ESTE item
   const wasSelected = prev.activeEditIndex === prev.index;
   const isSelected = next.activeEditIndex === next.index;
   
-  if (wasSelected !== isSelected) {
-    return false; // Precisa renderizar (estado de seleção mudou)
-  }
-
-  // 2. Se a seleção não mudou para este item, faz uma checagem rasa das outras props importantes
+  if (wasSelected !== isSelected) return false; 
+  
   return (
     prev.item === next.item &&
     prev.cols === next.cols &&

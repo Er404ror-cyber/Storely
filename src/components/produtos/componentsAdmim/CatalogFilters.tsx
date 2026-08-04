@@ -1,6 +1,7 @@
 // CatalogFilters.tsx
 import { useMemo } from "react";
 import { Filter } from "lucide-react";
+import { useTranslate } from "../../../context/LanguageContext";
 
 interface FilterProps {
   products: any[];
@@ -16,7 +17,8 @@ interface FilterProps {
 export function CatalogFilters({
   products, activeParent, setActiveParent, activeChild, setActiveChild, activeAttribute, setActiveAttribute, isDark
 }: FilterProps) {
-  
+  const { t } = useTranslate();
+
   // 1. AGRUPAMENTO INTELIGENTE (Pai + Filhos na mesma estrutura)
   const hierarchy = useMemo(() => {
     const map = new Map<string, Set<string>>();
@@ -113,7 +115,7 @@ export function CatalogFilters({
               : (isDark ? "bg-zinc-900/40 border-zinc-800/60 text-zinc-400 hover:bg-zinc-800/80" : "bg-white border-zinc-200 text-slate-600 hover:bg-zinc-50")
           }`}
         >
-          Todos
+          {t("filter_all" as any)}
         </button>
 
         {/* AGRUPAMENTOS DE PAIS E FILHOS */}

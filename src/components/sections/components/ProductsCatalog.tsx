@@ -12,7 +12,8 @@ import { cacheKey, readCache, writeCache, CACHE_VERSION } from "../../../utils/t
 import { useStoreProducts, SUPER_CACHE_CONFIG } from "../../../hooks/useStoreProducts"; 
 import { FONT_SIZE_MAPS, HERO_PALETTES } from "../../produtos/componentsAdmim/theme";
 
-import { enrichProductsIntelligently } from "../../../utils/ProductIntelligence";
+// 1. IMPORTAÇÃO DO HOOK
+import { useProductIntelligence } from "../../../utils/ProductIntelligence";
 import { CatalogFilters } from "../../produtos/componentsAdmim/CatalogFilters";
 
 const EDITOR_PREVIEW_LIMIT = 5; 
@@ -37,7 +38,9 @@ export interface CatalogProps {
 
 export function ProductsCatalog(props: CatalogProps) {
   const { t } = useTranslate();
-  const currentLang = "pt"; 
+  
+  // 2. INICIALIZAÇÃO DO HOOK
+  const { enrichProductsIntelligently } = useProductIntelligence();
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -118,9 +121,10 @@ export function ProductsCatalog(props: CatalogProps) {
     t
   );
 
+  // 3 e 4. ATUALIZAÇÃO DO PROCESSAMENTO (sem precisar de passar o currentLang)
   const processedProducts = useMemo(() => {
-    return enrichProductsIntelligently(rawProducts, currentLang as "pt" | "en");
-  }, [rawProducts, currentLang]);
+    return enrichProductsIntelligently(rawProducts);
+  }, [rawProducts, enrichProductsIntelligently]);
 
   useEffect(() => {
     if (processedProducts.length > 0 && effectiveStoreId) {
