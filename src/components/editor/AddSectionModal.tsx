@@ -24,26 +24,27 @@ interface BlockItemProps {
 }
 
 // Constantes estáticas fora do render para poupar memória RAM
+
+
 const SECTION_PREVIEWS: Record<string, string> = {
   hero_comercial: '/img/hero_comercial.png',
   galeria_grid: '/img/galeria_grid.png',
   vitrine_produtos: '/img/vitrine_produtos.png',
   texto_narrativo: '/img/texto_narativo.png',
   texto_imagem_showcase: '/img/texto_imagem_showcase.png',
+  esports_profile: '/img/esports_profile.png',
+  media_embeds: '/img/media_embeds.png',
+  contacto_mapa: '/img/contacto_mapa.png',
   
   estatisticas_larga: '',
   servicos_modern: '',
   precos_moderno: '',
-  contacto_mapa: '',
-  media_embeds: '',
-  esports_profile: '',
   hero_minimalista: '',
   tabela_precos: '',
   depoimentos_clientes: '',
   faq_acordion: '',
   rodape_simples: '',
 };
-
 const SECTION_CATEGORIES: Record<string, string> = {
   hero_comercial: 'hero',
   hero_minimalista: 'hero',
