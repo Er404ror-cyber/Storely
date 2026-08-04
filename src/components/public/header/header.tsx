@@ -110,7 +110,7 @@ export const StoreHeader = memo(function StoreHeader({ storeId }: { storeId: str
         {/* =========================================
             MOBILE HEADER (ANTI-PULOS)
             ========================================= */}
-        <div className="relative flex h-16 items-center px-4 md:hidden">
+        <div className="relative flex h-14 items-center px-4 md:hidden">
           <Link to={`/${storeSlug ?? ""}`} className="flex min-w-0 max-w-[42%] items-center gap-3">
             <img 
               src={storeData?.logo_url || FALLBACK_STORE} 
@@ -136,7 +136,7 @@ export const StoreHeader = memo(function StoreHeader({ storeId }: { storeId: str
         {/* =========================================
             DESKTOP HEADER (UX & ALTA CONVERSÃO) 
             ========================================= */}
-        <div className="hidden h-18 items-center justify-between gap-6 px-6 md:flex lg:px-8">
+        <div className="hidden h-16 items-center justify-between gap-6 px-6 md:flex lg:px-8">
           
           <Link to={`/${storeSlug ?? ""}`} className="flex shrink-0 items-center gap-3 hover:opacity-80 transition-opacity">
             <img 

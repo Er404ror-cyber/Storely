@@ -11,12 +11,12 @@ export const MAX_IMAGE_SIZE_MB = 1;
 export const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
 
 export const MAX_TEXT_LIMITS = {
-  badge: 24,
-  title: 70,
+  badge: 20,
+  title: 60,
   subtitle: 110,
-  description: 360,
+  description: 320,
   secondaryTitle: 60,
-  secondaryDescription: 260,
+  secondaryDescription: 280,
   imageAlt: 90,
 } as const;
 

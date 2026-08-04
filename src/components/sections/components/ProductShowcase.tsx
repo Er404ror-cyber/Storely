@@ -7,9 +7,9 @@ import { useTranslate } from "../../../context/LanguageContext";
 import { LayoutGrid, LayoutList, ProductShowcaseSkeleton } from "../../produtos/layouts";
 import { useAdminStore } from "../../../hooks/useAdminStore";
 
-import { safeText, cacheKey, CACHE_VERSION, PRODUCTS_LIMIT, INITIAL_VISIBLE, readCache, writeCache } from "../../../utils/text";
-import { STORE_CACHE_TTL } from "../../../utils/storeCache";
+import { safeText, cacheKey, CACHE_VERSION, INITIAL_VISIBLE, readCache, writeCache } from "../../../utils/text";
 import { HeaderText } from "../../produtos/HeaderText";
+import { useStoreProducts, SUPER_CACHE_CONFIG, type Product } from "../../../hooks/useStoreProducts"; // AJUSTA O PATH AQUI
 
 export type SectionStyles = {
   theme?: "dark" | "light";
@@ -24,16 +24,6 @@ export interface ShowcaseProps {
   onUpdate?: (field: string, value: string) => void;
 }
 
-export type Product = {
-  id: string;
-  name: string;
-  price: number;
-  category: string;
-  main_image: string;
-  created_at?: string;
-  currency: string;
-};
-
 export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
   const { t } = useTranslate();
   const location = useLocation();
@@ -44,7 +34,7 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
   const isEditor = location.pathname.includes("/editor/");
   const isReadOnly = !isEditor;
   const isDark = style?.theme === "dark";
-  const allLabel = t("common_all");
+  const allLabel = t("common_all") || "Todos";
 
   const [searchTerm, setSearchTerm] = useState("");
   const deferredSearch = useDeferredValue(searchTerm);
@@ -71,46 +61,19 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
       return safeStore;
     },
     enabled: Boolean(storeSlug && isReadOnly),
-    staleTime: STORE_CACHE_TTL,
+    ...SUPER_CACHE_CONFIG, // Usa a mesma proteção
   });
 
   const effectiveStoreId = publicStore?.id || adminStore?.id || null;
   const storeCurrency = publicStore?.currency || adminStore?.currency || "MZN";
 
-  const { data: products = [], isLoading: isLoadingProducts } = useQuery({
-    queryKey: ["products-showcase", effectiveStoreId, storeCurrency],
-    queryFn: async () => {
-      if (!effectiveStoreId) return [];
-      const key = cacheKey("storely_products_showcase", CACHE_VERSION, effectiveStoreId, storeCurrency);
-      const cached = readCache<Product[]>(key, activeStoreSlug);
-      if (cached) return cached;
-
-      const { data, error } = await supabase
-        .from("products")
-        .select("id,name,price,category,main_image,created_at")
-        .eq("store_id", effectiveStoreId)
-        .eq("is_active", true)
-        .order("created_at", { ascending: false })
-        .limit(PRODUCTS_LIMIT);
-
-      if (error) return [];
-
-      const safeData = (data || []).map((product) => ({
-        id: String(product?.id || ""),
-        name: safeText(product?.name, 70),
-        price: Number(product?.price) || 0,
-        category: safeText(product?.category, 40),
-        main_image: String(product?.main_image || ""),
-        created_at: product?.created_at || undefined,
-        currency: storeCurrency,
-      }));
-
-      writeCache(key, safeData, activeStoreSlug);
-      return safeData;
-    },
-    enabled: Boolean(effectiveStoreId),
-    staleTime: STORE_CACHE_TTL,
-  });
+  // 💡 CENTRALIZADO: Chama o cache protegido com os dados completos
+  const { data: products = [], isLoading: isLoadingProducts } = useStoreProducts(
+    effectiveStoreId, 
+    storeCurrency, 
+    activeStoreSlug, 
+    t
+  );
 
   const isLoading = (isLoadingStore || isLoadingProducts) && products.length === 0;
 
@@ -138,7 +101,6 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
     });
   }, [products, deferredSearch, selectedCategory, maxPrice, allLabel]);
 
-  // Mantém fatiado na vitrine inicial da Home
   const displayProducts = useMemo(() => {
     return filteredProducts.slice(0, INITIAL_VISIBLE);
   }, [filteredProducts]);
@@ -151,10 +113,20 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
     setSearchTerm("");
   }, [allLabel]);
 
+  // 💡 JÁ VAI COMPLETO COM AS GALERIAS
   const handleProductClick = useCallback((productId: string) => {
     if (!isReadOnly || !storeSlug) return;
-    navigate(`/${storeSlug}/${pageSlug || "home"}/${productId}`, { state: { fromStore: true } });
-  }, [isReadOnly, navigate, storeSlug, pageSlug]);
+    const clickedProduct = products.find(p => p.id === productId);
+    navigate(`/${storeSlug}/${pageSlug || "home"}/${productId}`, { 
+      state: { 
+        fromStore: true,
+        product: clickedProduct, 
+        initialProducts: products,
+        storeCurrency: storeCurrency,
+        effectiveStoreId: effectiveStoreId
+      } 
+    });
+  }, [isReadOnly, navigate, storeSlug, pageSlug, products, storeCurrency, effectiveStoreId]);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(safeText(e.target.value, 40));
@@ -173,59 +145,33 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
     setMaxPrice(value === "" ? null : Number(value));
   }, []);
 
-  // MUDANÇA AQUI: Função que redireciona para a página completa de produtos
   const handleViewFullCatalog = useCallback(() => {
     if (isEditor || !activeStoreSlug) return;
-    navigate(`/${activeStoreSlug}/products`);
-  }, [isEditor, activeStoreSlug, navigate]);
+    navigate(`/${activeStoreSlug}/products`, {
+      state: {
+        initialProducts: products,
+        storeCurrency: storeCurrency,
+        effectiveStoreId: effectiveStoreId,
+        initialFilters: { searchTerm, selectedCategory, maxPrice }
+      }
+    });
+  }, [isEditor, activeStoreSlug, navigate, products, storeCurrency, effectiveStoreId, searchTerm, selectedCategory, maxPrice]);
 
   return (
-    <section
-      className={`px-3 py-6 md:px-6 md:py-9 overflow-hidden ${
-        isDark ? "bg-[#0a0a0a] text-zinc-100" : "bg-white text-slate-900"
-      }`}
-      style={{
-        isolation: "isolate",
-        backfaceVisibility: "hidden",
-        transform: "translate3d(0, 0, 0)"
-      }}
-    >
+    <section className={`px-3 py-6 md:px-6 md:py-9 overflow-hidden ${isDark ? "bg-[#0a0a0a] text-zinc-100" : "bg-white text-slate-900"}`} style={{ isolation: "isolate", backfaceVisibility: "hidden", transform: "translate3d(0, 0, 0)" }}>
       <div className="mx-auto w-full max-w-6xl min-w-0">
-        <HeaderText
-          content={content}
-          style={style}
-          isReadOnly={isReadOnly}
-          isDark={isDark}
-          t={t}
-          onUpdate={onUpdate}
-        />
+        <HeaderText content={content} style={style} isReadOnly={isReadOnly} isDark={isDark} t={t} onUpdate={onUpdate} />
 
         {isReadOnly && (
           <div className="mb-5 flex flex-col gap-3">
             <div className="flex gap-2">
               <div className={`flex min-w-0 flex-1 items-center gap-2 rounded-2xl border px-3 py-2.5 ${isDark ? "bg-zinc-900/50 border-zinc-800" : "bg-slate-50 border-slate-100"}`}>
                 <Search size={17} className="shrink-0 opacity-40" />
-                <input
-                  type="text"
-                  value={searchTerm}
-                  placeholder={t("showcase_searchPlaceholder")}
-                  className="w-full min-w-0 bg-transparent border-none outline-none text-[16px] md:text-sm font-semibold truncate"
-                  onChange={handleSearchChange}
-                />
-                {searchTerm && (
-                  <button type="button" onClick={() => setSearchTerm("")} aria-label="Clear search" className="shrink-0 opacity-60 active:scale-95">
-                    <X size={15} />
-                  </button>
-                )}
+                <input type="text" value={searchTerm} placeholder={t("showcase_searchPlaceholder")} className="w-full min-w-0 bg-transparent border-none outline-none text-[16px] md:text-sm font-semibold truncate" onChange={handleSearchChange} />
+                {searchTerm && <button type="button" onClick={() => setSearchTerm("")} className="shrink-0 opacity-60 active:scale-95"><X size={15} /></button>}
               </div>
 
-              <button
-                type="button"
-                onClick={() => setIsFiltersVisible((v) => !v)}
-                className={`shrink-0 flex items-center justify-center gap-2 rounded-2xl border px-3 md:px-4 py-2.5 font-bold text-xs active:scale-[0.98] ${
-                  isFiltersVisible ? "bg-blue-600 border-blue-600 text-white" : isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-slate-200 text-slate-600"
-                }`}
-              >
+              <button type="button" onClick={() => setIsFiltersVisible((v) => !v)} className={`shrink-0 flex items-center justify-center gap-2 rounded-2xl border px-3 md:px-4 py-2.5 font-bold text-xs active:scale-[0.98] ${isFiltersVisible ? "bg-blue-600 border-blue-600 text-white" : isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-slate-200 text-slate-600"}`}>
                 <SlidersHorizontal size={16} />
                 <span className="hidden md:inline">{isFiltersVisible ? t("common_close") : t("common_filters")}</span>
               </button>
@@ -235,42 +181,16 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
                   {categories.map((cat) => (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => handleCategoryChange(cat)}
-                      className={`max-w-[150px] truncate rounded-xl border px-4 py-2 text-[10px] font-bold uppercase tracking-wide whitespace-nowrap active:scale-[0.98] ${
-                        selectedCategory === cat ? "bg-blue-600 border-blue-600 text-white" : isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-slate-200 text-slate-500"
-                      }`}
-                    >
-                      {cat}
-                    </button>
+                    <button key={cat} type="button" onClick={() => handleCategoryChange(cat)} className={`max-w-[150px] truncate rounded-xl border px-4 py-2 text-[10px] font-bold uppercase tracking-wide whitespace-nowrap active:scale-[0.98] ${selectedCategory === cat ? "bg-blue-600 border-blue-600 text-white" : isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-slate-200 text-slate-500"}`}>{cat}</button>
                   ))}
                 </div>
 
                 <div className={`grid grid-cols-1 items-center gap-3 rounded-2xl border px-4 py-3 md:grid-cols-[auto_1fr_auto] ${isDark ? "bg-zinc-900/30 border-zinc-800" : "bg-slate-50/50 border-slate-100"}`}>
-                  <div className="flex items-center gap-2">
-                    <Target size={15} className="text-blue-600" />
-                    <span className="text-[10px] font-bold uppercase opacity-60">{t("showcase_maxPrice")}</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max={absoluteMaxPrice}
-                    value={maxPrice ?? absoluteMaxPrice}
-                    onChange={handleMaxPriceChange}
-                    className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-zinc-200 accent-blue-600 dark:bg-zinc-800"
-                  />
+                  <div className="flex items-center gap-2"><Target size={15} className="text-blue-600" /><span className="text-[10px] font-bold uppercase opacity-60">{t("showcase_maxPrice")}</span></div>
+                  <input type="range" min="0" max={absoluteMaxPrice} value={maxPrice ?? absoluteMaxPrice} onChange={handleMaxPriceChange} className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-zinc-200 accent-blue-600 dark:bg-zinc-800" />
                   <div className={`flex min-w-[105px] items-center rounded-xl border px-3 py-2 ${isDark ? "bg-zinc-950/60 border-zinc-800" : "bg-white border-slate-200"}`}>
                     <span className="mr-1 max-w-[42px] truncate text-[11px] opacity-40">{storeCurrency}</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={maxPrice === null ? "" : maxPrice}
-                      placeholder={t("filter_unlimited")}
-                      onChange={handleMaxPriceInput}
-                      className="w-full bg-transparent text-center text-[16px] md:text-sm font-bold outline-none"
-                    />
+                    <input type="text" inputMode="numeric" value={maxPrice === null ? "" : maxPrice} placeholder={t("filter_unlimited")} onChange={handleMaxPriceInput} className="w-full bg-transparent text-center text-[16px] md:text-sm font-bold outline-none" />
                   </div>
                 </div>
               </div>
@@ -282,20 +202,12 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
           <div className="mb-5 flex flex-wrap items-center gap-2">
             <span className="mr-1 text-[10px] font-black uppercase tracking-tight opacity-40">{t("showcase_filter_active")}</span>
             {selectedCategory !== allLabel && (
-              <button type="button" onClick={() => handleCategoryChange(allLabel)} className="flex max-w-[170px] items-center gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-[10px] font-bold text-blue-500">
-                <span className="truncate">{selectedCategory}</span>
-                <X size={12} className="shrink-0" />
-              </button>
+              <button type="button" onClick={() => handleCategoryChange(allLabel)} className="flex max-w-[170px] items-center gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-[10px] font-bold text-blue-500"><span className="truncate">{selectedCategory}</span><X size={12} className="shrink-0" /></button>
             )}
             {maxPrice !== null && (
-              <button type="button" onClick={() => setMaxPrice(null)} className="flex items-center gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-[10px] font-bold text-blue-500">
-                <span className="truncate">{t("showcase_price_up_to").replace("{{price}}", String(maxPrice))}</span>
-                <X size={12} className="shrink-0" />
-              </button>
+              <button type="button" onClick={() => setMaxPrice(null)} className="flex items-center gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-[10px] font-bold text-blue-500"><span className="truncate">{t("showcase_price_up_to").replace("{{price}}", String(maxPrice))}</span><X size={12} className="shrink-0" /></button>
             )}
-            <button type="button" onClick={clearFilters} className="flex items-center gap-1.5 px-2 py-1.5 text-[10px] font-bold opacity-60 active:scale-95">
-              <RotateCcw size={12} /> {t("showcase_clear_all")}
-            </button>
+            <button type="button" onClick={clearFilters} className="flex items-center gap-1.5 px-2 py-1.5 text-[10px] font-bold opacity-60 active:scale-95"><RotateCcw size={12} /> {t("showcase_clear_all")}</button>
           </div>
         )}
 
@@ -310,14 +222,9 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
                 <LayoutGrid products={displayProducts} onAction={handleProductClick} cols={layoutCols} isDark={isDark} t={t} />
               )}
 
-              {/* MUDANÇA AQUI: Botão agora dispara o handleViewFullCatalog que redireciona o usuário */}
               {isReadOnly && filteredProducts.length > INITIAL_VISIBLE && (
                 <div className="mt-8 flex justify-center">
-                  <button
-                    type="button"
-                    onClick={handleViewFullCatalog}
-                    className={`flex items-center gap-2 rounded-2xl px-6 py-3 text-[11px] font-bold uppercase tracking-widest active:scale-95 ${isDark ? "bg-white text-black" : "bg-zinc-900 text-white"}`}
-                  >
+                  <button type="button" onClick={handleViewFullCatalog} className={`flex items-center gap-2 rounded-2xl px-6 py-3 text-[11px] font-bold uppercase tracking-widest active:scale-95 ${isDark ? "bg-white text-black" : "bg-zinc-900 text-white"}`}>
                     <Plus size={16} /> {t("showcase_viewFull")}
                   </button>
                 </div>

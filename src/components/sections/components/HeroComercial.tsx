@@ -520,7 +520,7 @@ const LayoutYoutube = memo(({ isDark, isCenter, content, children }: any) => {
 LayoutYoutube.displayName = 'LayoutYoutube';
 
 const LayoutBackground = memo(({ isDark, isCenter, content, children }: any) => (
-  <div className="relative w-full min-h-[380px] flex items-center justify-center py-12 px-6">
+  <div className="relative w-full min-h-[380px] flex items-center justify-center py-14  lg:py-20 xl:py-28 2xl:py-36 px-6">
     <div className="absolute inset-0 z-0">
       <MediaRenderer media={content.media as MediaData} className="w-full h-full object-cover" />
       <div className={`absolute inset-0 ${isDark ? 'bg-black/65' : 'bg-black/35'}`} />
@@ -537,7 +537,7 @@ LayoutBackground.displayName = 'LayoutBackground';
 
 const LayoutStorely = memo(({ isDark, isCenter, content, children }: any) => {
   return (
-    <div className="relative w-full max-w-7xl mx-auto px-6 lg:px-12 py-10">
+    <div className="relative w-full max-w-7xl mx-auto px-6 lg:px-12 py-12 xl:py-20">
       <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
         <div
           className={`w-full lg:w-[43%] shrink-0 z-10 ${isCenter ? 'text-center items-center flex flex-col' : 'text-left items-start flex flex-col'}`}

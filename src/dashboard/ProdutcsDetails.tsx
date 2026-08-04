@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, Edit3, Loader2, Share2, X, AlignLeft, Home, Check } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { useParams, useLocation } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AlignLeft } from "lucide-react";
 import { createPortal } from "react-dom";
 
 import { useAdminStore } from "../hooks/useAdminStore";
@@ -16,17 +15,21 @@ import { ProductCheckout } from "../components/produtos/componentsAdmim/ProductC
 import { StoreTrustCard } from "../components/produtos/componentsAdmim/StoreTrustCard";
 import { RelatedProductsCache } from "../components/produtos/componentsAdmim/RelatedProductsCache";
 import { MobileStickyBar } from "../components/produtos/componentsAdmim/MobileStickyBar";
+import { useWhatsAppOrder } from "../hooks/useWhatsAppOrder";
+import { ProductDetailsNav } from "../components/ProductDetails/ProductDetailsNav";
 
-// Componentes importados
-
-
-// [As tuas interfaces mantêm-se iguais]
 export interface ProductFormData {
-  name: string; category: string; price: string; unit: string; full_description: string; main_image: string; gallery: string[];
+  name: string; category: string; price: string; unit: string; full_description: string; main_image: string; gallery: string[]; stock?: number;
 }
 interface ProductDetailsProps { isCreating?: boolean; onClose?: () => void; }
 type PublicStoreData = { id?: string; slug: string; name?: string; whatsapp_number?: string | null; currency?: string | null; settings?: any; logo_url?: string | null; description?: string | null; };
-type ProductRow = { id: string; name?: string | null; category?: string | null; price?: number | string | null; unit?: string | null; full_description?: string | null; main_image?: string | null; gallery?: string[] | null; store_id?: string | null; };
+type ProductRow = { 
+  id: string; store_id?: string | null; name?: string | null; slug?: string | null;
+  price?: number | string | null; description?: string | null; image_url?: string | null;
+  is_active?: boolean | null; created_at?: string | null; category?: string | null; 
+  gallery?: string[] | null; main_image?: string | null; full_description?: string | null; 
+  unit?: string | null; stock?: number | null;
+};
 type ProductLocationState = { product?: ProductRow; store?: PublicStoreData; source?: string; searchMode?: string; fromStore?: boolean; };
 
 const UNIT_TRANSLATION_KEY_MAP = {
@@ -35,83 +38,129 @@ const UNIT_TRANSLATION_KEY_MAP = {
 
 export function ProductDetails({ isCreating = false, onClose }: ProductDetailsProps) {
   const params = useParams();
-  const navigate = useNavigate();
   const location = useLocation();
   const { pathname } = location;
 
   const storeSlug = useMemo(() => params.storeSlug || pathname.split("/").filter(Boolean)[0] || "", [params.storeSlug, pathname]);
   const { productId } = params;
+  
   const pageState = useMemo(() => (location.state || {}) as ProductLocationState, [location.state]);
 
   const { t, language } = useTranslate();
   const { data: adminStore } = useAdminStore();
+  const queryClient = useQueryClient();
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const { sendWhatsAppOrder } = useWhatsAppOrder();
   const isEditorRoute = pathname.includes("admin");
   const forceLightUI = isEditorRoute;
   const showVisitStore = !pageState?.fromStore;
 
-  // CSS Classes
-  const pageBgClass = forceLightUI ? "bg-slate-50 text-slate-900" : "bg-slate-50 text-slate-900 dark:bg-zinc-950 dark:text-zinc-100";
-  const navClass = forceLightUI ? "border-slate-200 bg-white/92 " : "border-slate-200 bg-white/92  dark:border-zinc-800 dark:bg-zinc-950/92";
-  const panelClass = forceLightUI ? "border-slate-200 bg-white" : "border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900";
-  const softPanelClass = forceLightUI ? "border-slate-200 bg-slate-50" : "border-slate-200 bg-slate-50 dark:border-zinc-800 dark:bg-zinc-900/60";
-  const imageWrapClass = forceLightUI ? "bg-slate-200" : "bg-slate-200 dark:bg-zinc-900";
-  const mutedTextClass = forceLightUI ? "text-slate-500" : "text-slate-500 dark:text-zinc-400";
-  const strongTextClass = forceLightUI ? "text-slate-950" : "text-slate-950 dark:text-white";
-  const softMutedTextClass = forceLightUI ? "text-slate-400" : "text-slate-400 dark:text-zinc-500";
-  const hoverSoftClass = forceLightUI ? "hover:bg-slate-100" : "hover:bg-slate-100 dark:hover:bg-zinc-900";
+  const styles = useMemo(() => ({
+    pageBg: forceLightUI ? "bg-slate-50 text-slate-900" : "bg-slate-50 text-slate-900 dark:bg-zinc-950 dark:text-zinc-100",
+    nav: forceLightUI ? "border-slate-200 bg-white/92 " : "border-slate-200 bg-white/92  dark:border-zinc-800 dark:bg-zinc-950/92",
+    panel: forceLightUI ? "border-slate-200 bg-white" : "border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900",
+    softPanel: forceLightUI ? "border-slate-200 bg-slate-50" : "border-slate-200 bg-slate-50 dark:border-zinc-800 dark:bg-zinc-900/60",
+    imageWrap: forceLightUI ? "bg-slate-200" : "bg-slate-200 dark:bg-zinc-900",
+    mutedText: forceLightUI ? "text-slate-500" : "text-slate-500 dark:text-zinc-400",
+    strongText: forceLightUI ? "text-slate-950" : "text-slate-950 dark:text-white",
+    softMutedText: forceLightUI        ? "text-slate-400" : "text-slate-400 dark:text-zinc-500",
+    hoverSoft: forceLightUI ? "hover:bg-slate-100" : "hover:bg-slate-100 dark:hover:bg-zinc-900"
+  }), [forceLightUI]);
 
   const [isEditing, setIsEditing] = useState(isCreating);
   const [quantity, setQuantity] = useState(1);
   const [customNote, setCustomNote] = useState("");
   const [copied, setCopied] = useState(false);
 
-
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
   }, []);
 
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: 0, behavior: "auto" }); 
+    }
+  }, [productId]);
+
   const { data: publicStore } = useStorePublic(storeSlug);
 
-  const { data: product, isLoading } = useQuery({
+  // 🚀 BUSCA HÍBRIDA COM CHAVE DE CACHE INDIVIDUAL ['product', productId]
+  // Permite sincronização imediata quando o Admin atualiza o produto sem precisar de refetch de rede.
+  const { data: product } = useQuery({
     queryKey: ["product", productId],
     queryFn: async (): Promise<ProductRow | null> => {
       if (isCreating || !productId) return null;
+      
+      // 1. Procura na cache global de listas de produtos
+      const queryCache = queryClient.getQueriesData<ProductRow[]>({ queryKey: ["products"] });
+      for (const [_, cachedProducts] of queryCache) {
+        if (cachedProducts && Array.isArray(cachedProducts)) {
+          const found = cachedProducts.find((p) => p.id === productId);
+          if (found) return found;
+        }
+      }
+
+      // 2. Fallback para a API se não existir em cache
       const { data, error } = await supabase.from("products").select("*").eq("id", productId).single();
       if (error) throw error;
       return data as ProductRow;
     },
-    enabled: !!productId && !isCreating && !pageState?.product,
-    staleTime: 1000 * 60 * 60,
+    enabled: !!productId && !isCreating, 
+    staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 60 * 24,
-    initialData: pageState?.product ?? undefined,
+    initialData: () => {
+      if (pageState?.product) return pageState.product;
+      
+      const queryCache = queryClient.getQueriesData<ProductRow[]>({ queryKey: ["products"] });
+      for (const [_, cachedProducts] of queryCache) {
+        if (cachedProducts && Array.isArray(cachedProducts)) {
+          const found = cachedProducts.find((p) => p.id === productId);
+          if (found) return found;
+        }
+      }
+      return undefined;
+    },
   });
 
+  const resolvedProduct = product || null; 
   const resolvedStore = (pageState?.store || publicStore || null) as PublicStoreData | null;
-  const resolvedProduct = pageState?.product || product || null;
 
-  const [initialData, setInitialData] = useState<ProductFormData>({ name: "", category: "", price: "", unit: "un", full_description: "", main_image: "", gallery: [] });
+  const initialData = useMemo<ProductFormData>(() => {
+    if (isCreating || !resolvedProduct) {
+      return { name: "", category: "", price: "", unit: "un", full_description: "", main_image: "", gallery: [] };
+    }
 
-  useEffect(() => {
-    if (isCreating) return;
-    if (!resolvedProduct) return;
-
-    const normalizedMainImage = resolvedProduct.main_image || (Array.isArray(resolvedProduct.gallery) ? resolvedProduct.gallery[0] : "") || "";
-    setInitialData({
+    const normalizedMainImage = resolvedProduct.main_image || resolvedProduct.image_url || (Array.isArray(resolvedProduct.gallery) ? resolvedProduct.gallery[0] : "") || "";
+    
+    return {
       name: resolvedProduct.name ?? "",
       category: resolvedProduct.category ?? "",
       price: resolvedProduct.price != null ? Number(resolvedProduct.price).toFixed(2) : "",
       unit: resolvedProduct.unit ?? "un",
-      full_description: resolvedProduct.full_description ?? "",
+      full_description: resolvedProduct.full_description ?? resolvedProduct.description ?? "",
       main_image: normalizedMainImage,
       gallery: Array.isArray(resolvedProduct.gallery) ? resolvedProduct.gallery.filter(Boolean) : normalizedMainImage ? [normalizedMainImage] : [],
-    });
+      stock: resolvedProduct.stock ?? undefined,
+    };
+  }, [resolvedProduct, isCreating]);
+
+  // 🚀 CALLBACK DE SUCESSO DA EDIÇÃO: Atualiza o cache local do React Query instantaneamente
+  const handleProductUpdateSuccess = useCallback((updatedProductData?: any) => {
+    setIsEditing(false);
+    if (updatedProductData && productId) {
+      queryClient.setQueryData(["product", productId], (old: any) => ({
+        ...old,
+        ...updatedProductData,
+      }));
+    }
+  }, [queryClient, productId]);
+
+  useEffect(() => {
     setQuantity(1);
     setCustomNote("");
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
-  }, [resolvedProduct, isCreating]);
+  }, [productId]);
 
   const previews = useMemo(() => {
     const merged = [initialData.main_image, ...(initialData.gallery || [])].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i);
@@ -132,167 +181,94 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
   const translatedUnit = UNIT_TRANSLATION_KEY_MAP[initialData.unit as keyof typeof UNIT_TRANSLATION_KEY_MAP] ? t(UNIT_TRANSLATION_KEY_MAP[initialData.unit as keyof typeof UNIT_TRANSLATION_KEY_MAP] as any) : initialData.unit;
 
   const handleWhatsAppOrder = useCallback(() => {
-    const whatsapp = resolvedStore?.whatsapp_number || adminStore?.whatsapp_number;
-    if (!whatsapp) { toast.error(t("product_details_whatsapp_unavailable" as any) || "WhatsApp indisponível."); return; }
+    sendWhatsAppOrder({
+      storeName: resolvedStore?.name || storeSlug,
+      whatsappNumber: resolvedStore?.whatsapp_number || adminStore?.whatsapp_number,
+      productName: initialData.name,
+      quantity,
+      unit: translatedUnit,
+      totalPrice: formatMoney(totalPrice),
+      customNote,
+      imageUrl: initialData.main_image,
+    });
+  }, [sendWhatsAppOrder, resolvedStore, adminStore, storeSlug, initialData.name, quantity, translatedUnit, totalPrice, formatMoney, customNote, initialData.main_image]);
 
-    const lines = [
-      `*Storely*`, "",
-      t("wa_greeting" as any) || "Olá! Tenho interesse neste produto.", "",
-      `📦 *${t("wa_product" as any) || "Produto"}:* ${initialData.name}`,
-      `🏪 *${t("wa_store" as any) || "Loja"}:* ${resolvedStore?.name || storeSlug}`,
-      `🔢 *${t("wa_quantity" as any) || "Quantidade"}:* ${quantity} ${translatedUnit}`,
-      `💰 *${t("wa_total" as any) || "Total"}:* ${formatMoney(totalPrice)}`, "",
-      customNote.trim() ? `📝 *Nota:* "${customNote.trim()}"\n` : "",
-      `🔗 *${t("wa_link" as any) || "Link"}:* ${window.location.href}`,
-      previews[0] ? `🖼️ *Imagem:* ${previews[0]}` : "", "",
-      t("wa_confirm" as any) || "Pode confirmar a disponibilidade?"
-    ].filter(Boolean);
-
-    window.open(`https://wa.me/${whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(lines.join("\n"))}`, "_blank");
-  }, [resolvedStore, adminStore, initialData.name, storeSlug, quantity, translatedUnit, totalPrice, formatMoney, customNote, previews, t]);
-
-  if (isLoading && !isCreating && !resolvedProduct) {
-    return createPortal(<div className={`fixed inset-0 z-[10000] flex items-center justify-center ${pageBgClass}`}><Loader2 className="animate-spin text-slate-700" size={30} /></div>, document.body);
-  }
-
-
-const handleShare = async () => {
-  const shareData = {
-    title: initialData?.name || "Storely",
-    text: `Confira ${initialData?.name || "este link"}!`,
-    url: window.location.href,
-  };
-
-  // Se for mobile / tiver suporte ao share nativo
-  if (navigator.share && navigator.canShare?.(shareData)) {
-    try {
-      await navigator.share(shareData);
-    } catch (err) {
-      console.log("Erro ao compartilhar nativamente", err);
+  const handleShare = useCallback(async () => {
+    const shareData = { title: initialData?.name || "Storely", text: `Confira ${initialData?.name || "este link"}!`, url: window.location.href };
+    if (navigator.share && navigator.canShare?.(shareData)) {
+      try { await navigator.share(shareData); } catch (err) { console.log("Erro share nativo", err); }
+    } else {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) { console.log("Erro clipboard", err); }
     }
-  } else {
-    // Fallback para Desktop: Copiar link
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000); // Reseta o ícone após 2 segundos
-    } catch (err) {
-      console.log("Erro ao copiar link", err);
-    }
-  }
-};
+  }, [initialData?.name]);
+
   return createPortal(
-    <div className={`fixed inset-0 z-[10000] h-[100dvh] w-full overflow-y-auto overflow-x-hidden ${pageBgClass}`}>
-<nav className={`sticky top-0 z-[10010] flex h-16 items-center justify-between border-b px-4 md:px-6 shadow-sm ${navClass}`}>
-               
-        <button 
-      type="button" 
-      onClick={() => isCreating ? onClose?.() : navigate(-1)} 
-      className={`rounded-full p-2 transition ${hoverSoftClass}`} 
-      aria-label="back"
+    <div 
+      ref={scrollRef} 
+      className={`fixed inset-0 z-[10000] h-[100dvh] w-full overflow-y-auto overflow-x-hidden ${styles.pageBg}`}
     >
-      <ChevronLeft size={24} />
-    </button>
-
-        <div className="flex items-center gap-3">
-          
-        <button 
-  type="button" 
-  onClick={() => {
-    // Se a rota contiver "products" ou "p", volta para a home da loja
-    if (pathname.includes("products") || pathname.includes("/p/")) {
-      navigate(`/${storeSlug}`, { replace: true });
-    } 
-    // Se a rota contiver "blog", volta para o marketplace geral
-    else if (pathname.includes("blog")) {
-      navigate("/", { replace: true });
-    } 
-    // Fallback de segurança por precaução
-    else {
-      navigate(`/${storeSlug}`, { replace: true });
-    }
-  }} 
-  className="flex items-center justify-center rounded-full bg-slate-100 p-2.5 text-slate-700 shadow-sm transition hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transform-gpu active:scale-95" 
-  aria-label="home"
-  title={pathname.includes("blog") ? "Ir para o Início Geral" : "Ir para o Início da Loja"}
->
-  <Home size={18} />
-</button>
-
-          <div className="h-6 w-px bg-slate-200 dark:bg-zinc-700"></div>
-
-          {!isEditorRoute && (
-  <button 
-    type="button" 
-    onClick={handleShare} 
-    className={`rounded-full p-2.5 transition ${hoverSoftClass}`}
-    aria-label={copied ? "Link copiado" : "Compartilhar"}
-    title={copied ? "Link copiado!" : "Compartilhar"}
-  >
-    {copied ? (
-      <Check size={20} className="text-green-600 dark:text-green-400" />
-    ) : (
-      <Share2 size={20} />
-    )}
-  </button>
-)}
-
-          {isEditorRoute && !isEditing && (
-            <button type="button" onClick={() => setIsEditing(true)} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-white shadow-sm transition hover:bg-slate-800">
-              <Edit3 size={16} />
-              <span className="text-[11px] font-black uppercase tracking-wider">{t("product_details_edit" as any) || "Editar"}</span>
-            </button>
-          )}
-
-          {isEditorRoute && isEditing && !isCreating && (
-            <button type="button" onClick={() => setIsEditing(false)} className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-slate-600 transition hover:bg-slate-50">
-              <X size={16} />
-              <span className="text-[11px] font-black uppercase tracking-wider">{t("product_details_cancel" as any) || "Cancelar"}</span>
-            </button>
-          )}
-        </div>
-      </nav>
+      <ProductDetailsNav
+        isCreating={isCreating} onClose={onClose} isEditorRoute={isEditorRoute}
+        isEditing={isEditing} setIsEditing={setIsEditing} handleShare={handleShare}
+        copied={copied} storeSlug={storeSlug} navClass={styles.nav} 
+        hoverSoftClass={styles.hoverSoft} t={t}
+      />
 
       <main className="mx-auto w-full max-w-6xl px-0 pb-36 md:px-4 md:pt-10 lg:px-8">
         {isEditing && isEditorRoute ? (
           <div className="px-4 pt-6 md:px-0">
-            <ProductForm productId={isCreating ? undefined : productId} isCreating={isCreating} initialData={initialData} onCancel={() => (isCreating ? onClose?.() : setIsEditing(false))} onSuccess={() => setIsEditing(false)} />
+            <ProductForm 
+              productId={isCreating ? undefined : productId} 
+              isCreating={isCreating} 
+              initialData={initialData} 
+              onCancel={() => (isCreating ? onClose?.() : setIsEditing(false))} 
+              onSuccess={handleProductUpdateSuccess} 
+            />
           </div>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] md:gap-10 lg:gap-14">
-              <ProductGallery images={previews} productName={initialData.name} fallbackImage={FALLBACK_PRODUCT} imageWrapClass={imageWrapClass} t={t} />
+              <ProductGallery images={previews} productName={initialData.name} fallbackImage={FALLBACK_PRODUCT} imageWrapClass={styles.imageWrap} t={t} />
 
               <div className="px-4 pt-4 md:px-0 md:pt-0 flex flex-col">
                 <span className={`inline-block mb-3 self-start rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] ${forceLightUI ? "bg-slate-200/60 text-slate-700" : "bg-slate-200/60 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300"}`}>
                   {initialData.category || t("common_category_general" as any) || "Geral"}
                 </span>
-                <h1 className={`text-[2rem] md:text-[2.5rem] font-extrabold leading-[1.15] tracking-tight mb-2 [overflow-wrap:anywhere] ${strongTextClass}`}>{initialData.name}</h1>
-                <p className={`text-2xl font-black tracking-tight mb-8 ${strongTextClass}`}>{formatMoney(unitPrice)} <span className="text-[15px] font-semibold text-slate-500">/ {translatedUnit}</span></p>
+                <h1 className={`text-[2rem] md:text-[2.5rem] font-extrabold leading-[1.15] tracking-tight mb-2 [overflow-wrap:anywhere] ${styles.strongText}`}>{initialData.name}</h1>
+                <p className={`text-2xl font-black tracking-tight mb-8 ${styles.strongText}`}>{formatMoney(unitPrice)} <span className="text-[15px] font-semibold text-slate-500">/ {translatedUnit}</span></p>
 
-                <ProductCheckout quantity={quantity} setQuantity={setQuantity} customNote={customNote} setCustomNote={setCustomNote} localizedTotalPrice={formatMoney(totalPrice)} translatedUnit={translatedUnit} handleWhatsAppOrder={handleWhatsAppOrder} forceLightUI={forceLightUI} panelClass={panelClass} softMutedTextClass={softMutedTextClass} strongTextClass={strongTextClass} isEditorRoute={isEditorRoute} t={t} />
+                <ProductCheckout quantity={quantity} setQuantity={setQuantity} customNote={customNote} setCustomNote={setCustomNote} localizedTotalPrice={formatMoney(totalPrice)} translatedUnit={translatedUnit} handleWhatsAppOrder={handleWhatsAppOrder} forceLightUI={forceLightUI} panelClass={styles.panel} softMutedTextClass={styles.softMutedText} strongTextClass={styles.strongText} isEditorRoute={isEditorRoute} t={t} />
 
                 {!isEditorRoute && showVisitStore && (
-                  <StoreTrustCard storeName={resolvedStore?.name || storeSlug} storeLogo={resolvedStore?.logo_url || ""} siteUrl={window.location.origin + "/" + storeSlug} softPanelClass={softPanelClass} strongTextClass={strongTextClass} mutedTextClass={mutedTextClass} t={t} />
+                  <StoreTrustCard storeName={resolvedStore?.name || storeSlug} storeLogo={resolvedStore?.logo_url || ""} siteUrl={window.location.origin + "/" + storeSlug} softPanelClass={styles.softPanel} strongTextClass={styles.strongText} mutedTextClass={styles.mutedText} t={t} />
                 )}
               </div>
             </div>
 
             {initialData.full_description && (
-              <div className="mt-12 md:mt-20 border-t border-slate-200 pt-10 dark:border-zinc-800 px-4 md:px-0">
-                <div className="flex items-center gap-2 mb-6"><AlignLeft size={20} className={mutedTextClass} /><h3 className={`text-xl font-extrabold tracking-tight ${strongTextClass}`}>{t("product_details_details" as any) || "Details"}</h3></div>
-                <div className={`max-w-3xl text-[16px] leading-loose whitespace-pre-wrap [overflow-wrap:anywhere] ${mutedTextClass}`}>{initialData.full_description}</div>
+              <div 
+                className="mt-12 md:mt-20 border-t border-slate-200 pt-10 dark:border-zinc-800 px-4 md:px-0"
+                style={{ contentVisibility: 'auto', containIntrinsicSize: '0 300px' }}
+              >
+                <div className="flex items-center gap-2 mb-6"><AlignLeft size={20} className={styles.mutedText} /><h3 className={`text-xl font-extrabold tracking-tight ${styles.strongText}`}>{t("product_details_details" as any) || "Details"}</h3></div>
+                <div className={`max-w-3xl text-[16px] leading-loose whitespace-pre-wrap [overflow-wrap:anywhere] ${styles.mutedText}`}>{initialData.full_description}</div>
               </div>
             )}
 
             {!isEditorRoute && !isEditing && (
-              <RelatedProductsCache currentProductId={productId || ""} currentCategory={initialData.category} currentStoreId={resolvedStore?.id} storeSlugFallback={storeSlug} panelClass={panelClass} strongTextClass={strongTextClass} mutedTextClass={mutedTextClass} formatMoney={formatMoney} t={t} />
+              <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 400px' }}>
+                <RelatedProductsCache currentProductId={productId || ""} currentCategory={initialData.category} currentStoreId={resolvedStore?.id} storeSlugFallback={storeSlug} panelClass={styles.panel} strongTextClass={styles.strongText} mutedTextClass={styles.mutedText} formatMoney={formatMoney} t={t} />
+              </div>
             )}
           </>
         )}
       </main>
 
-      {!isEditing && <MobileStickyBar localizedTotalPrice={formatMoney(totalPrice)} handleWhatsAppOrder={handleWhatsAppOrder} mutedTextClass={mutedTextClass} strongTextClass={strongTextClass} t={t} />}
+      {!isEditing && <MobileStickyBar localizedTotalPrice={formatMoney(totalPrice)} handleWhatsAppOrder={handleWhatsAppOrder} mutedTextClass={styles.mutedText} strongTextClass={styles.strongText} t={t} />}
 
       <style>{`.pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); } .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
     </div>, document.body

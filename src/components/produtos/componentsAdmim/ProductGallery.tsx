@@ -79,7 +79,7 @@ export const ProductGallery = memo(function ProductGallery({
               <button
                 type="button"
                 onClick={openImagePreview}
-                className="absolute right-4 top-4 z-20 rounded-full bg-black/40 p-2.5 text-white transition hover:bg-black/60 backdrop-blur-md shadow-sm"
+                className="absolute right-4 top-4 z-20 rounded-full bg-black/40 p-2.5 text-white transition hover:bg-black/60  shadow-sm"
               >
                 <Maximize2 size={20} />
               </button>

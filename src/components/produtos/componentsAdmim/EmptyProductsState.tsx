@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Store, Plus } from 'lucide-react';
-import type { TranslateFn } from '../../../dashboard/Products';
+import type { TranslateFn } from '../../../types/TextTypes';
 
 interface EmptyProductsStateProps {
   onAdd: () => void;

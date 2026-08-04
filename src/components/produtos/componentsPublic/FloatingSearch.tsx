@@ -8,6 +8,7 @@ import { supabase } from "../../../lib/supabase";
 import { getCategoryStyle, normalizeCategory, getSmartSynonyms } from "../../../utils/categories";
 import { STORE_CACHE_TTL } from "../../../utils/storeCache"; 
 import { readCache, writeCache, cacheKey, CACHE_VERSION } from "../../../utils/text";
+import { enrichProductsIntelligently } from "../../../utils/ProductIntelligence"; 
 
 // Importações Modulares Nativas
 import { SearchSuggestionsView } from "./SearchSuggestionsView";
@@ -22,12 +23,10 @@ interface FloatingSearchProps {
   theme?: "light" | "dark"; 
 }
 
-// OTIMIZAÇÃO: Recebe um 'maxLimit' para abortar cedo cálculos inúteis (Salva Bateria e CPU)
 function getTypoDistance(a: string, b: string, maxLimit = 2): number {
   if (a.length === 0) return b.length;
   if (b.length === 0) return a.length;
   
-  // Fast-circuit: Se a diferença de tamanho excede o erro permitido, não faz o loop pesado
   if (Math.abs(a.length - b.length) > maxLimit) return maxLimit + 1;
   
   let prevRow = Array.from({ length: b.length + 1 }, (_, i) => i);
@@ -52,6 +51,7 @@ function getTypoDistance(a: string, b: string, maxLimit = 2): number {
 
 export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug }: FloatingSearchProps) {
   const { t } = useTranslate();
+  const currentLang = "pt"; 
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -104,22 +104,25 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
     setTriggerGlobal(false);
   }, [deferredTerm]);
 
-  const { data: localProducts = [] } = useQuery({
+  const { data: rawLocalProducts = [] } = useQuery({
     queryKey: ["search-local-products-list", currentStoreId],
     queryFn: () => {
+      const stateProducts = (location.state as any)?.initialProducts;
+      if (stateProducts && Array.isArray(stateProducts) && stateProducts.length > 0) {
+        writeCache(targetCacheKey, stateProducts, activeStoreSlug);
+        queryClient.setQueryData(["catalog-products-full", currentStoreId, storeCurrency], stateProducts);
+        return stateProducts;
+      }
+
       const cached = readCache<any[]>(targetCacheKey, activeStoreSlug);
-      if (cached) return cached;
+      if (cached && cached.length > 0) return cached;
 
-      const liveCatalogData = queryClient.getQueryData<any[]>([
-        "catalog-products-full", 
-        currentStoreId, 
-        storeCurrency
-      ]);
-
+      const liveCatalogData = queryClient.getQueryData<any[]>(["catalog-products-full", currentStoreId, storeCurrency]);
       if (liveCatalogData && liveCatalogData.length > 0) {
         writeCache(targetCacheKey, liveCatalogData, activeStoreSlug);
         return liveCatalogData;
       }
+      
       return [];
     },
     enabled: isOpen && isProductsRoute,
@@ -128,6 +131,13 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
     refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
+
+  const localProducts = useMemo(() => {
+    if (rawLocalProducts.length > 0 && !rawLocalProducts[0].metadata) {
+      return enrichProductsIntelligently(rawLocalProducts, currentLang as "pt" | "en");
+    }
+    return rawLocalProducts;
+  }, [rawLocalProducts, currentLang]);
 
   const { data: globalProducts = [], isLoading: isLoadingGlobal } = useQuery({
     queryKey: ["search-global-products-list", smartQueryString],
@@ -160,9 +170,17 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
   const categories = useMemo(() => {
     const categoryMap = new Map<string, string>();
     localProducts.forEach(p => {
-      if (!p.category) return;
-      const norm = normalizeCategory(p.category);
-      if (!categoryMap.has(norm)) categoryMap.set(norm, p.category);
+      const parent = p.metadata?.parentCategory;
+      const child = p.metadata?.subCategory;
+      
+      if (parent) {
+        const normParent = normalizeCategory(parent);
+        if (!categoryMap.has(normParent)) categoryMap.set(normParent, parent);
+      }
+      if (child) {
+        const normChild = normalizeCategory(child);
+        if (!categoryMap.has(normChild)) categoryMap.set(normChild, child);
+      }
     });
 
     return Array.from(categoryMap.entries()).map(([norm, original]) => {
@@ -176,7 +194,6 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
     });
   }, [localProducts]);
 
-  // Sugestões super otimizadas (Aborta cedo loops complexos)
   const activeSuggestions = useMemo(() => {
     if (deferredTerm.length < 2) return [];
     
@@ -189,26 +206,16 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
     const fuzzyMatchField = (fieldValue: string) => {
       const fieldClean = cleanString(fieldValue);
       if (!fieldClean) return false;
-      
       if (fieldClean.includes(cleanTerm)) return true;
-
       const fieldWords = fieldClean.split(/\s+/);
-
       return queryWords.every(qWord => {
         const maxErrors = qWord.length <= 4 ? 1 : 2;
-
         return fieldWords.some(fWord => {
           if (fWord.startsWith(qWord)) return true;
-          // CPU Otimização: Nem tenta calcular a distância se o tamanho for incompatível
           if (Math.abs(qWord.length - fWord.length) > maxErrors + 2) return false;
-
           const fWordPrefix = fWord.substring(0, qWord.length);
-          // Passamos o maxErrors para a função matemática abortar execuções impossíveis no inicio
-          const prefixDistance = getTypoDistance(fWordPrefix, qWord, maxErrors);
-          if (prefixDistance <= maxErrors) return true;
-
-          const fullDistance = getTypoDistance(fWord, qWord, maxErrors);
-          return fullDistance <= maxErrors;
+          if (getTypoDistance(fWordPrefix, qWord, maxErrors) <= maxErrors) return true;
+          return getTypoDistance(fWord, qWord, maxErrors) <= maxErrors;
         });
       });
     };
@@ -217,22 +224,24 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
     const seen = new Set<string>();
 
     for (const p of localProducts) {
-      if (fuzzyMatchField(p.name)) {
-        const nameClean = p.name.trim();
-        if (!seen.has(nameClean)) {
-          seen.add(nameClean);
-          matches.push(nameClean);
-        }
-      } 
-      else if (p.category && fuzzyMatchField(p.category)) {
-        const catClean = p.category.trim();
-        if (!seen.has(catClean)) {
-          seen.add(catClean);
-          matches.push(catClean);
+      const searchableFields = [
+        p.name, 
+        p.metadata?.subCategory, 
+        p.metadata?.parentCategory,
+        p.metadata?.gender,
+        ...(p.metadata?.attributes || [])
+      ].filter(Boolean);
+
+      for (const field of searchableFields) {
+        if (fuzzyMatchField(field)) {
+          const fieldClean = field.trim();
+          if (!seen.has(fieldClean)) {
+            seen.add(fieldClean);
+            matches.push(fieldClean);
+          }
         }
       }
-
-      if (matches.length >= 5) break; // Break precoce protege RAM e Frame Drops
+      if (matches.length >= 6) break; 
     }
 
     return matches;
@@ -250,6 +259,7 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
     const synonyms = getSmartSynonyms(cleanTerm).map(syn => cleanString(syn));
     
     const fuzzyMatch = (target: string, query: string) => {
+      if (!target) return false;
       if (target.includes(query) || query.includes(target)) return true;
       if (query.length >= 4) {
         const partialQuery = query.substring(0, Math.floor(query.length * 0.8));
@@ -259,15 +269,22 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
     };
 
     return localProducts.filter(p => {
-      const targetStr = cleanString(`${p.name} ${p.category} ${p.description || ""}`);
+      const metadataValues = p.metadata ? [
+        p.metadata.parentCategory,
+        p.metadata.subCategory,
+        p.metadata.gender,
+        ...(p.metadata.sizes || []),
+        ...(p.metadata.attributes || [])
+      ].join(" ") : "";
+
+      const targetStr = cleanString(`${p.name} ${p.category} ${p.description || ""} ${metadataValues}`);
       
       const hasDirectMatch = synonyms.some(syn => targetStr.includes(syn)) || 
                              fuzzyMatch(targetStr, cleanTerm);
                              
       if (hasDirectMatch) return true;
 
-      const productCategoryLower = cleanString(p.category || "");
-      
+      const productCategoryLower = cleanString(p.metadata?.subCategory || p.category || "");
       const matchedCategory = MOCK_GLOBAL_CATEGORIES.find(cat => 
         cleanString(cat.searchQuery) === productCategoryLower || 
         cleanString(cat.slug) === productCategoryLower ||
@@ -293,10 +310,25 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
     setTimeout(() => setSearchTerm(""), 300);
   }, []);
 
+  // NAVEGAÇÃO OTIMIZADA: Envia o state completo e corrige a rota de "/blog/" para "/products/"
   const handleNavigate = useCallback((slug: string, id: string) => {
     handleClose();
-    if (slug) navigate(`/${slug}/blog/${id}`);
-  }, [handleClose, navigate]);
+    if (slug) {
+      // 1. Procura o produto clicado na lista local ou na lista global
+      const clickedProduct = localProducts.find(p => p.id === id) || globalProducts.find(p => p.id === id);
+
+      // 2. Navega para a página de produtos injetando todos os dados necessários no state
+      navigate(`/${slug}/products/${id}`, {
+        state: {
+          fromStore: true,
+          product: clickedProduct,
+          initialProducts: localProducts, // Evita re-fetch ao voltar
+          storeCurrency: storeCurrency,
+          effectiveStoreId: currentStoreId
+        }
+      });
+    }
+  }, [handleClose, navigate, localProducts, globalProducts, storeCurrency, currentStoreId]);
 
   const handleToggleGlobal = useCallback(() => setShowGlobalCats(p => !p), []);
   const handleSelectCategory = useCallback((name: string) => setSearchTerm(name), []);
@@ -322,7 +354,6 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
     <div 
       className="fixed inset-0 z-[99999] flex flex-col transition-colors duration-200 isolation-isolate h-[100dvh] overflow-hidden select-none bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-100 "
     >
-      {/* 1. Header Fixo */}
       <div className="order-1 flex shrink-0 items-center justify-between px-6 py-4 border-b border-zinc-200/50 dark:border-zinc-800/50 bg-white/40 dark:bg-zinc-950/40 text-zinc-800 dark:text-zinc-100">
         <h2 className="text-base font-black tracking-widest uppercase opacity-90">{t("search_title") || "Pesquisa"}</h2>
         <button 
@@ -333,7 +364,6 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
         </button>
       </div>
 
-      {/* 2. Barra de Input (Efeito Glass/Pill do SearchInputField) */}
       <div className="order-2 lg:order-3 z-20 shrink-0 bg-transparent ">
         <SearchInputField
           searchTerm={searchTerm}
@@ -347,7 +377,6 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
         />
       </div>
 
-      {/* 3. Área de Scroll Central */}
       <div className="order-3 md:order-2 flex-1 overflow-y-auto px-4 py-6 no-scrollbar overscroll-contain">
         {!deferredTerm ? (
           <SearchSuggestionsView
@@ -369,12 +398,11 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
             isDark={isDark}
             t={t as any}
             onTriggerGlobal={handleTriggerGlobal}
-            onNavigateProduct={handleNavigate}
+            onNavigateProduct={handleNavigate} // Agora passa a informação completa!
             activeStoreSlug={activeStoreSlug}
           />
         )}
       </div>
-
     </div>
   );
 }

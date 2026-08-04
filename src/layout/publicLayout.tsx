@@ -1,5 +1,5 @@
 import { Outlet, useParams, useNavigate, useLocation } from "react-router-dom";
-import { useId, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { StoreHeader } from "../components/public/header/header";
@@ -11,11 +11,15 @@ import { useTranslate } from '../context/LanguageContext';
 import { clearStoreCache } from "../utils/storeCache";
 import { FloatingSearch } from "../components/produtos/componentsPublic/FloatingSearch";
 
+// ==========================================
+// 🛠️ MODO DE TESTE DO BOTÃO (Muda para false em produção)
+// ==========================================
+const DEBUG_SHOW_BACK = false;
+
 export function PublicLayout() {
   const { storeSlug } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const layoutKey = useId();
   const queryClient = useQueryClient();
   
   const { data: store, isLoading, isError, isFetching, source, forceRefresh } = useStorePublic(storeSlug);
@@ -23,13 +27,62 @@ export function PublicLayout() {
   const { lang } = useTranslate();
   const isPt = lang.startsWith("pt");
 
-  // Reset Global Absoluto: Limpa Cache Pai, varre localStorage dos filhos, limpa React Query.
-  const handleGlobalRefresh = useCallback(async () => {
-    if (storeSlug) {
-      clearStoreCache(storeSlug);
-    }
+  const [showExternalBackButton, setShowExternalBackButton] = useState(false);
+
+  useEffect(() => {
+    const currentHost = window.location.hostname;
     
-    // Varredura forçada de Caches Filhos no LocalStorage
+    if (DEBUG_SHOW_BACK && !sessionStorage.getItem("storely_ext_origin")) {
+      sessionStorage.setItem("storely_ext_origin", "http://debug-origin.com");
+      sessionStorage.setItem("storely_landing_path", location.pathname);
+    }
+
+    let extOrigin = sessionStorage.getItem("storely_ext_origin");
+    let landingPath = sessionStorage.getItem("storely_landing_path");
+    
+    if (!extOrigin) {
+      const referrer = document.referrer;
+      if (referrer && !referrer.includes(currentHost)) {
+        extOrigin = referrer;
+        sessionStorage.setItem("storely_ext_origin", extOrigin);
+        sessionStorage.setItem("storely_landing_path", location.pathname);
+        landingPath = location.pathname;
+      } else {
+        sessionStorage.setItem("storely_ext_origin", "none");
+      }
+    }
+
+    if (extOrigin && extOrigin !== "none") {
+      if (location.pathname === landingPath) {
+        setShowExternalBackButton(true);
+      } else {
+        setShowExternalBackButton(false);
+      }
+    } else {
+      setShowExternalBackButton(false);
+    }
+
+  }, [location.pathname]);
+
+  const handleExternalGoBack = useCallback(() => {
+    const extOrigin = sessionStorage.getItem("storely_ext_origin");
+    
+    window.close();
+
+    setTimeout(() => {
+      if (DEBUG_SHOW_BACK && window.history.length > 1) {
+        navigate(-1);
+      } else if (extOrigin && extOrigin !== "none") {
+        window.location.href = extOrigin;
+      } else if (window.history.length > 1) {
+        navigate(-1);
+      }
+    }, 250);
+  }, [navigate]);
+
+  const handleGlobalRefresh = useCallback(async () => {
+    if (storeSlug) clearStoreCache(storeSlug);
+    
     try {
       const keys = Object.keys(localStorage);
       for (const key of keys) {
@@ -47,7 +100,6 @@ export function PublicLayout() {
       console.warn("Falha na limpeza dos sub-caches", e);
     }
     
-    // Invalida todos os dados em memória (React Query)
     await queryClient.invalidateQueries({
       predicate: (query) => {
         const keyStr = query.queryKey.join("-").toLowerCase();
@@ -60,7 +112,7 @@ export function PublicLayout() {
 
   if (isLoading && !store) {
     return (
-      <div className="h-screen w-full bg-white dark:bg-black flex flex-col items-center justify-center gap-3 antialiased">
+      <div className="min-h-dvh w-full bg-white dark:bg-black flex flex-col items-center justify-center gap-3 antialiased">
         <div className="h-6 w-6 border-2 border-slate-200 dark:border-slate-800 border-t-slate-900 dark:border-t-white rounded-full animate-spin" />
         <span className="text-slate-400 dark:text-slate-500 font-bold uppercase tracking-[0.3em] text-[9px]">
           {isPt ? "Carregando..." : "Loading..."}
@@ -71,7 +123,7 @@ export function PublicLayout() {
 
   if (isError || !store) {
     return (
-      <div className="h-screen w-full bg-white dark:bg-black flex flex-col items-center justify-center px-6 text-center antialiased">
+      <div className="min-h-dvh w-full bg-white dark:bg-black flex flex-col items-center justify-center px-6 text-center antialiased">
         <div className="space-y-2">
           <div className="text-4xl font-black tracking-widest text-slate-100 dark:text-slate-900 select-none">404</div>
           <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-800 dark:text-slate-200">
@@ -87,15 +139,15 @@ export function PublicLayout() {
         <div className="mt-8 flex gap-3 min-w-[220px]">
           <button
             type="button"
-            onClick={() => window.history.length > 1 ? navigate(-1) : navigate("/")}
-            className="flex-1 px-4 py-2 text-[10px] uppercase tracking-[0.15em] font-bold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 rounded-md hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer"
+            onClick={handleExternalGoBack}
+            className="flex-1 px-4 py-2 text-[10px] uppercase tracking-[0.15em] font-bold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 rounded-md hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer touch-manipulation"
           >
             {isPt ? "Voltar" : "Go Back"}
           </button>
           <button
             type="button"
             onClick={handleGlobalRefresh}
-            className="flex-1 px-4 py-2 text-[10px] uppercase tracking-[0.15em] font-bold text-white bg-black dark:bg-white dark:text-black rounded-md hover:opacity-80 transition-opacity cursor-pointer shadow-sm"
+            className="flex-1 px-4 py-2 text-[10px] uppercase tracking-[0.15em] font-bold text-white bg-black dark:bg-white dark:text-black rounded-md hover:opacity-80 transition-opacity cursor-pointer shadow-sm touch-manipulation"
           >
             {isPt ? "Repetir" : "Retry"}
           </button>
@@ -105,18 +157,53 @@ export function PublicLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black flex flex-col antialiased">
+    <div className="min-h-dvh w-full bg-white dark:bg-black flex flex-col antialiased select-none relative">
+      
+      {showExternalBackButton && (
+        <button
+          onClick={handleExternalGoBack}
+          title={isPt ? "Voltar ao site anterior" : "Go back to previous site"}
+          className="fixed top-16 left-3 md:top-20 md:left-5 z-[100] flex items-center justify-center w-9 h-9 md:w-10 md:h-10 bg-white/70 dark:bg-black/70 border border-slate-300/60 dark:border-slate-700/60 shadow-sm rounded-full text-slate-800 dark:text-white active:scale-95 transition-transform touch-manipulation"
+        >
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            width="18" 
+            height="18" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          >
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </button>
+      )}
+
       <StoreHeader storeId={store.id} />
 
-      <main 
-        key={`${layoutKey}-${location.pathname}`}
-        className="flex-1 w-full min-h-[75vh] flex flex-col style-layer"
-        style={{ animation: 'quickFadeIn 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards', willChange: 'opacity' }}
-      >
-        <Outlet context={{ storeId: store.id, store }} />
-      </main>
+      <main className="flex-1 w-full bg-white dark:bg-black flex flex-col select-text">
+        
+        {/* CORREÇÃO AQUI: Removido 'flex-1'. Agora a altura é definida pelo conteúdo real do Outlet. */}
+        <div className="w-full flex flex-col">
+          <Outlet context={{ storeId: store.id, store }} />
+        </div>
 
-      <StorePageLinksSection storeId={store.id} />
+        {/* CORREÇÃO AQUI: mt-auto empurra o rodapé para baixo se a página for curta,
+            mas deixa-o fluir naturalmente depois do conteúdo se a página for longa. */}
+        <div className="mt-auto w-full flex flex-col">
+          <StorePageLinksSection storeId={store.id} />
+
+          <StoreFooter
+            store={store} 
+            source={source} 
+            isFetching={isFetching} 
+            storeSlug={storeSlug} 
+            forceRefresh={handleGlobalRefresh} 
+          />
+        </div>
+      </main>
 
       <PublicBackgroundAudio
         settings={store?.settings?.background_audio}
@@ -126,24 +213,11 @@ export function PublicLayout() {
         storeCurrency={store?.currency}
       />
 
-      <StoreFooter
-        store={store} 
-        source={source} 
-        isFetching={isFetching} 
-        storeSlug={storeSlug} 
-        forceRefresh={handleGlobalRefresh} 
-      />
-
       <FloatingSearch 
         currentStoreId={store.id} 
         storeCurrency={store.currency || "MZN"} 
         activeStoreSlug={storeSlug} 
       />
-
-      <style>{`
-        @keyframes quickFadeIn { from { opacity: 0.4; } to { opacity: 1; } }
-        .style-layer { backface-visibility: hidden; }
-      `}</style>
     </div>
   );
 }

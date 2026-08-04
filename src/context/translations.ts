@@ -1666,6 +1666,187 @@ noImage: "No Image",
   add_note_placeholder: "Add a note to your order (e.g., color, size...)",
   related_products: "You might also like",
 
+
+  dashboard_title: "Dashboard",
+    ai_assistant: "Intelligent Assistant",
+    ai_search_placeholder: "AI: I need help with...",
+    ai_processing: "Processing your query...",
+    btn_configure: "Configure",
+    setup_configured: "Configured",
+    setup_overview_title: "Store Configuration",
+    setup_action_needed: "Action Required",
+    setup_all_ready: "All Ready!",
+    cta_ready_scale: "Ready to scale?",
+    cta_add_products: "Add more products to your catalog.",
+    dashboard_welcome_title: "Hello, {name}!",
+    dashboard_welcome_desc_pending: "Let's prepare your store!",
+    dashboard_welcome_desc_ready: "Store synced in real-time!",
+    stat_total_products: "Total Products",
+    stat_active_items: "Active Items",
+    stat_total_pages: "Total Pages",
+    stat_setup_progress: "Setup Progress",
+
+    ai_answer_payments: "The currency determines how your customers view prices. To adjust this, your payment methods, or item prices, go directly to your catalog management by clicking the button below.",
+    btn_edit_currency: "Manage Currency & Prices",
+    ai_answer_products: "Managing your catalog is very simple! You can add photos, change prices, and manage stock in the Products area. Click below to go there now.",
+    btn_manage_products: "Open Catalog",
+    ai_answer_pages: "You can design your store your way in our No-Code Web Builder. Change themes, colors, and the overall layout without needing code. Let's go?",
+    btn_edit_pages: "Open Web Builder",
+    ai_answer_contact: "Your logo and primary WhatsApp number (where you will receive orders) are essential. You can update this information quickly in the store Settings.",
+    btn_edit_contact: "Edit Store Profile",
+    ai_answer_greeting: "Hello! I am your Intelligent Assistant. Tell me what you want to do (e.g., 'I want to change the currency' or 'Add an item') and I will create a direct shortcut for you.",
+    ai_answer_default: "I understand, but I couldn't find an exact shortcut for that. Try using keywords like 'product', 'page', 'currency', or 'contact' so I can guide you precisely.",
+
+
+ 
+  stat_updated_recently: "Recently Updated",
+  stat_zero_records: "0 Records",
+  stat_public_view: "Visible to the Public",
+  stat_online_status: "Published Online",
+  stat_drafts: "In Draft",
+  stat_fully_configured: "100% Configured",
+  stat_in_progress: "Pending Setup",
+  
+  pages_created: "Pages Created",
+  pages_active_online: "active online",
+  node_details_title: "User Details",
+  node_master_email: "Master Email",
+  node_store_id: "Store ID",
+  node_activity: "Activity",
+  node_recent: "Recent",
+ 
+  btn_view_store: "View Store",
+  btn_see_all: "See All",
+
+  btn_ai_go_settings: "Go to Settings",
+  btn_ai_fallback_settings: "Configure Audio",
+  btn_ai_whatsapp_support: "Speak on WhatsApp",
+
+  ai_answer_music: "Background musical tracks, media files, and active storefront sound can be customized inside your store settings.",
+  ai_answer_security_profile: "Credential resets, primary e-mail changes, official logo graphics, store name, and bio descriptions are centralized inside settings.",
+  ai_answer_languages: "The administration language toggle switcher (English/Portuguese) is pinned right at the bottom of your left sidebar.",
+  ai_answer_unknown: "Hmm, I'm still learning and haven't indexed that exact path yet.",
+
+
+
+
+
+
+
+
+  common_photo: "Photo",
+  common_country: "Country",
+  common_links: "Links",
+  common_search: "Search country...",
+  common_add: "Add",
+  portfolio_projects: "Projects",
+  portfolio_specialty: "Specialty",
+  portfolio_experience: "Experience",
+  portfolio_change_photo: "Change Photo",
+  portfolio_save_cloud: "Save",
+  portfolio_photo_limit: "Photo exceeds 1MB. Too slow!",
+  portfolio_go_settings_wa: "Set the number in Settings.",
+  error_upload: "Upload error.",
+  portfolio_user_or_url: "Username or URL",
+  portfolio_default_dev: "DEV",
+  portfolio_default_role: "Software Engineer",
+  portfolio_default_bg: "PORTFOLIO",
+  current_lang: "en",
+
+
+  gallery_toast_uploading: "Uploading to the cloud...",
+gallery_toast_success: "Successfully saved to the cloud!",
+gallery_toast_error: "Network error. Please try again.",
+gallery_toast_removed: "Item removed locally.",
+gallery_console_remove_error: "Error removing:",
+gallery_toast_fix_limits: "Please fix weight limits before syncing.",
+
+
+
+    label_beta: "Beta",
+    filter_all: "All",
+    
+    // Full Categories
+    cat_hero: "Heroes & Headers",
+    cat_media: "Media & Images",
+    cat_features: "Features & Pricing",
+    cat_content: "Content & Texts",
+    cat_contact: "Contact & Footer",
+    cat_other: "Other Elements",
+    
+    // Short Categories (for filters)
+    cat_short_hero: "Heroes",
+    cat_short_media: "Media",
+    cat_short_features: "Features",
+    cat_short_content: "Content",
+    cat_short_contact: "Contact",
+    cat_short_other: "Others",
+    
+    // Section Names
+ 
+    section_media_embeds: "Media Embeds",
+    section_esports_profile: "eSports Profile",
+    section_hero_minimalista: "Minimalist Hero",
+    section_tabela_precos: "Pricing Table",
+    section_depoimentos_clientes: "Customer Testimonials",
+    section_faq_acordion: "Accordion FAQ",
+    section_rodape_simples: "Simple Footer",
+
+
+
+
+    editor_delete_success: "Section deleted!",
+    error_cant_delete_catalog: "This section is fixed and cannot be deleted.",
+    
+    // Navigation and Layout
+  
+    editor_locked_block: "Locked Section",
+    
+    // Confirmation Modal (Soft UI)
+    modal_delete_title: "Delete Section?",
+    modal_delete_desc: "Are you sure? This action cannot be undone.",
+    modal_cancel: "Cancel",
+    modal_confirm_delete: "Delete",
+
+
+
+
+
+
+
+
+    logo_missing: "Add Logo",
+change: "Change",
+logo_title: "Symbol / Logo",
+logo_subtitle: "Square Format (1:1)",
+upload_logo: "Choose File",
+file_too_large_title: "File too large",
+crop_error: "Error cropping the image.",
+adjust_logo: "Adjust Logo",
+
+zoom: "Zoom",
+zoom_instruction: "Slide to Zoom",
+
+no_search_results: "We couldn't find any products matching your search",
+
+portal_edition: "GLOBAL EDITION • BLOG",
+portal_badge: "News & Updates",
+portal_title: "Explore the ecosystem, templates, and the future of web design.",
+portal_desc: "An immersive Blog built for creators. Discover new features like background audio and our brand-new local AI assistant.",
+portal_explore_btn: "Enter Blog",
+portal_card1_tag: "New Update • Audio",
+portal_card1_time: "Just Released",
+portal_card1_title: "Immersive background music and dynamic soundscapes for your store",
+portal_card2_tag: "Beta • Local AI",
+portal_card2_engine: "Engine v5",
+portal_card2_title: "New local AI assistant to help you streamline your business workflow",
+portal_footer_hub: "Content Hub",
+portal_footer_more: "+ Articles & Guides",
+
+promo_title: "Promotions & Blog Portal",
+    promo_desc: "View updates, posts, and campaigns published on Storely",
+    cat_bakery: "Bakery & Sweets",
+
   },
 
 
@@ -2067,7 +2248,7 @@ modal_library_subtitle: "Selecione um bloco para construir",
 
   // Empty States
   empty_products_title: "Seu estoque está vazio",
-  empty_products_desc: "Adicione seu primeiro produto para começar a vender.",
+  no_search_results: "Nenhum produto encontrado para esta pesquisa",
   btn_start_catalog: "Começar Cadastro",
   empty_pages_title: "Nenhuma página criada",
   empty_pages_desc: "Crie páginas para dar identidade à sua loja.",
@@ -3361,6 +3542,174 @@ noImage: "Sem Imagem",
   Vendedor_Verificado: "Vendedor Verificado",
   add_note_placeholder: "Adicionar nota à encomenda (ex: cor, tamanho...)",
   related_products: "Também pode gostar",
+
+
+  dashboard_title: "Dashboard",
+    ai_assistant: "Assistente Inteligente",
+    ai_search_placeholder: "IA: Preciso de ajuda com...",
+    ai_processing: "A processar a tua dúvida...",
+    btn_configure: "Configurar",
+    setup_configured: "Configurado",
+    setup_overview_title: "Configuração da Loja",
+    setup_action_needed: "Ação Necessária",
+    setup_all_ready: "Tudo Pronto!",
+    cta_ready_scale: "Pronto para escalar?",
+    cta_add_products: "Adiciona mais produtos ao teu catálogo.",
+    dashboard_welcome_title: "Olá, {name}!",
+    dashboard_welcome_desc_pending: "Vamos preparar a tua loja!",
+    dashboard_welcome_desc_ready: "Loja sincronizada em tempo real!",
+    stat_total_products: "Total Produtos",
+    stat_active_items: "Artigos Ativos",
+    stat_total_pages: "Total Páginas",
+    stat_setup_progress: "Setup Concluído",
+
+    ai_answer_payments: "A moeda determina como os teus clientes visualizam os preços. Para ajustares isso ou os métodos de pagamento, acede diretamente à gestão do teu catálogo clicando no botão abaixo.",
+    btn_edit_currency: "Gerir Moeda e Preços",
+    ai_answer_products: "A gestão do teu catálogo é muito simples! Podes adicionar fotografias, alterar preços e gerir estoques na área de Produtos. Clica abaixo para ir para lá agora.",
+    btn_manage_products: "Abrir o Catálogo",
+    ai_answer_pages: "Podes desenhar a tua loja ao teu gosto no nosso Construtor Web (No-Code). Altera temas, cores e o layout sem precisar de código. Vamos lá?",
+    btn_edit_pages: "Abrir Construtor Web",
+    ai_answer_contact: "O teu logótipo e o teu WhatsApp (por onde vais receber as encomendas) são essenciais. Podes atualizar estas informações rapidamente nas Definições da loja.",
+    btn_edit_contact: "Editar Perfil da Loja",
+    ai_answer_greeting: "Olá! Sou o teu Assistente Inteligente. Diz-me o que pretendes fazer (ex: 'Quero mudar a moeda' ou 'Adicionar um artigo') e eu crio um atalho direto para ti.",
+    ai_answer_default: "Compreendo, mas não encontrei um atalho exato. Tenta utilizar palavras como 'produto', 'página', 'moeda' ou 'contacto' para eu te conseguir guiar com precisão.",
+
+
+  
+    stat_updated_recently: "Atualizado Recentemente",
+    stat_zero_records: "0 Registos",
+    stat_public_view: "Visíveis ao Público",
+    stat_online_status: "Publicadas Online",
+    stat_drafts: "Em Rascunho",
+    stat_fully_configured: "100% Configurado",
+    stat_in_progress: "Configuração Pendente",
+    
+    pages_created: "Páginas Criadas",
+    pages_active_online: "ativas online",
+    node_details_title: "Detalhes do Usuário",
+    node_master_email: "Email Mestre",
+    node_store_id: "Store ID",
+    node_activity: "Atividade",
+    node_recent: "Recente",
+   
+    btn_view_store: "Ver Loja",
+    btn_see_all: "Ver Todas",
+ 
+    btn_ai_go_settings: "Ir para Definições",
+    btn_ai_fallback_settings: "Configurar Áudio",
+    btn_ai_whatsapp_support: "Falar no WhatsApp",
+   
+    ai_answer_music: "Para envolver os teus clientes com faixas sonoras ou uma playlist para o site, ativa a opção.",
+    ai_answer_security_profile: "A tua password, e-mail de acesso, logótipo da marca, nome e descrição oficial mudam-se na área de perfil.",
+    ai_answer_languages: "O seletor principal de línguas (Português/Inglês) encontra-se fixado no fim da barra lateral.",
+    ai_answer_unknown: "Hum, ainda estou a aprender e não localizei esse caminho exato.",
+
+
+    common_photo: "Foto",
+  common_country: "País",
+  common_links: "Links",
+  common_search: "Pesquisar país...",
+  common_add: "Adicionar",
+  portfolio_projects: "Projetos",
+  portfolio_specialty: "Especialidade",
+  portfolio_experience: "Experiência",
+  portfolio_change_photo: "Alterar Foto",
+  portfolio_save_cloud: "Salvar",
+  portfolio_photo_limit: "Foto excede 1MB. Fica lento!",
+  portfolio_go_settings_wa: "Configure o nº nas Definições.",
+  error_upload: "Erro no upload.",
+  portfolio_user_or_url: "Usuário ou URL",
+  portfolio_default_dev: "DEV",
+  portfolio_default_role: "Engenheiro de Software",
+  portfolio_default_bg: "PORTFOLIO",
+
+  current_lang: "pt",
+
+  gallery_toast_uploading: "Subindo para a nuvem...",
+gallery_toast_success: "Tudo salvo na nuvem!",
+gallery_toast_error: "Erro na rede. Tente novamente.",
+gallery_toast_removed: "Item removido localmente.",
+gallery_console_remove_error: "Erro ao remover:",
+gallery_toast_fix_limits: "Corrija os limites de peso antes de sincronizar.",
+
+
+
+    label_beta: "Beta",
+    filter_all: "Todos",
+    
+    // Categorias Completas
+    cat_hero: "Heróis & Cabeçalhos",
+    cat_media: "Mídia & Imagens",
+    cat_features: "Recursos & Preços",
+    cat_content: "Conteúdo & Textos",
+    cat_contact: "Contato & Rodapé",
+    cat_other: "Outros Elementos",
+    
+    // Categorias Curtas (para os filtros)
+    cat_short_hero: "Heróis",
+    cat_short_media: "Mídia",
+    cat_short_features: "Recursos",
+    cat_short_content: "Conteúdo",
+    cat_short_contact: "Contato",
+    cat_short_other: "Outros",
+    
+    // Nomes das Secções
+   
+    section_media_embeds: "Mídia Embutida",
+    section_esports_profile: "Perfil eSports",
+    section_hero_minimalista: "Hero Minimalista",
+    section_tabela_precos: "Tabela de Preços",
+    section_depoimentos_clientes: "Depoimentos de Clientes",
+    section_faq_acordion: "FAQ Sanfona",
+    section_rodape_simples: "Rodapé Simples",
+
+    
+    editor_delete_success: "Secção apagada!",
+    error_cant_delete_catalog: "Esta secção é fixa e não pode ser apagada.",
+    
+    // Navegação e Layout
+  
+    
+    // Configurações de Estilo
+   
+    // Ações de Apagar
+    editor_locked_block: "Secção Bloqueada",
+    
+    // Modal de Confirmação (Soft UI)
+    modal_delete_title: "Apagar Secção?",
+    modal_delete_desc: "Tens a certeza? Esta ação não pode ser desfeita.",
+    modal_cancel: "Cancelar",
+    modal_confirm_delete: "Apagar",
+    logo_missing: "Adicionar Logo",
+
+change: "Mudar",
+logo_title: "Símbolo / Logotipo",
+logo_subtitle: "Formato Quadrado (1:1)",
+upload_logo: "Escolher Ficheiro",
+file_too_large_title: "Ficheiro muito grande",
+crop_error: "Erro ao recortar a imagem.",
+adjust_logo: "Ajustar Logo",
+
+zoom: "Zoom",
+zoom_instruction: "Desliza para fazer Zoom",
+empty_products_desc: "Adicione seu primeiro produto para começar a vender.",
+portal_edition: "EDIÇÃO GLOBAL • BLOG",
+portal_badge: "Novidades & Updates",
+portal_title: "Explora o ecossistema, templates e o futuro do design web.",
+portal_desc: "Um Blog imersivo desenhado para criadores. Descobre as novas funcionalidades, como áudio imersivo e a nova IA local de assistência.",
+portal_explore_btn: "Entrar no Blog",
+portal_card1_tag: "Novo Update • Áudio",
+portal_card1_time: "Lançado Agora",
+portal_card1_title: "Música de fundo imersiva e bandas sonoras dinâmicas nas lojas",
+portal_card2_tag: "Beta • IA Local",
+portal_card2_engine: "Engine v5",
+portal_card2_title: "Nova Inteligência Artificial local para te ajudar a gerir o negócio",
+portal_footer_hub: "Hub de Conteúdo",
+portal_footer_more: "+ Artigos & Guias",
+
+promo_title: "Portal de Promoções & Blog",
+  promo_desc: "Consulte as novidades, posts e campanhas divulgadas na Storely.",
+  cat_bakery: "Padaria & Doces",
 }
 
 

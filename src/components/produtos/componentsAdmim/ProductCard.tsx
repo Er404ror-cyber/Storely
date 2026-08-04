@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Tag, Coins,  Edit, Trash2 } from 'lucide-react';
-import type { TranslateFn } from '../../../dashboard/Products';
+import type { TranslateFn } from '../../../types/TextTypes';
 import { IOSToggle } from './ProductTable';
 
 interface Product {
@@ -16,6 +16,7 @@ interface Product {
   created_at?: string;
 }
 
+// Update this interface at the top of ProductCard
 interface ProductCardProps {
   product: Product;
   storeCurrency: string;
@@ -23,6 +24,7 @@ interface ProductCardProps {
   onDelete: () => void;
   togglePending: boolean;
   t: TranslateFn;
+  onClick?: () => void; // <-- Added this to accept the prop (optional)
 }
 
 const ProductImage = memo(({ src, alt }: { src: string; alt: string }) => (

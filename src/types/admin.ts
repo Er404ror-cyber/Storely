@@ -31,6 +31,7 @@ export interface AdminStore {
   // dados vindos do auth user
   email?: string | null;
   new_email_pending?: string | null;
+  whatsapp_number?: string; // Adiciona esta linha (opcional)
 }
 
 export interface AdminPage {

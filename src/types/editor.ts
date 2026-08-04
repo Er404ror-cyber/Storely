@@ -1,7 +1,7 @@
 import { SectionLibrary } from '../components/sections/main';
 
 export interface SectionStyle {
-  cols: string;
+  cols: "1" | "2" | "4";
   theme: 'light' | 'dark';
   align: 'left' | 'center' | 'justify';
   fontSize: 'small' | 'base' | 'large';

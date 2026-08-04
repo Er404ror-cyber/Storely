@@ -354,17 +354,16 @@ function ListComponent({ products, onAction, isDark }: LayoutProps) {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-0 md:px-4" style={{ contain: "layout paint" }}>
-      <div className="grid gap-2 lg:grid-cols-[1.1fr_0.9fr] xl:grid-cols-[1.2fr_0.8fr]">
-        {/*sm:min-h-[340px] lg:min-h-[500px]*/}
+      {/* 💡 CORREÇÃO 1: Trancar a altura do grid parent no Desktop (lg:h-[480px]) */}
+      <div className="grid gap-2 lg:h-[480px] lg:grid-cols-[1.1fr_0.9fr] xl:grid-cols-[1.2fr_0.8fr]">
+        
         {featured && (
           <button
             type="button"
             onClick={() => handleAction(featured.id)}
             className={[
-              "group relative min-h-[280px] overflow-hidden rounded-[1.35rem] border text-left active:scale-[0.99]",
-
-              "h-[320px] sm:h-[400px] lg:h-[480px] ",
-              
+              "group relative w-full overflow-hidden rounded-[1.35rem] border text-left active:scale-[0.99]",
+              "h-[320px] sm:h-[400px] lg:h-full", // Acompanha a altura rígida no lg
               cardBase,
             ].join(" ")}
             style={{ contain: "layout paint" }}
@@ -413,11 +412,11 @@ function ListComponent({ products, onAction, isDark }: LayoutProps) {
           </button>
         )}
 
-       {/* Mantém 2 colunas no celular, 3 no tablet e 1 coluna vertical no PC */}
-<div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-1">
+        {/* 💡 CORREÇÃO 2: Grid-rows-3 impõe divisão exata de espaço independentemente do tamanho da imagem/texto */}
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-1 lg:grid-rows-3 lg:h-full">
   {sideItems.map((p, index) => {
     const name = safeText(p.name);
-    const isThirdItem = index === 2; // Identifica o 3º produto para ajustar o layout
+    const isThirdItem = index === 2;
 
     return (
       <button
@@ -425,20 +424,18 @@ function ListComponent({ products, onAction, isDark }: LayoutProps) {
         type="button"
         onClick={() => handleAction(p.id)}
         className={[
-          "group grid min-w-0 overflow-hidden rounded-[1.1rem] border text-left active:scale-[0.99] transition-all",
-          // 💡 RESOLVE O BURACO: O 3º card ocupa a linha toda sozinho no mobile, mas volta ao normal no tablet/PC
+          "group flex min-w-0 flex-col overflow-hidden rounded-[1.1rem] border text-left active:scale-[0.99] transition-all h-full lg:flex-row",
           isThirdItem ? "col-span-2 sm:col-span-1" : "col-span-1",
-          // 💡 RESOLVE O APERTO: Imagem no topo no celular (grid-cols-1), lado a lado só no PC (lg)
-          "grid-cols-1 lg:grid-cols-[0.9fr_1.1fr]",
           cardBase,
         ].join(" ")}
         style={{ contain: "layout paint" }}
       >
         {/* Imagem do Produto */}
         <div className={[
-          "relative overflow-hidden bg-zinc-100 dark:bg-zinc-800 lg:min-h-[118px]",
-          // Se for o 3º item esticado no celular, damos um aspecto mais horizontal à foto para não ficar gigante
-          isThirdItem ? "aspect-[21/9] sm:aspect-square lg:aspect-auto" : "aspect-square lg:aspect-auto"
+          "relative shrink-0 overflow-hidden bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center",
+          "w-full lg:h-full lg:w-[40%] xl:w-[45%]",
+          // 💡 SOLUÇÃO 1: Removemos o aspect forçado no mobile para o 3º item. O contentor vai ajustar-se à foto.
+          isThirdItem ? "sm:aspect-square lg:aspect-auto" : "aspect-square lg:aspect-auto"
         ].join(" ")}>
           <ProductImage
             src={p.main_image}
@@ -446,12 +443,17 @@ function ListComponent({ products, onAction, isDark }: LayoutProps) {
             priority={index < 2}
             width={420}
             height={420}
-            className="h-full w-full object-cover"
+            // 💡 SOLUÇÃO 2: w-full e h-auto fazem a imagem ditar a altura. O max-h-[280px] garante o controlo do tamanho.
+            className={
+              isThirdItem 
+                ? "w-full h-auto max-h-[280px] object-contain sm:absolute sm:inset-0 sm:h-full sm:object-cover" 
+                : "absolute inset-0 h-full w-full object-cover"
+            }
           />
         </div>
 
-        {/* Informações */}
-        <div className="flex min-w-0 flex-col justify-between p-2.5">
+        {/* Informações: Flex-1 garante que o texto não empurra a imagem */}
+        <div className="flex flex-1 min-w-0 flex-col justify-between overflow-hidden p-2.5 lg:p-3">
           <div className="min-w-0">
             {p.category && (
               <p className="mb-1 truncate text-[8px] font-black uppercase tracking-[0.1em] text-blue-500">

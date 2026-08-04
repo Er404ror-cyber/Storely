@@ -12,7 +12,7 @@ import { PagesList } from './dashboard/PagesList';
 import { Editor } from './dashboard/PageEditor';
 import { ProductsList } from './dashboard/Products';
 import { ProductDetails } from './dashboard/ProdutcsDetails';
-import { AdminSettings } from './components/configGeral';
+import { AdminSettings } from './dashboard/configGeral';
 
 // Auth
 import { AuthPage } from './auth/auth';
