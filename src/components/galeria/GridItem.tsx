@@ -53,7 +53,8 @@ const GridItemComponent = ({
         : 'col-span-1 aspect-[6/5] md:aspect-[6/5]';
     }
 
-    return 'break-inside-avoid-column inline-block w-full mb-2 min-h-[100px] h-auto';
+    // CORREÇÃO AQUI: break-inside-avoid mais forte e margem mb-3 para casar com o gap-3 do container
+    return 'break-inside-avoid inline-block w-full mb-3 min-h-[100px] h-auto';
   }, [cols, index]);
 
   const handleInteraction = useCallback((ev: MouseEvent<HTMLDivElement>) => {
@@ -65,7 +66,6 @@ const GridItemComponent = ({
     }
   }, [isEditable, setActiveEditIndex, isSelected, index, onPreview, item]);
 
-  // EVENTOS LEVES (Não há "scale" ou alteração de Box-Model para evitar que as Colunas saltem)
   const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>) => {
     setIsDragging(true);
     if (e.dataTransfer) {
@@ -106,9 +106,11 @@ const GridItemComponent = ({
       onDragLeave={isEditable ? handleDragLeave : undefined}
       onDrop={isEditable ? handleDrop : undefined}
       onClick={handleInteraction}
+      // CORREÇÃO AQUI: Adicionado transform-gpu e will-change-transform para evitar os cards fantasmas
       className={`relative rounded-2xl overflow-hidden group border border-zinc-600/60 dark:border-zinc-800/50 
         cursor-pointer bg-zinc-200 dark:bg-zinc-900 
         transition-colors duration-200 ease-in-out
+        transform-gpu will-change-transform
         ${isEditable ? 'select-none' : ''}
         ${isDragging ? 'opacity-40 z-0' : 'opacity-100 z-10'}
         ${isDragOver ? 'ring-2 ring-blue-500 bg-blue-500/20' : ''}

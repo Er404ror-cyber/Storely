@@ -4,7 +4,6 @@ import type { ChangeEvent, JSX } from 'react';
 import { 
   Camera, X, Trash2, RefreshCcw, ShieldAlert, 
   Database, ChevronLeft, ChevronRight, Tag, CloudUpload,
-  Image as ImageIcon
 } from 'lucide-react';
 import { editableProps, getFontSize } from '../sections/helpers';
 import type { GalleryHeaderProps, MediaItem } from '../sections/main';
@@ -142,44 +141,64 @@ export const GalleryHeader = memo(function GalleryHeader<K extends string>({
   );
 });
 
-// --- 3. ESTADO VAZIO (TUTORIAL) ---
+
 export interface EmptyStateProps {
   isEditable: boolean;
   onUploadTrigger: () => void;
   t: (key: string) => string;
 }
 
-export const EmptyState = memo(function EmptyState({ isEditable, onUploadTrigger, t }: EmptyStateProps): JSX.Element {
-  return (
-    <div className="py-12 md:py-16 flex flex-col items-center select-none bg-zinc-50 dark:bg-zinc-900/30 rounded-xl border border-zinc-200 dark:border-zinc-800">
-      <div className="text-center flex flex-col items-center gap-5 px-4">
-        <div className="w-12 h-12 bg-zinc-200 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-2">
-          <ImageIcon size={20} className="text-zinc-400" />
+export const EmptyState: React.FC<EmptyStateProps> = ({ isEditable, onUploadTrigger, t }) => (
+  <div className="relative py-14 md:py-20 mt-4 flex flex-col items-center overflow-hidden">
+    <div className="absolute inset-0 flex items-center justify-center opacity-20 dark:opacity-10 pointer-events-none">
+      <div className="grid grid-cols-3 gap-4 w-full max-w-2xl px-6">
+        <div className="aspect-[4/3] border border-current rounded-2xl flex items-center justify-center">
+          <Camera size={24} className="opacity-20" />
         </div>
-        
-        <div>
-          <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">{t('gallery_tutorial_subtitle')}</h3>
-          <p className="text-sm md:text-base font-medium text-zinc-800 dark:text-zinc-200">{t('gallery_tutorial_title')}</p>
-        </div>
-
-        <div className="flex flex-wrap justify-center gap-4 text-[10px] font-medium text-zinc-500">
-          <div className="flex items-center gap-1.5"><Database size={12}/> 10 {t('gallery_items')}</div>
-          <div className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700 my-auto" />
-          <div className="flex items-center gap-1.5">Fotos {t('gallery_max_1mb')}</div>
-          <div className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700 my-auto" />
-          <div className="flex items-center gap-1.5">Vídeos {t('gallery_max_10mb')}</div>
-        </div>
-
-        {isEditable && (
-          <button onClick={onUploadTrigger} className="mt-2 flex items-center gap-2 px-6 py-2.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-lg text-[11px] font-bold uppercase transition-opacity hover:opacity-90 active:scale-95">
-            <CloudUpload size={14} /> {t('gallery_add')}
-          </button>
-        )}
+        <div className="aspect-[4/3] border border-current rounded-2xl border-dashed" />
+        <div className="aspect-[4/3] border border-current rounded-2xl" />
       </div>
     </div>
-  );
-});
 
+    <div className="relative z-10 text-center flex flex-col items-center gap-8">
+      <div className="space-y-2">
+        <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-40">
+          {t('gallery_tutorial_subtitle')}
+        </h3>
+        <p className="text-sm md:text-base font-bold max-w-[280px] md:max-w-md mx-auto leading-snug">
+          {t('gallery_tutorial_title')}
+        </p>
+      </div>
+
+      <div className="flex items-center gap-6 md:gap-8 py-3 px-6 md:px-10 rounded-2xl md:rounded-full border border-current/10 ">
+        <div className="flex flex-col items-center">
+          <span className="text-[8px] font-black opacity-40 uppercase tracking-tighter">{t('gallery_limit_label')}</span>
+          <span className="text-[10px] font-bold">10 {t('gallery_items')}</span>
+        </div>
+        <div className="w-px h-6 bg-current opacity-10" />
+        <div className="flex flex-col items-center">
+          <span className="text-[8px] font-black opacity-40 uppercase tracking-tighter">{t('gallery_type_photos')}</span>
+          <span className="text-[10px] font-bold">{t('gallery_max_1mb')}</span>
+        </div>
+        <div className="w-px h-6 bg-current opacity-10" />
+        <div className="flex flex-col items-center">
+          <span className="text-[8px] font-black opacity-40 uppercase tracking-tighter">{t('gallery_type_videos')}</span>
+          <span className="text-[10px] font-bold">{t('gallery_max_10mb')}</span>
+        </div>
+      </div>
+
+      {isEditable && (
+        <button 
+          onClick={onUploadTrigger}
+          className="group flex items-center gap-3 px-8 py-3.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] hover:scale-[1.02] active:scale-95 transition-all shadow-sm shadow-zinc-200/50 dark:shadow-none"
+        >
+          <CloudUpload size={14} className="group-hover:-translate-y-1 transition-transform" />
+          {t('gallery_add')}
+        </button>
+      )}
+    </div>
+  </div>
+);
 // --- 4. BARRA DE EDIÇÃO GLOBAL (BOTTOM TOOLBAR) ---
 export interface GlobalEditToolbarProps {
   items: MediaItem[];

@@ -2028,6 +2028,16 @@ auth_change_data_try_again: "Please change the data before trying again.",
   version_update_title: "Update Available",
   version_update_desc: "The system has been updated with improvements. Please refresh the page to continue.",
   version_update_button: "Update Now",
+
+
+
+  product_form_pricing_label: "Pricing",
+  product_form_price_original: "Original Price",
+ 
+  product_form_discount_label: "Discount (%)",
+  product_form_final_price_label: "Final store price:",
+
+
   },
 
 
@@ -4069,6 +4079,15 @@ auth_change_data_try_again: "Por favor, altere os dados antes de tentar novament
   version_update_title: "Atualização Disponível",
   version_update_desc: "O sistema foi atualizado com melhorias. Por favor, atualize a página para continuar.",
   version_update_button: "Atualizar Agora",
+
+
+
+  product_form_pricing_label: "Precificação",
+  product_form_price_original: "Preço Original",
+  product_form_discount_label: "Desconto (%)",
+  product_form_final_price_label: "Preço final na loja:",
+
+
 
 }
 
