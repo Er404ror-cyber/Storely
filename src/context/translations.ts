@@ -2036,6 +2036,8 @@ auth_change_data_try_again: "Please change the data before trying again.",
  
   product_form_discount_label: "Discount (%)",
   product_form_final_price_label: "Final store price:",
+ofertaEspecial: "Special Offer",
+
 
 
   },
@@ -4086,6 +4088,8 @@ auth_change_data_try_again: "Por favor, altere os dados antes de tentar novament
   product_form_price_original: "Preço Original",
   product_form_discount_label: "Desconto (%)",
   product_form_final_price_label: "Preço final na loja:",
+
+  ofertaEspecial: "Oferta Especial",
 
 
 

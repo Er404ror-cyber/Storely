@@ -121,9 +121,28 @@ export function ProductsCatalog(props: CatalogProps) {
     t
   );
 
-  // 3 e 4. ATUALIZAÇÃO DO PROCESSAMENTO (sem precisar de passar o currentLang)
+  // 3 e 4. ATUALIZAÇÃO DO PROCESSAMENTO COM CÁLCULO DE DESCONTO
   const processedProducts = useMemo(() => {
-    return enrichProductsIntelligently(rawProducts);
+    const enriched = enrichProductsIntelligently(rawProducts);
+    
+    return enriched.map(p => {
+      // Cálculo do desconto centralizado
+      const discount = Number(p.discount_percent) || 0;
+      const hasDiscount = discount > 0;
+      const originalPrice = Number(p.price) || 0;
+      
+      const finalPrice = hasDiscount 
+        ? originalPrice - (originalPrice * (discount / 100))
+        : originalPrice;
+
+      return {
+        ...p,
+        discount_percent: discount,
+        has_discount: hasDiscount,
+        original_price: originalPrice,
+        final_price: finalPrice
+      };
+    });
   }, [rawProducts, enrichProductsIntelligently]);
 
   useEffect(() => {
@@ -151,17 +170,14 @@ export function ProductsCatalog(props: CatalogProps) {
     }
     
     if (activeAttribute) {
-      // 1. Dicionário de Géneros Conhecidos
       const genderFilters = ["Homem", "Mulher", "Criança", "Men", "Women", "Kids"];
       const isGenderFilter = genderFilters.includes(activeAttribute);
 
       filtered = filtered.filter(p => {
         if (isGenderFilter) {
-          // REGRA DE OURO: Mostra se o produto for do género selecionado OU se não tiver nenhum género (Unissexo/Neutro)
           return p.metadata?.gender === activeAttribute || !p.metadata?.gender;
         }
         
-        // Se for um tamanho, cor ou material, tem de corresponder exatamente.
         return (
           (p.metadata?.sizes || []).includes(activeAttribute) ||
           (p.metadata?.attributes || []).includes(activeAttribute)
@@ -177,10 +193,12 @@ export function ProductsCatalog(props: CatalogProps) {
     if (isEditor || !activeStoreSlug) return;
     const clickedProduct = processedProducts.find(p => p.id === productId);
 
+    // O state agora transporta o clickedProduct que já contém os campos matemáticos
+    // final_price, original_price, discount_percent e has_discount
     navigate(`/${activeStoreSlug}/${pageSlug || "products"}/${productId}`, { 
       state: { 
         fromStore: true,
-        product: clickedProduct,
+        product: clickedProduct, // Já inclui o desconto injetado pelo useMemo acima
         initialProducts: processedProducts,
         storeCurrency: storeCurrency,
         effectiveStoreId: effectiveStoreId

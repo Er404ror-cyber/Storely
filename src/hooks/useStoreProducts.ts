@@ -2,22 +2,22 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
 import { safeText, cacheKey, CACHE_VERSION, readCache, writeCache } from "../utils/text";
 
-
 export const SUPER_CACHE_CONFIG = {
-    staleTime: 1000 * 60 * 60,      
-    gcTime: 1000 * 60 * 60 * 2,     
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-  };
+  staleTime: 1000 * 60 * 60,      
+  gcTime: 1000 * 60 * 60 * 2,     
+  refetchOnWindowFocus: false,
+  refetchOnMount: false,
+  refetchOnReconnect: false,
+};
 
-// Tipagem unificada com TODOS os detalhes do produto
+// Tipagem unificada com TODOS os detalhes do produto, incluindo o desconto
 export type Product = {
   id: string;
   store_id: string;
   name: string;
   slug?: string;
   price: number;
+  discount_percent?: number; // <-- ADICIONADO AQUI
   description?: string;
   image_url?: string;
   is_active?: boolean;
@@ -47,7 +47,8 @@ export function useStoreProducts(effectiveStoreId: string | null, storeCurrency:
       // 2. SE O CACHE EXPIROU, VAI AO SUPABASE (Trazendo tudo)
       const { data, error } = await supabase
         .from("products")
-        .select("id, store_id, name, slug, price, description, image_url, is_active, created_at, category, gallery, main_image, full_description, unit")
+        // <-- ADICIONADO O discount_percent AQUI (e removida a vírgula extra)
+        .select("id, store_id, name, slug, price, discount_percent, description, image_url, is_active, created_at, category, gallery, main_image, full_description, unit")
         .eq("store_id", effectiveStoreId)
         .eq("is_active", true)
         .order("created_at", { ascending: false });
@@ -60,6 +61,7 @@ export function useStoreProducts(effectiveStoreId: string | null, storeCurrency:
         name: safeText(product.name, 70),
         slug: product.slug || undefined,
         price: Number(product.price) || 0,
+        discount_percent: Number(product.discount_percent) || 0, // <-- ADICIONADO AQUI
         description: product.description || undefined,
         image_url: product.image_url || undefined,
         is_active: product.is_active ?? true,
