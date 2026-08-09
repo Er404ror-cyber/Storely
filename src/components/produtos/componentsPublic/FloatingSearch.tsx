@@ -8,11 +8,8 @@ import { supabase } from "../../../lib/supabase";
 import { getCategoryStyle, normalizeCategory, getSmartSynonyms } from "../../../utils/categories";
 import { STORE_CACHE_TTL } from "../../../utils/storeCache"; 
 import { readCache, writeCache, cacheKey, CACHE_VERSION } from "../../../utils/text";
-
-// 1. IMPORTAMOS O NOVO HOOK EM VEZ DA FUNÇÃO DIRETA
 import { useProductIntelligence } from "../../../utils/ProductIntelligence"; 
 
-// Importações Modulares Nativas
 import { SearchSuggestionsView } from "./SearchSuggestionsView";
 import { SearchResultsView } from "./SearchResultsView";
 import { SearchInputField } from "./SearchInputField";
@@ -53,8 +50,6 @@ function getTypoDistance(a: string, b: string, maxLimit = 2): number {
 
 export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug }: FloatingSearchProps) {
   const { t } = useTranslate();
-  
-  // 2. INICIALIZAMOS O MOTOR DE INTELIGÊNCIA AQUI
   const { enrichProductsIntelligently } = useProductIntelligence();
   
   const navigate = useNavigate();
@@ -69,6 +64,15 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
   
   const [triggerGlobal, setTriggerGlobal] = useState(false);
   const [showGlobalCats, setShowGlobalCats] = useState(false);
+
+  // DETETAR NAVEGAÇÃO EXTERNA PARA ABRIR AUTOMATICAMENTE
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.openSearch && isProductsRoute) {
+      setIsOpen(true);
+      navigate(location.pathname, { replace: true, state: { ...state, openSearch: false } });
+    }
+  }, [location.state, isProductsRoute, navigate, location.pathname]);
 
   const targetCacheKey = useMemo(() => {
     return cacheKey("store_catalog", CACHE_VERSION, currentStoreId);
@@ -137,10 +141,8 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
     refetchOnWindowFocus: false,
   });
 
-  // 3. ATUALIZAMOS O USEMEMO PARA USAR O NOVO HOOK
   const localProducts = useMemo(() => {
     if (rawLocalProducts.length > 0 && !rawLocalProducts[0].metadata) {
-      // Já não precisamos passar a linguagem, o Hook trata disso!
       return enrichProductsIntelligently(rawLocalProducts);
     }
     return rawLocalProducts;
@@ -156,14 +158,30 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
 
       const { data, error } = await supabase
         .from("products")
-        .select(`id, name, price, main_image, store_id, stores ( slug, name )`)
+        .select(`id, name, price, discount_percent, main_image, store_id, stores ( slug, name )`)
         .neq("store_id", currentStoreId)
         .eq("is_active", true)
         .or(smartQueryString)
         .limit(12);
         
       if (error) return [];
-      const finalData = data || [];
+      
+      // OTIMIZAÇÃO: Cálculo de descontos processado em memória (Custo de CPU praticamente 0ms para 12 items)
+      const finalData = (data || []).map((row: any) => {
+        const basePrice = row.price ? Number(row.price) : 0;
+        const discPercent = row.discount_percent ? Number(row.discount_percent) : 0;
+        const hasDiscount = discPercent > 0;
+        const finalPrice = hasDiscount ? basePrice - (basePrice * (discPercent / 100)) : basePrice;
+
+        return {
+          ...row,
+          hasDiscount,
+          originalPrice: hasDiscount ? basePrice : null,
+          finalPrice,
+          discountPercent: hasDiscount ? discPercent : null,
+        };
+      });
+
       writeCache(key, finalData, activeStoreSlug);
       return finalData;
     },
@@ -174,21 +192,16 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
     refetchOnWindowFocus: false,
   });
 
-  // ==========================================
-  // CAPTURA DA IMAGEM PARA A CATEGORIA
-  // ==========================================
   const categories = useMemo(() => {
     const categoryMap = new Map<string, { name: string; image: string | null }>();
     
     localProducts.forEach(p => {
       const parent = p.metadata?.parentCategory;
       const child = p.metadata?.subCategory;
-      // Pega a foto principal do produto
       const prodImage = p.main_image || null; 
       
       if (parent) {
         const normParent = normalizeCategory(parent);
-        // Se a categoria ainda não existe no Map ou existe mas ainda não tem foto, adicionamos
         if (!categoryMap.has(normParent) || (categoryMap.has(normParent) && !categoryMap.get(normParent)?.image)) {
           categoryMap.set(normParent, { name: parent, image: prodImage });
         }
@@ -206,9 +219,9 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
       return { 
         name: data.name, 
         searchKey: norm, 
-        emoji: style.emoji, // Mantemos o emoji como fallback caso não haja foto
+        emoji: style.emoji,
         color: style.color,
-        image: data.image   // <-- Nova propriedade de imagem!
+        image: data.image
       };
     });
   }, [localProducts]);
@@ -391,7 +404,7 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
         />
       </div>
 
-      <div className="order-3 md:order-2 flex-1 overflow-y-auto px-4 py-6 no-scrollbar overscroll-contain">
+      <div className="order-3 md:order-2 flex-1 overflow-y-auto px-4 py-6 no-scrollbar overscroll-contain ">
         {!deferredTerm ? (
           <SearchSuggestionsView
             showGlobalCats={showGlobalCats}

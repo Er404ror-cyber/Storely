@@ -40,7 +40,7 @@ function ListComponent({ products, onAction, isDark }: LayoutProps) {
             <div className="absolute inset-x-3 bottom-3 z-10 min-w-0 sm:inset-x-5 sm:bottom-5">
               <div className="mb-2 flex min-w-0 flex-wrap items-center gap-2">
                 {featured.category && (
-                  <span className="max-w-full truncate rounded-full bg-white/15 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-white backdrop-blur-sm">
+                  <span className="max-w-full truncate rounded-full bg-white/15 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-white ">
                     {safeText(featured.category)}
                   </span>
                 )}

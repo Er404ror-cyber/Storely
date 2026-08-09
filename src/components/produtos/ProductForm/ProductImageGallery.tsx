@@ -54,7 +54,7 @@ export const ProductImageGallery = memo(function ProductImageGallery({
                 {preview || isProcessing ? (
                   <>
                     {preview && <img src={preview} alt="" className={`h-full w-full object-cover ${isProcessing ? 'opacity-30' : 'opacity-100'}`} />}
-                    {isProcessing && <div className="absolute inset-0 flex items-center justify-center bg-slate-50/50 backdrop-blur-[2px]"><Loader2 className="h-6 w-6 animate-spin text-blue-500" /></div>}
+                    {isProcessing && <div className="absolute inset-0 flex items-center justify-center bg-slate-50/50 "><Loader2 className="h-6 w-6 animate-spin text-blue-500" /></div>}
                     
                     {/* Contentor flex que gere os espaços e evita sobreposições no telemóvel */}
                     <div className="absolute inset-x-2 top-2 flex items-start justify-between gap-1 pointer-events-none">
@@ -77,7 +77,7 @@ export const ProductImageGallery = memo(function ProductImageGallery({
                     </div>
 
                     <div className="absolute bottom-2 flex w-full items-center justify-between px-2">
-                      {!!size && <div className="rounded-lg bg-slate-900/80 px-2 py-1 text-[9px] font-bold text-white backdrop-blur-md">{formatBytes(size)}</div>}
+                      {!!size && <div className="rounded-lg bg-slate-900/80 px-2 py-1 text-[9px] font-bold text-white ">{formatBytes(size)}</div>}
                       {isLocalBlob && !isProcessing && (
                         <div className={`rounded-xl px-1 py-1 text-[6px] sm:text-[8px] font-black uppercase text-white shadow-sm ${isOrphanBlob ? 'bg-red-500' : 'bg-amber-500'}`}>
                           {isOrphanBlob ? t('editor_modal_orphan_media', { defaultValue: 'Inválida' }) : t('editor_modal_pending_media_title', { defaultValue: 'Pendente' })}

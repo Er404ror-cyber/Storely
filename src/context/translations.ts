@@ -2026,7 +2026,6 @@ auth_change_data_try_again: "Please change the data before trying again.",
 
 
   version_update_title: "Update Available",
-  version_update_desc: "The system has been updated with improvements. Please refresh the page to continue.",
   version_update_button: "Update Now",
 
 
@@ -2038,7 +2037,9 @@ auth_change_data_try_again: "Please change the data before trying again.",
   product_form_final_price_label: "Final store price:",
 ofertaEspecial: "Special Offer",
 
-
+version_update_badge: "New Era Available",
+  version_update_desc: "A new version with performance enhancements and fixes has been deployed to ensure maximum smoothness for your store.",
+  version_update_released: "Released on",
 
   },
 
@@ -4079,7 +4080,6 @@ auth_change_data_try_again: "Por favor, altere os dados antes de tentar novament
   product_form_unit_conjunto: "Conjunto",
 
   version_update_title: "Atualização Disponível",
-  version_update_desc: "O sistema foi atualizado com melhorias. Por favor, atualize a página para continuar.",
   version_update_button: "Atualizar Agora",
 
 
@@ -4091,7 +4091,9 @@ auth_change_data_try_again: "Por favor, altere os dados antes de tentar novament
 
   ofertaEspecial: "Oferta Especial",
 
-
+  version_update_badge: "Nova Era Disponível",
+  version_update_desc: "Uma nova versão com melhorias de desempenho e correções foi instalada para garantir a máxima fluidez na sua loja.",
+  version_update_released: "Lançado em",
 
 }
 

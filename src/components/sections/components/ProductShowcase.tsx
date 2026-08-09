@@ -1,15 +1,15 @@
-import { useState, useDeferredValue, useMemo, useCallback } from "react";
+import { useMemo, useCallback } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Package, Search, Plus, Target, X, RotateCcw, SlidersHorizontal } from "lucide-react";
+import { Package, Search, Plus } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
 import { useTranslate } from "../../../context/LanguageContext";
 import { LayoutGrid, LayoutList, ProductShowcaseSkeleton } from "../../produtos/layouts";
 import { useAdminStore } from "../../../hooks/useAdminStore";
 
-import { safeText, cacheKey, CACHE_VERSION, INITIAL_VISIBLE, readCache, writeCache } from "../../../utils/text";
+import { cacheKey, CACHE_VERSION, INITIAL_VISIBLE, readCache, writeCache } from "../../../utils/text";
 import { HeaderText } from "../../produtos/HeaderText";
-import { useStoreProducts, SUPER_CACHE_CONFIG, type Product } from "../../../hooks/useStoreProducts"; // AJUSTA O PATH AQUI
+import { useStoreProducts, SUPER_CACHE_CONFIG,} from "../../../hooks/useStoreProducts";
 
 export type SectionStyles = {
   theme?: "dark" | "light";
@@ -34,13 +34,6 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
   const isEditor = location.pathname.includes("/editor/");
   const isReadOnly = !isEditor;
   const isDark = style?.theme === "dark";
-  const allLabel = t("common_all") || "Todos";
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const deferredSearch = useDeferredValue(searchTerm);
-  const [selectedCategory, setSelectedCategory] = useState<string>(allLabel);
-  const [maxPrice, setMaxPrice] = useState<number | null>(null);
-  const [isFiltersVisible, setIsFiltersVisible] = useState(false);
 
   const layoutCols = Math.min(Math.max(Number(style?.cols) || 4, 1), 4);
   const activeStoreSlug = isReadOnly ? storeSlug : adminStore?.slug;
@@ -61,13 +54,12 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
       return safeStore;
     },
     enabled: Boolean(storeSlug && isReadOnly),
-    ...SUPER_CACHE_CONFIG, // Usa a mesma proteção
+    ...SUPER_CACHE_CONFIG,
   });
 
   const effectiveStoreId = publicStore?.id || adminStore?.id || null;
   const storeCurrency = publicStore?.currency || adminStore?.currency || "MZN";
 
-  // 💡 CENTRALIZADO: Chama o cache protegido com os dados completos
   const { data: products = [], isLoading: isLoadingProducts } = useStoreProducts(
     effectiveStoreId, 
     storeCurrency, 
@@ -77,43 +69,10 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
 
   const isLoading = (isLoadingStore || isLoadingProducts) && products.length === 0;
 
-  const absoluteMaxPrice = useMemo(() => {
-    if (!products.length) return 10000;
-    return Math.max(1, ...products.map((p) => Number(p.price) || 0));
+  const displayProducts = useMemo(() => {
+    return products.slice(0, INITIAL_VISIBLE);
   }, [products]);
 
-  const categories = useMemo<string[]>(() => {
-    const set = new Set<string>();
-    for (const product of products) {
-      const cat = safeText(product.category, 40);
-      if (cat) set.add(cat);
-    }
-    return [allLabel, ...Array.from(set)];
-  }, [products, allLabel]);
-
-  const filteredProducts = useMemo<Product[]>(() => {
-    const term = deferredSearch.trim().toLowerCase();
-    return products.filter((p) => {
-      if (term && !p.name.toLowerCase().includes(term)) return false;
-      if (selectedCategory !== allLabel && p.category !== selectedCategory) return false;
-      if (maxPrice !== null && (Number(p.price) || 0) > maxPrice) return false;
-      return true;
-    });
-  }, [products, deferredSearch, selectedCategory, maxPrice, allLabel]);
-
-  const displayProducts = useMemo(() => {
-    return filteredProducts.slice(0, INITIAL_VISIBLE);
-  }, [filteredProducts]);
-
-  const hasActiveFilters = isReadOnly && (selectedCategory !== allLabel || maxPrice !== null || deferredSearch.trim() !== "");
-
-  const clearFilters = useCallback(() => {
-    setSelectedCategory(allLabel);
-    setMaxPrice(null);
-    setSearchTerm("");
-  }, [allLabel]);
-
-  // 💡 JÁ VAI COMPLETO COM AS GALERIAS
   const handleProductClick = useCallback((productId: string) => {
     if (!isReadOnly || !storeSlug) return;
     const clickedProduct = products.find(p => p.id === productId);
@@ -128,22 +87,20 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
     });
   }, [isReadOnly, navigate, storeSlug, pageSlug, products, storeCurrency, effectiveStoreId]);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(safeText(e.target.value, 40));
-  }, []);
-
-  const handleCategoryChange = useCallback((cat: string) => {
-    setSelectedCategory(cat);
-  }, []);
-
-  const handleMaxPriceChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setMaxPrice(Number(e.target.value));
-  }, []);
-
-  const handleMaxPriceInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, 9);
-    setMaxPrice(value === "" ? null : Number(value));
-  }, []);
+  // ==========================================
+  // DISPARA A NAVEGAÇÃO E ABRE O FLOATING SEARCH
+  // ==========================================
+  const handleOpenSearch = useCallback(() => {
+    if (isEditor || !activeStoreSlug) return;
+    navigate(`/${activeStoreSlug}/products`, {
+      state: {
+        openSearch: true, // FLAG PARA O FLOATING SEARCH ABRIR
+        initialProducts: products,
+        storeCurrency: storeCurrency,
+        effectiveStoreId: effectiveStoreId
+      }
+    });
+  }, [isEditor, activeStoreSlug, navigate, products, storeCurrency, effectiveStoreId]);
 
   const handleViewFullCatalog = useCallback(() => {
     if (isEditor || !activeStoreSlug) return;
@@ -151,11 +108,10 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
       state: {
         initialProducts: products,
         storeCurrency: storeCurrency,
-        effectiveStoreId: effectiveStoreId,
-        initialFilters: { searchTerm, selectedCategory, maxPrice }
+        effectiveStoreId: effectiveStoreId
       }
     });
-  }, [isEditor, activeStoreSlug, navigate, products, storeCurrency, effectiveStoreId, searchTerm, selectedCategory, maxPrice]);
+  }, [isEditor, activeStoreSlug, navigate, products, storeCurrency, effectiveStoreId]);
 
   return (
     <section className={`px-3 py-6 md:px-6 md:py-9 overflow-hidden ${isDark ? "bg-[#0a0a0a] text-zinc-100" : "bg-white text-slate-900"}`} style={{ isolation: "isolate", backfaceVisibility: "hidden", transform: "translate3d(0, 0, 0)" }}>
@@ -163,51 +119,18 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
         <HeaderText content={content} style={style} isReadOnly={isReadOnly} isDark={isDark} t={t} onUpdate={onUpdate} />
 
         {isReadOnly && (
-          <div className="mb-5 flex flex-col gap-3">
-            <div className="flex gap-2">
-              <div className={`flex min-w-0 flex-1 items-center gap-2 rounded-2xl border px-3 py-2.5 ${isDark ? "bg-zinc-900/50 border-zinc-800" : "bg-slate-50 border-slate-100"}`}>
-                <Search size={17} className="shrink-0 opacity-40" />
-                <input type="text" value={searchTerm} placeholder={t("showcase_searchPlaceholder")} className="w-full min-w-0 bg-transparent border-none outline-none text-[16px] md:text-sm font-semibold truncate" onChange={handleSearchChange} />
-                {searchTerm && <button type="button" onClick={() => setSearchTerm("")} className="shrink-0 opacity-60 active:scale-95"><X size={15} /></button>}
-              </div>
-
-              <button type="button" onClick={() => setIsFiltersVisible((v) => !v)} className={`shrink-0 flex items-center justify-center gap-2 rounded-2xl border px-3 md:px-4 py-2.5 font-bold text-xs active:scale-[0.98] ${isFiltersVisible ? "bg-blue-600 border-blue-600 text-white" : isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-slate-200 text-slate-600"}`}>
-                <SlidersHorizontal size={16} />
-                <span className="hidden md:inline">{isFiltersVisible ? t("common_close") : t("common_filters")}</span>
-              </button>
-            </div>
-
-            {isFiltersVisible && (
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-                  {categories.map((cat) => (
-                    <button key={cat} type="button" onClick={() => handleCategoryChange(cat)} className={`max-w-[150px] truncate rounded-xl border px-4 py-2 text-[10px] font-bold uppercase tracking-wide whitespace-nowrap active:scale-[0.98] ${selectedCategory === cat ? "bg-blue-600 border-blue-600 text-white" : isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-slate-200 text-slate-500"}`}>{cat}</button>
-                  ))}
-                </div>
-
-                <div className={`grid grid-cols-1 items-center gap-3 rounded-2xl border px-4 py-3 md:grid-cols-[auto_1fr_auto] ${isDark ? "bg-zinc-900/30 border-zinc-800" : "bg-slate-50/50 border-slate-100"}`}>
-                  <div className="flex items-center gap-2"><Target size={15} className="text-blue-600" /><span className="text-[10px] font-bold uppercase opacity-60">{t("showcase_maxPrice")}</span></div>
-                  <input type="range" min="0" max={absoluteMaxPrice} value={maxPrice ?? absoluteMaxPrice} onChange={handleMaxPriceChange} className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-zinc-200 accent-blue-600 dark:bg-zinc-800" />
-                  <div className={`flex min-w-[105px] items-center rounded-xl border px-3 py-2 ${isDark ? "bg-zinc-950/60 border-zinc-800" : "bg-white border-slate-200"}`}>
-                    <span className="mr-1 max-w-[42px] truncate text-[11px] opacity-40">{storeCurrency}</span>
-                    <input type="text" inputMode="numeric" value={maxPrice === null ? "" : maxPrice} placeholder={t("filter_unlimited")} onChange={handleMaxPriceInput} className="w-full bg-transparent text-center text-[16px] md:text-sm font-bold outline-none" />
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {hasActiveFilters && (
-          <div className="mb-5 flex flex-wrap items-center gap-2">
-            <span className="mr-1 text-[10px] font-black uppercase tracking-tight opacity-40">{t("showcase_filter_active")}</span>
-            {selectedCategory !== allLabel && (
-              <button type="button" onClick={() => handleCategoryChange(allLabel)} className="flex max-w-[170px] items-center gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-[10px] font-bold text-blue-500"><span className="truncate">{selectedCategory}</span><X size={12} className="shrink-0" /></button>
-            )}
-            {maxPrice !== null && (
-              <button type="button" onClick={() => setMaxPrice(null)} className="flex items-center gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-[10px] font-bold text-blue-500"><span className="truncate">{t("showcase_price_up_to").replace("{{price}}", String(maxPrice))}</span><X size={12} className="shrink-0" /></button>
-            )}
-            <button type="button" onClick={clearFilters} className="flex items-center gap-1.5 px-2 py-1.5 text-[10px] font-bold opacity-60 active:scale-95"><RotateCcw size={12} /> {t("showcase_clear_all")}</button>
+          <div className="mb-6 w-full max-w-xl">
+            {/* BOTÃO QUE IMITA UM INPUT DE PESQUISA */}
+            <button 
+              type="button"
+              onClick={handleOpenSearch}
+              className={`flex w-full min-w-0 items-center gap-2 rounded-2xl border px-4 py-3 shadow-sm transition-transform active:scale-[0.98] cursor-text ${isDark ? "bg-zinc-900/50 border-zinc-800 hover:bg-zinc-800" : "bg-slate-50 border-slate-200 hover:bg-slate-100"}`}
+            >
+              <Search size={18} className="shrink-0 opacity-40 text-current" />
+              <span className="w-full text-left min-w-0 bg-transparent border-none outline-none text-[16px] md:text-sm font-semibold truncate opacity-50">
+                {t("showcase_searchPlaceholder") || "Pesquisar produtos..."}
+              </span>
+            </button>
           </div>
         )}
 
@@ -222,9 +145,9 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
                 <LayoutGrid products={displayProducts} onAction={handleProductClick} cols={layoutCols} isDark={isDark} t={t} />
               )}
 
-              {isReadOnly && filteredProducts.length > INITIAL_VISIBLE && (
+              {isReadOnly && products.length > INITIAL_VISIBLE && (
                 <div className="mt-8 flex justify-center">
-                  <button type="button" onClick={handleViewFullCatalog} className={`flex items-center gap-2 rounded-2xl px-6 py-3 text-[11px] font-bold uppercase tracking-widest active:scale-95 ${isDark ? "bg-white text-black" : "bg-zinc-900 text-white"}`}>
+                  <button type="button" onClick={handleViewFullCatalog} className={`flex items-center gap-2 rounded-2xl px-6 py-3 text-[11px] font-bold uppercase tracking-widest transition-transform active:scale-95 ${isDark ? "bg-white text-black hover:bg-zinc-200" : "bg-zinc-900 text-white hover:bg-zinc-800"}`}>
                     <Plus size={16} /> {t("showcase_viewFull")}
                   </button>
                 </div>
@@ -232,10 +155,12 @@ export function ProductShowcase({ content, style, onUpdate }: ShowcaseProps) {
             </div>
           )}
 
-          {!isLoading && filteredProducts.length === 0 && (
+          {!isLoading && products.length === 0 && (
             <div className="rounded-3xl border border-dashed border-zinc-200 py-16 text-center dark:border-zinc-800">
-              <Package size={38} className="mx-auto mb-4 text-zinc-500 opacity-10" />
-              <p className="text-xs font-bold uppercase tracking-widest opacity-40">{t("showcase_empty")}</p>
+              <Package size={38} className="mx-auto mb-4 text-zinc-500 opacity-20" />
+              <p className="text-xs font-bold uppercase tracking-widest opacity-50">
+                {t("showcase_empty")}
+              </p>
             </div>
           )}
         </div>
