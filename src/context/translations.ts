@@ -2041,6 +2041,12 @@ version_update_badge: "New Era Available",
   version_update_desc: "A new version with performance enhancements and fixes has been deployed to ensure maximum smoothness for your store.",
   version_update_released: "Released on",
 
+
+    filter_subcategories: "Subcategories:",
+    filter_all_sub: "All",
+    filter_clear: "Clear",
+    gender_kid: "Kids",
+    search_results_title: "Search Results"
   },
 
 
@@ -4094,6 +4100,13 @@ auth_change_data_try_again: "Por favor, altere os dados antes de tentar novament
   version_update_badge: "Nova Era Disponível",
   version_update_desc: "Uma nova versão com melhorias de desempenho e correções foi instalada para garantir a máxima fluidez na sua loja.",
   version_update_released: "Lançado em",
+
+
+    filter_subcategories: "Subcategorias:",
+    filter_all_sub: "Todas",
+    filter_clear: "Limpar",
+    gender_kid: "Criança",
+    search_results_title: "Resultados da Pesquisa",
 
 }
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useDeferredValue, useMemo, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search, X } from "lucide-react";
+import { Search, X, ArrowLeft } from "lucide-react";
 
 import { useTranslate } from "../../../context/LanguageContext";
 import { supabase } from "../../../lib/supabase";
@@ -25,7 +25,6 @@ interface FloatingSearchProps {
 function getTypoDistance(a: string, b: string, maxLimit = 2): number {
   if (a.length === 0) return b.length;
   if (b.length === 0) return a.length;
-  
   if (Math.abs(a.length - b.length) > maxLimit) return maxLimit + 1;
   
   let prevRow = Array.from({ length: b.length + 1 }, (_, i) => i);
@@ -49,7 +48,7 @@ function getTypoDistance(a: string, b: string, maxLimit = 2): number {
 }
 
 export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug }: FloatingSearchProps) {
-  const { t } = useTranslate();
+  const { t, language } = useTranslate();
   const { enrichProductsIntelligently } = useProductIntelligence();
   
   const navigate = useNavigate();
@@ -65,7 +64,6 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
   const [triggerGlobal, setTriggerGlobal] = useState(false);
   const [showGlobalCats, setShowGlobalCats] = useState(false);
 
-  // DETETAR NAVEGAÇÃO EXTERNA PARA ABRIR AUTOMATICAMENTE
   useEffect(() => {
     const state = location.state as any;
     if (state?.openSearch && isProductsRoute) {
@@ -89,8 +87,11 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        setIsOpen(false);
-        setSearchTerm("");
+        if (searchTerm) {
+          setSearchTerm("");
+        } else {
+          setIsOpen(false);
+        }
       }
     };
 
@@ -107,7 +108,7 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
       document.body.style.overflow = '';
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen]);
+  }, [isOpen, searchTerm]);
 
   useEffect(() => {
     setTriggerGlobal(false);
@@ -142,11 +143,9 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
   });
 
   const localProducts = useMemo(() => {
-    if (rawLocalProducts.length > 0 && !rawLocalProducts[0].metadata) {
-      return enrichProductsIntelligently(rawLocalProducts);
-    }
-    return rawLocalProducts;
-  }, [rawLocalProducts, enrichProductsIntelligently]);
+    if (!rawLocalProducts || rawLocalProducts.length === 0) return [];
+    return enrichProductsIntelligently(rawLocalProducts);
+  }, [rawLocalProducts, enrichProductsIntelligently, language]);
 
   const { data: globalProducts = [], isLoading: isLoadingGlobal } = useQuery({
     queryKey: ["search-global-products-list", smartQueryString],
@@ -166,7 +165,6 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
         
       if (error) return [];
       
-      // OTIMIZAÇÃO: Cálculo de descontos processado em memória (Custo de CPU praticamente 0ms para 12 items)
       const finalData = (data || []).map((row: any) => {
         const basePrice = row.price ? Number(row.price) : 0;
         const discPercent = row.discount_percent ? Number(row.discount_percent) : 0;
@@ -258,6 +256,7 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
     for (const p of localProducts) {
       const searchableFields = [
         p.name, 
+        p.category,
         p.metadata?.subCategory, 
         p.metadata?.parentCategory,
         p.metadata?.gender,
@@ -278,7 +277,7 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
 
     return matches;
   }, [localProducts, deferredTerm]);
- 
+
   const localResults = useMemo(() => {
     if (!deferredTerm) return [];
     
@@ -337,6 +336,15 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
     });
   }, [localProducts, deferredTerm, t]);
   
+  // AÇÃO INTELIGENTE: Se houver algo pesquisado, o botão limpa/volta; caso contrário, fecha a janela
+  const handleHeaderAction = useCallback(() => {
+    if (searchTerm) {
+      setSearchTerm("");
+    } else {
+      setIsOpen(false);
+    }
+  }, [searchTerm]);
+
   const handleClose = useCallback(() => {
     setIsOpen(false);
     setTimeout(() => setSearchTerm(""), 300);
@@ -370,9 +378,10 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[20] flex h-14 w-14 items-center justify-center rounded-full shadow-xl transition-transform duration-200 hover:scale-105 active:scale-95 cursor-pointer bg-zinc-900 text-zinc-50 dark:bg-zinc-100 dark:text-zinc-950 border border-zinc-200/10 dark:border-zinc-800/40 "
+        aria-label={t("search_title") || "Pesquisar"}
+        className="fixed bottom-5 right-5 md:bottom-7 md:right-7 z-[99] flex h-14 w-14 items-center justify-center rounded-full shadow-2xl transition-all duration-300 hover:scale-110 active:scale-90 cursor-pointer border bg-zinc-900 text-amber-400 border-zinc-700/60 shadow-zinc-950/30 ring-2 ring-zinc-800/80 dark:bg-gradient-to-tr dark:from-amber-500 dark:to-amber-400 dark:text-zinc-950 dark:border-amber-300/50 dark:shadow-amber-500/25 dark:ring-amber-400/30"
       >
-        <Search size={22} />
+        <Search size={22} className="stroke-[2.5]" />
       </button>
     );
   }
@@ -381,13 +390,30 @@ export function FloatingSearch({ currentStoreId, storeCurrency, activeStoreSlug 
 
   return (
     <div className="fixed inset-0 z-[99999] flex flex-col transition-colors duration-200 isolation-isolate h-[100dvh] overflow-hidden select-none bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-100 ">
+      
+      {/* CABEÇALHO COM BOTÃO MULTIFUNÇÃO (VOLTAR / FECHAR) */}
       <div className="order-1 flex shrink-0 items-center justify-between px-6 py-4 border-b border-zinc-200/50 dark:border-zinc-800/50 bg-white/40 dark:bg-zinc-950/40 text-zinc-800 dark:text-zinc-100">
-        <h2 className="text-base font-black tracking-widest uppercase opacity-90">{t("search_title") || "Pesquisa"}</h2>
+        <div className="flex items-center gap-2">
+          {searchTerm && (
+            <button
+              onClick={handleHeaderAction}
+              className="mr-1 rounded-full p-1.5 transition-all active:scale-90 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+              title="Voltar ao início"
+            >
+              <ArrowLeft size={18} />
+            </button>
+          )}
+          <h2 className="text-base font-black tracking-widest uppercase opacity-90">
+            {searchTerm ? (t("search_results_title") || "Resultados") : (t("search_title") || "Pesquisa")}
+          </h2>
+        </div>
+
         <button 
-          onClick={handleClose} 
+          onClick={handleHeaderAction} 
           className="rounded-full p-2 transition-colors active:scale-90 cursor-pointer bg-zinc-200/40 dark:bg-zinc-900/60 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-200/80 dark:hover:bg-zinc-800"
+          title={searchTerm ? "Limpar pesquisa" : "Fechar"}
         >
-          <X size={16} strokeWidth={2.5} />
+          {searchTerm ? <ArrowLeft size={16} strokeWidth={2.5} /> : <X size={16} strokeWidth={2.5} />}
         </button>
       </div>
 
