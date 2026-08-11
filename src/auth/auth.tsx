@@ -328,7 +328,7 @@ export function AuthPage() {
 
           <section className="order-1 flex items-center justify-center lg:order-2 lg:justify-end">
             <div className="w-full max-w-[440px]">
-              <div className="px-0 py-2 sm:py-4 lg:rounded-[34px] lg:border lg:border-white/10 lg:bg-black/28 lg:p-6 lg:shadow-[0_25px_90px_rgba(0,0,0,0.38)] lg:backdrop-blur-xl">
+              <div className="px-0 py-2 sm:py-4 lg:rounded-[34px] lg:border lg:border-white/10 lg:bg-black/28 lg:p-6 lg:shadow-[0_25px_90px_rgba(0,0,0,0.38)] lg:backdrop-blur-md">
                 
                 <div className="lg:hidden">
                   <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">{t("auth_brand")}</p>

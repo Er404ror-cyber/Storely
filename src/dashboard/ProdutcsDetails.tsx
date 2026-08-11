@@ -20,7 +20,7 @@ import { ProductDetailsNav } from "../components/ProductDetails/ProductDetailsNa
 
 export interface ProductFormData {
   name: string; category: string; price: string; unit: string; full_description: string; main_image: string; gallery: string[]; stock?: number;
-  discount_percent?: string; // NOVO: Campo de desconto
+  discount_percent?: string;
 }
 interface ProductDetailsProps { isCreating?: boolean; onClose?: () => void; }
 type PublicStoreData = { id?: string; slug: string; name?: string; whatsapp_number?: string | null; currency?: string | null; settings?: any; logo_url?: string | null; description?: string | null; };
@@ -30,7 +30,7 @@ type ProductRow = {
   is_active?: boolean | null; created_at?: string | null; category?: string | null; 
   gallery?: string[] | null; main_image?: string | null; full_description?: string | null; 
   unit?: string | null; stock?: number | null;
-  discount_percent?: number | null; // NOVO: Campo de desconto
+  discount_percent?: number | null;
 };
 type ProductLocationState = { product?: ProductRow; store?: PublicStoreData; source?: string; searchMode?: string; fromStore?: boolean; };
 
@@ -49,7 +49,6 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
   const location = useLocation();
   const { pathname } = location;
   const navigate = useNavigate();
-
 
   const storeSlug = useMemo(() => params.storeSlug || pathname.split("/").filter(Boolean)[0] || "", [params.storeSlug, pathname]);
   const { productId } = params;
@@ -94,7 +93,6 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
 
   const { data: publicStore } = useStorePublic(storeSlug);
 
-  // 🚀 BUSCA HÍBRIDA COM CHAVE DE CACHE INDIVIDUAL
   const { data: product } = useQuery({
     queryKey: ["product", productId],
     queryFn: async (): Promise<ProductRow | null> => {
@@ -147,13 +145,9 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
     };
   }, [resolvedProduct, isCreating]);
 
-  // 🚀 SUCESSO AO SALVAR: Atualiza a lista por trás e fecha imediatamente!
   const handleProductUpdateSuccess = useCallback((updatedProductData?: any) => {
     if (updatedProductData && productId) {
-      // Atualiza produto individual
       queryClient.setQueryData(["product", productId], (old: any) => ({ ...old, ...updatedProductData }));
-      
-      // Atualiza a tabela principal em background para não precisar de loading
       queryClient.setQueriesData({ queryKey: ["products"] }, (oldList: any) => {
         if (!Array.isArray(oldList)) return oldList;
         return oldList.map(p => p.id === productId ? { ...p, ...updatedProductData } : p);
@@ -164,9 +158,9 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
       onClose();
     } else {
       setIsEditing(false);
-      navigate(`/admin/produtos`); // Ajusta 'storeSlug' se necessário
+      navigate(`/admin/produtos`);
     }
-  }, [queryClient, productId, onClose, navigate, ]);
+  }, [queryClient, productId, onClose, navigate]);
 
   useEffect(() => {
     setQuantity(1);
@@ -178,7 +172,6 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
     return merged.length ? merged : [];
   }, [initialData.main_image, initialData.gallery]);
 
-  // 🚀 OTIMIZAÇÃO DOS CÁLCULOS DE DESCONTO (Tudo local)
   const unitPriceOriginal = useMemo(() => Number(initialData.price || 0), [initialData.price]);
   const discountPercent = useMemo(() => {
     const val = parseInt(initialData.discount_percent || "0", 10);
@@ -202,18 +195,35 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
 
   const translatedUnit = UNIT_TRANSLATION_KEY_MAP[initialData.unit as keyof typeof UNIT_TRANSLATION_KEY_MAP] ? t(UNIT_TRANSLATION_KEY_MAP[initialData.unit as keyof typeof UNIT_TRANSLATION_KEY_MAP] as any) : initialData.unit;
 
+  // 🚀 ATUALIZAÇÃO: Gatilhos Mentais de Venda Embutidos e Dinâmicos via Traduções
   const handleWhatsAppOrder = useCallback(() => {
+    const totalOriginal = unitPriceOriginal * quantity;
+    const totalSaved = totalOriginal - totalPriceFinal;
+
+    let optimizedNote = "";
+    
+    if (discountPercent > 0) {
+      // Usa fragmentos de tradução para injetar os números sem complicação
+      optimizedNote = `${t("whatsapp_discount_title" as any)} ${discountPercent}${t("whatsapp_discount_suffix" as any)}\n\n${t("whatsapp_price_from" as any)}${formatMoney(totalOriginal)}~\n${t("whatsapp_price_to" as any)}${formatMoney(totalPriceFinal)}*\n${t("whatsapp_savings_prefix" as any)}${formatMoney(totalSaved)}${t("whatsapp_savings_suffix" as any)}`;
+      
+      if (customNote) {
+        optimizedNote += `\n\n${t("whatsapp_customer_note" as any)} ${customNote}`;
+      }
+    } else {
+      optimizedNote = customNote;
+    }
+
     sendWhatsAppOrder({
       storeName: resolvedStore?.name || storeSlug,
       whatsappNumber: resolvedStore?.whatsapp_number || adminStore?.whatsapp_number,
       productName: initialData.name,
       quantity,
       unit: translatedUnit,
-      totalPrice: formatMoney(totalPriceFinal), // Envia o preço com desconto
-      customNote,
+      totalPrice: formatMoney(totalPriceFinal),
+      customNote: optimizedNote, 
       imageUrl: initialData.main_image,
     });
-  }, [sendWhatsAppOrder, resolvedStore, adminStore, storeSlug, initialData.name, quantity, translatedUnit, totalPriceFinal, formatMoney, customNote, initialData.main_image]);
+  }, [sendWhatsAppOrder, resolvedStore, adminStore, storeSlug, initialData.name, quantity, translatedUnit, totalPriceFinal, formatMoney, customNote, initialData.main_image, discountPercent, unitPriceOriginal, t]);
 
   const handleShare = useCallback(async () => {
     const shareData = { title: initialData?.name || "Storely", text: `Confira ${initialData?.name || "este link"}!`, url: window.location.href };
@@ -259,7 +269,6 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
                   {initialData.name}
                 </h1>
                 
-                {/* 🚀 Renderização Dinâmica do Preço com Desconto */}
                 <div className="flex flex-wrap items-end gap-3 mb-8">
                   <p className={`text-2xl font-black tracking-tight ${styles.strongText}`}>
                     {formatMoney(unitPriceFinal)} <span className="text-[15px] font-semibold text-slate-500">/ {translatedUnit}</span>

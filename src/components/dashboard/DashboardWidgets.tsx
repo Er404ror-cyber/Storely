@@ -1,5 +1,9 @@
-import { memo } from 'react';
-import { type LucideIcon, ArrowRight, Layout, Package, Play, Sparkles, Plus, Calendar, Fingerprint, Mail, ExternalLink, Store } from 'lucide-react';
+import { memo, useState, useEffect, useMemo } from 'react';
+import { 
+  type LucideIcon, ArrowRight, Layout, Package, Play, Sparkles, Plus, 
+  Calendar, Fingerprint, Mail, ExternalLink, Store, Copy, Check, 
+  Palette,  TrendingUp, MessageCircle, Instagram, Users, Megaphone
+} from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import type { Product, Page, StepItem } from '../../types/dashboard';
@@ -7,7 +11,7 @@ import type { Product, Page, StepItem } from '../../types/dashboard';
 // --- ELEMENTOS PEQUENOS ---
 export const StatCard = memo(function StatCard({ label, value, icon: Icon, bgColor, iconBgColor, iconColor, trendText, trendColor }: { label: string; value: string | number; icon: LucideIcon; bgColor: string; iconBgColor: string; iconColor: string; trendText: string; trendColor: string; }) {
   return (
-    <div className={`rounded-[2rem] p-5 shadow-sm border border-white ${bgColor}`} style={{ contain: 'content' }}>
+    <div className={`rounded-[2rem] p-5 shadow-sm border border-white flex flex-col justify-between ${bgColor}`} style={{ contain: 'content' }}>
       <div className={`flex h-12 w-12 items-center justify-center rounded-2xl mb-4 ${iconBgColor} ${iconColor}`}>
         <Icon size={22} className="opacity-90" />
       </div>
@@ -67,27 +71,119 @@ export const PageRow = memo(function PageRow({ page, onNavigate, homeLabel, subP
   );
 });
 
-// --- SEÇÕES MAIORES ---
+// --- HERO BANNER (COM TIKER ESTILO TELEJORNAL) ---
 export const HeroBanner = memo(function HeroBanner({ storeName, storeSlug, progress, t, onNavigate }: { storeName: string; storeSlug: string; progress: number; t: any; onNavigate: (r: string) => void }) {
+  const [copied, setCopied] = useState(false);
+  const [tipIndex, setTipIndex] = useState(0);
+  
+  const storeUrl = `${window.location.origin}/${storeSlug || ''}`;
+  const heroTips = ['tip_hero_1', 'tip_hero_2', 'tip_hero_3', 'tip_hero_4'];
+
+  // Roda as dicas a cada 6 segundos de forma otimizada
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTipIndex((prev) => (prev + 1) % heroTips.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [heroTips.length]);
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(storeUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <section className="relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] bg-gradient-to-r from-[#DFD5F5] to-[#EBE4F9] p-6 sm:p-8 md:p-10 border-2 border-white">
-      <div className="relative z-10 max-w-lg">
-        <h2 className="text-xl sm:text-2xl md:text-[28px] font-black text-[#2D263B] leading-tight flex items-center gap-2">
+    <section className="relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] bg-gradient-to-r from-[#DFD5F5] to-[#EBE4F9] p-5 sm:p-8 border-2 border-white">
+      <div className="relative z-10 max-w-xl">
+        <h2 className="text-xl sm:text-2xl font-black text-[#2D263B] leading-tight flex items-center gap-2">
           {t('dashboard_welcome_title')?.replace('{name}', storeName || 'Parceiro') || `Olá, ${storeName || 'Parceiro'}!`} ☀️
         </h2>
-        <p className="text-xs sm:text-sm font-bold text-[#796C92] mt-2 mb-5 sm:mb-6">
-          {progress < 100 ? (t('dashboard_welcome_desc_pending') || 'Prepare o seu catálogo digital e comece a faturar agora mesmo!') : (t('dashboard_welcome_desc_ready') || 'O seu negócio está totalmente online e sincronizado.')}
+        <p className="text-[11px] sm:text-xs font-bold text-[#796C92] mt-1.5 mb-4">
+          {progress < 100 ? (t('dashboard_welcome_desc_pending') || 'Prepare o seu catálogo e comece a vender!') : (t('dashboard_welcome_desc_ready') || 'A sua loja está online e pronta para receber pedidos.')}
         </p>
-        <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => onNavigate('/admin/produtos')} className="inline-flex items-center gap-2 rounded-full bg-[#9A81E9] px-5 sm:px-6 py-2.5 sm:py-3 text-[11px] sm:text-[12px] font-black tracking-wide text-white transition-transform hover:scale-105 active:scale-95 transform-gpu shadow-sm">
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button onClick={() => onNavigate('/admin/produtos')} className="inline-flex items-center gap-2 rounded-full bg-[#9A81E9] px-5 py-2.5 text-[11px] sm:text-[12px] font-black tracking-wide text-white transition-transform active:scale-95 shadow-sm">
             <Play size={14} fill="currentColor" /> {t('btn_manage_products') || 'Gerir Artigos'}
           </button>
-          <button onClick={() => window.open(`/${storeSlug || ''}`, '_blank')} className="inline-flex items-center gap-2 rounded-full bg-white/60 px-5 sm:px-6 py-2.5 sm:py-3 text-[11px] sm:text-[12px] font-black tracking-wide text-[#5C5370] transition-transform hover:bg-white hover:scale-105 active:scale-95 transform-gpu shadow-sm border border-white">
-            <ExternalLink size={14} /> {t('btn_view_store') || 'Ver Loja'}
-          </button>
+          
+          <div className="flex items-center bg-white/50 rounded-full border border-white/60  shadow-sm p-1">
+             <button onClick={() => window.open(storeUrl, '_blank')} className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[11px] sm:text-[12px] font-black tracking-wide text-[#5C5370] hover:text-[#2D263B] transition-colors">
+               <ExternalLink size={14} /> {t('btn_view_store') || 'Ver Loja'}
+             </button>
+             <div className="w-[1px] h-4 bg-white/50 mx-1"></div>
+             <button onClick={handleCopyLink} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-[#9175E6] shadow-sm active:scale-90 transition-transform" title="Copiar Link">
+               {copied ? <Check size={12} strokeWidth={3} /> : <Copy size={12} strokeWidth={2.5} />}
+             </button>
+          </div>
+        </div>
+
+        {/* Estilo Telejornal (Ticker Inferior) Otimizado para Celulares Fracos */}
+        <div className="mt-4 flex items-center gap-2 bg-white/40 px-3.5 py-2 rounded-xl border border-white/60  w-full max-w-full overflow-hidden shadow-xs">
+          <div className="flex items-center gap-1 bg-[#8862DF] text-white px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider shrink-0 animate-pulse">
+            <MessageCircle size={10} />
+            <span>{t('tip_hero_title') || 'AO VIVO'}</span>
+          </div>
+          
+          <div className="relative h-5 overflow-hidden w-full flex items-center">
+            <div 
+              key={tipIndex} 
+              className="absolute w-full transform-gpu transition-all duration-500 ease-out will-change-transform animate-in fade-in slide-in-from-bottom-2"
+            >
+              <p className="text-[10px] sm:text-[11px] font-bold text-[#5C5370] truncate">
+                {t(heroTips[tipIndex]) || 'Copie o link acima e coloque no Status do WhatsApp!'}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
-      <div className="absolute right-[-30px] bottom-[-40px] sm:right-[-20px] md:right-10 md:bottom-0 opacity-10 sm:opacity-20 md:opacity-100 pointer-events-none"><Store size={180} className="text-[#C8B8EF]" /></div>
+
+      <div className="absolute right-[-30px] bottom-[-40px] sm:right-[-20px] md:right-10 md:bottom-0 opacity-10 sm:opacity-20 md:opacity-100 pointer-events-none select-none">
+        <Store size={180} className="text-[#C8B8EF]" />
+      </div>
+    </section>
+  );
+});
+
+// --- RECOMENDAÇÕES (DINÂMICAS E ALEATÓRIAS) ---
+export const StorelyRecommendations = memo(function StorelyRecommendations({ t }: { t: any }) {
+  const allTips = useMemo(() => [
+    { id: 'whatsapp', icon: MessageCircle, color: 'text-[#20A068]', bg: 'bg-[#E8F8F2]', titleKey: 'tips_rec_whatsapp_title', descKey: 'tips_rec_whatsapp_desc' },
+    { id: 'social', icon: Instagram, color: 'text-[#E1306C]', bg: 'bg-[#FCECF1]', titleKey: 'tips_rec_social_title', descKey: 'tips_rec_social_desc' },
+    { id: 'groups', icon: Users, color: 'text-[#4267B2]', bg: 'bg-[#EAF0FA]', titleKey: 'tips_rec_groups_title', descKey: 'tips_rec_groups_desc' },
+    { id: 'clarity', icon: TrendingUp, color: 'text-[#F29C38]', bg: 'bg-[#FFF4E5]', titleKey: 'tips_rec_clarity_title', descKey: 'tips_rec_clarity_desc' },
+    { id: 'visual', icon: Palette, color: 'text-[#9175E6]', bg: 'bg-[#EFEAF6]', titleKey: 'tips_rec_visual_title', descKey: 'tips_rec_visual_desc' },
+    { id: 'promo', icon: Megaphone, color: 'text-[#E53E3E]', bg: 'bg-[#FDE8E8]', titleKey: 'tips_rec_promo_title', descKey: 'tips_rec_promo_desc' },
+  ], []);
+
+  const randomTips = useMemo(() => {
+    const shuffled = [...allTips].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 3);
+  }, [allTips]);
+
+  return (
+    <section className="w-full">
+      <div className="flex items-center gap-2 mb-4 px-1">
+        <Sparkles size={18} className="text-[#9175E6]" />
+        <h3 className="text-[14px] sm:text-[15px] font-black text-[#2D263B]">{t('tips_section_title') || 'Como vender mais todos os dias'}</h3>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+        {randomTips.map((tip) => (
+          <div key={tip.id} className="bg-white p-4 rounded-[1.5rem] border border-gray-100 shadow-xs flex items-start gap-3 transform-gpu transition-transform active:scale-[0.98]">
+            <div className={`w-9 h-9 shrink-0 rounded-[0.9rem] flex items-center justify-center mt-0.5 ${tip.bg} ${tip.color}`}>
+              <tip.icon size={16} strokeWidth={2.5} />
+            </div>
+            <div className="min-w-0">
+              <h4 className="text-[12px] font-black text-[#2D263B] mb-0.5 truncate">{t(tip.titleKey)}</h4>
+              <p className="text-[10px] font-bold text-[#867B9E] leading-relaxed line-clamp-2">
+                {t(tip.descKey)}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
     </section>
   );
 });

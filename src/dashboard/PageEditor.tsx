@@ -17,7 +17,6 @@ import { DesktopSidebar } from '../components/editor/desktopSidebar';
 import { EditorHeader } from '../components/editor/EditorHeader';
 import { MobileElements } from '../components/editor/MobileElements';
 
-// Novos componentes otimizados
 import { EditorSection } from '../components/editor/EditorSection';
 import { EditorEmptyState } from '../components/editor/EditorEmptyState';
 import { EditorFab } from '../components/editor/EditorFab';
@@ -30,6 +29,7 @@ export function Editor() {
   const { pageId } = useParams<{ pageId: string }>();
   const [sections, setSections] = useState<Section[]>([]);
   const [originalSections, setOriginalSections] = useState<Section[]>([]);
+  const [deletedSectionIds, setDeletedSectionIds] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -42,12 +42,15 @@ export function Editor() {
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const scrollRafRef = useRef<number | null>(null);
   const lastFocusedIdRef = useRef<string | null>(null); 
+  
+  // Ref para lock de sincronização imediato e controle de cancelamento de requisições
+  const isSavingRef = useRef(false);
+  const saveControllerRef = useRef<AbortController | null>(null);
 
   const hasChanges = useMemo(() => {
     return JSON.stringify(sections) !== JSON.stringify(originalSections);
   }, [sections, originalSections]);
 
-  // COMBINAÇÃO INVENCÍVEL: Usa a validação antiga + Validação profunda por texto para apanhar QUALQUER blob escondido
   const hasPendingUploads = useMemo(() => {
     return sections.some(s => sectionHasPendingUploads(s) || JSON.stringify(s.content).includes('blob:'));
   }, [sections]);
@@ -114,9 +117,30 @@ export function Editor() {
     [focusSection]
   );
 
+  const handleSetSections = useCallback((newSectionsAction: React.SetStateAction<Section[]>) => {
+    setSections((prevSections) => {
+      const nextSections = typeof newSectionsAction === 'function' 
+        ? newSectionsAction(prevSections) 
+        : newSectionsAction;
+
+      // Identifica secções removidas para apagar com segurança na base de dados
+      const currentIds = new Set(nextSections.map((s) => s.id));
+      const removedIds = prevSections
+        .filter((s) => !currentIds.has(s.id))
+        .map((s) => s.id);
+
+      if (removedIds.length > 0) {
+        setDeletedSectionIds((prev) => Array.from(new Set([...prev, ...removedIds])));
+      }
+
+      return nextSections;
+    });
+  }, []);
+
   useEffect(() => {
     return () => {
       if (scrollRafRef.current) window.cancelAnimationFrame(scrollRafRef.current);
+      if (saveControllerRef.current) saveControllerRef.current.abort();
     };
   }, []);
 
@@ -193,6 +217,7 @@ export function Editor() {
 
           setSections(formatted);
           setOriginalSections(cloneSections(formatted));
+          setDeletedSectionIds([]);
           setLastSaved(new Date());
         }
       } catch (err: unknown) {
@@ -209,9 +234,9 @@ export function Editor() {
   }, [pageId]);
 
   const handleManualSave = useCallback(async () => {
-    if (!pageId || isSaving) return;
+    // Trava síncrona imediata contra cliques múltiplos/rápidos
+    if (!pageId || isSavingRef.current) return;
 
-    // 1. Identificar e bloquear (Garante que apanha pela função antiga OU pela procura exata do blob)
     const pendingSection = sections.find(s => sectionHasPendingUploads(s) || JSON.stringify(s.content).includes('blob:'));
     
     if (pendingSection) {
@@ -221,10 +246,9 @@ export function Editor() {
           `Ação Bloqueada: Faça "Sync" das imagens no bloco "${pendingSection.type.toUpperCase()}" antes de gravar.`,
         { duration: 5000, icon: '🛑' }
       );
-      return; // ⛔ Bloqueia imediatamente o save
+      return;
     }
 
-    // 2. Identificar e bloquear secções pesadas
     const heavySection = sections.find((section) => sectionTotalPendingBytes(section) > MAX_TOTAL_SECTION_MEDIA_BYTES);
     
     if (heavySection) {
@@ -234,17 +258,35 @@ export function Editor() {
           `O bloco "${heavySection.type.toUpperCase()}" possui imagens demasiado pesadas.`,
         { duration: 5000, icon: '📦' }
       );
-      return; // ⛔ Bloqueia imediatamente
+      return;
     }
 
-    // Avança apenas se não houver bloqueios pendentes
+    // Ativa travas
+    isSavingRef.current = true;
     setIsSaving(true);
+
+    if (saveControllerRef.current) {
+      saveControllerRef.current.abort();
+    }
+    saveControllerRef.current = new AbortController();
+
     const loadingToast = toast.loading(t('savingPage') || 'Salvando página...');
 
     try {
-      await supabase.from('page_sections').delete().eq('page_id', pageId);
+      // 1. Remove apenas as secções explicitamente deletadas (evita apagar a página inteira)
+      if (deletedSectionIds.length > 0) {
+        const { error: deleteErr } = await supabase
+          .from('page_sections')
+          .delete()
+          .in('id', deletedSectionIds)
+          .abortSignal(saveControllerRef.current.signal);
 
-      const toInsert = sections.map((s, i) => ({
+        if (deleteErr) throw deleteErr;
+      }
+
+      // 2. Prepara dados com ID explicito para permitir Upsert idempotente
+      const payload = sections.map((s, i) => ({
+        id: s.id,
         page_id: pageId,
         type: s.type,
         content: s.content,
@@ -252,25 +294,35 @@ export function Editor() {
         order_index: i,
       }));
 
-      const { error } = await supabase.from('page_sections').insert(toInsert);
-      if (error) throw error;
+      // 3. Executa Upsert (Atualiza existentes ou insere novos de forma segura)
+      const { error: upsertErr } = await supabase
+        .from('page_sections')
+        .upsert(payload, { onConflict: 'id' })
+        .abortSignal(saveControllerRef.current.signal);
+
+      if (upsertErr) throw upsertErr;
 
       setOriginalSections(cloneSections(sections));
+      setDeletedSectionIds([]);
       setLastSaved(new Date());
       setActiveModal(null);
 
       toast.success(t('publishedSuccess') || 'Publicado com sucesso!', { id: loadingToast });
       if (blocker.state === 'blocked') blocker.proceed();
     } catch (err: unknown) {
-      console.error(err);
-      toast.error(t('publishError') || 'Erro ao publicar.', { id: loadingToast });
+      if (err instanceof Error && err.name === 'AbortError') return;
+
+      console.error('Erro ao guardar:', err);
+      toast.error(t('publishError') || 'Erro ao publicar. Verifique a ligação.', { id: loadingToast });
     } finally {
+      isSavingRef.current = false;
       setIsSaving(false);
     }
-  }, [pageId, isSaving, sections, handleSetEditingId, t, blocker]);
+  }, [pageId, sections, deletedSectionIds, handleSetEditingId, t, blocker]);
 
   const handleDiscard = useCallback(() => {
     setSections(cloneSections(originalSections));
+    setDeletedSectionIds([]);
     setActiveModal(null);
     if (blocker.state === 'blocked') blocker.proceed();
   }, [originalSections, blocker]);
@@ -278,20 +330,20 @@ export function Editor() {
   const updateSectionStyle = useCallback(
     (id: string, key: keyof SectionStyle, value: string) => {
       focusSection(id);
-      setSections((prev) =>
+      handleSetSections((prev) =>
         prev.map((s) => (s.id === id ? { ...s, style: { ...s.style, [key]: value } } : s))
       );
     },
-    [focusSection]
+    [focusSection, handleSetSections]
   );
 
   const updateSectionContent = useCallback((id: string, key: string, value: unknown) => {
-    setSections((prev) =>
+    handleSetSections((prev) =>
       prev.map((sec) =>
         sec.id === id ? { ...sec, content: { ...sec.content, [key]: value } } : sec
       )
     );
-  }, []);
+  }, [handleSetSections]);
 
   const handlePreview = useCallback(() => {
     if (slugs?.store) {
@@ -339,7 +391,7 @@ export function Editor() {
         isSaving={isSaving}
         setEditingId={handleSetEditingId}
         updateSectionStyle={updateSectionStyle}
-        setSections={setSections}
+        setSections={handleSetSections}
         setShowAddModal={setShowAddModal}
         setActiveModal={setActiveModal}
       />
@@ -364,7 +416,9 @@ export function Editor() {
           }}
         >
           {sections.length === 0 && (
-             <EditorEmptyState onAdd={() => setShowAddModal(true)}   t={t as (key: string) => string}
+             <EditorEmptyState 
+               onAdd={() => setShowAddModal(true)}   
+               t={t as (key: string) => string}
               />
           )}
 
@@ -383,7 +437,7 @@ export function Editor() {
                   onClick={focusSection}
                   onUpdateContent={updateSectionContent}
                   t={t as (key: string) => string}
-            />
+                />
               );
             })}
           </div>
@@ -398,7 +452,7 @@ export function Editor() {
           setShowMobileSidebar={setShowMobileSidebar}
           setEditingId={handleSetEditingId}
           updateSectionStyle={updateSectionStyle}
-          setSections={setSections}
+          setSections={handleSetSections}
           setShowAddModal={setShowAddModal}
           setActiveModal={setActiveModal}
         />
@@ -417,7 +471,7 @@ export function Editor() {
         handleManualSave={handleManualSave}
         handleDiscard={handleDiscard}
         resetBlocker={() => blocker.reset?.()}
-        setSections={setSections}
+        setSections={handleSetSections}
         setEditingId={handleSetEditingId}
         setShowMobileSidebar={setShowMobileSidebar}
       />

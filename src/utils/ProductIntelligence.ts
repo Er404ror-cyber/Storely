@@ -28,7 +28,7 @@ export const MOCK_GLOBAL_CATEGORIES: MockCategory[] = [
   { nameKey: "cat_design_editor", searchQuery: "design", emoji: "✨", color: "from-violet-600 to-fuchsia-950 bg-gradient-to-br", slug: "design", keywords: ["template", "ui", "ux", "componente", "mockup", "vetor", "vector", "canva", "pinterest", "font", "fonte", "icon", "icone", "textura", "texture", "layout", "preset", "graphics", "assets", "design", "wireframe"] },
   { nameKey: "cat_arts_crafts", searchQuery: "art", emoji: "🎨", color: "from-rose-500 to-amber-950 bg-gradient-to-br", slug: "art", keywords: ["quadro", "pintura", "tela", "arte", "desenho", "pincel", "acrilico", "art", "painting", "canvas", "frame", "drawing", "poster", "ilustracao", "illustration", "aguarela", "watercolor", "ink", "tinta", "galeria", "gallery"] },
   { nameKey: "cat_digital_3d", searchQuery: "3d", emoji: "🔮", color: "from-indigo-500 to-cyan-950 bg-gradient-to-br", slug: "3d", keywords: ["3d", "modelo 3d", "stl", "obj", "impressao 3d", "filamento", "resina", "render", "blender", "miniatura", "sculpture", "esculpido", "3d model", "3d print", "filament", "resin", "cad", "mesh", "malha"] },
-  { nameKey: "cat_bakery", searchQuery: "bakery", emoji: "🍰", color: "from-pink-500 to-rose-900 bg-gradient-to-br", slug: "bakery", keywords: ["bolo", "doce", "sobremesa", "festa", "salgado", "torta", "cake", "sweet", "dessert", "party", "cupcake", "brigadeiro", "casamento"] }
+  { nameKey: "cat_bakery", searchQuery: "bakery", emoji: "🍰", color: "from-pink-500 to-rose-900 bg-gradient-to-br", slug: "bakery", keywords: ["bolo", "doce", "sobremesa", "festa", "salgado", "torta", "cake", "sweet", "dessert", "party", "cupcake", "cupcakes", "brigadeiro", "casamento", "bombom", "marmita", "combo", "kit"] }
 ];
 
 // 2. FALLBACK_PARENTS COM MAPEAMENTO EXATO DE TODOS OS 17 SLUGS
@@ -52,18 +52,20 @@ const FALLBACK_PARENTS: Record<string, string> = {
   bakery: "Pastelaria e Doces"
 };
 
-// MAPA DINÂMICO DE CATEGORIAS PAI
+// MAPA DINÂMICO DE CATEGORIAS PAI E REGRAS DIRETAS DO MOCK
 const PARENT_LABEL_MAP: Record<string, string> = {};
-const DYNAMIC_PARENTS = MOCK_GLOBAL_CATEGORIES.map(cat => {
+const DYNAMIC_PARENTS_RULES: Array<{ id: string, labelKey: string, isKidCategory: boolean, regex: RegExp }> = [];
+
+MOCK_GLOBAL_CATEGORIES.forEach(cat => {
   const baseLabel = FALLBACK_PARENTS[cat.slug] || (cat.slug.charAt(0).toUpperCase() + cat.slug.slice(1));
   PARENT_LABEL_MAP[cat.slug] = baseLabel;
 
-  return {
+  DYNAMIC_PARENTS_RULES.push({
     id: cat.slug,
     labelKey: baseLabel,
     isKidCategory: ['baby', 'crianca', 'kids', 'infantil', 'bebe', 'toys'].includes(cat.slug.toLowerCase()),
     regex: new RegExp(`\\b(${cat.keywords.join('|')})\\b`, 'i')
-  };
+  });
 });
 
 // 3. SUBCATEGORIAS COBRINDO TODAS AS 17 CATEGORIAS MOCK
@@ -79,9 +81,10 @@ const SUB_CATEGORY_RULES = [
   { parentSlug: "electronics", labelKey: "Smartwatches", regex: /\b(smartwatch|apple watch|galaxy watch|gadget|rastreador|drone|pulso inteligente)\b/i },
 
   // --- PASTELARIA & DOCES (cat_bakery & cat_grocery) ---
+  { parentSlug: "bakery", labelKey: "Combos e Kits", regex: /\b(combo|kit festa|kit doce|combo de mini bolo)\b/i },
   { parentSlug: "bakery", labelKey: "Chiffon", regex: /\b(chiffon|chifon)\b/i },
-  { parentSlug: "bakery", labelKey: "Mini Bolos", regex: /\b(mini[- ]?bolo|minibolo|cupcake|muffin|bento cake|bento|mini torta)\b/i },
-  { parentSlug: "bakery", labelKey: "Doces e Sobremesas", regex: /\b(doce|doces|sobremesa|dessert|brigadeiro|pudim|macaron|brownie|cookie|bolacha|biscoito|donut|chocolates)\b/i },
+  { parentSlug: "bakery", labelKey: "Mini Bolos", regex: /\b(mini[- ]?bolo|minibolo|cupcake|cupcakes|muffin|bento cake|bento|mini torta|marmita|bolo na marmita)\b/i },
+  { parentSlug: "bakery", labelKey: "Doces e Sobremesas", regex: /\b(doce|doces|sobremesa|dessert|brigadeiro|pudim|macaron|brownie|cookie|bolacha|biscoito|donut|chocolates|bombom|bombons|trufa|trufas)\b/i },
   { parentSlug: "bakery", labelKey: "Bolos e Tortas", regex: /\b(bolo|bolos|cake|cakes|torta|tortas|pie|pies|cheesecake|pavlova)\b/i },
   { parentSlug: "groceries", labelKey: "Salgados", regex: /\b(salgado|coxinha|rissol|pastel|chamuca|empada|empadao|snack|chips|pao|salgados)\b/i },
   { parentSlug: "groceries", labelKey: "Bebidas e Refrescos", regex: /\b(bebida|sumo|suco|juice|refrigerante|soda|agua|water|cerveja|beer|vinho|wine)\b/i },
@@ -162,6 +165,18 @@ const ATTRIBUTE_MAP = [
 
 // 4. DICIONÁRIO MULTILÍNGUE COMPLETO (PT / EN)
 const TRANSLATION_MAP: Record<string, { pt: string; en: string }> = {
+  // Sinónimos e normalização
+  "Criança": { pt: "Criança", en: "Kids" },
+  "Crianças": { pt: "Criança", en: "Kids" },
+  "Kids": { pt: "Criança", en: "Kids" },
+  "Infantil": { pt: "Criança", en: "Kids" },
+  "Bebé": { pt: "Bebé", en: "Baby" },
+  "Baby": { pt: "Bebé", en: "Baby" },
+  "Mulher": { pt: "Mulher", en: "Women" },
+  "Women": { pt: "Mulher", en: "Women" },
+  "Homem": { pt: "Homem", en: "Men" },
+  "Men": { pt: "Homem", en: "Men" },
+  
   // Categorias Principais
   "Tecnologia": { pt: "Tecnologia", en: "Technology" },
   "Vestuário": { pt: "Vestuário", en: "Clothing" },
@@ -181,8 +196,16 @@ const TRANSLATION_MAP: Record<string, { pt: string; en: string }> = {
   "3D e Modelagem": { pt: "3D e Modelagem", en: "3D & Modeling" },
   "Pastelaria e Doces": { pt: "Pastelaria e Doces", en: "Bakery & Sweets" },
   "Catálogo Geral": { pt: "Catálogo Geral", en: "General Catalog" },
-
-  // Subcategorias
+  
+  // Subcategorias e Novas Tags
+  "Combos e Kits": { pt: "Combos e Kits", en: "Combos & Kits" },
+  "Combo": { pt: "Combo", en: "Combo" },
+  "Kit": { pt: "Kit", en: "Kit" },
+  "Bombom": { pt: "Bombom", en: "Bonbon" },
+  "Marmita": { pt: "Marmita", en: "Lunchbox Cake" },
+  "Cupcake": { pt: "Cupcake", en: "Cupcake" },
+  "Cupcakes": { pt: "Cupcakes", en: "Cupcakes" },
+  
   "Chiffon": { pt: "Chiffon", en: "Chiffon" },
   "Mini Bolos": { pt: "Mini Bolos", en: "Mini Cakes" },
   "Doces e Sobremesas": { pt: "Doces e Sobremesas", en: "Sweets & Desserts" },
@@ -229,11 +252,6 @@ const TRANSLATION_MAP: Record<string, { pt: string; en: string }> = {
   "Acessórios e Brinquedos Pet": { pt: "Acessórios e Brinquedos Pet", en: "Pet Toys & Gear" },
   "Ferramentas Elétricas e Manuais": { pt: "Ferramentas Elétricas e Manuais", en: "Power & Hand Tools" },
   "Construção e Tintas": { pt: "Construção e Tintas", en: "Construction & Paints" },
-
-  // Géneros e Atributos
-  "Criança": { pt: "Criança", en: "Kids" },
-  "Mulher": { pt: "Mulher", en: "Women" },
-  "Homem": { pt: "Homem", en: "Men" },
   "Preto": { pt: "Preto", en: "Black" },
   "Branco": { pt: "Branco", en: "White" },
   "Azul": { pt: "Azul", en: "Blue" },
@@ -258,6 +276,26 @@ function removeAccents(str: string): string {
 }
 
 /**
+ * Função Auxiliar Inteligente para gerir tags sem duplicados baseados em Maiúsculas/Minúsculas
+ */
+class UniqueTagManager {
+  private tags = new Map<string, string>();
+
+  add(tag: string) {
+    if (!tag || tag.trim() === "") return;
+    const lowerKey = tag.toLowerCase().trim();
+    // Adiciona só se não existir a versão em lowercase (evita duplicação invisível)
+    if (!this.tags.has(lowerKey)) {
+      this.tags.set(lowerKey, tag.trim());
+    }
+  }
+
+  values(): string[] {
+    return Array.from(this.tags.values());
+  }
+}
+
+/**
  * MOTOR PRINCIPAL DE INTELIGÊNCIA
  */
 export function useProductIntelligence() {
@@ -275,19 +313,20 @@ export function useProductIntelligence() {
         return targetLang === "en" ? term.replace("Tam: ", "Size: ") : term;
       }
 
-      if (TRANSLATION_MAP[term]) {
-        return TRANSLATION_MAP[term][targetLang];
+      // Procura inteligente e insensível a capitalização
+      const foundKey = Object.keys(TRANSLATION_MAP).find(k => k.toLowerCase() === term.toLowerCase());
+      if (foundKey) {
+        return TRANSLATION_MAP[foundKey][targetLang];
       }
 
-      return term;
+      return term; 
     };
 
-    // REGEX DE DETEÇÃO MULTILÍNGUE
     const explicitKidRegex = /\b(crianca|criancas|infantil|infantis|kids|bebe|bebes|baby|recem[- ]nascido|brinquedo|brinquedos|lego|maternidade)\b/i;
     const adultIndicatorsRegex = /\b(faculdade|universidade|trabalho|social|casual|streetwear|silhueta|decote|ajustado|ajustada|fitted|v-neck|adulto|adultos|senhora|homem|mulher|women|men|boyfriend|y2k|dia[- ]?a[- ]?dia|saltos|sutia|lingerie|blazer|cardigan|3[6-9]|4[0-8]|xs|s|m|l|xl|xxl)\b/i;
 
     return products.map(product => {
-      let cleanProduct = { ...product };
+      const cleanProduct = { ...product };
 
       const titleText = removeAccents(cleanProduct.name || '').toLowerCase();
       const descText = removeAccents(cleanProduct.description || cleanProduct.desc || cleanProduct.details || '').toLowerCase();
@@ -324,7 +363,7 @@ export function useProductIntelligence() {
         }
       }
 
-      // SUBCATEGORIA BASE (Aplica a primeira regra correspondente)
+      // SUBCATEGORIA BASE
       for (const rule of SUB_CATEGORY_RULES) {
         if (rule.parentSlug === "baby" && !isKidExplicit) {
           continue;
@@ -353,7 +392,7 @@ export function useProductIntelligence() {
 
       // CATEGORIA PAI BASE
       if (!parentCategory) {
-        for (const parent of DYNAMIC_PARENTS) {
+        for (const parent of DYNAMIC_PARENTS_RULES) {
           if (parent.isKidCategory && !isKidExplicit) {
             continue;
           }
@@ -376,42 +415,58 @@ export function useProductIntelligence() {
         parentCategory = "Vestuário";
       }
 
-      let displayCategory = subCategory || parentCategory || cleanProduct.category;
+      const displayCategory = subCategory || parentCategory || cleanProduct.category || "Catálogo Geral";
       let finalGender = gender; 
 
       if (!isKidExplicit && finalGender === "Criança") {
         finalGender = isAdultOrStudent ? "Mulher" : "";
       }
 
-      if (!displayCategory || displayCategory.trim() === "") {
-        displayCategory = "Catálogo Geral";
-      }
-
-      // EXTRAÇÃO DE TAMANHOS
-      const sizes = new Set<string>();
-      const sizeRegex = /\b(?:tamanho|tam|size)\s*[:=]?\s*(pp|p|m|g|gg|xg|xs|s|l|xl|xxl|xxxl|[3-5][0-9])\b/gi;
-      let match;
-      while ((match = sizeRegex.exec(fullText)) !== null) {
-        sizes.add(translateTag(`Tam: ${match[1].toUpperCase()}`));
-      }
-      
-      if (/\b(tamanho unico|one size)\b/i.test(fullText)) {
-        sizes.add(translateTag("Tam: Único"));
-      }
-
-      // ATRIBUTOS (CORES & MATERIAIS)
-      const attributes = new Set<string>();
-      ATTRIBUTE_MAP.forEach(attr => {
-        if (attr.regex.test(fullText)) {
-          attributes.add(translateTag(attr.labelKey));
-        }
-      });
-
-      // TRADUÇÃO DE EXPORTAÇÃO NO IDIOMA ATIVO
+      // TRADUÇÕES ESTRUTURAIS
       const translatedParentCategory = translateTag(parentCategory || "Catálogo Geral");
       const translatedSubCategory = translateTag(subCategory);
       const translatedDisplayCategory = translateTag(displayCategory);
       const translatedGender = translateTag(finalGender);
+
+      // EXTRAÇÃO DE TAMANHOS USANDO GERENCIADOR ÚNICO
+      const sizesManager = new UniqueTagManager();
+      const sizeRegex = /\b(?:tamanho|tam|size)\s*[:=]?\s*(pp|p|m|g|gg|xg|xs|s|l|xl|xxl|xxxl|[3-5][0-9])\b/gi;
+      let match;
+      while ((match = sizeRegex.exec(fullText)) !== null) {
+        sizesManager.add(translateTag(`Tam: ${match[1].toUpperCase()}`));
+      }
+      
+      if (/\b(tamanho unico|one size)\b/i.test(fullText)) {
+        sizesManager.add(translateTag("Tam: Único"));
+      }
+
+      // ATRIBUTOS ENRIQUECIDOS USANDO GERENCIADOR ÚNICO
+      const attributesManager = new UniqueTagManager();
+      ATTRIBUTE_MAP.forEach(attr => {
+        if (attr.regex.test(fullText)) {
+          attributesManager.add(translateTag(attr.labelKey));
+        }
+      });
+
+      // INJEÇÃO DIRETA DE KEYWORDS DO MOCK COMO TAGS EXTRAS (Com Tradução e Proteção Contextual)
+      for (const mock of MOCK_GLOBAL_CATEGORIES) {
+        for (const kw of mock.keywords) {
+          if (new RegExp(`\\b${kw}\\b`, 'i').test(fullText)) {
+            const prettyTag = kw.charAt(0).toUpperCase() + kw.slice(1).toLowerCase();
+            const translatedKwTag = translateTag(prettyTag);
+            
+            // PROTEÇÃO: Só adiciona o Atributo/Keyword se ele não for literalmente o Género ou a Categoria!
+            const isStructuralDuplicate = [translatedParentCategory, translatedSubCategory, translatedGender]
+              .map(t => t.toLowerCase())
+              .includes(translatedKwTag.toLowerCase());
+
+            if (!isStructuralDuplicate) {
+              attributesManager.add(translatedKwTag);
+            }
+            break; 
+          }
+        }
+      }
 
       return { 
         ...cleanProduct, 
@@ -421,8 +476,8 @@ export function useProductIntelligence() {
           parentCategory: translatedParentCategory,
           subCategory: translatedSubCategory,
           gender: translatedGender, 
-          sizes: Array.from(sizes),
-          attributes: Array.from(attributes)
+          sizes: sizesManager.values(),
+          attributes: attributesManager.values()
         } 
       };
     });
@@ -432,7 +487,7 @@ export function useProductIntelligence() {
 }
 
 /**
- * EXTRAÇÃO RÁPIDA DE TAGS (SHORT-CIRCUIT)
+ * EXTRAÇÃO RÁPIDA DE TAGS (SHORT-CIRCUIT) - OTIMIZADA CONTRA DUPLICAÇÃO
  */
 export function enrichProductsWithSubcategories(products: any[], lang: "pt" | "en" = "pt") {
   if (!products || !Array.isArray(products)) return [];
@@ -441,22 +496,43 @@ export function enrichProductsWithSubcategories(products: any[], lang: "pt" | "e
     const titleText = removeAccents(`${product.name || ''} ${product.category || ''}`).toLowerCase();
     const descText = removeAccents(product.description || '').toLowerCase();
     
-    const tags = new Set<string>();
+    // O Manager Único agora trabalha em harmonia com o Dicionário de Sinónimos
+    const tagsManager = new UniqueTagManager();
     
+    // Tratamento e tradução da tag que já vem no produto
     if (product.category) {
-      tags.add(product.category);
+       // Procura por sinónimo seguro
+       const foundKey = Object.keys(TRANSLATION_MAP).find(k => k.toLowerCase() === product.category.toLowerCase());
+       const mappedTranslation = foundKey ? TRANSLATION_MAP[foundKey][lang] : product.category;
+       tagsManager.add(mappedTranslation);
     }
 
     let foundMainCategory = false;
 
     const extractSingleCategory = (text: string) => {
       if (!text || foundMainCategory) return;
+      
+      // 1. Tenta por Subcategoria Específica
       for (const rule of SUB_CATEGORY_RULES) {
         if (rule.regex.test(text)) {
-          const translatedName = TRANSLATION_MAP[rule.labelKey]?.[lang] || rule.labelKey;
-          tags.add(translatedName);
+          const foundKey = Object.keys(TRANSLATION_MAP).find(k => k.toLowerCase() === rule.labelKey.toLowerCase());
+          const translatedName = foundKey ? TRANSLATION_MAP[foundKey][lang] : rule.labelKey;
+          tagsManager.add(translatedName);
           foundMainCategory = true;
           break;
+        }
+      }
+      
+      // 2. Fallback de Segurança - Se não for Subcategoria, puxa diretamente do Mock (Categoria Pai)
+      if (!foundMainCategory) {
+        for (const parent of DYNAMIC_PARENTS_RULES) {
+          if (parent.regex.test(text)) {
+            const foundKey = Object.keys(TRANSLATION_MAP).find(k => k.toLowerCase() === parent.labelKey.toLowerCase());
+            const translatedName = foundKey ? TRANSLATION_MAP[foundKey][lang] : parent.labelKey;
+            tagsManager.add(translatedName);
+            foundMainCategory = true;
+            break;
+          }
         }
       }
     };
@@ -465,23 +541,41 @@ export function enrichProductsWithSubcategories(products: any[], lang: "pt" | "e
     extractSingleCategory(descText);
 
     const fullText = `${titleText} ${descText}`;
+    
+    // EXTRAÇÃO DE TAMANHOS
     const sizeRegex = /\b(?:tamanho|tam|size)\s*[:=]?\s*(pp|p|m|g|gg|xg|xs|s|l|xl|xxl|xxxl|[3-5][0-9])\b/gi;
     let match;
     while ((match = sizeRegex.exec(fullText)) !== null) {
       const extractedSize = match[1].toUpperCase();
-      tags.add(lang === "en" ? `Size: ${extractedSize}` : `Tam: ${extractedSize}`);
+      tagsManager.add(lang === "en" ? `Size: ${extractedSize}` : `Tam: ${extractedSize}`);
     }
 
     if (/\b(plus size|tamanho grande)\b/i.test(fullText)) {
-      tags.add(lang === "en" ? "Plus Size" : "Tamanhos Grandes");
+      tagsManager.add(lang === "en" ? "Plus Size" : "Tamanhos Grandes");
     }
     if (/\b(tamanho unico|one size)\b/i.test(fullText)) {
-      tags.add(lang === "en" ? "One Size" : "Tamanho Único");
+      tagsManager.add(lang === "en" ? "One Size" : "Tamanho Único");
+    }
+
+    // EXTRAÇÃO DE KEYWORDS DIRETAS DO MOCK
+    for (const mock of MOCK_GLOBAL_CATEGORIES) {
+      for (const kw of mock.keywords) {
+        if (new RegExp(`\\b${kw}\\b`, 'i').test(fullText)) {
+          const prettyTag = kw.charAt(0).toUpperCase() + kw.slice(1).toLowerCase();
+          
+          // O Dicionário de Sinónimos garantirá traduções perfeitas de extras.
+          const foundKey = Object.keys(TRANSLATION_MAP).find(k => k.toLowerCase() === prettyTag.toLowerCase());
+          const translatedKw = foundKey ? TRANSLATION_MAP[foundKey][lang] : prettyTag;
+          
+          tagsManager.add(translatedKw);
+          break; // Adiciona apenas a primeira de cada categoria
+        }
+      }
     }
 
     return { 
       ...product, 
-      displayTags: Array.from(tags) 
+      displayTags: tagsManager.values() 
     };
   });
 }

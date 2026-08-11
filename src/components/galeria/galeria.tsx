@@ -247,7 +247,7 @@ export const GlobalEditToolbar = memo(function GlobalEditToolbar({
         </div>
       )}
 
-      <div className={`w-full bg-zinc-950/90 backdrop-blur-xl dark:bg-zinc-900/95 border border-zinc-800/80 p-2 flex items-center justify-between shadow-2xl
+      <div className={`w-full bg-zinc-950/90  dark:bg-zinc-900/95 border border-zinc-800/80 p-2 flex items-center justify-between shadow-2xl
         ${isTooLarge ? 'rounded-b-2xl rounded-t-sm' : 'rounded-2xl'}
       `}>
         
