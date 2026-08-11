@@ -25,14 +25,14 @@ const AuthHeaderComponent = ({ t, lastError }: AuthHeaderProps) => {
       <button
         type="button"
         onClick={() => navigate(-1)}
-        className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-black/20 backdrop-blur-md transition hover:bg-black/30"
+        className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-black/20  transition hover:bg-black/30"
       >
         <ArrowLeft size={20} />
       </button>
       <button
         type="button"
         onClick={handleSupport}
-        className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm font-bold text-white/90 backdrop-blur-md transition hover:bg-black/30"
+        className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm font-bold text-white/90  transition hover:bg-black/30"
       >
         <HelpCircle size={16} />
         {t("auth_support") || "Suporte"}

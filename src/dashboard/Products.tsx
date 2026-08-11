@@ -21,7 +21,7 @@ import { ProductDetails } from './ProdutcsDetails';
 const LoadingState = memo(({ t }: { t: any }) => (
   <div className="flex flex-col items-center justify-center py-20 opacity-70">
     <Loader2 className="animate-spin text-blue-600 mb-4" size={32} />
-    <p className="text-sm font-semibold text-slate-500">{t('loading_products') || 'Carregando produtos...'}</p>
+    <p className="text-sm font-semibold text-slate-500">{t('loading_engine') || 'Carregando produtos...'}</p>
   </div>
 ));
 LoadingState.displayName = 'LoadingState';

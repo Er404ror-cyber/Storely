@@ -81,7 +81,7 @@ export const LS_AUTH_HINT = "storely-auth-user";
 
 export const STORELY_CACHE_KEY = "storely-public-cache-v9";
 export const STORELY_CACHE_VERSION = 9;
-export const STORELY_CACHE_TTL = 1000 * 60 * 60 * 2;
+export const STORELY_CACHE_TTL = 1000 * 60 * 60 * 24;
 export const STORELY_STATE_KEY = "storely-showcase-ui-v4";
 
 export const MAX_PRODUCTS_FETCH = 72;

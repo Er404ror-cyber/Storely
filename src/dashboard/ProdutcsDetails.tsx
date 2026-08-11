@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlignLeft } from "lucide-react";
 import { createPortal } from "react-dom";
@@ -20,6 +20,7 @@ import { ProductDetailsNav } from "../components/ProductDetails/ProductDetailsNa
 
 export interface ProductFormData {
   name: string; category: string; price: string; unit: string; full_description: string; main_image: string; gallery: string[]; stock?: number;
+  discount_percent?: string;
 }
 interface ProductDetailsProps { isCreating?: boolean; onClose?: () => void; }
 type PublicStoreData = { id?: string; slug: string; name?: string; whatsapp_number?: string | null; currency?: string | null; settings?: any; logo_url?: string | null; description?: string | null; };
@@ -29,55 +30,25 @@ type ProductRow = {
   is_active?: boolean | null; created_at?: string | null; category?: string | null; 
   gallery?: string[] | null; main_image?: string | null; full_description?: string | null; 
   unit?: string | null; stock?: number | null;
+  discount_percent?: number | null;
 };
 type ProductLocationState = { product?: ProductRow; store?: PublicStoreData; source?: string; searchMode?: string; fromStore?: boolean; };
 
 const UNIT_TRANSLATION_KEY_MAP = {
-  // === 1. ULTRA COMUNS (Qualquer tipo de produto físico/varejo) ===
-  un: "product_form_unit_un",
-  peca: "product_form_unit_peca",
-  pacote: "product_form_unit_pacote",
-  caixa: "product_form_unit_caixa",
-  kit: "product_form_unit_kit",
-  conjunto: "product_form_unit_conjunto", // Roupas, móveis, louças
-  par: "product_form_unit_par",         // Calçados, brincos, luvas
-
-  // === 2. PESO E VOLUME FLUIDO (Alimentos, cosméticos, químicos, petshop) ===
-  kg: "product_form_unit_kg",
-  g: "product_form_unit_g",
-  l: "product_form_unit_l",
-  ml: "product_form_unit_ml",
-
-  // === 3. ATACADO E QUANTIDADES MAIORES (Distribuição e alimentação) ===
-  fardo: "product_form_unit_fardo",
-  cento: "product_form_unit_cento",       // Doces, impressos, brindes
-
-  // === 4. SERVIÇOS E PRODUTOS DIGITAIS ===
+  un: "product_form_unit_un", peca: "product_form_unit_peca", pacote: "product_form_unit_pacote", caixa: "product_form_unit_caixa", kit: "product_form_unit_kit", conjunto: "product_form_unit_conjunto", par: "product_form_unit_par",
+  kg: "product_form_unit_kg", g: "product_form_unit_g", l: "product_form_unit_l", ml: "product_form_unit_ml",
+  fardo: "product_form_unit_fardo", cento: "product_form_unit_cento",
   servico: "product_form_unit_servico",
-
-  // === 5. TEMPO (Diárias, agendamentos, assinaturas e contratos) ===
-  hora: "product_form_unit_hora",
-  dia: "product_form_unit_dia",
-  semana: "product_form_unit_semana",
-  mes: "product_form_unit_mes",
-  ano: "product_form_unit_ano",
-
-  // === 6. METRAGEM E MEDIDAS LINEARES (Tecidos, cabos, fitas, construção) ===
-  m: "product_form_unit_m",
-  cm: "product_form_unit_cm",
-  mm: "product_form_unit_mm",
-  rolo: "product_form_unit_rolo",         // Fios, fitas, papel de parede
-
-  // === 7. ÁREA E VOLUME ESPACIAL (Imóveis, terrenos, materiais brutos) ===
-  m2: "product_form_unit_m2",             // Pisos, terrenos
-  m3: "product_form_unit_m3",             // Areia, brita, madeira
-  t: "product_form_unit_t",               // Tonelada (Cargas pesadas)
+  hora: "product_form_unit_hora", dia: "product_form_unit_dia", semana: "product_form_unit_semana", mes: "product_form_unit_mes", ano: "product_form_unit_ano",
+  m: "product_form_unit_m", cm: "product_form_unit_cm", mm: "product_form_unit_mm", rolo: "product_form_unit_rolo",
+  m2: "product_form_unit_m2", m3: "product_form_unit_m3", t: "product_form_unit_t",
 } as const;
 
 export function ProductDetails({ isCreating = false, onClose }: ProductDetailsProps) {
   const params = useParams();
   const location = useLocation();
   const { pathname } = location;
+  const navigate = useNavigate();
 
   const storeSlug = useMemo(() => params.storeSlug || pathname.split("/").filter(Boolean)[0] || "", [params.storeSlug, pathname]);
   const { productId } = params;
@@ -102,7 +73,7 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
     imageWrap: forceLightUI ? "bg-slate-200" : "bg-slate-200 dark:bg-zinc-900",
     mutedText: forceLightUI ? "text-slate-500" : "text-slate-500 dark:text-zinc-400",
     strongText: forceLightUI ? "text-slate-950" : "text-slate-950 dark:text-white",
-    softMutedText: forceLightUI        ? "text-slate-400" : "text-slate-400 dark:text-zinc-500",
+    softMutedText: forceLightUI ? "text-slate-400" : "text-slate-400 dark:text-zinc-500",
     hoverSoft: forceLightUI ? "hover:bg-slate-100" : "hover:bg-slate-100 dark:hover:bg-zinc-900"
   }), [forceLightUI]);
 
@@ -117,21 +88,15 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
   }, []);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({ top: 0, behavior: "auto" }); 
-    }
+    if (scrollRef.current) scrollRef.current.scrollTo({ top: 0, behavior: "auto" }); 
   }, [productId]);
 
   const { data: publicStore } = useStorePublic(storeSlug);
 
-  // 🚀 BUSCA HÍBRIDA COM CHAVE DE CACHE INDIVIDUAL ['product', productId]
-  // Permite sincronização imediata quando o Admin atualiza o produto sem precisar de refetch de rede.
   const { data: product } = useQuery({
     queryKey: ["product", productId],
     queryFn: async (): Promise<ProductRow | null> => {
       if (isCreating || !productId) return null;
-      
-      // 1. Procura na cache global de listas de produtos
       const queryCache = queryClient.getQueriesData<ProductRow[]>({ queryKey: ["products"] });
       for (const [_, cachedProducts] of queryCache) {
         if (cachedProducts && Array.isArray(cachedProducts)) {
@@ -139,8 +104,6 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
           if (found) return found;
         }
       }
-
-      // 2. Fallback para a API se não existir em cache
       const { data, error } = await supabase.from("products").select("*").eq("id", productId).single();
       if (error) throw error;
       return data as ProductRow;
@@ -150,7 +113,6 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
     gcTime: 1000 * 60 * 60 * 24,
     initialData: () => {
       if (pageState?.product) return pageState.product;
-      
       const queryCache = queryClient.getQueriesData<ProductRow[]>({ queryKey: ["products"] });
       for (const [_, cachedProducts] of queryCache) {
         if (cachedProducts && Array.isArray(cachedProducts)) {
@@ -167,11 +129,9 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
 
   const initialData = useMemo<ProductFormData>(() => {
     if (isCreating || !resolvedProduct) {
-      return { name: "", category: "", price: "", unit: "un", full_description: "", main_image: "", gallery: [] };
+      return { name: "", category: "", price: "", unit: "un", full_description: "", main_image: "", gallery: [], discount_percent: "" };
     }
-
     const normalizedMainImage = resolvedProduct.main_image || resolvedProduct.image_url || (Array.isArray(resolvedProduct.gallery) ? resolvedProduct.gallery[0] : "") || "";
-    
     return {
       name: resolvedProduct.name ?? "",
       category: resolvedProduct.category ?? "",
@@ -181,19 +141,26 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
       main_image: normalizedMainImage,
       gallery: Array.isArray(resolvedProduct.gallery) ? resolvedProduct.gallery.filter(Boolean) : normalizedMainImage ? [normalizedMainImage] : [],
       stock: resolvedProduct.stock ?? undefined,
+      discount_percent: resolvedProduct.discount_percent != null ? String(resolvedProduct.discount_percent) : "",
     };
   }, [resolvedProduct, isCreating]);
 
-  // 🚀 CALLBACK DE SUCESSO DA EDIÇÃO: Atualiza o cache local do React Query instantaneamente
   const handleProductUpdateSuccess = useCallback((updatedProductData?: any) => {
-    setIsEditing(false);
     if (updatedProductData && productId) {
-      queryClient.setQueryData(["product", productId], (old: any) => ({
-        ...old,
-        ...updatedProductData,
-      }));
+      queryClient.setQueryData(["product", productId], (old: any) => ({ ...old, ...updatedProductData }));
+      queryClient.setQueriesData({ queryKey: ["products"] }, (oldList: any) => {
+        if (!Array.isArray(oldList)) return oldList;
+        return oldList.map(p => p.id === productId ? { ...p, ...updatedProductData } : p);
+      });
     }
-  }, [queryClient, productId]);
+  
+    if (onClose) {
+      onClose();
+    } else {
+      setIsEditing(false);
+      navigate(`/admin/produtos`);
+    }
+  }, [queryClient, productId, onClose, navigate]);
 
   useEffect(() => {
     setQuantity(1);
@@ -205,8 +172,18 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
     return merged.length ? merged : [];
   }, [initialData.main_image, initialData.gallery]);
 
-  const unitPrice = useMemo(() => Number(initialData.price || 0), [initialData.price]);
-  const totalPrice = useMemo(() => unitPrice * quantity, [unitPrice, quantity]);
+  const unitPriceOriginal = useMemo(() => Number(initialData.price || 0), [initialData.price]);
+  const discountPercent = useMemo(() => {
+    const val = parseInt(initialData.discount_percent || "0", 10);
+    return isNaN(val) ? 0 : val;
+  }, [initialData.discount_percent]);
+
+  const unitPriceFinal = useMemo(() => {
+    if (discountPercent > 0) return unitPriceOriginal - (unitPriceOriginal * (discountPercent / 100));
+    return unitPriceOriginal;
+  }, [unitPriceOriginal, discountPercent]);
+
+  const totalPriceFinal = useMemo(() => unitPriceFinal * quantity, [unitPriceFinal, quantity]);
 
   const currency = useMemo(() => (resolvedStore?.currency || resolvedStore?.settings?.currency || adminStore?.currency || FALLBACK_CURRENCY).toUpperCase(), [resolvedStore, adminStore]);
   const locale = language === "pt" ? "pt-PT" : "en-US";
@@ -218,37 +195,48 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
 
   const translatedUnit = UNIT_TRANSLATION_KEY_MAP[initialData.unit as keyof typeof UNIT_TRANSLATION_KEY_MAP] ? t(UNIT_TRANSLATION_KEY_MAP[initialData.unit as keyof typeof UNIT_TRANSLATION_KEY_MAP] as any) : initialData.unit;
 
+  // 🚀 ATUALIZAÇÃO: Gatilhos Mentais de Venda Embutidos e Dinâmicos via Traduções
   const handleWhatsAppOrder = useCallback(() => {
+    const totalOriginal = unitPriceOriginal * quantity;
+    const totalSaved = totalOriginal - totalPriceFinal;
+
+    let optimizedNote = "";
+    
+    if (discountPercent > 0) {
+      // Usa fragmentos de tradução para injetar os números sem complicação
+      optimizedNote = `${t("whatsapp_discount_title" as any)} ${discountPercent}${t("whatsapp_discount_suffix" as any)}\n\n${t("whatsapp_price_from" as any)}${formatMoney(totalOriginal)}~\n${t("whatsapp_price_to" as any)}${formatMoney(totalPriceFinal)}*\n${t("whatsapp_savings_prefix" as any)}${formatMoney(totalSaved)}${t("whatsapp_savings_suffix" as any)}`;
+      
+      if (customNote) {
+        optimizedNote += `\n\n${t("whatsapp_customer_note" as any)} ${customNote}`;
+      }
+    } else {
+      optimizedNote = customNote;
+    }
+
     sendWhatsAppOrder({
       storeName: resolvedStore?.name || storeSlug,
       whatsappNumber: resolvedStore?.whatsapp_number || adminStore?.whatsapp_number,
       productName: initialData.name,
       quantity,
       unit: translatedUnit,
-      totalPrice: formatMoney(totalPrice),
-      customNote,
+      totalPrice: formatMoney(totalPriceFinal),
+      customNote: optimizedNote, 
       imageUrl: initialData.main_image,
     });
-  }, [sendWhatsAppOrder, resolvedStore, adminStore, storeSlug, initialData.name, quantity, translatedUnit, totalPrice, formatMoney, customNote, initialData.main_image]);
+  }, [sendWhatsAppOrder, resolvedStore, adminStore, storeSlug, initialData.name, quantity, translatedUnit, totalPriceFinal, formatMoney, customNote, initialData.main_image, discountPercent, unitPriceOriginal, t]);
 
   const handleShare = useCallback(async () => {
     const shareData = { title: initialData?.name || "Storely", text: `Confira ${initialData?.name || "este link"}!`, url: window.location.href };
     if (navigator.share && navigator.canShare?.(shareData)) {
       try { await navigator.share(shareData); } catch (err) { console.log("Erro share nativo", err); }
     } else {
-      try {
-        await navigator.clipboard.writeText(window.location.href);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      } catch (err) { console.log("Erro clipboard", err); }
+      try { await navigator.clipboard.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 2000); } 
+      catch (err) { console.log("Erro clipboard", err); }
     }
   }, [initialData?.name]);
 
   return createPortal(
-    <div 
-      ref={scrollRef} 
-      className={`fixed inset-0 z-[10000] h-[100dvh] w-full overflow-y-auto overflow-x-hidden ${styles.pageBg}`}
-    >
+    <div ref={scrollRef} className={`fixed inset-0 z-[10000] h-[100dvh] w-full overflow-y-auto overflow-x-hidden ${styles.pageBg}`}>
       <ProductDetailsNav
         isCreating={isCreating} onClose={onClose} isEditorRoute={isEditorRoute}
         isEditing={isEditing} setIsEditing={setIsEditing} handleShare={handleShare}
@@ -276,10 +264,29 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
                 <span className={`inline-block mb-3 self-start rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] ${forceLightUI ? "bg-slate-200/60 text-slate-700" : "bg-slate-200/60 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300"}`}>
                   {initialData.category || t("common_category_general" as any) || "Geral"}
                 </span>
-                <h1 className={`text-[2rem] md:text-[2.5rem] font-extrabold leading-[1.15] tracking-tight mb-2 [overflow-wrap:anywhere] ${styles.strongText}`}>{initialData.name}</h1>
-                <p className={`text-2xl font-black tracking-tight mb-8 ${styles.strongText}`}>{formatMoney(unitPrice)} <span className="text-[15px] font-semibold text-slate-500">/ {translatedUnit}</span></p>
+                
+                <h1 className={`text-[2rem] md:text-[2.5rem] font-extrabold leading-[1.15] tracking-tight mb-2 [overflow-wrap:anywhere] ${styles.strongText}`}>
+                  {initialData.name}
+                </h1>
+                
+                <div className="flex flex-wrap items-end gap-3 mb-8">
+                  <p className={`text-2xl font-black tracking-tight ${styles.strongText}`}>
+                    {formatMoney(unitPriceFinal)} <span className="text-[15px] font-semibold text-slate-500">/ {translatedUnit}</span>
+                  </p>
+                  
+                  {discountPercent > 0 && (
+                    <>
+                      <p className="text-lg font-semibold text-slate-400 line-through mb-[2px]">
+                        {formatMoney(unitPriceOriginal)}
+                      </p>
+                      <span className="mb-1 rounded-lg bg-amber-100 px-2 py-0.5 text-[11px] font-black text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
+                        -{discountPercent}%
+                      </span>
+                    </>
+                  )}
+                </div>
 
-                <ProductCheckout quantity={quantity} setQuantity={setQuantity} customNote={customNote} setCustomNote={setCustomNote} localizedTotalPrice={formatMoney(totalPrice)} translatedUnit={translatedUnit} handleWhatsAppOrder={handleWhatsAppOrder} forceLightUI={forceLightUI} panelClass={styles.panel} softMutedTextClass={styles.softMutedText} strongTextClass={styles.strongText} isEditorRoute={isEditorRoute} t={t} />
+                <ProductCheckout quantity={quantity} setQuantity={setQuantity} customNote={customNote} setCustomNote={setCustomNote} localizedTotalPrice={formatMoney(totalPriceFinal)} translatedUnit={translatedUnit} handleWhatsAppOrder={handleWhatsAppOrder} forceLightUI={forceLightUI} panelClass={styles.panel} softMutedTextClass={styles.softMutedText} strongTextClass={styles.strongText} isEditorRoute={isEditorRoute} t={t} />
 
                 {!isEditorRoute && showVisitStore && (
                   <StoreTrustCard storeName={resolvedStore?.name || storeSlug} storeLogo={resolvedStore?.logo_url || ""} siteUrl={window.location.origin + "/" + storeSlug} softPanelClass={styles.softPanel} strongTextClass={styles.strongText} mutedTextClass={styles.mutedText} t={t} />
@@ -292,7 +299,7 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
                 className="mt-12 md:mt-20 border-t border-slate-200 pt-10 dark:border-zinc-800 px-4 md:px-0"
                 style={{ contentVisibility: 'auto', containIntrinsicSize: '0 300px' }}
               >
-                <div className="flex items-center gap-2 mb-6"><AlignLeft size={20} className={styles.mutedText} /><h3 className={`text-xl font-extrabold tracking-tight ${styles.strongText}`}>{t("product_details_details" as any) || "Details"}</h3></div>
+                <div className="flex items-center gap-2 mb-6"><AlignLeft size={20} className={styles.mutedText} /><h3 className={`text-xl font-extrabold tracking-tight ${styles.strongText}`}>{t("product_details_details" as any) || "Detalhes"}</h3></div>
                 <div className={`max-w-3xl text-[16px] leading-loose whitespace-pre-wrap [overflow-wrap:anywhere] ${styles.mutedText}`}>{initialData.full_description}</div>
               </div>
             )}
@@ -306,7 +313,7 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
         )}
       </main>
 
-      {!isEditing && <MobileStickyBar localizedTotalPrice={formatMoney(totalPrice)} handleWhatsAppOrder={handleWhatsAppOrder} mutedTextClass={styles.mutedText} strongTextClass={styles.strongText} t={t} />}
+      {!isEditing && <MobileStickyBar localizedTotalPrice={formatMoney(totalPriceFinal)} handleWhatsAppOrder={handleWhatsAppOrder} mutedTextClass={styles.mutedText} strongTextClass={styles.strongText} t={t} />}
 
       <style>{`.pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); } .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
     </div>, document.body

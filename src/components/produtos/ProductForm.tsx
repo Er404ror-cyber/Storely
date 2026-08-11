@@ -15,6 +15,7 @@ export interface ProductFormData {
   full_description: string;
   main_image: string;
   gallery: string[];
+  discount_percent?: string;
 }
 
 interface ProductFormProps {

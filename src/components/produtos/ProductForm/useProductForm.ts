@@ -50,7 +50,6 @@ export function useProductForm({ productId, isCreating, initialData, onSuccess }
   }, [adminStore?.id, productId]);
 
   useEffect(() => {
-    // FIX: Alterado de 'let' para 'const'
     const restoredTokens: (string | null)[] = Array(PRODUCT_IMAGE_SLOTS).fill(null);
     try {
       const raw = window.localStorage.getItem(storageKey);
@@ -81,9 +80,6 @@ export function useProductForm({ productId, isCreating, initialData, onSuccess }
     const parsed = splitPrice(initialData.price);
     setPriceMajor(parsed.major || '');
     setPriceCents(parsed.cents === '00' ? '' : parsed.cents);
-
-    const filledCount = mergedImages.filter(Boolean).length;
-    setVisibleCount(Math.min(PRODUCT_IMAGE_SLOTS, Math.max(2, filledCount + 1)));
   }, [initialData, storageKey]);
 
   useEffect(() => {
@@ -98,7 +94,7 @@ export function useProductForm({ productId, isCreating, initialData, onSuccess }
     window.localStorage.setItem(storageKey, JSON.stringify(tokensToSave));
   }, [slots, storageKey]);
 
-  // FIX: Sincroniza a ref com o estado mais atualizado
+  // Sincroniza a ref com o estado mais atualizado
   useEffect(() => {
     latestSlots.current = slots;
   }, [slots]);
@@ -193,7 +189,7 @@ export function useProductForm({ productId, isCreating, initialData, onSuccess }
       try {
         const uploaded = await uploadToCloudinary(slot.file);
         return { index, uploaded };
-      } catch { // FIX: Removido 'err' que não estava em uso
+      } catch {
         updateSlot(index, { error: t('product_form_upload_error'), isProcessing: false });
         return null;
       }
@@ -247,6 +243,10 @@ export function useProductForm({ productId, isCreating, initialData, onSuccess }
       if (!adminStore?.id) throw new Error(t('product_form_store_not_found'));
       if (hasAnyLocalBlob) throw new Error(t('product_form_blobs_prevent_save'));
 
+      // 🚀 Tratamento de segurança para o desconto antes de salvar
+      const parsedDiscount = parseInt(formData.discount_percent || '0', 10);
+      const safeDiscountPercent = isNaN(parsedDiscount) ? 0 : Math.min(100, Math.max(0, parsedDiscount));
+
       const payload = {
         name: formData.name.trim(),
         slug: createProductSlug(formData.name),
@@ -257,6 +257,7 @@ export function useProductForm({ productId, isCreating, initialData, onSuccess }
         main_image: slots[0].preview,
         gallery: slots.slice(1).map(s => s.preview).filter(Boolean),
         store_id: adminStore.id,
+        discount_percent: safeDiscountPercent, // 🚀 Campo novo adicionado aqui
       };
 
       if (isCreating) {

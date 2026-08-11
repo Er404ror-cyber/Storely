@@ -31,53 +31,116 @@ export const SectionHeader = memo(({ icon, title, subtle, controls }: { icon: Re
   </div>
 ));
 
+
+
 export const ProductCard = memo(({ item, onClick, compact = false, locale = "en-US" }: { item: ProductItem; onClick: (item: ProductItem) => void; compact?: boolean; locale?: string }) => {
   const [noImg, setNoImg] = useState(false);
   const { t } = useTranslate();
   
-  // Memoriza o preço formatado para evitar recalcular e piscar a UI
-  const price = React.useMemo(() => formatProductPrice(item.price, item.currency, locale), [item.price, item.currency, locale]);
+  // 1. Define o preço final (se tiver desconto, usa o final, senão o normal)
+  const currentPriceValue = item.finalPrice ?? item.price;
+  
+  // 2. Memoriza os preços formatados
+  const currentPrice = React.useMemo(() => 
+    formatProductPrice(currentPriceValue, item.currency, locale), 
+  [currentPriceValue, item.currency, locale]);
+
+  const originalPrice = React.useMemo(() => 
+    (item.hasDiscount && item.originalPrice) 
+      ? formatProductPrice(item.originalPrice, item.currency, locale) 
+      : null, 
+  [item.hasDiscount, item.originalPrice, item.currency, locale]);
 
   return (
-    <article onClick={() => onClick(item)} className={`group/card cursor-pointer overflow-hidden rounded-[1.35rem] border border-zinc-200 bg-white shadow-sm transition-transform duration-150 motion-safe:hover:-translate-y-0.5 dark:border-zinc-800 dark:bg-zinc-900 ${compact ? "w-[190px] min-w-[190px]" : "w-full"}`} style={{ contentVisibility: "auto", containIntrinsicSize: "auto 320px" }}>
-      <div className={`relative overflow-hidden bg-zinc-100 dark:bg-zinc-900 ${compact ? "aspect-[4/4.8]" : "aspect-[4/4.8] md:aspect-[4/3.5]"}`}>
-        <img src={item.image || FALLBACK_PRODUCT} alt={item.name} loading="lazy" decoding="async" fetchPriority="low" draggable={false} width={380} height={456} sizes={compact ? "190px" : "(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"} className="h-full w-full object-cover pointer-events-none" onError={(e) => handleImgError(e, FALLBACK_PRODUCT, setNoImg)} />
+    <article 
+      onClick={() => onClick(item)} 
+      // Adicionado transform-gpu para animação leve de hover
+      className={`group/card cursor-pointer overflow-hidden flex flex-col rounded-[1.35rem] border border-zinc-200 bg-white shadow-sm transition-transform duration-150 motion-safe:hover:-translate-y-0.5 transform-gpu dark:border-zinc-800 dark:bg-zinc-900 ${compact ? "w-[190px] min-w-[190px]" : "w-full"}`} 
+      style={{ contentVisibility: "auto", containIntrinsicSize: "auto 320px" }}
+    >
+      <div className={`relative overflow-hidden bg-zinc-100 dark:bg-zinc-900 shrink-0 ${compact ? "aspect-[4/4.8]" : "aspect-[4/4.8] md:aspect-[4/3.8]"}`}>
+        <img 
+          src={item.image || FALLBACK_PRODUCT} 
+          alt={item.name} 
+          loading="lazy" 
+          decoding="async" 
+          fetchPriority="low" 
+          draggable={false} 
+          sizes={compact ? "190px" : "(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"} 
+          // Adicionado object-center para garantir que o produto não é cortado mal
+          className="h-full w-full object-cover object-center pointer-events-none" 
+          onError={(e) => handleImgError(e, FALLBACK_PRODUCT, setNoImg)} 
+        />
+        
+        {/* BADGE DE DESCONTO: Removida a sombra colorida pesada */}
+        {item.hasDiscount && item.discountPercent && (
+          <div className="absolute right-2.5 top-2.5 z-10 rounded-full bg-rose-600 px-2 py-1 text-[11px] font-black tracking-wider text-white shadow-sm">
+            -{item.discountPercent}%
+          </div>
+        )}
+
+       
         {noImg && (
-          <div className="absolute right-2.5 bottom-2.5 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.12em] border border-zinc-700/30 backface-hidden">
-            <ImageOff size={10} className="text-zinc-400" />
+          <div className="absolute right-2.5 bottom-2.5 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.12em] border border-zinc-700/30 bg-zinc-900/90 text-white">
+            <ImageOff size={10} className="text-zinc-300" />
             {t("noImage") || "Sem Imagem"}
           </div>
         )}
-        <div className="absolute left-2.5 top-2.5 max-w-[55%] rounded-full bg-zinc-50/92 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-zinc-900 backface-hidden"><span className="block truncate">{item.storeName}</span></div>
+        
+
+        <div className="absolute left-2.5 top-2.5 max-w-[55%] rounded-full bg-zinc-50/95 dark:bg-zinc-900/95 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200/50 dark:border-zinc-800/50">
+          <span className="block truncate">{item.storeName}</span>
+        </div>
       </div>
       
-      {/* Informações do Produto com Foco Psicológico no Preço */}
-      <div className="space-y-2.5 p-3 overflow-hidden">
-        <div className="w-full overflow-hidden whitespace-nowrap group/text">
-          <h4 className="text-[13px] font-black leading-tight tracking-tight text-zinc-950 dark:text-zinc-50 inline-block w-max pr-4 group-hover/text:translate-x-[-40%] group-hover/text:transition-transform group-hover/text:duration-[4000ms] group-hover/text:linear group-hover/text:will-change-transform backface-hidden">{item.name}</h4>
+      {/* Container flex-1 para empurrar o preço sempre para a base (alinhamento perfeito em grids) */}
+      <div className="flex flex-col flex-1 p-3 overflow-hidden">
+        {/* Removido backface-hidden do texto animado para poupar RAM de vídeo */}
+        <div className="w-full overflow-hidden whitespace-nowrap group/text mb-2">
+          <h4 className="text-[13px] font-black leading-tight tracking-tight text-zinc-950 dark:text-zinc-50 inline-block w-max pr-4 group-hover/text:translate-x-[-40%] group-hover/text:transition-transform group-hover/text:duration-[4000ms] group-hover/text:linear group-hover/text:will-change-transform">
+            {item.name}
+          </h4>
         </div>
 
-        {/* Linha de Metadados Limpa */}
-        <div className="flex items-center gap-2 text-[10px] text-zinc-500 dark:text-zinc-400">
+        <div className="flex items-center gap-2 text-[10px] text-zinc-500 dark:text-zinc-400 mb-2">
           <span className="truncate font-black uppercase tracking-wide text-blue-600 dark:text-blue-400">{item.category}</span>
           <span className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700 shrink-0" />
           <span className="truncate">{item.timeAgoShort}</span>
         </div>
 
-        {/* AJUSTE AQUI: "Cubo" do Preço Otimizado e Altamente Escaneável */}
-        {price && (
-          <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between">
-            <span className="text-[9px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Preço</span>
-            <span className="text-[14px] font-black tracking-tight text-zinc-950 dark:text-emerald-400 bg-zinc-50 dark:bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-100 dark:border-zinc-800/40 tabular-nums shadow-inner">
-              {price}
+        {/* ÁREA DE PREÇO: Ancoragem e Destaque Visual */}
+        {currentPrice && (
+          <div className="mt-auto pt-2 border-t border-zinc-100 dark:border-zinc-800/60 flex flex-col justify-end">
+            <span className="text-[9px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1">
+              {item.hasDiscount ? t("ofertaEspecial") || "Oferta Especial" : t("price") || "Preço"}
             </span>
+            
+            <div className="flex items-center justify-between gap-2">
+              {/* Preço Antigo (Ancoragem) */}
+              <div className="flex items-center min-w-0">
+                {item.hasDiscount && originalPrice && (
+                  <span className="truncate text-[10px] font-bold text-zinc-400 line-through decoration-zinc-300 dark:decoration-zinc-600 mr-2">
+                    {originalPrice}
+                  </span>
+                )}
+              </div>
+              
+              {/* Preço Atual (Call to Value) */}
+              <span className={`shrink-0 text-[14px] font-black tracking-tight tabular-nums px-2.5 py-0.5 rounded-lg border shadow-sm transition-colors
+                ${item.hasDiscount 
+                  ? "text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/60" 
+                  : "text-zinc-950 dark:text-emerald-400 bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800/60"
+                }
+              `}>
+                {currentPrice}
+              </span>
+            </div>
           </div>
         )}
       </div>
     </article>
   );
 });
-
 export const StoreCard = memo(({ item, onClick, viewStore }: { item: StoreItem; onClick: (slug: string) => void; viewStore: string }) => {
   const [noCover, setNoCover] = useState(false);
   const [noLogo, setNoLogo] = useState(false);

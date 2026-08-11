@@ -9,11 +9,29 @@ interface SearchResultsViewProps {
   triggerGlobal: boolean;
   deferredTerm: string;
   storeCurrency: string;
-  isDark: boolean; // Mantido apenas para compatibilidade de assinatura se necessário
+  isDark: boolean; 
   t: (key: any, variables?: any) => string;
   onTriggerGlobal: () => void;
   onNavigateProduct: (slug: string, id: string) => void;
   activeStoreSlug?: string;
+}
+
+// OTIMIZAÇÃO: Garante que os resultados locais (da própria loja) recebem o desconto corretamente
+function enrichWithDiscounts(product: any) {
+  if (product.hasDiscount !== undefined) return product;
+
+  const basePrice = product.price ? Number(product.price) : 0;
+  const discPercent = Number(product.discountPercent || product.discount_percent) || 0;
+  
+  const hasDiscount = discPercent > 0;
+  
+  return {
+    ...product,
+    hasDiscount,
+    originalPrice: hasDiscount ? basePrice : null,
+    finalPrice: hasDiscount ? basePrice - (basePrice * (discPercent / 100)) : basePrice,
+    discountPercent: hasDiscount ? discPercent : null,
+  };
 }
 
 export const SearchResultsView = React.memo(function SearchResultsView({
@@ -40,7 +58,7 @@ export const SearchResultsView = React.memo(function SearchResultsView({
             {localResults.map(p => (
               <SearchResultCard
                 key={p.id}
-                product={p}
+                product={enrichWithDiscounts(p)} 
                 currency={storeCurrency}
                 onClick={() => activeStoreSlug && onNavigateProduct(activeStoreSlug, p.id)}
               />
@@ -75,7 +93,7 @@ export const SearchResultsView = React.memo(function SearchResultsView({
                 return (
                   <SearchResultCard
                     key={p.id}
-                    product={p}
+                    product={p} 
                     currency={storeCurrency}
                     isGlobal={true}
                     onClick={() => storeData?.slug && onNavigateProduct(storeData.slug, p.id)}

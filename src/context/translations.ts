@@ -2026,8 +2026,78 @@ auth_change_data_try_again: "Please change the data before trying again.",
 
 
   version_update_title: "Update Available",
-  version_update_desc: "The system has been updated with improvements. Please refresh the page to continue.",
   version_update_button: "Update Now",
+
+
+
+  product_form_pricing_label: "Pricing",
+  product_form_price_original: "Original Price",
+ 
+  product_form_discount_label: "Discount (%)",
+  product_form_final_price_label: "Final store price:",
+ofertaEspecial: "Special Offer",
+
+version_update_badge: "New Era Available",
+  version_update_desc: "A new version with performance enhancements and fixes has been deployed to ensure maximum smoothness for your store.",
+  version_update_released: "Released on",
+
+
+    filter_subcategories: "Subcategories:",
+    filter_all_sub: "All",
+    filter_clear: "Clear",
+    gender_kid: "Kids",
+    search_results_title: "Search Results",
+    
+    whatsapp_discount_title: "🔥 *I want to secure my offer with",
+whatsapp_discount_suffix: "% off!*",
+whatsapp_price_from: "From: ~",
+whatsapp_price_to: "For: *",
+whatsapp_savings_prefix: "*(Guaranteed savings of ",
+whatsapp_savings_suffix: ")* 🎉",
+whatsapp_customer_note: "📝 *Customer note:*",
+
+exit: "Exit",
+share_text: "Check out this content!",
+reset_zoom: "Reset Zoom",
+
+tip_hero_title: "Tip:",
+tip_hero_desc: "Copy the link above and post it on your WhatsApp Status!",
+tips_whatsapp_title: "Share on WhatsApp",
+tips_whatsapp_desc: "Share your store link on WhatsApp Status. Seeing everything in one link makes customers buy faster.",
+tips_sales_title: "Prices & Details",
+tips_sales_desc: "Always include prices and sizes. Customers often give up when they have to ask for the price.",
+tips_visual_title: "Photos that Sell",
+tips_visual_desc: "Take photos in a well-lit place. A clean and beautiful store builds a lot of trust.",
+
+
+
+
+
+
+tip_hero_1: "Copy the link above and post it on your WhatsApp Status!",
+tip_hero_2: "Add the link to your Instagram or TikTok bio.",
+tip_hero_3: "Set the link as your auto-reply on WhatsApp Business.",
+tip_hero_4: "Send your catalog directly to customers in chats.",
+
+tips_section_title: "How to sell more every day",
+
+tips_rec_whatsapp_title: "WhatsApp Power",
+tips_rec_whatsapp_desc: "Share on Status and add to your WhatsApp bio. Customers buy much faster.",
+
+tips_rec_social_title: "Link in Bio",
+tips_rec_social_desc: "On Instagram/TikTok, tell them 'Shop via the link in bio!'. It makes buying super easy.",
+
+tips_rec_groups_title: "Facebook Groups",
+tips_rec_groups_desc: "Share your store in groups. A full store builds way more trust than random messages.",
+
+tips_rec_clarity_title: "Prices are Key",
+tips_rec_clarity_desc: "Never hide prices. Stores with clear prices sell 3x more because they avoid questions.",
+
+tips_rec_visual_title: "Quality Photos",
+tips_rec_visual_desc: "Use good lighting and clean backgrounds. A nice photo adds a lot of value to your product.",
+
+tips_rec_promo_title: "Flash Sales",
+tips_rec_promo_desc: "Run 24h offers. Urgency makes customers decide and buy on the spot."
   },
 
 
@@ -4067,9 +4137,79 @@ auth_change_data_try_again: "Por favor, altere os dados antes de tentar novament
   product_form_unit_conjunto: "Conjunto",
 
   version_update_title: "Atualização Disponível",
-  version_update_desc: "O sistema foi atualizado com melhorias. Por favor, atualize a página para continuar.",
   version_update_button: "Atualizar Agora",
 
+
+
+  product_form_pricing_label: "Precificação",
+  product_form_price_original: "Preço Original",
+  product_form_discount_label: "Desconto (%)",
+  product_form_final_price_label: "Preço final na loja:",
+
+  ofertaEspecial: "Oferta Especial",
+
+  version_update_badge: "Nova Era Disponível",
+  version_update_desc: "Uma nova versão com melhorias de desempenho e correções foi instalada para garantir a máxima fluidez na sua loja.",
+  version_update_released: "Lançado em",
+
+
+    filter_subcategories: "Subcategorias:",
+    filter_all_sub: "Todas",
+    filter_clear: "Limpar",
+    gender_kid: "Criança",
+    search_results_title: "Resultados da Pesquisa",
+
+    whatsapp_discount_title: "🔥 *Quero garantir a minha oferta com",
+whatsapp_discount_suffix: "% de desconto!*",
+whatsapp_price_from: "De: ~",
+whatsapp_price_to: "Por: *",
+whatsapp_savings_prefix: "*(Poupança garantida de ",
+whatsapp_savings_suffix: ")* 🎉",
+whatsapp_customer_note: "📝 *Observação do cliente:*",
+
+exit: "Sair",
+share_text: "Dá uma vista de olhos neste conteúdo!",
+reset_zoom: "Remover Zoom",
+
+
+tip_hero_title: "Dica:",
+tip_hero_desc: "Copie o link acima e coloque no Status do WhatsApp!",
+tips_section_title: "Como vender mais todos os dias",
+tips_whatsapp_title: "Divulgue no WhatsApp",
+tips_whatsapp_desc: "Partilhe o seu link no Status do WhatsApp. Ver tudo num só link faz os clientes comprarem mais rápido.",
+tips_sales_title: "Preço e Detalhes",
+tips_sales_desc: "Coloque preços e tamanhos. Clientes desistem de comprar quando têm de perguntar o preço.",
+tips_visual_title: "Fotos que Vendem",
+tips_visual_desc: "Tire fotografias num lugar iluminado. Uma loja limpa e bonita transmite muita confiança.",
+
+
+
+
+
+
+tip_hero_1: "Copie o link acima e coloque no Status do WhatsApp!",
+tip_hero_2: "Adicione o link na biografia do seu Instagram ou TikTok.",
+tip_hero_3: "Coloque o link na resposta automática do WhatsApp Business.",
+tip_hero_4: "Envie o seu catálogo diretamente aos clientes nas conversas.",
+
+
+tips_rec_whatsapp_title: "Poder do WhatsApp",
+tips_rec_whatsapp_desc: "Partilhe no Status e coloque o link na bio do WhatsApp. Clientes compram mais rápido assim.",
+
+tips_rec_social_title: "Link na Biografia",
+tips_rec_social_desc: "No Instagram/TikTok, diga 'Compre no link da bio!'. Facilita muito a vida de quem quer comprar.",
+
+tips_rec_groups_title: "Grupos do Facebook",
+tips_rec_groups_desc: "Divulgue a loja em grupos. Uma loja completa passa muito mais confiança do que mensagens soltas.",
+
+tips_rec_clarity_title: "Preço é Fundamental",
+tips_rec_clarity_desc: "Nunca esconda o preço. Lojas com preços claros vendem 3x mais porque evitam perguntas.",
+
+tips_rec_visual_title: "Fotos com Qualidade",
+tips_rec_visual_desc: "Use boa luz e fundos limpos. Uma foto bonita passa confiança e valoriza muito o seu produto.",
+
+tips_rec_promo_title: "Ofertas Relâmpago",
+tips_rec_promo_desc: "Crie ofertas de 24h. A urgência faz os clientes decidirem e comprarem na hora."
 }
 
 

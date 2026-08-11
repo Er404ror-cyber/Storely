@@ -40,15 +40,24 @@ export type ProductStore = {
     storeDescription: string;
     storeLogo: string;
     storeWhatsApp?: string | null;
+    
+    // Precificação Base
     price: number | null;
     currency: string;
+    
+    // Novos campos adicionados para Descontos (Psicologia de Conversão)
+    hasDiscount?: boolean;
+    originalPrice?: number | null;
+    finalPrice?: number | null;
+    discountPercent?: number | null;
+  
+    // Campos de Busca Interna
     searchName: string;
     searchCategory: string;
     searchStore: string;
     searchDescription: string;
     searchFull: string;
   };
-  
   export type StoreItem = {
     id: string;
     slug: string;
