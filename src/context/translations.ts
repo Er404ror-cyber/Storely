@@ -2231,7 +2231,7 @@ network_restored_title: "Connection restored",
 network_restored_desc: "Data loaded and connection speed normalized.",
 network_close_aria: "Close network alert",
 
-swipe_down_to_close: "Swipe down to close",
+swipe_down_to_close: "Swipe down",
   },
 
 
@@ -4501,7 +4501,7 @@ network_slow_desc: "O processamento ou resposta da rede está demorando mais que
 network_restored_title: "Conexão restabelecida",
 network_restored_desc: "Dados carregados e velocidade normalizada.",
 network_close_aria: "Fechar aviso de rede",
-swipe_down_to_close: "Deslize para baixo para fechar",
+swipe_down_to_close: "Deslize para baixo",
 
 }
 

@@ -4,12 +4,11 @@ import { useTranslate } from '../context/LanguageContext';
 
 type NetworkState = 'online' | 'offline' | 'slow' | 'restored';
 
-const SLOW_RTT_THRESHOLD_MS = 2200;    // Latência acima de 2.2s = lenta
-const QUERY_SLOW_THRESHOLD_MS = 2500;   // Query demorando mais de 2.5s = lenta
-const PING_INTERVAL_MS = 30000;         // Checagem a cada 30s
-const PING_TIMEOUT_MS = 4000;           // Timeout de 4s
-const RESTORED_DISPLAY_MS = 3500;       // Duração da mensagem de restabelecido
-const ANIMATION_DURATION_MS = 400;      // Duração da animação de saída
+const PING_TIMEOUT_MS = 2000;           
+const SLOW_RTT_THRESHOLD_MS = 1500;     
+const QUERY_SLOW_THRESHOLD_MS = 3000;   
+const RESTORED_DISPLAY_MS = 3500;       
+const ANIMATION_DURATION_MS = 400;
 
 export const NetworkStatus: React.FC = () => {
   const { t } = useTranslate();
@@ -20,72 +19,79 @@ export const NetworkStatus: React.FC = () => {
   const isFetching = useIsFetching();
 
   const statusRef = useRef<NetworkState>('online');
-  const hadIssueRef = useRef<boolean>(false);
   const dismissTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const querySlowTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const intervalTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const isCheckingRef = useRef<boolean>(false);
+  const queryTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 1. Limpeza Segura de Todos os Timers de Fechamento
-  const clearDismissTimers = useCallback(() => {
+  const clearDismissTimer = useCallback(() => {
     if (dismissTimerRef.current) {
       clearTimeout(dismissTimerRef.current);
       dismissTimerRef.current = null;
     }
   }, []);
 
-  const clearQuerySlowTimer = useCallback(() => {
-    if (querySlowTimerRef.current) {
-      clearTimeout(querySlowTimerRef.current);
-      querySlowTimerRef.current = null;
+  const clearQueryTimer = useCallback(() => {
+    if (queryTimerRef.current) {
+      clearTimeout(queryTimerRef.current);
+      queryTimerRef.current = null;
     }
   }, []);
 
-  // 2. Fechamento Garantido com Animação (Sem ficar preso)
   const hideCard = useCallback(() => {
-    clearDismissTimers();
+    clearDismissTimer();
     setVisible(false);
 
     dismissTimerRef.current = setTimeout(() => {
       setShouldRender(false);
       statusRef.current = 'online';
       setStatus('online');
-      hadIssueRef.current = false;
     }, ANIMATION_DURATION_MS);
-  }, [clearDismissTimers]);
+  }, [clearDismissTimer]);
 
-  // 3. Exibição do Card Restabelecido com Auto-Dismiss Obrigatório
   const triggerRestored = useCallback(() => {
-    clearDismissTimers();
-    clearQuerySlowTimer();
+    // PREVENÇÃO DE CONGELAMENTO: Se já estiver verde, ignora novos chamados e deixa o tempo correr
+    if (statusRef.current === 'restored') return;
 
+    clearDismissTimer();
+    clearQueryTimer();
+    
     statusRef.current = 'restored';
     setStatus('restored');
     setShouldRender(true);
 
-    // Próximo frame para garantir a animação de entrada
-    requestAnimationFrame(() => {
-      setVisible(true);
-    });
+    requestAnimationFrame(() => setVisible(true));
 
-    // Auto-dismiss seguro: fecha após o tempo definido
     dismissTimerRef.current = setTimeout(() => {
       hideCard();
     }, RESTORED_DISPLAY_MS);
-  }, [clearDismissTimers, clearQuerySlowTimer, hideCard]);
+  }, [clearDismissTimer, clearQueryTimer, hideCard]);
 
-  // 4. Medição de Latência Real Leve
-  const measureActualLatency = useCallback(async (): Promise<{ isOnline: boolean; isSlow: boolean }> => {
-    if (!navigator.onLine) {
-      return { isOnline: false, isSlow: false };
-    }
+  const setOfflineState = useCallback(() => {
+    clearDismissTimer();
+    clearQueryTimer();
+    statusRef.current = 'offline';
+    setStatus('offline');
+    setShouldRender(true);
+    requestAnimationFrame(() => setVisible(true));
+  }, [clearDismissTimer, clearQueryTimer]);
+
+  const setSlowState = useCallback(() => {
+    if (statusRef.current === 'offline' || statusRef.current === 'restored') return;
+    
+    clearDismissTimer();
+    statusRef.current = 'slow';
+    setStatus('slow');
+    setShouldRender(true);
+    requestAnimationFrame(() => setVisible(true));
+  }, [clearDismissTimer]);
+
+  const testNetworkLatency = useCallback(async (): Promise<boolean> => {
+    if (!navigator.onLine) return true;
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), PING_TIMEOUT_MS);
     const startTime = performance.now();
 
     try {
-      // Usa micro requisição com cache-bust
       await fetch(`/favicon.ico?_t=${Date.now()}`, {
         method: 'HEAD',
         cache: 'no-store',
@@ -94,167 +100,84 @@ export const NetworkStatus: React.FC = () => {
 
       clearTimeout(timeoutId);
       const latency = performance.now() - startTime;
-
-      return {
-        isOnline: true,
-        isSlow: latency >= SLOW_RTT_THRESHOLD_MS,
-      };
+      
+      return latency > SLOW_RTT_THRESHOLD_MS;
     } catch (err: unknown) {
       clearTimeout(timeoutId);
-
-      // Abort = timeout de rede (conexão muito lenta)
       if (err instanceof DOMException && err.name === 'AbortError') {
-        return { isOnline: true, isSlow: true };
+        return true;
       }
-
-      // Se o navigator ainda diz que está online, não assume offline por falha de 404/CORS
-      return { isOnline: navigator.onLine, isSlow: false };
+      return false; 
     }
   }, []);
 
-  // 5. Avaliação do Estado da Rede
-  const evaluateNetwork = useCallback(async () => {
-    if (isCheckingRef.current) return;
-    // Não interrompe a animação de saída do estado "restored"
-    if (statusRef.current === 'restored') return;
-
-    isCheckingRef.current = true;
-
-    // Offline Total
-    if (!navigator.onLine) {
-      hadIssueRef.current = true;
-      clearDismissTimers();
-      clearQuerySlowTimer();
-      statusRef.current = 'offline';
-      setStatus('offline');
-      setShouldRender(true);
-      requestAnimationFrame(() => setVisible(true));
-      isCheckingRef.current = false;
-      return;
-    }
-
-    // Leitura das APIs de conexão do navegador
-    const nav = navigator as any;
-    const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
-    let hardwareIndicatesSlow = false;
-
-    if (conn) {
-      hardwareIndicatesSlow =
-        conn.effectiveType === 'slow-2g' ||
-        conn.effectiveType === '2g' ||
-        (conn.rtt && conn.rtt > 2000);
-    }
-
-    const { isOnline, isSlow } = await measureActualLatency();
-
-    if (!isOnline) {
-      hadIssueRef.current = true;
-      clearDismissTimers();
-      statusRef.current = 'offline';
-      setStatus('offline');
-      setShouldRender(true);
-      requestAnimationFrame(() => setVisible(true));
-    } else if (isSlow || hardwareIndicatesSlow) {
-      hadIssueRef.current = true;
-      clearDismissTimers();
-      statusRef.current = 'slow';
-      setStatus('slow');
-      setShouldRender(true);
-      requestAnimationFrame(() => setVisible(true));
-    } else {
-      // Se estava com problema e agora normalizou
-      if (hadIssueRef.current && isFetching === 0) {
-        triggerRestored();
-      } else if (!hadIssueRef.current && statusRef.current !== 'online') {
-        hideCard();
-      }
-    }
-
-    isCheckingRef.current = false;
-  }, [measureActualLatency, triggerRestored, isFetching, clearDismissTimers, clearQuerySlowTimer, hideCard]);
-
-  // 6. Monitoramento de Queries TanStack Longas
   useEffect(() => {
     if (isFetching > 0) {
-      if (statusRef.current === 'online' && !hadIssueRef.current) {
-        clearQuerySlowTimer();
-        querySlowTimerRef.current = setTimeout(() => {
-          if (navigator.onLine && statusRef.current !== 'restored') {
-            hadIssueRef.current = true;
-            clearDismissTimers();
-            statusRef.current = 'slow';
-            setStatus('slow');
-            setShouldRender(true);
-            requestAnimationFrame(() => setVisible(true));
+      if (statusRef.current === 'online') {
+        clearQueryTimer();
+        
+        queryTimerRef.current = setTimeout(async () => {
+          if (statusRef.current !== 'online') return;
+
+          const isNetworkSlow = await testNetworkLatency();
+          
+          if (isNetworkSlow && navigator.onLine) {
+            setSlowState();
           }
         }, QUERY_SLOW_THRESHOLD_MS);
       }
     } else {
-      clearQuerySlowTimer();
-      if (hadIssueRef.current && statusRef.current === 'slow' && navigator.onLine) {
+      clearQueryTimer();
+      if (statusRef.current === 'slow' && navigator.onLine) {
         triggerRestored();
       }
     }
 
-    return () => clearQuerySlowTimer();
-  }, [isFetching, triggerRestored, clearDismissTimers, clearQuerySlowTimer]);
+    return () => clearQueryTimer();
+  }, [isFetching, testNetworkLatency, setSlowState, triggerRestored, clearQueryTimer]);
 
-  // 7. Eventos Globais de Rede e Visibilidade da Aba
   useEffect(() => {
-    evaluateNetwork();
-
-    const handleOnline = () => evaluateNetwork();
-    const handleOffline = () => {
-      hadIssueRef.current = true;
-      clearDismissTimers();
-      clearQuerySlowTimer();
-      statusRef.current = 'offline';
-      setStatus('offline');
-      setShouldRender(true);
-      requestAnimationFrame(() => setVisible(true));
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        evaluateNetwork();
-        if (!intervalTimerRef.current) {
-          intervalTimerRef.current = setInterval(evaluateNetwork, PING_INTERVAL_MS);
-        }
-      } else if (intervalTimerRef.current) {
-        clearInterval(intervalTimerRef.current);
-        intervalTimerRef.current = null;
+    const handleOnline = () => {
+      if (statusRef.current === 'offline' || statusRef.current === 'slow') {
+        triggerRestored();
       }
     };
 
-    window.addEventListener('online', handleOnline, { passive: true });
-    window.addEventListener('offline', handleOffline, { passive: true });
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    const handleOffline = () => setOfflineState();
+
+    const handleConnectionChange = () => {
+      if (!navigator.onLine) return;
+      const nav = navigator as any;
+      const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
+      
+      if (conn && (conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g' || (conn.rtt && conn.rtt > 2000))) {
+        setSlowState();
+      }
+    };
+
+    if (!navigator.onLine) {
+      setOfflineState();
+    } else {
+      handleConnectionChange();
+    }
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
     const nav = navigator as any;
     const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
     if (conn) {
-      conn.addEventListener('change', evaluateNetwork);
-    }
-
-    if (document.visibilityState === 'visible') {
-      intervalTimerRef.current = setInterval(evaluateNetwork, PING_INTERVAL_MS);
+      conn.addEventListener('change', handleConnectionChange);
     }
 
     return () => {
-      clearDismissTimers();
-      clearQuerySlowTimer();
-      if (intervalTimerRef.current) {
-        clearInterval(intervalTimerRef.current);
-        intervalTimerRef.current = null;
-      }
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (conn) {
-        conn.removeEventListener('change', evaluateNetwork);
+        conn.removeEventListener('change', handleConnectionChange);
       }
     };
-  }, [evaluateNetwork, clearDismissTimers, clearQuerySlowTimer]);
+  }, [setOfflineState, setSlowState, triggerRestored]);
 
   if (!shouldRender) return null;
 
@@ -312,7 +235,7 @@ export const NetworkStatus: React.FC = () => {
       }`}
     >
       <div 
-        className={`flex items-center gap-3.5 px-4 py-3 rounded-2xl shadow-2xl  border ${config.bg} pointer-events-auto transition-all duration-300`}
+        className={`flex items-center gap-3.5 px-4 py-3 rounded-2xl shadow-2xl border ${config.bg} pointer-events-auto transition-all duration-300`}
       >
         <div className="relative flex items-center justify-center p-2 rounded-xl bg-black/15">
           {config.icon}
@@ -330,18 +253,17 @@ export const NetworkStatus: React.FC = () => {
           </p>
         </div>
 
-        {status !== 'restored' && (
-          <button
-            type="button"
-            onClick={hideCard}
-            aria-label={t('network_close_aria' as any, { defaultValue: 'Fechar aviso' })}
-            className="p-1.5 -mr-1 rounded-lg hover:bg-black/15 transition-colors opacity-80 hover:opacity-100 active:scale-95 cursor-pointer"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        )}
+        {/* Removi a restrição do 'restored'. O botão fica sempre disponível! */}
+        <button
+          type="button"
+          onClick={hideCard}
+          aria-label={t('network_close_aria' as any, { defaultValue: 'Fechar aviso' })}
+          className="p-1.5 -mr-1 rounded-lg hover:bg-black/15 transition-colors opacity-80 hover:opacity-100 active:scale-95 cursor-pointer"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
     </aside>
   );
