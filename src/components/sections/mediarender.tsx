@@ -124,9 +124,11 @@ const MediaRendererComponent: React.FC<MediaRendererProps> = ({ media, className
   const ref = useRef<HTMLVideoElement | HTMLImageElement>(null);
   const order = useRef(orderCounter++);
   const [hasError, setHasError] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     setHasError(false);
+    setIsLoaded(false);
   }, [media?.url]);
 
   useEffect(() => {
@@ -154,16 +156,14 @@ const MediaRendererComponent: React.FC<MediaRendererProps> = ({ media, className
   ========================= */
 
   if (!media?.url) {
-    return <div className={`${className} bg-zinc-200 dark:bg-zinc-800`} />;
+    return <div className={`${className} bg-zinc-200 dark:bg-zinc-800`} style={{ contain: 'layout paint' }} />;
   }
 
-  // OTIMIZAÇÃO SEGURA: Acelera GPU sem quebrar o layout do celular
+  // OTIMIZAÇÃO SEGURA: Aceleração por GPU sem layout shift
   const sharedStyles: React.CSSProperties = {
     width: '100%',
     height: '100%',
-    objectFit: 'cover',
     display: 'block',
-    transform: 'translateZ(0)', // Força GPU acceleration
     backfaceVisibility: 'hidden',
     pointerEvents: isEditable ? 'none' : 'auto'
   };
@@ -177,7 +177,10 @@ const MediaRendererComponent: React.FC<MediaRendererProps> = ({ media, className
 
     if (hasError && isEditable) {
       return (
-        <div className={`${className} bg-slate-900 flex flex-col items-center justify-center p-6 text-center`} style={sharedStyles}>
+        <div 
+          className={`${className} bg-slate-900 flex flex-col items-center justify-center p-6 text-center`} 
+          style={{ ...sharedStyles, contain: 'layout paint' }}
+        >
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-2">
             <polygon points="23 7 16 12 23 17 23 7"></polygon>
             <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
@@ -191,50 +194,82 @@ const MediaRendererComponent: React.FC<MediaRendererProps> = ({ media, className
     }
 
     return (
-      <video
-        key={videoSrc} 
-        ref={ref as React.RefObject<HTMLVideoElement>}
-        src={videoSrc}
-        className={className}
-        muted
-        playsInline 
-        preload={isBlob ? "auto" : "metadata"}
-        crossOrigin={isBlob ? undefined : "anonymous"}
-        disablePictureInPicture
-        disableRemotePlayback
-        style={sharedStyles}
-        autoPlay={false} 
-        controls={false} 
-        onError={() => setHasError(true)} 
-        onLoadedData={(e) => {
-          try {
-            if (e.currentTarget.currentTime === 0) {
-              e.currentTarget.currentTime = 0.001;
+      <div className="relative w-full h-full overflow-hidden" style={{ contain: 'layout paint' }}>
+        {/* Skeleton Shimmer enquanto o primeiro frame do vídeo não carrega */}
+        <div
+          className={`absolute inset-0 z-0 bg-zinc-300/70 dark:bg-zinc-800/70 animate-pulse transition-opacity duration-500 ease-out ${
+            isLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          }`}
+        />
+
+        <video
+          key={videoSrc} 
+          ref={ref as React.RefObject<HTMLVideoElement>}
+          src={videoSrc}
+          className={`${className} transition-opacity duration-500 ease-out transform-gpu ${
+            isLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+          muted
+          playsInline 
+          preload={isBlob ? "auto" : "metadata"}
+          crossOrigin={isBlob ? undefined : "anonymous"}
+          disablePictureInPicture
+          disableRemotePlayback
+          style={sharedStyles}
+          autoPlay={false} 
+          controls={false} 
+          onError={() => {
+            setHasError(true);
+            setIsLoaded(true);
+          }} 
+          onLoadedData={(e) => {
+            setIsLoaded(true);
+            try {
+              if (e.currentTarget.currentTime === 0) {
+                e.currentTarget.currentTime = 0.001;
+              }
+            } catch (err) {
+              // Ignora silenciosamente se o navegador bloquear o salto de frame
             }
-          } catch (err) {
-            // Ignora silenciosamente se o navegador bloquear o salto de frame
-          }
-        }}
-      />
+          }}
+        />
+      </div>
     );
   }
 
   return (
-    <img
-      ref={ref as React.RefObject<HTMLImageElement>}
-      src={media.url}
-      className={className}
-      alt="Hero media"
-      loading="lazy"
-      decoding="async" 
-      style={sharedStyles}
-    />
+    <div className="relative w-full h-full overflow-hidden" style={{ contain: 'layout paint' }}>
+      {/* Skeleton Shimmer para imagem */}
+      <div
+        className={`absolute inset-0 z-0 bg-zinc-300/70 dark:bg-zinc-800/70 animate-pulse transition-opacity duration-500 ease-out ${
+          isLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}
+      />
+
+      <img
+        ref={ref as React.RefObject<HTMLImageElement>}
+        src={media.url}
+        className={`${className} transition-opacity duration-500 ease-out transform-gpu ${
+          isLoaded ? 'opacity-100' : 'opacity-0'
+        }`}
+        alt="Hero media"
+        loading="lazy"
+        decoding="async" 
+        style={sharedStyles}
+        onLoad={() => setIsLoaded(true)}
+        onError={() => {
+          setHasError(true);
+          setIsLoaded(true);
+        }}
+      />
+    </div>
   );
 };
 
 export const MediaRenderer = memo(MediaRendererComponent, (prev, next) => {
   return (
     prev.media?.url === next.media?.url && 
+    prev.media?.type === next.media?.type &&
     prev.className === next.className &&
     prev.isEditable === next.isEditable
   );

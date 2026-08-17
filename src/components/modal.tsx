@@ -7,7 +7,7 @@ import React, {
   type TouchEvent,
   type WheelEvent
 } from 'react';
-import { X, Play, Pause, Volume2, VolumeX, Maximize2, Share2, Check, Minimize2, ZoomOut } from 'lucide-react';
+import { X, Play, Pause, Volume2, VolumeX, Maximize2, Share2, Check, Minimize2, ZoomOut, ChevronDown } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import type { MediaItem } from '../types/library';
 
@@ -19,7 +19,6 @@ interface MediaModalProps {
 
 export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const progressBarRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -28,34 +27,40 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
   const [visible, setVisible] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [videoProgress, setVideoProgress] = useState<number>(0);
 
   // States para Zoom e Pan
   const [scale, setScale] = useState<number>(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
 
-  // Refs de auxílio para os gestos
+  // States para Swipe-to-Close suave
+  const [swipeY, setSwipeY] = useState<number>(0);
+  const [isSwiping, setIsSwiping] = useState<boolean>(false);
+
+  // Refs de auxílio
   const initialDistance = useRef<number>(0);
   const initialScale = useRef<number>(1);
   const lastPosition = useRef({ x: 0, y: 0 });
   const initialTouch = useRef({ x: 0, y: 0 });
-  
-  // States para Swipe-to-close
-  const [touchStartY, setTouchStartY] = useState<number>(0);
-  const [touchEndY, setTouchEndY] = useState<number>(0);
+  const touchStartY = useRef<number>(0);
 
-  // 1. Controle de Visibilidade
+  // 1. Controle de Visibilidade dos Controles
   const handleInteraction = (): void => {
     setVisible(true);
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-    hideTimerRef.current = setTimeout(() => setVisible(false), 2500);
+    hideTimerRef.current = setTimeout(() => setVisible(false), 3000);
   };
 
+  // --- ADICIONE ESTA FUNÇÃO ---
   const toggleVisibility = (e: React.MouseEvent | React.TouchEvent): void => {
     e.stopPropagation();
     setVisible((prev) => !prev);
     if (!visible) handleInteraction();
   };
+  // -----------------------------
+
+
 
   useEffect(() => {
     handleInteraction();
@@ -64,21 +69,7 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
     };
   }, []);
 
-  // 2. Loop de Progresso do Vídeo
-  useEffect(() => {
-    let frameId: number;
-    const step = (): void => {
-      if (videoRef.current && progressBarRef.current && isPlaying) {
-        const progress = (videoRef.current.currentTime / videoRef.current.duration) * 100;
-        progressBarRef.current.style.transform = `scaleX(${(progress || 0) / 100})`;
-      }
-      frameId = requestAnimationFrame(step);
-    };
-    frameId = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frameId);
-  }, [isPlaying]);
-
-  // 3. Fullscreen Listeners
+  // 2. Fullscreen Listeners
   useEffect(() => {
     const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
@@ -90,13 +81,19 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
     };
   }, []);
 
-  // 4. Lógica de Gestos: Pinch-to-Zoom, Pan e Swipe-to-close
+  // 3. Auxiliares de Cálculo para Zoom Focalizado
   const getDistance = (touches: React.TouchList) => {
     const dx = touches[0].clientX - touches[1].clientX;
     const dy = touches[0].clientY - touches[1].clientY;
     return Math.sqrt(dx * dx + dy * dy);
   };
 
+  const getMidpoint = (touches: React.TouchList) => ({
+    x: (touches[0].clientX + touches[1].clientX) / 2,
+    y: (touches[0].clientY + touches[1].clientY) / 2
+  });
+
+  // 4. Lógica de Gestos Otimizada
   const onTouchStart = (e: TouchEvent) => {
     handleInteraction();
     setIsDragging(true);
@@ -104,18 +101,36 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
     if (e.touches.length === 2) {
       initialDistance.current = getDistance(e.touches);
       initialScale.current = scale;
+      setIsSwiping(false);
     } else if (e.touches.length === 1) {
       initialTouch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       lastPosition.current = { ...position };
-      setTouchStartY(e.touches[0].clientY);
+      touchStartY.current = e.touches[0].clientY;
+
+      if (scale === 1) {
+        setIsSwiping(true);
+      }
     }
   };
 
   const onTouchMove = (e: TouchEvent) => {
     if (e.touches.length === 2) {
       const dist = getDistance(e.touches);
-      const newScale = Math.min(Math.max(1, initialScale.current * (dist / initialDistance.current)), 5);
-      setScale(newScale);
+      const targetScale = Math.min(Math.max(1, initialScale.current * (dist / initialDistance.current)), 4);
+      
+      // Zoom em direção ao centro dos dedos
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const mid = getMidpoint(e.touches);
+        const center = { x: rect.width / 2, y: rect.height / 2 };
+
+        const factor = targetScale / scale - 1;
+        const dx = (mid.x - center.x - position.x) * factor;
+        const dy = (mid.y - center.y - position.y) * factor;
+
+        setPosition((prev) => ({ x: prev.x - dx, y: prev.y - dy }));
+      }
+      setScale(targetScale);
     } else if (e.touches.length === 1) {
       if (scale > 1) {
         const deltaX = e.touches[0].clientX - initialTouch.current.x;
@@ -124,8 +139,11 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
           x: lastPosition.current.x + deltaX,
           y: lastPosition.current.y + deltaY
         });
-      } else {
-        setTouchEndY(e.touches[0].clientY);
+      } else if (isSwiping) {
+        const deltaY = e.touches[0].clientY - touchStartY.current;
+        if (deltaY > 0) {
+          setSwipeY(deltaY);
+        }
       }
     }
   };
@@ -133,15 +151,14 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
   const onTouchEnd = () => {
     setIsDragging(false);
 
-    if (scale === 1 && touchStartY > 0 && touchEndY > 0) {
-      const swipeDistance = touchEndY - touchStartY;
-      if (swipeDistance > 75) {
+    if (scale === 1 && isSwiping) {
+      if (swipeY > 100) {
         onClose();
+      } else {
+        setSwipeY(0);
       }
+      setIsSwiping(false);
     }
-    
-    setTouchStartY(0);
-    setTouchEndY(0);
 
     if (scale < 1) {
       resetZoom();
@@ -149,8 +166,19 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
   };
 
   const onWheel = (e: WheelEvent) => {
-    const delta = e.deltaY * -0.01;
-    const newScale = Math.min(Math.max(1, scale + delta), 5);
+    const delta = e.deltaY * -0.005;
+    const newScale = Math.min(Math.max(1, scale + delta), 4);
+
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const center = { x: rect.width / 2, y: rect.height / 2 };
+      const factor = newScale / scale - 1;
+      const dx = (e.clientX - center.x - position.x) * factor;
+      const dy = (e.clientY - center.y - position.y) * factor;
+
+      setPosition((prev) => ({ x: prev.x - dx, y: prev.y - dy }));
+    }
+
     setScale(newScale);
     if (newScale === 1) setPosition({ x: 0, y: 0 });
   };
@@ -160,11 +188,20 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
     if (scale > 1) {
       resetZoom();
     } else {
-      setScale(2.5);
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const center = { x: rect.width / 2, y: rect.height / 2 };
+        const targetScale = 2.5;
+        const factor = targetScale - 1;
+        const dx = (e.clientX - center.x) * factor;
+        const dy = (e.clientY - center.y) * factor;
+
+        setPosition({ x: -dx, y: -dy });
+        setScale(targetScale);
+      }
     }
   };
 
-  // Função centralizada para remover o Zoom
   const resetZoom = (e?: React.MouseEvent | React.TouchEvent) => {
     if (e) e.stopPropagation();
     setScale(1);
@@ -173,24 +210,58 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
   };
 
   // 5. Partilha
+  // 5. Partilha avançada com suporte a envio de ficheiro real
   const handleShare = async (e: MouseEvent<HTMLButtonElement>): Promise<void> => {
     e.stopPropagation();
     if (!media?.url) return;
-    
+
     const currentUrl = window.location.href;
     const shareText = t('share_text') || 'Dá uma vista de olhos neste conteúdo!';
-    
+
     try {
       if (navigator.share) {
-        await navigator.share({ title: 'Portfólio', text: shareText, url: currentUrl });
+        let fileToShare: File | null = null;
+
+        // Tenta converter a URL do ficheiro num objeto File real
+        try {
+          const response = await fetch(media.url);
+          const blob = await response.blob();
+          const ext = media.url.split('.').pop()?.split('?')[0] || (media.type === 'video' ? 'mp4' : 'jpg');
+          const mimeType = blob.type || (media.type === 'video' ? 'video/mp4' : 'image/jpeg');
+
+          fileToShare = new File([blob], `media.${ext}`, { type: mimeType });
+        } catch (fetchErr) {
+          console.warn("Não foi possível carregar o ficheiro para partilha direta, enviando apenas o link:", fetchErr);
+        }
+
+        // Verifica se o navegador suporta a partilha de ficheiros
+        if (fileToShare && navigator.canShare && navigator.canShare({ files: [fileToShare] })) {
+          await navigator.share({
+            title: 'Portfólio',
+            text: shareText,
+            url: currentUrl,
+            files: [fileToShare]
+          });
+          return;
+        }
+
+        // Fallback da Web Share API se não suportar ficheiros
+        await navigator.share({
+          title: 'Portfólio',
+          text: shareText,
+          url: currentUrl
+        });
       } else {
+        // Fallback para Clipboard (Desktop)
         const copyContent = `${shareText}\n\nSite: ${currentUrl}\nMídia: ${media.url}`;
         await navigator.clipboard.writeText(copyContent);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       }
     } catch (err) {
-      if ((err as Error).name !== 'AbortError') console.error("Erro ao compartilhar:", err);
+      if ((err as Error).name !== 'AbortError') {
+        console.error("Erro ao compartilhar:", err);
+      }
     }
   };
 
@@ -219,28 +290,55 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
     handleInteraction();
   };
 
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      const progress = (videoRef.current.currentTime / videoRef.current.duration) * 100;
+      setVideoProgress(progress || 0);
+    }
+  };
+
   const handleProgressChange = (e: ChangeEvent<HTMLInputElement>): void => {
     if (videoRef.current) {
       const time = (Number(e.target.value) / 100) * videoRef.current.duration;
       videoRef.current.currentTime = time;
+      setVideoProgress(Number(e.target.value));
     }
     handleInteraction();
   };
 
   if (!media) return null;
 
+  const bgOpacity = Math.max(0.2, 1 - swipeY / 300);
+
   return createPortal(
     <div 
       ref={containerRef}
-      className="fixed inset-0 z-[10000] bg-black overflow-hidden flex items-center justify-center touch-none transition-opacity"
-      style={{ contain: 'strict' }}
+      className="fixed inset-0 z-[10000] bg-black overflow-hidden flex items-center justify-center touch-none transition-opacity duration-150"
+      style={{ 
+        backgroundColor: `rgba(0, 0, 0, ${bgOpacity})`,
+        contain: 'strict' 
+      }}
       onMouseMove={handleInteraction}
       onClick={onClose}
     >
+      {/* INDICADOR DE INSTRUÇÃO E SWIPE (Visível em scale 1) */}
+      {scale === 1 && (
+        <div 
+          className={`absolute top-2 left-1/2 -translate-x-1/2 z-[110] flex flex-col items-center gap-1 pointer-events-none transition-all duration-300 ${
+            visible ? 'opacity-80 translate-y-0' : 'opacity-0 -translate-y-2'
+          }`}
+        >
+          <div className="w-10 h-1 bg-white/40 rounded-full" />
+          <span className="text-[10px] font-medium text-white/70 uppercase tracking-widest flex items-center gap-0.5">
+            <ChevronDown size={12} /> {t('swipe_down_to_close') || 'Deslize para baixo para fechar'}
+          </span>
+        </div>
+      )}
+
       {/* HEADER */}
       <div className={`absolute top-0 left-0 w-full p-4 md:p-8 flex justify-between items-start z-[100] transition-all duration-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
         <div className="p-2 select-none">
-          <span className="text-[10px] md:text-xs font-bold text-white/50 bg-black/40 px-3 py-1.5 rounded-full uppercase tracking-[0.2em] ">
+          <span className="text-[10px] md:text-xs font-bold text-white/60 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full uppercase tracking-[0.2em]">
             {media.type}
           </span>
         </div>
@@ -248,13 +346,14 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
         <div className="flex items-center gap-2 md:gap-3 pointer-events-auto">
           <button 
             onClick={handleShare} 
-            className="flex items-center justify-center w-11 h-11 md:w-auto md:px-6 md:py-3 bg-zinc-800/80 hover:bg-zinc-700 border border-white/10 rounded-full md:rounded-xl text-white transition-colors active:scale-95"
+            className="flex items-center justify-center w-11 h-11 md:w-auto md:px-5 md:py-2.5 bg-zinc-800/80 hover:bg-zinc-700 backdrop-blur-md border border-white/10 rounded-full md:rounded-xl text-white transition-all active:scale-95"
+            aria-label="Compartilhar"
           >
             {copied ? <Check size={18} className="text-green-500" /> : <Share2 size={18} />}
           </button>
           
           <button 
-            className="flex items-center justify-center gap-2 w-11 h-11 md:w-auto md:px-6 md:py-3 bg-white text-black rounded-full md:rounded-xl font-bold active:scale-95 transition-transform"
+            className="flex items-center justify-center gap-2 w-11 h-11 md:w-auto md:px-5 md:py-2.5 bg-white text-black rounded-full md:rounded-xl font-bold active:scale-95 transition-all shadow-lg"
             onClick={(e: MouseEvent) => { e.stopPropagation(); onClose(); }}
           >
             <span className="text-xs hidden md:block uppercase font-black tracking-tighter">
@@ -265,23 +364,23 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
         </div>
       </div>
 
-      {/* BOTÃO FLUTUANTE DE RESET ZOOM (Aparece apenas quando tem zoom) */}
+      {/* BOTÃO DE RESET ZOOM */}
       {scale > 1 && (
-        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[150] pointer-events-auto">
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[150] pointer-events-auto">
           <button
             onClick={resetZoom}
             onTouchEnd={(e) => { e.preventDefault(); resetZoom(e); }}
-            className="flex items-center gap-2 px-5 py-2.5 bg-black/70  border border-white/20 text-white rounded-full shadow-xl hover:bg-black/90 active:scale-95 transition-all animate-in fade-in zoom-in-95"
+            className="flex items-center gap-2 px-4 py-2 bg-black/70 backdrop-blur-md border border-white/20 text-white rounded-full shadow-xl hover:bg-black/90 active:scale-95 transition-all animate-in fade-in zoom-in-95"
           >
-            <ZoomOut size={18} />
-            <span className="text-[11px] font-black uppercase tracking-widest">
+            <ZoomOut size={16} />
+            <span className="text-[10px] font-black uppercase tracking-widest">
               {t('reset_zoom') || 'Remover Zoom'}
             </span>
           </button>
         </div>
       )}
 
-      {/* VIEWPORT COM ZOOM E PAN */}
+      {/* VIEWPORT COM ZOOM, PAN E SWIPE-TO-CLOSE */}
       <div 
         className="w-full h-full flex items-center justify-center pointer-events-auto overflow-hidden"
         onTouchStart={onTouchStart}
@@ -292,9 +391,11 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
         onClick={toggleVisibility}
       >
         <div 
-          className={`relative flex items-center justify-center w-full h-full will-change-transform ${!isDragging ? 'transition-transform duration-200 ease-out' : ''}`}
+          className={`relative flex items-center justify-center w-full h-full will-change-transform ${
+            !isDragging && !isSwiping ? 'transition-transform duration-200 ease-out' : ''
+          }`}
           style={{ 
-            transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+            transform: `translate(${position.x}px, ${position.y + swipeY}px) scale(${scale})`,
             cursor: scale > 1 ? 'grab' : 'auto'
           }}
         >
@@ -311,9 +412,16 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
               className="w-full h-full object-contain pointer-events-none"
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
+              onTimeUpdate={handleTimeUpdate}
             />
           ) : (
-            <img src={media.url} className="w-full h-full object-contain pointer-events-none select-none" alt="Media view" />
+            <img 
+              src={media.url} 
+              className="w-full h-full object-contain pointer-events-none select-none" 
+              alt="Media view" 
+              loading="eager"
+              decoding="async"
+            />
           )}
         </div>
       </div>
@@ -321,38 +429,38 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
       {/* CONTROLES DO VÍDEO */}
       {media.type === 'video' && (
         <div 
-          className={`absolute bottom-0 left-0 w-full p-6 pb-10 md:p-10 bg-gradient-to-t from-black via-black/80 to-transparent transition-all duration-300 z-[100] ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
+          className={`absolute bottom-0 left-0 w-full p-6 pb-8 md:p-8 bg-gradient-to-t from-black via-black/80 to-transparent transition-all duration-300 z-[100] ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="max-w-3xl mx-auto flex flex-col gap-6">
-            <div className="w-full h-1.5 md:h-[3px] bg-white/20 relative overflow-hidden group rounded-full cursor-pointer">
+          <div className="max-w-3xl mx-auto flex flex-col gap-4">
+            <div className="w-full h-1.5 bg-white/20 relative overflow-hidden group rounded-full cursor-pointer">
               <div 
-                ref={progressBarRef} 
                 className="absolute inset-0 bg-white origin-left" 
-                style={{ transform: 'scaleX(0)' }}
+                style={{ transform: `scaleX(${videoProgress / 100})` }}
               />
               <input
                 type="range" min="0" max="100" step="0.1"
+                value={videoProgress}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                 onChange={handleProgressChange}
               />
             </div>
             
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-6 md:gap-8">
+              <div className="flex items-center gap-4 md:gap-6">
                 <button onClick={togglePlay} className="text-white hover:scale-110 active:scale-95 transition-transform p-2">
-                  {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" />}
+                  {isPlaying ? <Pause size={26} fill="currentColor" /> : <Play size={26} fill="currentColor" />}
                 </button>
-                <button onClick={() => setIsMuted(!isMuted)} className="text-white/60 hover:text-white transition-colors p-2">
-                  {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
+                <button onClick={() => setIsMuted(!isMuted)} className="text-white/70 hover:text-white transition-colors p-2">
+                  {isMuted ? <VolumeX size={22} /> : <Volume2 size={22} />}
                 </button>
               </div>
               
               <button 
                 onClick={toggleFullscreen}
-                className="p-3 text-white/60 hover:text-white transition-all hover:bg-white/10 rounded-full md:rounded-lg"
+                className="p-2.5 text-white/70 hover:text-white transition-all hover:bg-white/10 rounded-full md:rounded-lg"
               >
-                {isFullscreen ? <Minimize2 size={24} /> : <Maximize2 size={24} />}
+                {isFullscreen ? <Minimize2 size={22} /> : <Maximize2 size={22} />}
               </button>
             </div>
           </div>

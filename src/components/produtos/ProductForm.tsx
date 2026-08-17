@@ -1,5 +1,4 @@
 import { memo } from 'react';
-
 import { Package2 } from 'lucide-react';
 import { useTranslate } from '../../context/LanguageContext';
 import { useProductForm } from './ProductForm/useProductForm';
@@ -35,7 +34,9 @@ export const ProductForm = memo(function ProductForm(props: ProductFormProps) {
       
       {/* CABEÇALHO */}
       <div className="mb-2 flex items-start gap-3 px-2">
-        <div className="rounded-2xl bg-blue-50 p-3 text-blue-600"><Package2 size={18} /></div>
+        <div className="rounded-2xl bg-blue-50 p-3 text-blue-600">
+          <Package2 size={18} />
+        </div>
         <div className="min-w-0 flex-1">
           <h2 className="text-base font-black uppercase tracking-wide text-slate-900">
             {props.isCreating ? t('product_form_create_title') : t('product_form_edit_title')}
@@ -68,7 +69,7 @@ export const ProductForm = memo(function ProductForm(props: ProductFormProps) {
         adminStoreId={state.adminStore?.id}
       />
 
-      {/* BARRA FIXA DE AÇÃO */}
+      {/* BARRA FIXA DE AÇÃO COM ESTADOS DE PROCESSAMENTO E CANCELAMENTO */}
       <ProductActionBar
         isCreating={!!props.isCreating}
         hasAnyLocalBlob={state.hasAnyLocalBlob}
@@ -76,10 +77,11 @@ export const ProductForm = memo(function ProductForm(props: ProductFormProps) {
         hasOrphanBlobs={state.hasOrphanBlobs}
         isSyncingPhotos={state.isSyncingPhotos}
         isSaving={state.saveMutation.isPending}
+        isCancelling={state.isCancelling}
         canSave={state.canSave}
         fieldErrors={state.fieldErrors}
         onSave={() => state.saveMutation.mutate()}
-        onCancel={props.onCancel}
+        onCancel={state.handleCancel}
       />
     </div>
   );

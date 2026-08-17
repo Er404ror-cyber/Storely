@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState, useEffect } from "react";
 import { type LayoutProps, type Product, sortProductsByDate, safeText, formatPrice, IMAGE_FALLBACK } from "./layout.utils";
 import { ProductImage, ProductLabel, ModernScrollRow } from "./LayoutShared";
 import { Sparkles } from "lucide-react";
@@ -16,9 +16,15 @@ const PinterestProductCard = memo(function PinterestProductCard({
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const name = safeText(product.name);
+  const imageSrc = product.main_image || IMAGE_FALLBACK;
+
+  useEffect(() => {
+    setIsLoaded(false);
+    setAspectRatio(null);
+  }, [product.main_image]);
 
   return (
-    <div className="mb-3 sm:mb-4 inline-block w-full break-inside-avoid transform-gpu">
+    <div className="mb-3 sm:mb-4 inline-block w-full break-inside-avoid transform-gpu" style={{ contain: "layout paint" }}>
       <button
         type="button"
         onClick={() => onAction(product.id)}
@@ -30,11 +36,17 @@ const PinterestProductCard = memo(function PinterestProductCard({
           }`}
           style={{
             aspectRatio: aspectRatio ? `${aspectRatio}` : "4 / 5",
-            transition: "aspect-ratio 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
           }}
         >
+          {/* Skeleton fixo de fundo (evita tela branca e pulos) */}
+          <div
+            className={`absolute inset-0 z-0 animate-pulse transition-opacity duration-500 ${
+              isDark ? "bg-zinc-800" : "bg-zinc-200"
+            } ${isLoaded ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+          />
+
           <img
-            src={product.main_image || IMAGE_FALLBACK}
+            src={imageSrc}
             alt={name}
             loading="lazy"
             decoding="async"
@@ -50,8 +62,7 @@ const PinterestProductCard = memo(function PinterestProductCard({
               e.currentTarget.src = IMAGE_FALLBACK;
               setIsLoaded(true);
             }}
-            // A CORREÇÃO ESTÁ AQUI: m-0, p-0, block, absolute inset-0.
-            // Cravamos a imagem em 100% do espaço gerado pelo aspectRatio, matando qualquer sobra.
+            // Animação original preservada: fade-in suave e zoom no hover
             className={`absolute inset-0 m-0 block h-full w-full border-none p-0 object-cover object-center transition-all duration-500 md:group-hover:scale-105 ${
               isLoaded ? "opacity-100" : "opacity-0"
             }`}
@@ -59,14 +70,14 @@ const PinterestProductCard = memo(function PinterestProductCard({
 
           {/* Badge de Desconto */}
           {product.discount_percent && product.discount_percent > 0 ? (
-            <div className="absolute right-2 top-2 z-10 flex items-center gap-0.5 rounded-md bg-rose-600 px-1.5 py-0.5 text-[9px] font-black text-white shadow-sm md:text-[10px]">
+            <div className="absolute right-2 top-2 z-10 flex items-center gap-0.5 rounded-md bg-rose-600 px-1.5 py-0.5 text-[9px] font-black text-white shadow-sm md:text-[10px] animate-in fade-in zoom-in duration-300">
               <Sparkles size={9} className="opacity-90" /> -{product.discount_percent}%
             </div>
           ) : null}
 
           {/* Badge de Preço */}
           <div
-            className={`absolute bottom-2 right-2 flex max-w-[75%] items-center truncate rounded-full border px-2 py-1 text-[9px] font-black leading-none shadow-sm md:text-[10px] ${
+            className={`absolute bottom-2 right-2 z-10 flex max-w-[75%] items-center truncate rounded-full border px-2 py-1 text-[9px] font-black leading-none shadow-sm md:text-[10px] ${
               isDark
                 ? "border-zinc-700/50 bg-zinc-900 text-white shadow-black/60"
                 : "border-zinc-200/80 bg-white text-zinc-900"
@@ -98,7 +109,7 @@ const PinterestProductCard = memo(function PinterestProductCard({
   );
 });
 
-function GridComponent({ products = [], onAction, cols, isDark }: LayoutProps & { cols: number }) {
+function GridComponent({ products = [], onAction, cols, isDark = false }: LayoutProps & { cols: number }) {
   const sortedProducts = useMemo(() => sortProductsByDate(products), [products]);
 
   const handleAction = useCallback(
@@ -149,14 +160,14 @@ function GridComponent({ products = [], onAction, cols, isDark }: LayoutProps & 
                   discount={p.discount_percent}
                   className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
                 />
-                <ProductLabel name={name} product={p} size={isMain ? "lg" : "sm"} />
+                <ProductLabel name={name} product={p} size={isMain ? "lg" : "sm"} isDark={isDark} />
               </button>
             );
           })}
         </div>
 
         {rowsOfRemaining.map((row, rowIndex) => (
-          <ModernScrollRow key={rowIndex}>
+          <ModernScrollRow key={rowIndex} isDark={isDark}>
             {row.map((p) => {
               const name = safeText(p.name);
               return (

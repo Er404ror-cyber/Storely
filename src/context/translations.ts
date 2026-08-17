@@ -2097,8 +2097,159 @@ tips_rec_visual_title: "Quality Photos",
 tips_rec_visual_desc: "Use good lighting and clean backgrounds. A nice photo adds a lot of value to your product.",
 
 tips_rec_promo_title: "Flash Sales",
-tips_rec_promo_desc: "Run 24h offers. Urgency makes customers decide and buy on the spot."
+tips_rec_promo_desc: "Run 24h offers. Urgency makes customers decide and buy on the spot.",
+
+
+
+product_form_images_subtitle: "Images are saved and optimized in the cloud.",
+product_form_images_deferred_desc: "Images are uploaded to the cloud only when saving the product.",
+product_form_pending_warning: "Pending upload photos",
+
+product_form_ready_to_save: "Ready",
+product_form_saved: "Saved",
+
+product_form_cover_required_tag: "Main",
+product_form_extra_images_title: "Additional Photos",
+product_form_cover_needed_hint: "Set cover image to unlock",
+product_form_add_cover_first: "Add the cover first",
+
+
+
+
+
+
+
+product_form_image_corrupt: "Damaged Photo",
+product_form_image_corrupt_desc: "Corrupted file or unsupported format.",
+product_form_replace: "Replace",
+
+
+// Action Bar & Form States
+btn_waiting: "Please wait...",
+common_cancel: "Cancel",
+product_form_cancelling_title: "Cancelling...",
+product_form_cleaning_photos: "Cleaning uploaded photos...",
+
+
+quick_phrase_men: "Target Audience: Men / Male",
+quick_phrase_unisex: "Style: Unisex (For Everyone)",
+quick_phrase_adult: "Size and Fit for Adults",
+quick_phrase_onesize: "Size: One Size / Adjustable",
+
+
+
+
+
+
+
+
+
+
+
+
+// Group Headers
+group_header_audience: "Audience",
+group_header_sizes: "Sizes",
+group_header_styles: "Style",
+group_header_materials: "Material",
+group_header_colors: "Colors",
+
+// Search-Engine Optimized Values
+val_kids: "Kids (Baby / Children)",
+val_women: "Women (Female)",
+val_men: "Men (Male)",
+val_unisex: "Unisex",
+val_adult: "Adult",
+val_p: "Size: S",
+val_m: "Size: M",
+val_g: "Size: L",
+val_gg: "Size: XL",
+val_onesize: "One Size",
+val_plussize: "Plus Size",
+val_casual: "Casual / Everyday",
+val_social: "Formal / Work",
+val_fitness: "Workout / Fitness",
+val_party: "Party / Events",
+val_combo: "Kit / Combo",
+val_cotton: "100% Cotton",
+val_leather: "Leather",
+val_jeans: "Jeans / Denim",
+val_black: "Black",
+val_white: "White",
+val_blue: "Blue",
+val_red: "Red",
+val_pink: "Pink",
+val_gold: "Gold",
+
+// Assistant UI
+product_form_smart_helper_title: "Add Quick Tags",
+selected_tags_label: "Active:",
+tab_audience: "Audience",
+tab_sizes: "Sizes",
+tab_styles: "Style",
+tab_materials: "Material",
+tab_colors: "Colors",
+
+// Quick Tag Chips
+quick_tag_kids: "👶 Kids",
+quick_tag_women: "👩 Women",
+quick_tag_men: "👨 Men",
+quick_tag_unisex: "✨ Unisex",
+quick_tag_adult: "🧑 Adult",
+quick_tag_p: "📏 S",
+quick_tag_m: "📏 M",
+quick_tag_g: "📏 L",
+quick_tag_gg: "📏 XL",
+quick_tag_onesize: "📏 One Size",
+quick_tag_plussize: "➕ Plus Size",
+quick_tag_casual: "👟 Casual",
+quick_tag_social: "👔 Formal",
+quick_tag_fitness: "⚡ Fitness",
+quick_tag_party: "🎉 Party",
+quick_tag_combo: "📦 Kit / Combo",
+quick_tag_cotton: "🌿 Cotton",
+quick_tag_leather: "🧥 Leather",
+quick_tag_jeans: "👖 Jeans",
+quick_tag_black: "⚫ Black",
+quick_tag_white: "⚪ White",
+quick_tag_blue: "🔵 Blue",
+quick_tag_red: "🔴 Red",
+quick_tag_pink: "🌸 Pink",
+quick_tag_gold: "✨ Gold",
+
+
+
+
+
+
+
   },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4209,7 +4360,131 @@ tips_rec_visual_title: "Fotos com Qualidade",
 tips_rec_visual_desc: "Use boa luz e fundos limpos. Uma foto bonita passa confiança e valoriza muito o seu produto.",
 
 tips_rec_promo_title: "Ofertas Relâmpago",
-tips_rec_promo_desc: "Crie ofertas de 24h. A urgência faz os clientes decidirem e comprarem na hora."
+tips_rec_promo_desc: "Crie ofertas de 24h. A urgência faz os clientes decidirem e comprarem na hora.",
+
+
+
+
+
+
+
+
+product_form_images_subtitle: "As imagens são salvas e optimizadas na nuvem.",
+product_form_images_deferred_desc: "As imagens são salvas na nuvem apenas ao finalizar o produto.",
+product_form_pending_warning: "Fotos pendentes de envio",
+
+product_form_ready_to_save: "Pronta",
+product_form_saved: "Na Nuvem",
+
+product_form_cover_required_tag: "Principal",
+product_form_extra_images_title: "Fotos Adicionais",
+product_form_cover_needed_hint: "Defina a capa para desbloquear",
+product_form_add_cover_first: "Adicione a capa primeiro",
+
+
+
+
+product_form_image_corrupt: "Foto Danificada",
+product_form_image_corrupt_desc: "Ficheiro corrompido ou formato inválido.",
+product_form_replace: "Trocar",
+
+
+// Barra de Ações e Estados do Formulário
+btn_waiting: "Aguarde...",
+common_cancel: "Cancelar",
+product_form_cancelling_title: "A Cancelar...",
+product_form_cleaning_photos: "A limpar fotos enviadas...",
+
+
+quick_phrase_men: "Público: Masculino / Homem",
+
+quick_phrase_adult: "Tamanho e Modelo para Adulto",
+quick_phrase_onesize: "Tamanho: Único / Ajustável",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Cabeçalhos dos Grupos Salvos
+group_header_audience: "Público",
+group_header_sizes: "Tamanhos",
+group_header_styles: "Estilo",
+group_header_materials: "Material",
+group_header_colors: "Cores",
+
+// Valores Otimizados para o Motor de Busca
+val_kids: "Infantil (Criança / Bebé)",
+val_women: "Feminino (Mulher)",
+val_men: "Masculino (Homem)",
+val_unisex: "Unissexo",
+val_adult: "Adulto",
+val_p: "Tam: P",
+val_m: "Tam: M",
+val_g: "Tam: G",
+val_gg: "Tam: GG",
+val_onesize: "Tamanho Único",
+val_plussize: "Plus Size",
+val_casual: "Casual / Dia a dia",
+val_social: "Social / Trabalho",
+val_fitness: "Treino / Fitness",
+val_party: "Festa / Eventos",
+val_combo: "Kit / Combo",
+val_cotton: "100% Algodão",
+val_leather: "Couro / Pele",
+val_jeans: "Jeans / Denim",
+val_black: "Preto",
+val_white: "Branco",
+val_blue: "Azul",
+val_red: "Vermelho",
+val_pink: "Rosa",
+val_gold: "Dourado",
+
+// Interface do Assistente
+product_form_smart_helper_title: "Adicionar Tags Rápidas",
+selected_tags_label: "Ativas:",
+tab_audience: "Público",
+tab_sizes: "Tamanhos",
+tab_styles: "Estilo",
+tab_materials: "Material",
+tab_colors: "Cores",
+
+// Chips de Ação Rápida
+quick_tag_kids: "👶 Criança",
+quick_tag_women: "👩 Mulher",
+quick_tag_men: "👨 Homem",
+quick_tag_unisex: "✨ Unissexo",
+quick_tag_adult: "🧑 Adulto",
+quick_tag_p: "📏 P",
+quick_tag_m: "📏 M",
+quick_tag_g: "📏 G",
+quick_tag_gg: "📏 GG",
+quick_tag_onesize: "📏 Único",
+quick_tag_plussize: "➕ Plus Size",
+quick_tag_casual: "👟 Casual",
+quick_tag_social: "👔 Social",
+quick_tag_fitness: "⚡ Fitness",
+quick_tag_party: "🎉 Festa",
+quick_tag_combo: "📦 Kit / Combo",
+quick_tag_cotton: "🌿 Algodão",
+quick_tag_leather: "🧥 Couro",
+quick_tag_jeans: "👖 Jeans",
+quick_tag_black: "⚫ Preto",
+quick_tag_white: "⚪ Branco",
+quick_tag_blue: "🔵 Azul",
+quick_tag_red: "🔴 Vermelho",
+quick_tag_pink: "🌸 Rosa",
+quick_tag_gold: "✨ Dourado",
+
+
 }
 
 
