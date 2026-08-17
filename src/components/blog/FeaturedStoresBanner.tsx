@@ -66,7 +66,7 @@ export const FeaturedStoresBanner: React.FC<FeaturedStoresBannerProps> = ({
                   <img
                     src={bannerImage}
                     alt={store.name}
-                    className="w-full h-full object-cover object-center filter blur-[1px] group-hover:blur-0 transition-all duration-500 scale-105 group-hover:scale-100"
+                    className="w-full h-full object-cover object-center  transition-all duration-500 scale-105 group-hover:scale-100"
                   />
                   <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/60 to-transparent" />
                 </div>
@@ -133,7 +133,7 @@ export const FeaturedStoresBanner: React.FC<FeaturedStoresBannerProps> = ({
                         e.stopPropagation();
                         onProductClick(latestProduct);
                       }}
-                      className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/15 text-white font-semibold text-xs sm:text-sm rounded-full active:scale-95 transition-all backdrop-blur-md"
+                      className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/15 text-white font-semibold text-xs sm:text-sm rounded-full active:scale-95 transition-all "
                       title="Ver produto recente"
                     >
                       <ShoppingBag size={15} />

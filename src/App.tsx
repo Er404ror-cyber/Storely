@@ -1,47 +1,45 @@
 import { RouterProvider } from "react-router-dom";
 import { route } from "./routes";
 import { Toaster } from "react-hot-toast";
-import { LanguageProvider } from "./context/LanguageContext";
-import { Helmet, HelmetProvider } from "react-helmet-async"; 
-import { useTranslate } from "./context/LanguageContext";
+import { LanguageProvider, useTranslate } from "./context/LanguageContext";
+import { Helmet } from "react-helmet-async"; 
 import VersionChecker from "./utils/VersionChecker";
+import NetworkStatus from "./utils/NetworkStatus";
 
-// Componente interno para acessar o contexto de tradução
 const AppContent = () => {
   const { lang, t } = useTranslate();
 
   return (
     <>
       <Helmet 
-  titleTemplate="%s | Storely" 
-  defaultTitle="Storely — Sem código / Sem limites"
->
-  <html lang={lang} />
-  
-  
-  <meta name="description" content={t('hero_desc')} />
+        titleTemplate="%s | Storely" 
+        defaultTitle="Storely — Sem código / Sem limites"
+      >
+        <html lang={lang} />
+        
+        <meta name="description" content={t('hero_desc')} />
 
-  <meta property="og:site_name" content="Storely" />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://storelyy.vercel.app/" />
-  
-  <link rel="alternate" href="https://storelyy.vercel.app/" hrefLang="pt" />
-  <link rel="alternate" href="https://storelyy.vercel.app/" hrefLang="en" />
-  <link rel="alternate" href="https://storelyy.vercel.app/" hrefLang="x-default" />
+        <meta property="og:site_name" content="Storely" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://storelyy.vercel.app/" />
+        
+        <link rel="alternate" href="https://storelyy.vercel.app/" hrefLang="pt" />
+        <link rel="alternate" href="https://storelyy.vercel.app/" hrefLang="en" />
+        <link rel="alternate" href="https://storelyy.vercel.app/" hrefLang="x-default" />
 
-  <meta 
-    name="theme-color" 
-    content={document.documentElement.classList.contains('dark') ? "#09090b" : "#ffffff"} 
-  />
-</Helmet>
+        <meta 
+          name="theme-color" 
+          content={typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? "#09090b" : "#ffffff"} 
+        />
+      </Helmet>
 
-<Toaster 
+      <Toaster 
         position="bottom-right" 
         reverseOrder={false}
         toastOptions={{
-          duration: 4000, // O toast some sozinho após 4 segundos
+          duration: 4000,
           style: {
-            background: '#1e293b', // Fundo escuro elegante (Slate-800)
+            background: '#1e293b',
             color: '#fff',
             borderRadius: '16px',
             fontSize: '14px',
@@ -51,18 +49,22 @@ const AppContent = () => {
           },
           success: {
             iconTheme: {
-              primary: '#6366f1', // Ícone Indigo
+              primary: '#6366f1',
               secondary: '#fff',
             },
           },
           error: {
             iconTheme: {
-              primary: '#ef4444', // Ícone Vermelho para erros (ex: nome duplicado)
+              primary: '#ef4444',
               secondary: '#fff',
             },
           },
         }} 
       />
+
+      {/* Monitor de Rede Não-Intrusivo */}
+      <NetworkStatus />
+      
       <RouterProvider router={route} />
     </>
   );
@@ -70,12 +72,10 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <HelmetProvider>
-      <LanguageProvider>
+    <LanguageProvider>
       <VersionChecker />
-        <AppContent />
-      </LanguageProvider>
-    </HelmetProvider>
+      <AppContent />
+    </LanguageProvider>
   );
 };
 

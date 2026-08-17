@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlignLeft } from "lucide-react";
 import { createPortal } from "react-dom";
 
 import { useAdminStore } from "../hooks/useAdminStore";
@@ -12,6 +11,7 @@ import { useTranslate } from "../context/LanguageContext";
 import { FALLBACK_CURRENCY, FALLBACK_PRODUCT } from "../utils/constants";
 import { ProductGallery } from "../components/produtos/componentsAdmim/ProductGallery";
 import { ProductCheckout } from "../components/produtos/componentsAdmim/ProductCheckout";
+import { ProductDescription } from "../components/produtos/componentsAdmim/ProductDescription";
 import { StoreTrustCard } from "../components/produtos/componentsAdmim/StoreTrustCard";
 import { RelatedProductsCache } from "../components/produtos/componentsAdmim/RelatedProductsCache";
 import { MobileStickyBar } from "../components/produtos/componentsAdmim/MobileStickyBar";
@@ -195,7 +195,7 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
 
   const translatedUnit = UNIT_TRANSLATION_KEY_MAP[initialData.unit as keyof typeof UNIT_TRANSLATION_KEY_MAP] ? t(UNIT_TRANSLATION_KEY_MAP[initialData.unit as keyof typeof UNIT_TRANSLATION_KEY_MAP] as any) : initialData.unit;
 
-  // 🚀 ATUALIZAÇÃO: Gatilhos Mentais de Venda Embutidos e Dinâmicos via Traduções
+  // Gatilhos Mentais de Venda Embutidos e Dinâmicos via Traduções
   const handleWhatsAppOrder = useCallback(() => {
     const totalOriginal = unitPriceOriginal * quantity;
     const totalSaved = totalOriginal - totalPriceFinal;
@@ -203,7 +203,6 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
     let optimizedNote = "";
     
     if (discountPercent > 0) {
-      // Usa fragmentos de tradução para injetar os números sem complicação
       optimizedNote = `${t("whatsapp_discount_title" as any)} ${discountPercent}${t("whatsapp_discount_suffix" as any)}\n\n${t("whatsapp_price_from" as any)}${formatMoney(totalOriginal)}~\n${t("whatsapp_price_to" as any)}${formatMoney(totalPriceFinal)}*\n${t("whatsapp_savings_prefix" as any)}${formatMoney(totalSaved)}${t("whatsapp_savings_suffix" as any)}`;
       
       if (customNote) {
@@ -294,15 +293,12 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
               </div>
             </div>
 
-            {initialData.full_description && (
-              <div 
-                className="mt-12 md:mt-20 border-t border-slate-200 pt-10 dark:border-zinc-800 px-4 md:px-0"
-                style={{ contentVisibility: 'auto', containIntrinsicSize: '0 300px' }}
-              >
-                <div className="flex items-center gap-2 mb-6"><AlignLeft size={20} className={styles.mutedText} /><h3 className={`text-xl font-extrabold tracking-tight ${styles.strongText}`}>{t("product_details_details" as any) || "Detalhes"}</h3></div>
-                <div className={`max-w-3xl text-[16px] leading-loose whitespace-pre-wrap [overflow-wrap:anywhere] ${styles.mutedText}`}>{initialData.full_description}</div>
-              </div>
-            )}
+            {/* Componente de Descrição Estruturada */}
+            <ProductDescription
+              fullDescription={initialData.full_description}
+              styles={{ mutedText: styles.mutedText, strongText: styles.strongText }}
+              t={t}
+            />
 
             {!isEditorRoute && !isEditing && (
               <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 400px' }}>

@@ -2220,9 +2220,18 @@ quick_tag_gold: "✨ Gold",
 
 
 
+cat_arts_crafts: "design",
 
 
+network_offline_title: "No internet connection",
+network_offline_desc: "Check your Wi-Fi or cellular data connection.",
+network_slow_title: "Slow connection detected",
+network_slow_desc: "Network response is taking longer than expected.",
+network_restored_title: "Connection restored",
+network_restored_desc: "Data loaded and connection speed normalized.",
+network_close_aria: "Close network alert",
 
+swipe_down_to_close: "Swipe down to close",
   },
 
 
@@ -4484,6 +4493,15 @@ quick_tag_red: "🔴 Vermelho",
 quick_tag_pink: "🌸 Rosa",
 quick_tag_gold: "✨ Dourado",
 
+
+network_offline_title: "Sem conexão com a internet",
+network_offline_desc: "Verifique sua rede Wi-Fi ou dados móveis.",
+network_slow_title: "Sua internet está lenta",
+network_slow_desc: "O processamento ou resposta da rede está demorando mais que o esperado.",
+network_restored_title: "Conexão restabelecida",
+network_restored_desc: "Dados carregados e velocidade normalizada.",
+network_close_aria: "Fechar aviso de rede",
+swipe_down_to_close: "Deslize para baixo para fechar",
 
 }
 

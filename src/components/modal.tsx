@@ -338,7 +338,7 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
       {/* HEADER */}
       <div className={`absolute top-0 left-0 w-full p-4 md:p-8 flex justify-between items-start z-[100] transition-all duration-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
         <div className="p-2 select-none">
-          <span className="text-[10px] md:text-xs font-bold text-white/60 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full uppercase tracking-[0.2em]">
+          <span className="text-[10px] md:text-xs font-bold text-white/60 bg-black/50  px-3 py-1.5 rounded-full uppercase tracking-[0.2em]">
             {media.type}
           </span>
         </div>
@@ -346,7 +346,7 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
         <div className="flex items-center gap-2 md:gap-3 pointer-events-auto">
           <button 
             onClick={handleShare} 
-            className="flex items-center justify-center w-11 h-11 md:w-auto md:px-5 md:py-2.5 bg-zinc-800/80 hover:bg-zinc-700 backdrop-blur-md border border-white/10 rounded-full md:rounded-xl text-white transition-all active:scale-95"
+            className="flex items-center justify-center w-11 h-11 md:w-auto md:px-5 md:py-2.5 bg-zinc-800/80 hover:bg-zinc-700  border border-white/10 rounded-full md:rounded-xl text-white transition-all active:scale-95"
             aria-label="Compartilhar"
           >
             {copied ? <Check size={18} className="text-green-500" /> : <Share2 size={18} />}
@@ -370,7 +370,7 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
           <button
             onClick={resetZoom}
             onTouchEnd={(e) => { e.preventDefault(); resetZoom(e); }}
-            className="flex items-center gap-2 px-4 py-2 bg-black/70 backdrop-blur-md border border-white/20 text-white rounded-full shadow-xl hover:bg-black/90 active:scale-95 transition-all animate-in fade-in zoom-in-95"
+            className="flex items-center gap-2 px-4 py-2 bg-black/70  border border-white/20 text-white rounded-full shadow-xl hover:bg-black/90 active:scale-95 transition-all animate-in fade-in zoom-in-95"
           >
             <ZoomOut size={16} />
             <span className="text-[10px] font-black uppercase tracking-widest">

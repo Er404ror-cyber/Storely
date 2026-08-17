@@ -170,7 +170,7 @@ export const ProductImageGallery = memo(function ProductImageGallery({
               )}
 
               {isProcessing && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-slate-950/40 backdrop-blur-[2px] z-20">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-slate-950/40  z-20">
                   <Loader2 className="h-6 w-6 animate-spin text-white" />
                   <span className="text-[10px] font-black text-white uppercase tracking-wider">
                     {t('uploading', { defaultValue: 'A Enviar...' })}

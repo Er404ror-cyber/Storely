@@ -13,17 +13,17 @@ export interface MockCategory {
 // 1. MOCK DE CATEGORIAS GLOBAIS COMPLETO (17 CATEGORIAS)
 export const MOCK_GLOBAL_CATEGORIES: MockCategory[] = [
   { nameKey: "cat_tech", searchQuery: "electronics", emoji: "💻", color: "from-blue-600 to-indigo-950 bg-gradient-to-br", slug: "electronics", keywords: ["celular", "computador", "fone", "carregador", "smartwatch", "iphone", "gadgets", "tech", "laptop", "phone", "computer", "headphones", "charger", "screen", "teclado", "keyboard", "mouse"] },
-  { nameKey: "cat_fashion", searchQuery: "clothing", emoji: "👕", color: "from-pink-600 to-purple-950 bg-gradient-to-br", slug: "clothing", keywords: ["camisa", "calça", "vestido", "sapatilha", "casaco", "roupa", "tshirt", "jeans", "moda", "shirt", "pants", "dress", "shoes", "jacket", "coat", "hoodie", "skirt", "saia", "blusa"] },
+  { nameKey: "cat_fashion", searchQuery: "clothing", emoji: "👕", color: "from-pink-600 to-purple-950 bg-gradient-to-br", slug: "clothing", keywords: ["camisa", "camiseta", "calça", "vestido", "sapatilha", "casaco", "roupa", "tshirt", "t'shirt", "t’shirt", "polo", "jeans", "moda", "shirt", "pants", "dress", "shoes", "jacket", "coat", "hoodie", "skirt", "saia", "blusa", "scarpin", "scarpins", "salto", "saltos", "heels", "stiletto", "calções", "calcao", "shorts", "bermuda", "body", "bodysuit", "conjunto"] },
   { nameKey: "cat_grocery", searchQuery: "groceries", emoji: "🍔", color: "from-amber-500 to-red-900 bg-gradient-to-br", slug: "groceries", keywords: ["bebida", "snack", "chocolate", "sumo", "bolacha", "comida", "batata", "refrigerante", "lanche", "drink", "juice", "cookies", "food", "soda", "water", "água", "snack", "beer", "cerveja"] },
   { nameKey: "cat_home", searchQuery: "home", emoji: "🏠", color: "from-emerald-600 to-teal-950 bg-gradient-to-br", slug: "home", keywords: ["planta", "sofa", "almofada", "cama", "luminaria", "decoracao", "moveis", "tapete", "espelho", "plant", "couch", "pillow", "bed", "lamp", "decor", "furniture", "rug", "mirror", "mesa", "table"] },
   { nameKey: "cat_beauty", searchQuery: "beauty", emoji: "💄", color: "from-purple-500 to-rose-950 bg-gradient-to-br", slug: "beauty", keywords: ["perfume", "creme", "batom", "skincare", "champô", "maquilhagem", "sabonete", "cosmeticos", "beuty", "beauty", "beleza", "makeup", "lipstick", "shampoo", "soap", "skin", "oil", "óleo", "fragrance", "gel", "hidratante", "protetor solar"] },
-  { nameKey: "cat_fitness", searchQuery: "sports", emoji: "👟", color: "from-orange-500 to-red-800 bg-gradient-to-br", slug: "sports", keywords: ["ténis", "mochila", "garrafa", "suplemento", "calções", "academia", "treino", "haltere", "sport", "sneakers", "backpack", "bottle", "shorts", "gym", "workout", "fitness", "whey", "protein"] },
-  { nameKey: "cat_books", searchQuery: "books", emoji: "📚", color: "from-cyan-600 to-blue-950 bg-gradient-to-br", slug: "books", keywords: ["livro", "agenda", "caneta", "caderno", "romance", "papelaria", "leitura", "hq", "manga", "book", "notebook", "pen", "pencil", "lápis", "novel", "comic", "read"] },
+  { nameKey: "cat_fitness", searchQuery: "sports", emoji: "👟", color: "from-orange-500 to-red-800 bg-gradient-to-br", slug: "sports", keywords: ["ténis", "mochila", "garrafa", "suplemento", "academia", "treino", "haltere", "sport", "sneakers", "backpack", "bottle", "gym", "workout", "fitness", "whey", "protein"] },
+  { nameKey: "cat_books", searchQuery: "books", emoji: "📚", color: "from-cyan-600 to-blue-950 bg-gradient-to-br", slug: "books", keywords: ["livro", "agenda", "caneta", "caderno", "romance", "papelaria", "leitura", "hq", "manga livro", "book", "notebook", "pen", "pencil", "lápis", "novel", "comic", "read"] },
   { nameKey: "cat_accessories", searchQuery: "accessories", emoji: "🕶️", color: "from-zinc-700 to-slate-950 bg-gradient-to-br", slug: "accessories", keywords: ["oculos", "relogio", "anel", "carteira", "colar", "brinco", "boné", "cinto", "pulseira", "glasses", "watch", "ring", "wallet", "necklace", "earrings", "cap", "belt", "hat", "bag", "mala"] },
-  { nameKey: "cat_baby", searchQuery: "baby", emoji: "👶", color: "from-sky-400 to-indigo-900 bg-gradient-to-br", slug: "baby", keywords: ["fralda", "biberao", "chupeta", "brinquedo", "berço", "body", "roupa bebe", "leite", "diaper", "bottle", "pacifier", "toy", "crib", "baby clothing", "milk", "carrinho", "stroller"] },
+  { nameKey: "cat_baby", searchQuery: "baby", emoji: "👶", color: "from-sky-400 to-indigo-900 bg-gradient-to-br", slug: "baby", keywords: ["fralda", "biberao", "chupeta", "berço", "body bebe", "roupa bebe", "leite", "diaper", "bottle", "pacifier", "toy", "crib", "baby clothing", "milk", "carrinho", "stroller"] },
   { nameKey: "cat_pets", searchQuery: "pets", emoji: "🐾", color: "from-amber-600 to-stone-900 bg-gradient-to-br", slug: "pets", keywords: ["ração", "coleira", "brinquedo gato", "brinquedo cao", "petisco", "gato", "cão", "passaro", "food", "collar", "dog", "cat", "bird", "leash", "trela", "aquario", "aquarium", "shampoo pet", "caminha", "petshop", "veterinaria"] },
   { nameKey: "cat_tools", searchQuery: "tools", emoji: "🛠️", color: "from-yellow-600 to-zinc-900 bg-gradient-to-br", slug: "tools", keywords: ["martelo", "chave fenda", "parafuso", "prego", "furadeira", "alicate", "tinta", "construcao", "hammer", "screwdriver", "screw", "drill", "pliers", "paint", "construction", "diy", "bateria"] },
-  { nameKey: "cat_toys", searchQuery: "toys", emoji: "🧩", color: "from-red-500 to-purple-950 bg-gradient-to-br", slug: "toys", keywords: ["boneca", "carro", "puzzle", "lego", "tabuleiro", "ursinho", "jogos", "doll", "car", "puzzle", "boardgame", "game", "plush", "peluche", "crianças", "kids"] },
+  { nameKey: "cat_toys", searchQuery: "toys", emoji: "🧩", color: "from-red-500 to-purple-950 bg-gradient-to-br", slug: "toys", keywords: ["boneca", "carro brinquedo", "puzzle", "lego", "tabuleiro", "ursinho", "jogos tabuleiro", "doll", "toy", "plush", "peluche"] },
   { nameKey: "cat_auto", searchQuery: "automotive", emoji: "🚘", color: "from-slate-600 to-zinc-950 bg-gradient-to-br", slug: "automotive", keywords: ["óleo motor", "pneu", "bateria carro", "filtro", "lampada", "limpeza", "acessorio carro", "car", "oil", "tire", "battery", "filter", "bulb", "cleaning", "moto", "motorcycle", "capacete", "helmet"] },
   { nameKey: "cat_design_editor", searchQuery: "design", emoji: "✨", color: "from-violet-600 to-fuchsia-950 bg-gradient-to-br", slug: "design", keywords: ["template", "ui", "ux", "componente", "mockup", "vetor", "vector", "canva", "pinterest", "font", "fonte", "icon", "icone", "textura", "texture", "layout", "preset", "graphics", "assets", "design", "wireframe"] },
   { nameKey: "cat_arts_crafts", searchQuery: "art", emoji: "🎨", color: "from-rose-500 to-amber-950 bg-gradient-to-br", slug: "art", keywords: ["quadro", "pintura", "tela", "arte", "desenho", "pincel", "acrilico", "art", "painting", "canvas", "frame", "drawing", "poster", "ilustracao", "illustration", "aguarela", "watercolor", "ink", "tinta", "galeria", "gallery"] },
@@ -68,104 +68,93 @@ MOCK_GLOBAL_CATEGORIES.forEach(cat => {
   });
 });
 
-// 3. SUBCATEGORIAS COBRINDO TODAS AS 17 CATEGORIAS MOCK
+// 3. SUBCATEGORIAS COM PRIORIDADE E SEPARAÇÃO DE PÚBLICO
 const SUB_CATEGORY_RULES = [
-  // --- BELEZA (cat_beauty) ---
-  { parentSlug: "beauty", labelKey: "Maquilhagem", regex: /\b(maquiagem|maquilhagem|makeup|batom|batons|lipstick|lipsticks|rimel|mascara|base|foundation|blush|delineador|glos|gloss|corretivo)\b/i, genderForceKey: "Mulher" },
-  { parentSlug: "beauty", labelKey: "Perfumaria e Cuidados", regex: /\b(perfume|perfumes|colonia|hidratante|skincare|serum|protetor solar|shampoo|champo|condicionador|mascara capilar|sabonete|fragrance|beuty|beauty|beleza|estetica|cosmetico|cosmeticos)\b/i },
+  // --- BEBÉ & CRIANÇA ---
+  { parentSlug: "baby", labelKey: "Roupa de Bebé", regex: /\b(body bebe|body de bebe|body infantil|roupa bebe|roupa de bebe|recem nascido|recém[- ]nascido|manta bebe|macacao bebe|macacão bebê)\b/i, genderForceKey: "Criança" },
+  { parentSlug: "baby", labelKey: "Acessórios de Bebé", regex: /\b(fralda|fraldas|biberao|biberão|chupeta|chupetas|berco|berço|carrinho de bebe|mordedor|mordedores|biberon|diaper|pacifier)\b/i, genderForceKey: "Criança" },
+  { parentSlug: "toys", labelKey: "Brinquedos e Jogos", regex: /\b(brinquedo|brinquedos|boneca|bonecas|boneco|bonecos|carrinho brinquedo|lego|quebra[- ]cabeca|puzzle|pelucia|peluche|jogos de tabuleiro|boardgame|doll|toy|toys)\b/i, genderForceKey: "Criança" },
 
-  // --- ELETRÓNICA & TECNOLOGIA (cat_tech) ---
-  { parentSlug: "electronics", labelKey: "Smartphones e Acessórios", regex: /\b(smartphone|iphone|celular|telemovel|capinha|capa celular|carregador|powerbank|pelicula|cabo usb|suporte celular)\b/i },
+  // --- VESTUÁRIO ADULTO & CALÇADO ---
+  { parentSlug: "clothing", labelKey: "Calçado", regex: /\b(calcado|calcados|sapato|sapatos|sapatilha|sapatilhas|tenis|sneaker|sneakers|shoes|sandalia|sandalias|bota|botas|boots|chinelo|chinelos|flip-?flops|salto|saltos|scarpin|scarpins|stiletto|stilettos|pumps?|high[- ]?heels?|rasteira|mule|oxford|coturno)\b/i },
+  { parentSlug: "clothing", labelKey: "Camisas e Tops", regex: /\b(camisa|camisas|camiseta|camisetas|t-?shirt|t[’']?shirt|polo|polos|shirt|shirts|blusa|blusas|blouse|blouses|top|tops|cropped|tunica|social|body|bodies|bodysuit)\b/i },
+  { parentSlug: "clothing", labelKey: "Calções", regex: /\b(bermuda|bermudas|calcao|calcoes|calção|calções|shorts|calcao desportivo|calcoes desportivo|calcoes desportivos|shorts desportivo|calcao de banho)\b/i },
+  { parentSlug: "clothing", labelKey: "Calças", regex: /\b(calca|calcas|calça|calças|pants|trousers|legging|leggings)\b/i },
+  { parentSlug: "clothing", labelKey: "Conjuntos", regex: /\b(conjunto|conjuntos|set|suit)\b/i },
+  { parentSlug: "clothing", labelKey: "Vestidos e Macacões", regex: /\b(vestido|vestidos|dress|dresses|macacao|macacoes|macacão|macacões|jumpsuit|jumpsuits)\b/i },
+  { parentSlug: "clothing", labelKey: "Saias", regex: /\b(saia|saias|skirt|skirts)\b/i, genderForceKey: "Mulher" },
+  { parentSlug: "clothing", labelKey: "Moda Íntima", regex: /\b(collant|lingerie|cueca|sutia|sutiã|bra|underwear|calcinha|calcinhas|biquini|biquíni)\b/i, genderForceKey: "Mulher" },
+  { parentSlug: "clothing", labelKey: "Casacos", regex: /\b(casaco|casacos|jaqueta|jaquetas|hoodie|hoodies|moletom|moletons|sweater|sweaters|pullover|coat|coats|camisola|camisolas|blazer|cardigan)\b/i },
+
+  // --- BELEZA ---
+  { parentSlug: "beauty", labelKey: "Maquilhagem", regex: /\b(maquiagem|maquilhagem|makeup|batom|batons|lipstick|lipsticks|rimel|mascara|base|foundation|blush|delineador|glos|gloss|corretivo)\b/i, genderForceKey: "Mulher" },
+  { parentSlug: "beauty", labelKey: "Perfumaria e Cuidados", regex: /\b(perfume|perfumes|colonia|colónia|hidratante|skincare|serum|protetor solar|shampoo|champo|champô|condicionador|mascara capilar|sabonete|fragrance|beuty|beauty|beleza|estetica|cosmetico|cosmeticos)\b/i },
+
+  // --- ELETRÓNICA & TECNOLOGIA ---
+  { parentSlug: "electronics", labelKey: "Smartphones e Acessórios", regex: /\b(smartphone|iphone|celular|telemovel|telemóvel|capinha|capa celular|carregador|powerbank|pelicula|película|cabo usb|suporte celular)\b/i },
   { parentSlug: "electronics", labelKey: "Computadores", regex: /\b(computador|laptop|notebook|macbook|pc|teclado|mouse|rato|monitor|processador|ssd|hd|placa de video)\b/i },
-  { parentSlug: "electronics", labelKey: "Áudio e Som", regex: /\b(fone|fones|headphone|earbud|airpod|caixa de som|speaker|coluna de som|audio|microfone|amplificador|soundbar)\b/i },
+  { parentSlug: "electronics", labelKey: "Áudio e Som", regex: /\b(fone|fones|headphone|earbud|airpod|caixa de som|speaker|coluna de som|audio|áudio|microfone|amplificador|soundbar)\b/i },
   { parentSlug: "electronics", labelKey: "Smartwatches", regex: /\b(smartwatch|apple watch|galaxy watch|gadget|rastreador|drone|pulso inteligente)\b/i },
 
-  // --- PASTELARIA & DOCES (cat_bakery & cat_grocery) ---
+  // --- PASTELARIA & DOCES ---
   { parentSlug: "bakery", labelKey: "Combos e Kits", regex: /\b(combo|kit festa|kit doce|combo de mini bolo)\b/i },
   { parentSlug: "bakery", labelKey: "Chiffon", regex: /\b(chiffon|chifon)\b/i },
   { parentSlug: "bakery", labelKey: "Mini Bolos", regex: /\b(mini[- ]?bolo|minibolo|cupcake|cupcakes|muffin|bento cake|bento|mini torta|marmita|bolo na marmita)\b/i },
   { parentSlug: "bakery", labelKey: "Doces e Sobremesas", regex: /\b(doce|doces|sobremesa|dessert|brigadeiro|pudim|macaron|brownie|cookie|bolacha|biscoito|donut|chocolates|bombom|bombons|trufa|trufas)\b/i },
   { parentSlug: "bakery", labelKey: "Bolos e Tortas", regex: /\b(bolo|bolos|cake|cakes|torta|tortas|pie|pies|cheesecake|pavlova)\b/i },
-  { parentSlug: "groceries", labelKey: "Salgados", regex: /\b(salgado|coxinha|rissol|pastel|chamuca|empada|empadao|snack|chips|pao|salgados)\b/i },
-  { parentSlug: "groceries", labelKey: "Bebidas e Refrescos", regex: /\b(bebida|sumo|suco|juice|refrigerante|soda|agua|water|cerveja|beer|vinho|wine)\b/i },
+  { parentSlug: "groceries", labelKey: "Salgados", regex: /\b(salgado|coxinha|rissol|pastel|chamuca|empada|empadao|snack|chips|pao|pão|salgados)\b/i },
+  { parentSlug: "groceries", labelKey: "Bebidas e Refrescos", regex: /\b(bebida|sumo|suco|juice|refrigerante|soda|agua|água|water|cerveja|beer|vinho|wine)\b/i },
 
-  // --- ACESSÓRIOS (cat_accessories) ---
-  { parentSlug: "accessories", labelKey: "Relógios e Joias", regex: /\b(relogio|watch|anel|ring|colar|necklace|brinco|earring|pulseira|bracelet)\b/i },
-  { parentSlug: "accessories", labelKey: "Óculos e Chapéus", regex: /\b(oculos|glasses|sunglasses|bone|cap|chapeu|hat)\b/i },
+  // --- ACESSÓRIOS ---
+  { parentSlug: "accessories", labelKey: "Relógios e Joias", regex: /\b(relogio|relógio|watch|anel|ring|colar|necklace|brinco|earring|pulseira|bracelet)\b/i },
+  { parentSlug: "accessories", labelKey: "Óculos e Chapéus", regex: /\b(oculos|óculos|glasses|sunglasses|bone|boné|cap|chapeu|chapéu|hat)\b/i },
   { parentSlug: "accessories", labelKey: "Malas e Carteiras", regex: /\b(carteira|wallet|bolsa|bag|mala|mochila|cinto|belt)\b/i },
 
-  // --- DESIGN, ARTE & 3D (cat_design_editor, cat_arts_crafts, cat_digital_3d) ---
+  // --- DESIGN, ARTE & 3D ---
   { parentSlug: "design", labelKey: "Templates e UI/UX", regex: /\b(template|ui|ux|wireframe|componente|layout|mockup|preset|canva|pinterest)\b/i },
-  { parentSlug: "design", labelKey: "Fontes e Vetores", regex: /\b(vetor|vector|font|fonte|icon|icone|textura|texture)\b/i },
-  { parentSlug: "art", labelKey: "Quadros e Telas", regex: /\b(quadro|quadros|tela|telas|painting|canvas|moldura|poster|ilustracao|print|arte de parede|galeria)\b/i },
-  { parentSlug: "art", labelKey: "Pintura e Desenho", regex: /\b(pincel|desenho|drawing|acrilico|aguarela|watercolor|ink|tinta)\b/i },
+  { parentSlug: "design", labelKey: "Fontes e Vetores", regex: /\b(vetor|vector|font|fonte|icon|icone|ícone|textura|texture)\b/i },
+  { parentSlug: "art", labelKey: "Quadros e Telas", regex: /\b(quadro|quadros|tela|telas|painting|canvas|moldura|poster|ilustracao|ilustração|print|arte de parede|galeria)\b/i },
+  { parentSlug: "art", labelKey: "Pintura e Desenho", regex: /\b(pincel|desenho|drawing|acrilico|acrílico|aguarela|watercolor|ink|tinta)\b/i },
   { parentSlug: "3d", labelKey: "Modelos 3D e STL", regex: /\b(3d|modelo 3d|3d model|stl|obj|blender|sculpture|malha|mesh|cad)\b/i },
-  { parentSlug: "3d", labelKey: "Impressão 3D e Insumos", regex: /\b(impressao 3d|3d print|filamento|resina|filament|resin)\b/i },
+  { parentSlug: "3d", labelKey: "Impressão 3D e Insumos", regex: /\b(impressao 3d|impressão 3d|3d print|filamento|resina|filament|resin)\b/i },
 
-  // --- CASA & UTENSÍLIOS (cat_home) ---
-  { parentSlug: "home", labelKey: "Móveis e Sofás", regex: /\b(sofa|couch|mesa|table|moveis|furniture|estante|prateleira)\b/i },
-  { parentSlug: "home", labelKey: "Decoração e Espelhos", regex: /\b(almofada|pillow|luminaria|candeeiro|lamp|decoracao|decor|vela|velas|espelho|mirror|tapete|rug)\b/i },
-  { parentSlug: "home", labelKey: "Cozinha e Utensílios", regex: /\b(panela|frigideira|prato|copo|talher|caneca|airfryer|liquidificador|garrafa termica|pote|abridor)\b/i },
+  // --- CASA & UTENSÍLIOS ---
+  { parentSlug: "home", labelKey: "Móveis e Sofás", regex: /\b(sofa|sofá|couch|mesa|table|moveis|móveis|furniture|estante|prateleira)\b/i },
+  { parentSlug: "home", labelKey: "Decoração e Espelhos", regex: /\b(almofada|pillow|luminaria|luminária|candeeiro|lamp|decoracao|decoração|decor|vela|velas|espelho|mirror|tapete|rug)\b/i },
+  { parentSlug: "home", labelKey: "Cozinha e Utensílios", regex: /\b(panela|frigideira|prato|copo|talher|caneca|airfryer|liquidificador|garrafa termica|garrafa térmica|pote|abridor)\b/i },
 
-  // --- DESPORTO & FITNESS (cat_fitness) ---
-  { parentSlug: "sports", labelKey: "Suplementos e Nutrição", regex: /\b(whey|creatina|proteina|pre treino|bcaa|termogenico|vitaminas|coqueteleira|shaker)\b/i },
-  { parentSlug: "sports", labelKey: "Equipamento de Treino", regex: /\b(haltere|kettlebell|elastico|extensor|tapete yoga|mat|corda de saltar|luva treino|bola futebol|bola basquete)\b/i },
-  { parentSlug: "sports", labelKey: "Moda Fitness", regex: /\b(top fitness|legging treino|shorts treino|camisa termica|regata treino)\b/i },
+  // --- DESPORTO & FITNESS ---
+  { parentSlug: "sports", labelKey: "Suplementos e Nutrição", regex: /\b(whey|creatina|proteina|proteína|pre treino|bcaa|termogenico|vitaminas|coqueteleira|shaker)\b/i },
+  { parentSlug: "sports", labelKey: "Equipamento de Treino", regex: /\b(haltere|kettlebell|elastico|elástico|extensor|tapete yoga|mat|corda de saltar|luva treino|bola futebol|bola basquete)\b/i },
+  { parentSlug: "sports", labelKey: "Moda Fitness", regex: /\b(top fitness|legging treino|camisa termica|regata treino)\b/i },
 
-  // --- LIVRARIA & PAPELARIA (cat_books) ---
-  { parentSlug: "books", labelKey: "Livros e HQs", regex: /\b(livro|livros|book|books|romance|ficcao|biografia|manga|hq|quadrinhos|bestseller|novel|comic)\b/i },
-  { parentSlug: "books", labelKey: "Papelaria e Material", regex: /\b(caderno|agenda|planner|caneta|lapis|estojo|mochila escolar|bloco de notas|grampeador|papel a4)\b/i },
+  // --- LIVRARIA & PAPELARIA ---
+  { parentSlug: "books", labelKey: "Livros e HQs", regex: /\b(livro|livros|book|books|romance|ficcao|ficção|biografia|manga livro|mangas japoneses|hq|quadrinhos|bestseller|novel|comic)\b/i },
+  { parentSlug: "books", labelKey: "Papelaria e Material", regex: /\b(caderno|agenda|planner|caneta|lapis|lápis|estojo|mochila escolar|bloco de notas|grampeador|papel a4)\b/i },
 
-  // --- BEBÉ & BRINQUEDOS (cat_baby & cat_toys) ---
-  { parentSlug: "baby", labelKey: "Roupa de Bebé", regex: /\b(body bebe|body infantil|roupa bebe|recem nascido|body de bebe|manta bebe|macacao bebe)\b/i, genderForceKey: "Criança" },
-  { parentSlug: "baby", labelKey: "Acessórios de Bebé", regex: /\b(fralda|biberao|chupeta|berco|carrinho de bebe|mordaça|mordedor|biberon|diaper|pacifier)\b/i, genderForceKey: "Criança" },
-  { parentSlug: "toys", labelKey: "Brinquedos e Jogos", regex: /\b(brinquedo|brinquedos|boneca|boneco|carrinho|lego|quebra[- ]cabeca|puzzle|pelucia|jogos de tabuleiro|boardgame|doll|toy)\b/i, genderForceKey: "Criança" },
+  // --- AUTOMÓVEL & MOTO ---
+  { parentSlug: "automotive", labelKey: "Peças e Óleos", regex: /\b(oleo motor|óleo motor|pneu|bateria carro|filtro|lampada|lâmpada|tire|oil|battery|filter)\b/i },
+  { parentSlug: "automotive", labelKey: "Acessórios de Moto e Carro", regex: /\b(capacete|helmet|limpeza|acessorio carro|acessório carro|suporte gps|rastreador veicular)\b/i },
 
-  // --- VESTUÁRIO ADULTO (cat_fashion) ---
-  { parentSlug: "clothing", labelKey: "Vestidos e Macacões", regex: /\b(vestido|vestidos|dress|dresses|macacao|macacoes|jumpsuit|jumpsuits)\b/i, genderForceKey: "Mulher" },
-  { parentSlug: "clothing", labelKey: "Saias", regex: /\b(saia|saias|skirt|skirts)\b/i, genderForceKey: "Mulher" },
-  { parentSlug: "clothing", labelKey: "Moda Íntima", regex: /\b(body|bodies|bodysuit|collant|lingerie|cueca|sutia|bra|underwear|calcinha|biquini)\b/i, genderForceKey: "Mulher" },
-  { parentSlug: "clothing", labelKey: "Camisas e Tops", regex: /\b(camisa|camisas|camiseta|camisetas|t-?shirt|t-?shirts|shirt|shirts|blusa|blusas|blouse|blouses|top|tops|cropped|tunica|social)\b/i },
-  { parentSlug: "clothing", labelKey: "Conjuntos", regex: /\b(conjunto|conjuntos|set|suit)\b/i },
-  { parentSlug: "clothing", labelKey: "Casacos", regex: /\b(casaco|casacos|jaqueta|jaquetas|hoodie|hoodies|moletom|moletons|sweater|sweaters|pullover|coat|coats|camisola|camisolas|blazer|cardigan)\b/i },
-  { parentSlug: "clothing", labelKey: "Calções", regex: /\b(bermuda|bermudas|calcao|calcoes|shorts)\b/i },
-  { parentSlug: "clothing", labelKey: "Calças", regex: /\b(calca|calcas|pants|trousers|legging|leggings)\b/i },
-  { parentSlug: "clothing", labelKey: "Calçado", regex: /\b(calcado|calcados|sapato|sapatos|sapatilha|sapatilhas|tenis|sneaker|sneakers|shoes|sandalia|sandalias|bota|botas|boots|chinelo|chinelos|flip-?flops|salto)\b/i },
+  // --- PET SHOP ---
+  { parentSlug: "pets", labelKey: "Ração e Alimentação", regex: /\b(racao|ração|petisco|food|dog food|cat food)\b/i },
+  { parentSlug: "pets", labelKey: "Acessórios e Brinquedos Pet", regex: /\b(coleira|collar|guia|trela|arranhador|caixa de areia|caminha pet|brinquedo cao|brinquedo gato|aquario|aquário|shampoo pet)\b/i },
 
-  // --- AUTOMÓVEL & MOTO (cat_auto) ---
-  { parentSlug: "automotive", labelKey: "Peças e Óleos", regex: /\b(oleo motor|pneu|bateria carro|filtro|lampada|tire|oil|battery|filter)\b/i },
-  { parentSlug: "automotive", labelKey: "Acessórios de Moto e Carro", regex: /\b(capacete|helmet|limpeza|acessorio carro|suporte gps|rastreador veicular)\b/i },
-
-  // --- PET SHOP (cat_pets) ---
-  { parentSlug: "pets", labelKey: "Ração e Alimentação", regex: /\b(racao|petisco|food|dog food|cat food)\b/i },
-  { parentSlug: "pets", labelKey: "Acessórios e Brinquedos Pet", regex: /\b(coleira|collar|guia|trela|arranhador|caixa de areia|caminha pet|brinquedo cao|brinquedo gato|aquario|shampoo pet)\b/i },
-
-  // --- FERRAMENTAS (cat_tools) ---
+  // --- FERRAMENTAS ---
   { parentSlug: "tools", labelKey: "Ferramentas Elétricas e Manuais", regex: /\b(martelo|chave fenda|parafuso|prego|furadeira|alicate|hammer|screwdriver|screw|drill|pliers|bateria)\b/i },
-  { parentSlug: "tools", labelKey: "Construção e Tintas", regex: /\b(tinta|construcao|paint|construction|diy)\b/i }
+  { parentSlug: "tools", labelKey: "Construção e Tintas", regex: /\b(tinta|construcao|construção|paint|construction|diy)\b/i }
 ];
 
-const ATTRIBUTE_MAP = [
-  { labelKey: "Preto", regex: /\b(preto|preta|pretos|pretas|black|escura)\b/i },
-  { labelKey: "Branco", regex: /\b(branco|branca|brancos|brancas|white)\b/i },
-  { labelKey: "Azul", regex: /\b(azul|azuis|blue|navy)\b/i },
-  { labelKey: "Vermelho", regex: /\b(vermelho|vermelha|vermelhos|vermelhas|red|encarnado)\b/i },
-  { labelKey: "Verde", regex: /\b(verde|verdes|green)\b/i },
-  { labelKey: "Amarelo", regex: /\b(amarelo|amarela|amarelos|amarelas|yellow)\b/i },
-  { labelKey: "Laranja", regex: /\b(laranja|orange)\b/i },
-  { labelKey: "Rosa", regex: /\b(rosa|rosas|pink)\b/i },
-  { labelKey: "Roxo", regex: /\b(roxo|roxa|purple|lilas|lilás)\b/i },
-  { labelKey: "Castanho", regex: /\b(castanho|castanha|brown|marrom)\b/i },
-  { labelKey: "Cinza", regex: /\b(cinza|cinzento|cinzenta|grey|gray|prata|silver)\b/i },
-  { labelKey: "Dourado", regex: /\b(dourado|dourada|gold)\b/i },
+// MATERIAIS SEGUROS (Validam no título ou em composição explícita)
+const SAFE_MATERIAL_MAP = [
   { labelKey: "Couro", regex: /\b(couro|pele|leather)\b/i },
-  { labelKey: "Jeans", regex: /\b(jeans|denim|ganga)\b/i },
-  { labelKey: "Algodão", regex: /\b(algodao|algodão|cotton)\b/i }
+  { labelKey: "Jeans", regex: /\b(calca jeans|calça jeans|jaqueta jeans|short jeans|bermuda jeans|saia jeans|vestido jeans|em jeans|de jeans|100% jeans|denim|ganga)\b/i },
+  { labelKey: "Algodão", regex: /\b(100% algodao|100% algodão|puro algodao|cotton|tecido algodao)\b/i }
 ];
 
 // 4. DICIONÁRIO MULTILÍNGUE COMPLETO (PT / EN)
 const TRANSLATION_MAP: Record<string, { pt: string; en: string }> = {
-  // Sinónimos e normalização
+  // Públicos
   "Criança": { pt: "Criança", en: "Kids" },
   "Crianças": { pt: "Criança", en: "Kids" },
   "Kids": { pt: "Criança", en: "Kids" },
@@ -176,6 +165,8 @@ const TRANSLATION_MAP: Record<string, { pt: string; en: string }> = {
   "Women": { pt: "Mulher", en: "Women" },
   "Homem": { pt: "Homem", en: "Men" },
   "Men": { pt: "Homem", en: "Men" },
+  "Unissexo": { pt: "Unissexo", en: "Unisex" },
+  "Unisex": { pt: "Unissexo", en: "Unisex" },
   
   // Categorias Principais
   "Tecnologia": { pt: "Tecnologia", en: "Technology" },
@@ -197,7 +188,7 @@ const TRANSLATION_MAP: Record<string, { pt: string; en: string }> = {
   "Pastelaria e Doces": { pt: "Pastelaria e Doces", en: "Bakery & Sweets" },
   "Catálogo Geral": { pt: "Catálogo Geral", en: "General Catalog" },
   
-  // Subcategorias e Novas Tags
+  // Subcategorias
   "Combos e Kits": { pt: "Combos e Kits", en: "Combos & Kits" },
   "Combo": { pt: "Combo", en: "Combo" },
   "Kit": { pt: "Kit", en: "Kit" },
@@ -205,7 +196,6 @@ const TRANSLATION_MAP: Record<string, { pt: string; en: string }> = {
   "Marmita": { pt: "Marmita", en: "Lunchbox Cake" },
   "Cupcake": { pt: "Cupcake", en: "Cupcake" },
   "Cupcakes": { pt: "Cupcakes", en: "Cupcakes" },
-  
   "Chiffon": { pt: "Chiffon", en: "Chiffon" },
   "Mini Bolos": { pt: "Mini Bolos", en: "Mini Cakes" },
   "Doces e Sobremesas": { pt: "Doces e Sobremesas", en: "Sweets & Desserts" },
@@ -252,18 +242,6 @@ const TRANSLATION_MAP: Record<string, { pt: string; en: string }> = {
   "Acessórios e Brinquedos Pet": { pt: "Acessórios e Brinquedos Pet", en: "Pet Toys & Gear" },
   "Ferramentas Elétricas e Manuais": { pt: "Ferramentas Elétricas e Manuais", en: "Power & Hand Tools" },
   "Construção e Tintas": { pt: "Construção e Tintas", en: "Construction & Paints" },
-  "Preto": { pt: "Preto", en: "Black" },
-  "Branco": { pt: "Branco", en: "White" },
-  "Azul": { pt: "Azul", en: "Blue" },
-  "Vermelho": { pt: "Vermelho", en: "Red" },
-  "Verde": { pt: "Verde", en: "Green" },
-  "Amarelo": { pt: "Amarelo", en: "Yellow" },
-  "Laranja": { pt: "Laranja", en: "Orange" },
-  "Rosa": { pt: "Rosa", en: "Pink" },
-  "Roxo": { pt: "Roxo", en: "Purple" },
-  "Castanho": { pt: "Castanho", en: "Brown" },
-  "Cinza": { pt: "Cinza", en: "Grey" },
-  "Dourado": { pt: "Dourado", en: "Gold" },
   "Couro": { pt: "Couro", en: "Leather" },
   "Jeans": { pt: "Jeans", en: "Denim" },
   "Algodão": { pt: "Algodão", en: "Cotton" },
@@ -272,7 +250,10 @@ const TRANSLATION_MAP: Record<string, { pt: string; en: string }> = {
 
 function removeAccents(str: string): string {
   if (!str) return "";
-  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\u2018\u2019\u0060\u00B4]/g, "'");
 }
 
 /**
@@ -284,7 +265,6 @@ class UniqueTagManager {
   add(tag: string) {
     if (!tag || tag.trim() === "") return;
     const lowerKey = tag.toLowerCase().trim();
-    // Adiciona só se não existir a versão em lowercase (evita duplicação invisível)
     if (!this.tags.has(lowerKey)) {
       this.tags.set(lowerKey, tag.trim());
     }
@@ -308,28 +288,22 @@ export function useProductIntelligence() {
 
     const translateTag = (term: string) => {
       if (!term) return "";
-      
-      if (term.startsWith("Tam: ")) {
-        return targetLang === "en" ? term.replace("Tam: ", "Size: ") : term;
-      }
-
-      // Procura inteligente e insensível a capitalização
       const foundKey = Object.keys(TRANSLATION_MAP).find(k => k.toLowerCase() === term.toLowerCase());
-      if (foundKey) {
-        return TRANSLATION_MAP[foundKey][targetLang];
-      }
-
-      return term; 
+      return foundKey ? TRANSLATION_MAP[foundKey][targetLang] : term;
     };
 
-    const explicitKidRegex = /\b(crianca|criancas|infantil|infantis|kids|bebe|bebes|baby|recem[- ]nascido|brinquedo|brinquedos|lego|maternidade)\b/i;
-    const adultIndicatorsRegex = /\b(faculdade|universidade|trabalho|social|casual|streetwear|silhueta|decote|ajustado|ajustada|fitted|v-neck|adulto|adultos|senhora|homem|mulher|women|men|boyfriend|y2k|dia[- ]?a[- ]?dia|saltos|sutia|lingerie|blazer|cardigan|3[6-9]|4[0-8]|xs|s|m|l|xl|xxl)\b/i;
+    // Termos de criança explícitos
+    const explicitKidRegex = /\b(crianca|criancas|infantil|infantis|kids?|bebe|bebes|baby|recem[- ]nascido|brinquedo|brinquedos|lego|body bebe|roupa bebe)\b/i;
+    // Termos estritamente adultos
+    const adultIndicatorsRegex = /\b(faculdade|universidade|trabalho|social|exercitar|academia|adulto|adultos|senhora|homem|mulher|women|men|boyfriend|y2k|saltos|sutia|lingerie|blazer|scarpin|scarpins|stiletto|heels?|modeladora|cintura alta|vintage|deposito|depósito)\b/i;
 
     return products.map(product => {
       const cleanProduct = { ...product };
 
+      // Leitura da descrição com suporte ao campo full_description
+      const rawDesc = cleanProduct.full_description || cleanProduct.description || cleanProduct.desc || cleanProduct.details || '';
       const titleText = removeAccents(cleanProduct.name || '').toLowerCase();
-      const descText = removeAccents(cleanProduct.description || cleanProduct.desc || cleanProduct.details || '').toLowerCase();
+      const descText = removeAccents(rawDesc).toLowerCase();
       const categoryText = removeAccents(cleanProduct.category || '').toLowerCase();
       
       const contentOnlyText = `${titleText} ${descText}`;
@@ -339,43 +313,38 @@ export function useProductIntelligence() {
       let subCategory = "";
       let gender = "";
 
-      const isAdultOrStudent = adultIndicatorsRegex.test(fullText);
-      let isKidExplicit = explicitKidRegex.test(fullText);
-
-      // TRAVA DE SEGURANÇA: BLOQUEIO ABSOLUTO DE ADULTOS EM CRIANÇAS
-      if (isAdultOrStudent || !isKidExplicit) {
-        isKidExplicit = false;
-      }
+      const isAdultStrict = adultIndicatorsRegex.test(fullText);
+      const isKidExplicit = explicitKidRegex.test(titleText) || (explicitKidRegex.test(fullText) && !isAdultStrict);
 
       // ATRIBUIÇÃO BASE DE GÉNERO
       if (isKidExplicit) {
         gender = "Criança";
-      } else if (/\b(mulher|feminino|feminina|women|woman|senhora|rapariga|silhueta|decote|blusa|saia|vestido|lingerie)\b/i.test(fullText) || isAdultOrStudent) {
+      } else if (/\b(mulher|feminino|feminina|women|woman|senhora|rapariga|silhueta|decote|blusa|saia|vestido|lingerie|scarpin|scarpins|stiletto|heels?|sutia|calcinha|modeladora|cintura alta)\b/i.test(fullText)) {
         gender = "Mulher";
-      } else if (/\b(homem|masculino|men|man|rapaz|barba|gravata)\b/i.test(fullText)) {
+      } else if (/\b(homem|masculino|men|man|rapaz|barba|gravata|polo|polos|cueca|boxer)\b/i.test(fullText)) {
         gender = "Homem";
       } else {
         const origGender = removeAccents(cleanProduct.gender || '').toLowerCase();
         if (origGender.includes("crianca") || origGender.includes("infantil") || origGender.includes("baby") || origGender.includes("kids")) {
-          gender = "";
+          gender = isAdultStrict ? "" : "Criança";
         } else {
           gender = cleanProduct.gender || "";
         }
       }
 
-      // SUBCATEGORIA BASE
+      // SUBCATEGORIA BASE (Avaliando primeiro o TÍTULO para evitar falso positivo da descrição)
       for (const rule of SUB_CATEGORY_RULES) {
-        if (rule.parentSlug === "baby" && !isKidExplicit) {
+        if (rule.parentSlug === "baby" && gender !== "Criança") {
           continue;
         }
 
-        if (rule.regex.test(titleText) || rule.regex.test(descText) || rule.regex.test(categoryText)) {
+        if (rule.regex.test(titleText)) {
           subCategory = rule.labelKey; 
           
-          if (rule.genderForceKey) {
+          if (rule.genderForceKey && !gender) {
             if (rule.genderForceKey === "Criança") {
               if (isKidExplicit) gender = "Criança";
-            } else if (!gender) {
+            } else if (!isKidExplicit) {
               gender = rule.genderForceKey;
             }
           }
@@ -390,10 +359,39 @@ export function useProductIntelligence() {
         }
       }
 
+      // Se não achou no título, avalia no resto do texto
+      if (!subCategory) {
+        for (const rule of SUB_CATEGORY_RULES) {
+          if (rule.parentSlug === "baby" && gender !== "Criança") {
+            continue;
+          }
+
+          if (rule.regex.test(descText) || rule.regex.test(categoryText)) {
+            subCategory = rule.labelKey; 
+            
+            if (rule.genderForceKey && !gender) {
+              if (rule.genderForceKey === "Criança") {
+                if (isKidExplicit) gender = "Criança";
+              } else if (!isKidExplicit) {
+                gender = rule.genderForceKey;
+              }
+            }
+            
+            if (rule.parentSlug) {
+              const mappedLabel = PARENT_LABEL_MAP[rule.parentSlug] || FALLBACK_PARENTS[rule.parentSlug];
+              if (mappedLabel) {
+                parentCategory = mappedLabel;
+              }
+            }
+            break; 
+          }
+        }
+      }
+
       // CATEGORIA PAI BASE
       if (!parentCategory) {
         for (const parent of DYNAMIC_PARENTS_RULES) {
-          if (parent.isKidCategory && !isKidExplicit) {
+          if (parent.isKidCategory && gender !== "Criança") {
             continue;
           }
 
@@ -404,10 +402,10 @@ export function useProductIntelligence() {
         }
       }
 
-      // FALLBACK CONTEXTUAL
+      // FALLBACK CONTEXTUAL (Vestuário)
       if (!parentCategory && subCategory) {
-        if (['Camisas e Tops', 'Conjuntos', 'Casacos', 'Calças', 'Calções', 'Vestidos e Macacões', 'Saias', 'Moda Íntima', 'Calçado'].includes(subCategory) || /\b(camisa|blusa|conjunto|camiseta|calca|casaco)\b/i.test(titleText)) {
-          parentCategory = "Vestuário";
+        if (['Camisas e Tops', 'Conjuntos', 'Casacos', 'Calças', 'Calções', 'Vestidos e Macacões', 'Saias', 'Moda Íntima', 'Calçado'].includes(subCategory) || /\b(camisa|blusa|conjunto|camiseta|t-?shirt|t'shirt|polo|calca|casaco|sapato|scarpin|body|bermuda|calcao|calcoes)\b/i.test(titleText)) {
+          parentCategory = gender === "Criança" ? "Bebé e Criança" : "Vestuário";
         }
       }
 
@@ -419,7 +417,7 @@ export function useProductIntelligence() {
       let finalGender = gender; 
 
       if (!isKidExplicit && finalGender === "Criança") {
-        finalGender = isAdultOrStudent ? "Mulher" : "";
+        finalGender = isAdultStrict ? "Mulher" : "";
       }
 
       // TRADUÇÕES ESTRUTURAIS
@@ -428,45 +426,13 @@ export function useProductIntelligence() {
       const translatedDisplayCategory = translateTag(displayCategory);
       const translatedGender = translateTag(finalGender);
 
-      // EXTRAÇÃO DE TAMANHOS USANDO GERENCIADOR ÚNICO
-      const sizesManager = new UniqueTagManager();
-      const sizeRegex = /\b(?:tamanho|tam|size)\s*[:=]?\s*(pp|p|m|g|gg|xg|xs|s|l|xl|xxl|xxxl|[3-5][0-9])\b/gi;
-      let match;
-      while ((match = sizeRegex.exec(fullText)) !== null) {
-        sizesManager.add(translateTag(`Tam: ${match[1].toUpperCase()}`));
-      }
-      
-      if (/\b(tamanho unico|one size)\b/i.test(fullText)) {
-        sizesManager.add(translateTag("Tam: Único"));
-      }
-
-      // ATRIBUTOS ENRIQUECIDOS USANDO GERENCIADOR ÚNICO
+      // ATRIBUTOS ENRIQUECIDOS SEGUROS
       const attributesManager = new UniqueTagManager();
-      ATTRIBUTE_MAP.forEach(attr => {
-        if (attr.regex.test(fullText)) {
+      SAFE_MATERIAL_MAP.forEach(attr => {
+        if (attr.regex.test(titleText) || (attr.regex.test(descText) && !/\b(combina|usar|vestir|com)\s+/i.test(descText))) {
           attributesManager.add(translateTag(attr.labelKey));
         }
       });
-
-      // INJEÇÃO DIRETA DE KEYWORDS DO MOCK COMO TAGS EXTRAS (Com Tradução e Proteção Contextual)
-      for (const mock of MOCK_GLOBAL_CATEGORIES) {
-        for (const kw of mock.keywords) {
-          if (new RegExp(`\\b${kw}\\b`, 'i').test(fullText)) {
-            const prettyTag = kw.charAt(0).toUpperCase() + kw.slice(1).toLowerCase();
-            const translatedKwTag = translateTag(prettyTag);
-            
-            // PROTEÇÃO: Só adiciona o Atributo/Keyword se ele não for literalmente o Género ou a Categoria!
-            const isStructuralDuplicate = [translatedParentCategory, translatedSubCategory, translatedGender]
-              .map(t => t.toLowerCase())
-              .includes(translatedKwTag.toLowerCase());
-
-            if (!isStructuralDuplicate) {
-              attributesManager.add(translatedKwTag);
-            }
-            break; 
-          }
-        }
-      }
 
       return { 
         ...cleanProduct, 
@@ -476,7 +442,7 @@ export function useProductIntelligence() {
           parentCategory: translatedParentCategory,
           subCategory: translatedSubCategory,
           gender: translatedGender, 
-          sizes: sizesManager.values(),
+          sizes: [], // 🚀 Não julga tamanhos
           attributes: attributesManager.values()
         } 
       };
@@ -487,24 +453,32 @@ export function useProductIntelligence() {
 }
 
 /**
- * EXTRAÇÃO RÁPIDA DE TAGS (SHORT-CIRCUIT) - OTIMIZADA CONTRA DUPLICAÇÃO
+ * EXTRAÇÃO RÁPIDA DE TAGS (SHORT-CIRCUIT) - SEM JULGAR TAMANHOS E SEM FALHAS EM CRIANÇAS
  */
 export function enrichProductsWithSubcategories(products: any[], lang: "pt" | "en" = "pt") {
   if (!products || !Array.isArray(products)) return [];
   
   return products.map(product => {
-    const titleText = removeAccents(`${product.name || ''} ${product.category || ''}`).toLowerCase();
-    const descText = removeAccents(product.description || '').toLowerCase();
+    // Leitura garantida da descrição com suporte a full_description
+    const rawDesc = product.full_description || product.description || product.desc || product.details || '';
+    const titleText = removeAccents(product.name || '').toLowerCase();
+    const descText = removeAccents(rawDesc).toLowerCase();
+    const fullText = `${titleText} ${descText}`;
     
-    // O Manager Único agora trabalha em harmonia com o Dicionário de Sinónimos
     const tagsManager = new UniqueTagManager();
     
+    // Identificação de Criança
+    const isAdultStrict = /\b(faculdade|universidade|exercitar|academia|vintage|deposito|depósito|scarpin|scarpins|stiletto|modeladora|cintura alta|senhora)\b/i.test(fullText);
+    const isKid = (/\b(crianca|criancas|infantil|infantis|kids?|bebe|bebes|baby|recem[- ]nascido|brinquedo|brinquedos|lego|body bebe|roupa bebe)\b/i.test(titleText) || /\b(crianca|criancas|infantil|infantis|kids?|bebe|bebes|baby)\b/i.test(fullText)) && !isAdultStrict;
+
     // Tratamento e tradução da tag que já vem no produto
     if (product.category) {
-       // Procura por sinónimo seguro
        const foundKey = Object.keys(TRANSLATION_MAP).find(k => k.toLowerCase() === product.category.toLowerCase());
        const mappedTranslation = foundKey ? TRANSLATION_MAP[foundKey][lang] : product.category;
-       tagsManager.add(mappedTranslation);
+       
+       if (!isAdultStrict || (product.category.toLowerCase() !== 'baby' && product.category.toLowerCase() !== 'cat_baby')) {
+         tagsManager.add(mappedTranslation);
+       }
     }
 
     let foundMainCategory = false;
@@ -514,6 +488,8 @@ export function enrichProductsWithSubcategories(products: any[], lang: "pt" | "e
       
       // 1. Tenta por Subcategoria Específica
       for (const rule of SUB_CATEGORY_RULES) {
+        if (rule.parentSlug === "baby" && !isKid) continue;
+
         if (rule.regex.test(text)) {
           const foundKey = Object.keys(TRANSLATION_MAP).find(k => k.toLowerCase() === rule.labelKey.toLowerCase());
           const translatedName = foundKey ? TRANSLATION_MAP[foundKey][lang] : rule.labelKey;
@@ -526,6 +502,8 @@ export function enrichProductsWithSubcategories(products: any[], lang: "pt" | "e
       // 2. Fallback de Segurança - Se não for Subcategoria, puxa diretamente do Mock (Categoria Pai)
       if (!foundMainCategory) {
         for (const parent of DYNAMIC_PARENTS_RULES) {
+          if (parent.isKidCategory && !isKid) continue;
+
           if (parent.regex.test(text)) {
             const foundKey = Object.keys(TRANSLATION_MAP).find(k => k.toLowerCase() === parent.labelKey.toLowerCase());
             const translatedName = foundKey ? TRANSLATION_MAP[foundKey][lang] : parent.labelKey;
@@ -537,45 +515,17 @@ export function enrichProductsWithSubcategories(products: any[], lang: "pt" | "e
       }
     };
 
+    // Prioriza o título sobre a descrição
     extractSingleCategory(titleText);
     extractSingleCategory(descText);
 
-    const fullText = `${titleText} ${descText}`;
-    
-    // EXTRAÇÃO DE TAMANHOS
-    const sizeRegex = /\b(?:tamanho|tam|size)\s*[:=]?\s*(pp|p|m|g|gg|xg|xs|s|l|xl|xxl|xxxl|[3-5][0-9])\b/gi;
-    let match;
-    while ((match = sizeRegex.exec(fullText)) !== null) {
-      const extractedSize = match[1].toUpperCase();
-      tagsManager.add(lang === "en" ? `Size: ${extractedSize}` : `Tam: ${extractedSize}`);
-    }
-
-    if (/\b(plus size|tamanho grande)\b/i.test(fullText)) {
-      tagsManager.add(lang === "en" ? "Plus Size" : "Tamanhos Grandes");
-    }
-    if (/\b(tamanho unico|one size)\b/i.test(fullText)) {
-      tagsManager.add(lang === "en" ? "One Size" : "Tamanho Único");
-    }
-
-    // EXTRAÇÃO DE KEYWORDS DIRETAS DO MOCK
-    for (const mock of MOCK_GLOBAL_CATEGORIES) {
-      for (const kw of mock.keywords) {
-        if (new RegExp(`\\b${kw}\\b`, 'i').test(fullText)) {
-          const prettyTag = kw.charAt(0).toUpperCase() + kw.slice(1).toLowerCase();
-          
-          // O Dicionário de Sinónimos garantirá traduções perfeitas de extras.
-          const foundKey = Object.keys(TRANSLATION_MAP).find(k => k.toLowerCase() === prettyTag.toLowerCase());
-          const translatedKw = foundKey ? TRANSLATION_MAP[foundKey][lang] : prettyTag;
-          
-          tagsManager.add(translatedKw);
-          break; // Adiciona apenas a primeira de cada categoria
-        }
-      }
+    if (isKid) {
+      tagsManager.add(TRANSLATION_MAP["Criança"][lang]);
     }
 
     return { 
       ...product, 
-      displayTags: tagsManager.values() 
+      displayTags: tagsManager.values() // 🚀 Tags 100% limpas sem extração arbitrária de tamanhos
     };
   });
 }

@@ -45,6 +45,9 @@ interface SmartTagDefinition {
 
 const TAB_ORDER: HelperTab[] = ['audience', 'sizes', 'styles', 'materials', 'colors'];
 
+// Abas de seleção múltipla (Tamanhos, Cores e Material) vs Seleção única (Público e Estilo)
+const MULTI_SELECT_TABS = new Set<HelperTab>(['sizes', 'colors', 'materials']);
+
 const GROUP_CONFIG: Record<HelperTab, { headerKey: string; defaultHeader: string }> = {
   audience: { headerKey: 'group_header_audience', defaultHeader: 'Público' },
   sizes: { headerKey: 'group_header_sizes', defaultHeader: 'Tamanhos' },
@@ -53,7 +56,6 @@ const GROUP_CONFIG: Record<HelperTab, { headerKey: string; defaultHeader: string
   colors: { headerKey: 'group_header_colors', defaultHeader: 'Cores' },
 };
 
-// 🚀 Vocabulário calibrado para acionar os filtros do useProductIntelligence
 const STATIC_TAG_GROUPS: Record<HelperTab, SmartTagDefinition[]> = {
   audience: [
     { id: 'kids', labelKey: 'quick_tag_kids', defaultLabel: '👶 Criança', valueKey: 'val_kids', defaultValue: 'Infantil (Criança / Bebé)', regex: /\b(criança|crianca|infantil|infantis|bebé|bebe|kids|baby)\b/i },
@@ -108,12 +110,43 @@ export const ProductBasicDetails = memo(function ProductBasicDetails({
   const { t } = useTranslate();
   const [activeTab, setActiveTab] = useState<HelperTab>('audience');
 
-  // Estado que guarda APENAS o que o utilizador digitou
   const [userText, setUserText] = useState('');
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const isInternalUpdate = useRef(false);
 
-  // Extrai as tags para os botões e limpa 100% da caixa de texto do utilizador
+  // 🚀 Resolução universal da categoria pelo searchQuery do MOCK_GLOBAL_CATEGORIES
+  const selectedCategoryValue = useMemo(() => {
+    if (!formData.category) return '';
+
+    const rawCategory = formData.category.trim();
+    const rawLower = rawCategory.toLowerCase();
+
+    // 1. Procura direta por searchQuery, slug ou nameKey
+    const directMatch = MOCK_GLOBAL_CATEGORIES.find(
+      c => c.searchQuery.toLowerCase() === rawLower || 
+           c.slug.toLowerCase() === rawLower || 
+           c.nameKey.toLowerCase() === rawLower
+    );
+    if (directMatch) return directMatch.searchQuery;
+
+    // 2. Procura pelo nome traduzido
+    const translatedMatch = MOCK_GLOBAL_CATEGORIES.find(c => {
+      const translatedName = t(c.nameKey as any);
+      return translatedName && translatedName.toLowerCase() === rawLower;
+    });
+    if (translatedMatch) return translatedMatch.searchQuery;
+
+    // 3. Procura por palavras-chave da categoria
+    const keywordMatch = MOCK_GLOBAL_CATEGORIES.find(c =>
+      c.keywords.some(k => k.toLowerCase() === rawLower)
+    );
+    if (keywordMatch) return keywordMatch.searchQuery;
+
+    // 4. Mantém como categoria personalizada
+    return rawCategory;
+  }, [formData.category, t]);
+
+  // Extrai as tags do sistema da descrição e isola o texto do usuário
   useEffect(() => {
     if (isInternalUpdate.current) {
       isInternalUpdate.current = false;
@@ -136,10 +169,9 @@ export const ProductBasicDetails = memo(function ProductBasicDetails({
             matchedIds.push(tag.id);
           }
         });
-        return; // Nunca insere tags do sistema na caixa de texto
+        return;
       }
 
-      // Suporte a tags antigas de formato legado "• Tag Individual"
       if (cleanLine.startsWith('•')) {
         let isLegacyTag = false;
         ALL_TAGS.forEach(tag => {
@@ -158,7 +190,6 @@ export const ProductBasicDetails = memo(function ProductBasicDetails({
     setSelectedTagIds(matchedIds);
   }, [formData.full_description]);
 
-  // Sincroniza o payload com o formato agrupado por linha (Ex: "• Tamanhos: Tam: P, Tam: M")
   const syncCombinedDescription = useCallback((text: string, tagIds: string[]) => {
     const groupLines: string[] = [];
 
@@ -201,9 +232,30 @@ export const ProductBasicDetails = memo(function ProductBasicDetails({
     syncCombinedDescription(finalClean, selectedTagIds);
   }, [selectedTagIds, syncCombinedDescription]);
 
+  // Alternância com trava de seleção única para Público e Estilo
   const handleToggleTag = useCallback((tagId: string) => {
+    let targetTab: HelperTab | null = null;
+    for (const tab of TAB_ORDER) {
+      if (STATIC_TAG_GROUPS[tab].some(tDef => tDef.id === tagId)) {
+        targetTab = tab;
+        break;
+      }
+    }
+
     setSelectedTagIds(prev => {
-      const next = prev.includes(tagId) ? prev.filter(id => id !== tagId) : [...prev, tagId];
+      let next: string[];
+
+      if (targetTab && !MULTI_SELECT_TABS.has(targetTab)) {
+        const tabTagIds = new Set(STATIC_TAG_GROUPS[targetTab].map(tDef => tDef.id));
+        if (prev.includes(tagId)) {
+          next = prev.filter(id => id !== tagId);
+        } else {
+          next = prev.filter(id => !tabTagIds.has(id)).concat(tagId);
+        }
+      } else {
+        next = prev.includes(tagId) ? prev.filter(id => id !== tagId) : [...prev, tagId];
+      }
+
       syncCombinedDescription(userText, next);
       return next;
     });
@@ -237,7 +289,6 @@ export const ProductBasicDetails = memo(function ProductBasicDetails({
     setFormData(p => ({ ...p, [field]: val }));
   }, [setFormData]);
 
-  // Controles de preço
   const handleMajorChange = useCallback((val: string) => {
     const raw = val.replace(/\D/g, '');
     if (!raw) {
@@ -285,7 +336,6 @@ export const ProductBasicDetails = memo(function ProductBasicDetails({
 
   const activeTagItems = STATIC_TAG_GROUPS[activeTab];
 
-  // Tags selecionadas ordenadas por categoria
   const orderedSelectedTags = useMemo(() => {
     const list: Array<{ id: string; label: string; tab: HelperTab }> = [];
     TAB_ORDER.forEach(groupKey => {
@@ -303,6 +353,11 @@ export const ProductBasicDetails = memo(function ProductBasicDetails({
     });
     return list;
   }, [selectedTagIds, t]);
+
+  const isCustomCategory = useMemo(() => {
+    if (!selectedCategoryValue) return false;
+    return !MOCK_GLOBAL_CATEGORIES.some(c => c.searchQuery === selectedCategoryValue);
+  }, [selectedCategoryValue]);
 
   return (
     <section 
@@ -421,35 +476,54 @@ export const ProductBasicDetails = memo(function ProductBasicDetails({
           )}
         </div>
 
-        {/* CATEGORIA */}
+        {/* CATEGORIA VINCULADA AO SEARCHQUERY */}
         <div>
           <label className="mb-1.5 block text-[11px] font-black uppercase text-slate-500">
             {t('product_form_category_label' as any)}
           </label>
           <select
-            value={formData.category}
+            value={selectedCategoryValue}
             onChange={e => handleField('category', e.target.value)}
             className="h-13 sm:h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 font-black text-slate-700 outline-none transition-colors duration-150 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
           >
             <option value="" disabled hidden>{t('product_form_category_placeholder' as any)}</option>
+            
+            {/* Categoria personalizada caso não conste no Mock */}
+            {isCustomCategory && (
+              <option value={selectedCategoryValue}>
+                📁 {selectedCategoryValue}
+              </option>
+            )}
+
             {MOCK_GLOBAL_CATEGORIES.map(c => (
-              <option key={c.slug} value={c.slug}>
+              <option key={c.searchQuery} value={c.searchQuery}>
                 {c.emoji} {t(c.nameKey as any)}
               </option>
             ))}
           </select>
+
           {recentCategories.length > 0 && (
             <div className="mt-2.5 flex flex-wrap gap-1.5">
-              {recentCategories.map(c => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => handleField('category', c)}
-                  className="rounded-xl bg-slate-100 px-2.5 py-1.5 text-[10px] font-black uppercase text-slate-700 hover:bg-slate-200 transition-colors duration-150"
-                >
-                  {c}
-                </button>
-              ))}
+              {recentCategories.map(c => {
+                const matchingMock = MOCK_GLOBAL_CATEGORIES.find(
+                  mock => mock.searchQuery.toLowerCase() === c.toLowerCase() ||
+                          mock.slug.toLowerCase() === c.toLowerCase() ||
+                          t(mock.nameKey as any)?.toLowerCase() === c.toLowerCase()
+                );
+                const targetValue = matchingMock ? matchingMock.searchQuery : c;
+                const displayLabel = matchingMock ? `${matchingMock.emoji} ${t(matchingMock.nameKey as any)}` : c;
+                
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => handleField('category', targetValue)}
+                    className="rounded-xl bg-slate-100 px-2.5 py-1.5 text-[10px] font-black uppercase text-slate-700 hover:bg-slate-200 transition-colors duration-150"
+                  >
+                    {displayLabel}
+                  </button>
+                );
+              })}
             </div>
           )}
           {fieldErrors.category && <p className="mt-1.5 text-xs font-semibold text-amber-600">{fieldErrors.category}</p>}
@@ -473,7 +547,7 @@ export const ProductBasicDetails = memo(function ProductBasicDetails({
           </select>
         </div>
 
-        {/* ÁREA DA DESCRIÇÃO (TEXTO LIVRE DO USUÁRIO) */}
+        {/* ÁREA DA DESCRIÇÃO */}
         <div className="md:col-span-2">
           <div className="mb-1.5 flex items-center justify-between">
             <label className="flex items-center gap-1.5 text-[11px] font-black uppercase text-slate-500">
@@ -497,7 +571,7 @@ export const ProductBasicDetails = memo(function ProductBasicDetails({
             className="min-h-[120px] sm:min-h-[140px] w-full resize-none rounded-[1.25rem] border border-slate-200 bg-slate-50 p-3.5 sm:p-4 text-sm font-semibold text-slate-800 outline-none transition-colors duration-150 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 leading-relaxed"
           />
 
-          {/* BADGES ATIVOS (GERENCIADOS VISUALMENTE) */}
+          {/* BADGES ATIVOS */}
           {orderedSelectedTags.length > 0 && (
             <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
               <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 mr-0.5">
@@ -517,7 +591,7 @@ export const ProductBasicDetails = memo(function ProductBasicDetails({
             </div>
           )}
 
-          {/* ASSISTENTE DE TAGS RÁPIDAS (SELETOR) */}
+          {/* ASSISTENTE DE TAGS RÁPIDAS */}
           <div className="mt-3 flex flex-col gap-2 rounded-2xl border border-slate-200 bg-slate-50/80 p-2.5 sm:p-3">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 border-b border-slate-200/70 pb-2">
               <div className="flex items-center gap-1 text-slate-800">
@@ -527,7 +601,6 @@ export const ProductBasicDetails = memo(function ProductBasicDetails({
                 </span>
               </div>
 
-              {/* Seletor de Abas em Negrito */}
               <div className="flex flex-wrap items-center gap-1">
                 <button
                   type="button"
@@ -577,7 +650,7 @@ export const ProductBasicDetails = memo(function ProductBasicDetails({
               </div>
             </div>
 
-            {/* Chips Rápidos da Aba Ativa */}
+            {/* Chips da Aba Ativa */}
             <div className="flex flex-wrap items-center gap-1 pt-0.5">
               {activeTagItems.map((tag) => {
                 const label = t(tag.labelKey as any, { defaultValue: tag.defaultLabel });
