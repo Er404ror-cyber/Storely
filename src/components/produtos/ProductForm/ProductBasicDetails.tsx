@@ -21,6 +21,17 @@ import { MOCK_GLOBAL_CATEGORIES } from '../componentsPublic/SearchMocks';
 import type { ProductFormData } from '../ProductForm';
 import { useTranslate } from '../../../context/LanguageContext';
 
+// IMPORTAÇÃO DAS CONSTANTES SEPARADAS
+import { 
+  TAB_ORDER, 
+  MULTI_SELECT_TABS, 
+  GROUP_CONFIG, 
+  STATIC_TAG_GROUPS, 
+  ALL_TAGS, 
+  SYSTEM_TAG_LINE_REGEX, 
+  type HelperTab
+} from './productTags'; 
+
 interface ProductBasicDetailsProps {
   formData: ProductFormData;
   setFormData: React.Dispatch<React.SetStateAction<ProductFormData>>;
@@ -31,71 +42,6 @@ interface ProductBasicDetailsProps {
   fieldErrors: Record<string, string>;
   adminStoreId?: string;
 }
-
-type HelperTab = 'audience' | 'sizes' | 'styles' | 'materials' | 'colors';
-
-interface SmartTagDefinition {
-  id: string;
-  labelKey: string;
-  defaultLabel: string;
-  valueKey: string;
-  defaultValue: string;
-  regex: RegExp;
-}
-
-const TAB_ORDER: HelperTab[] = ['audience', 'sizes', 'styles', 'materials', 'colors'];
-
-// Abas de seleção múltipla (Tamanhos, Cores e Material) vs Seleção única (Público e Estilo)
-const MULTI_SELECT_TABS = new Set<HelperTab>(['sizes', 'colors', 'materials']);
-
-const GROUP_CONFIG: Record<HelperTab, { headerKey: string; defaultHeader: string }> = {
-  audience: { headerKey: 'group_header_audience', defaultHeader: 'Público' },
-  sizes: { headerKey: 'group_header_sizes', defaultHeader: 'Tamanhos' },
-  styles: { headerKey: 'group_header_styles', defaultHeader: 'Estilo' },
-  materials: { headerKey: 'group_header_materials', defaultHeader: 'Material' },
-  colors: { headerKey: 'group_header_colors', defaultHeader: 'Cores' },
-};
-
-const STATIC_TAG_GROUPS: Record<HelperTab, SmartTagDefinition[]> = {
-  audience: [
-    { id: 'kids', labelKey: 'quick_tag_kids', defaultLabel: '👶 Criança', valueKey: 'val_kids', defaultValue: 'Infantil (Criança / Bebé)', regex: /\b(criança|crianca|infantil|infantis|bebé|bebe|kids|baby)\b/i },
-    { id: 'women', labelKey: 'quick_tag_women', defaultLabel: '👩 Mulher', valueKey: 'val_women', defaultValue: 'Feminino (Mulher)', regex: /\b(mulher|feminino|feminina|senhora|women)\b/i },
-    { id: 'men', labelKey: 'quick_tag_men', defaultLabel: '👨 Homem', valueKey: 'val_men', defaultValue: 'Masculino (Homem)', regex: /\b(homem|masculino|rapaz|men)\b/i },
-    { id: 'unisex', labelKey: 'quick_tag_unisex', defaultLabel: '✨ Unissexo', valueKey: 'val_unisex', defaultValue: 'Unissexo', regex: /\b(unissexo|unisex)\b/i },
-    { id: 'adult', labelKey: 'quick_tag_adult', defaultLabel: '🧑 Adulto', valueKey: 'val_adult', defaultValue: 'Adulto', regex: /\b(adulto|adultos)\b/i },
-  ],
-  sizes: [
-    { id: 'size_p', labelKey: 'quick_tag_p', defaultLabel: '📏 P', valueKey: 'val_p', defaultValue: 'Tam: P', regex: /\b(?:tamanho|tam|size)\s*[:=]?\s*p\b/i },
-    { id: 'size_m', labelKey: 'quick_tag_m', defaultLabel: '📏 M', valueKey: 'val_m', defaultValue: 'Tam: M', regex: /\b(?:tamanho|tam|size)\s*[:=]?\s*m\b/i },
-    { id: 'size_g', labelKey: 'quick_tag_g', defaultLabel: '📏 G', valueKey: 'val_g', defaultValue: 'Tam: G', regex: /\b(?:tamanho|tam|size)\s*[:=]?\s*g\b/i },
-    { id: 'size_gg', labelKey: 'quick_tag_gg', defaultLabel: '📏 GG', valueKey: 'val_gg', defaultValue: 'Tam: GG', regex: /\b(?:tamanho|tam|size)\s*[:=]?\s*gg\b/i },
-    { id: 'size_onesize', labelKey: 'quick_tag_onesize', defaultLabel: '📏 Único', valueKey: 'val_onesize', defaultValue: 'Tamanho Único', regex: /\b(tamanho único|tamanho unico|one size)\b/i },
-    { id: 'size_plussize', labelKey: 'quick_tag_plussize', defaultLabel: '➕ Plus Size', valueKey: 'val_plussize', defaultValue: 'Plus Size', regex: /\b(plus size|tamanho grande)\b/i },
-  ],
-  styles: [
-    { id: 'casual', labelKey: 'quick_tag_casual', defaultLabel: '👟 Casual', valueKey: 'val_casual', defaultValue: 'Casual / Dia a dia', regex: /\b(casual|streetwear|dia a dia)\b/i },
-    { id: 'social', labelKey: 'quick_tag_social', defaultLabel: '👔 Social', valueKey: 'val_social', defaultValue: 'Social / Trabalho', regex: /\b(social|trabalho|blazer|alfaiataria)\b/i },
-    { id: 'fitness', labelKey: 'quick_tag_fitness', defaultLabel: '⚡ Fitness', valueKey: 'val_fitness', defaultValue: 'Treino / Fitness', regex: /\b(treino|academia|fitness|desporto)\b/i },
-    { id: 'party', labelKey: 'quick_tag_party', defaultLabel: '🎉 Festa', valueKey: 'val_party', defaultValue: 'Festa / Eventos', regex: /\b(festa|evento|casamento)\b/i },
-    { id: 'combo', labelKey: 'quick_tag_combo', defaultLabel: '📦 Kit / Combo', valueKey: 'val_combo', defaultValue: 'Kit / Combo', regex: /\b(kit|combo)\b/i },
-  ],
-  materials: [
-    { id: 'cotton', labelKey: 'quick_tag_cotton', defaultLabel: '🌿 Algodão', valueKey: 'val_cotton', defaultValue: '100% Algodão', regex: /\b(algodao|algodão|cotton)\b/i },
-    { id: 'leather', labelKey: 'quick_tag_leather', defaultLabel: '🧥 Couro', valueKey: 'val_leather', defaultValue: 'Couro / Pele', regex: /\b(couro|pele|leather)\b/i },
-    { id: 'jeans', labelKey: 'quick_tag_jeans', defaultLabel: '👖 Jeans', valueKey: 'val_jeans', defaultValue: 'Jeans / Denim', regex: /\b(jeans|denim|ganga)\b/i },
-  ],
-  colors: [
-    { id: 'black', labelKey: 'quick_tag_black', defaultLabel: '⚫ Preto', valueKey: 'val_black', defaultValue: 'Preto', regex: /\b(preto|preta|black)\b/i },
-    { id: 'white', labelKey: 'quick_tag_white', defaultLabel: '⚪ Branco', valueKey: 'val_white', defaultValue: 'Branco', regex: /\b(branco|branca|white)\b/i },
-    { id: 'blue', labelKey: 'quick_tag_blue', defaultLabel: '🔵 Azul', valueKey: 'val_blue', defaultValue: 'Azul', regex: /\b(azul|blue)\b/i },
-    { id: 'red', labelKey: 'quick_tag_red', defaultLabel: '🔴 Vermelho', valueKey: 'val_red', defaultValue: 'Vermelho', regex: /\b(vermelho|vermelha|red)\b/i },
-    { id: 'pink', labelKey: 'quick_tag_pink', defaultLabel: '🌸 Rosa', valueKey: 'val_pink', defaultValue: 'Rosa', regex: /\b(rosa|pink)\b/i },
-    { id: 'gold', labelKey: 'quick_tag_gold', defaultLabel: '✨ Dourado', valueKey: 'val_gold', defaultValue: 'Dourado', regex: /\b(dourado|dourada|gold)\b/i },
-  ],
-};
-
-const ALL_TAGS = Object.values(STATIC_TAG_GROUPS).flat();
-const SYSTEM_TAG_LINE_REGEX = /^•\s*(Público|Tamanhos?|Estilos?|Materiais?|Material|Cores?|Audience|Sizes?|Styles?|Materials?|Colors?):\s*(.*)$/i;
 
 export const ProductBasicDetails = memo(function ProductBasicDetails({
   formData,
@@ -108,20 +54,19 @@ export const ProductBasicDetails = memo(function ProductBasicDetails({
   adminStoreId,
 }: ProductBasicDetailsProps) {
   const { t } = useTranslate();
-  const [activeTab, setActiveTab] = useState<HelperTab>('audience');
+  const [activeTab, setActiveTab] = useState<HelperTab>('sizes');
 
   const [userText, setUserText] = useState('');
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const isInternalUpdate = useRef(false);
 
-  // 🚀 Resolução universal da categoria pelo searchQuery do MOCK_GLOBAL_CATEGORIES
+  // Resolução universal da categoria
   const selectedCategoryValue = useMemo(() => {
     if (!formData.category) return '';
 
     const rawCategory = formData.category.trim();
     const rawLower = rawCategory.toLowerCase();
 
-    // 1. Procura direta por searchQuery, slug ou nameKey
     const directMatch = MOCK_GLOBAL_CATEGORIES.find(
       c => c.searchQuery.toLowerCase() === rawLower || 
            c.slug.toLowerCase() === rawLower || 
@@ -129,24 +74,21 @@ export const ProductBasicDetails = memo(function ProductBasicDetails({
     );
     if (directMatch) return directMatch.searchQuery;
 
-    // 2. Procura pelo nome traduzido
     const translatedMatch = MOCK_GLOBAL_CATEGORIES.find(c => {
       const translatedName = t(c.nameKey as any);
       return translatedName && translatedName.toLowerCase() === rawLower;
     });
     if (translatedMatch) return translatedMatch.searchQuery;
 
-    // 3. Procura por palavras-chave da categoria
     const keywordMatch = MOCK_GLOBAL_CATEGORIES.find(c =>
       c.keywords.some(k => k.toLowerCase() === rawLower)
     );
     if (keywordMatch) return keywordMatch.searchQuery;
 
-    // 4. Mantém como categoria personalizada
     return rawCategory;
   }, [formData.category, t]);
 
-  // Extrai as tags do sistema da descrição e isola o texto do usuário
+  // Extrai as tags do sistema da descrição
   useEffect(() => {
     if (isInternalUpdate.current) {
       isInternalUpdate.current = false;
@@ -232,7 +174,6 @@ export const ProductBasicDetails = memo(function ProductBasicDetails({
     syncCombinedDescription(finalClean, selectedTagIds);
   }, [selectedTagIds, syncCombinedDescription]);
 
-  // Alternância com trava de seleção única para Público e Estilo
   const handleToggleTag = useCallback((tagId: string) => {
     let targetTab: HelperTab | null = null;
     for (const tab of TAB_ORDER) {
@@ -334,7 +275,31 @@ export const ProductBasicDetails = memo(function ProductBasicDetails({
     };
   }, [priceMajor, priceCents, formData.discount_percent]);
 
-  const activeTagItems = STATIC_TAG_GROUPS[activeTab];
+// 🧠 FILTRO INTELIGENTE: Só mostra as tags que pertencem à categoria selecionada
+const activeTagItems = useMemo(() => {
+  const baseTags = STATIC_TAG_GROUPS[activeTab];
+  
+  // Se não houver categoria escolhida ainda, mostramos apenas as tags Universais ou de Roupa (fallback)
+  if (!selectedCategoryValue) {
+    return baseTags.filter(tag => !tag.categories || tag.categories.includes('clothing'));
+  }
+
+  // Se houver categoria, filtra as tags que têm a categoria na lista (ou que não têm lista = Universais)
+  const filtered = baseTags.filter(tag => 
+    !tag.categories || // Tags Universais (Cores, Combo, etc)
+    tag.categories.length === 0 || 
+    tag.categories.includes(selectedCategoryValue)
+  );
+
+  // Salvaguarda: Se o utilizador escreveu uma categoria personalizada (ex: "Sapatos Mágicos")
+  // e o resultado ficar vazio (só cores), nós revelamos as tags de Roupa como ajuda base.
+  if (filtered.length === baseTags.filter(t => !t.categories).length) {
+    return baseTags.filter(tag => !tag.categories || tag.categories.includes('clothing'));
+  }
+
+  return filtered;
+}, [activeTab, selectedCategoryValue]);
+
 
   const orderedSelectedTags = useMemo(() => {
     const list: Array<{ id: string; label: string; tab: HelperTab }> = [];

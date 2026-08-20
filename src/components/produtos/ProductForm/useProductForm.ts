@@ -43,7 +43,6 @@ export function useProductForm({ productId, isCreating, initialData, onCancel, o
   const [isSyncingPhotos, setIsSyncingPhotos] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
 
-  // Rastreamento estrito de tokens da sessão para prevenção de lixo na nuvem
   const newlyUploadedTokensRef = useRef<Set<string>>(new Set());
   const isSavedRef = useRef(false);
   const isInitializedRef = useRef(false);
@@ -53,7 +52,6 @@ export function useProductForm({ productId, isCreating, initialData, onCancel, o
     return `product-form-tokens:${adminStore?.id || 'no-store'}:${productId || 'new'}`;
   }, [adminStore?.id, productId]);
 
-  // Inicialização estável e única dos dados (evita reset em re-renders do componente pai)
   useEffect(() => {
     if (isInitializedRef.current) return;
     isInitializedRef.current = true;
@@ -70,50 +68,65 @@ export function useProductForm({ productId, isCreating, initialData, onCancel, o
           }
         });
       }
-    } catch (err) {
-      console.warn('[LocalStorage] Restauração de tokens ignorada:', err);
+    } catch {
+      // Ignora falhas de localStorage silenciosamente
     }
 
-    const cleanMain = initialData.main_image?.startsWith('http') ? initialData.main_image : '';
-    const cleanGallery = (initialData.gallery || []).filter(img => Boolean(img) && img.startsWith('http'));
+    let foundCorruptImages = false;
 
-    const mergedImages = [
-      cleanMain,
-      ...cleanGallery.slice(0, PRODUCT_IMAGE_SLOTS - 1),
-    ];
+    const rawImages = [
+      initialData.main_image || '',
+      ...(initialData.gallery || [])
+    ].slice(0, PRODUCT_IMAGE_SLOTS);
 
-    const initialSlots = Array.from({ length: PRODUCT_IMAGE_SLOTS }, (_, i): SlotState => ({
-      ...DEFAULT_SLOT,
-      preview: mergedImages[i] || '',
-      deleteToken: restoredTokens[i] || null,
-    }));
+    const initialSlots = Array.from({ length: PRODUCT_IMAGE_SLOTS }, (_, i): SlotState => {
+      const url = rawImages[i] || '';
+      
+      // Deteta erros graves gravados da base de dados (não têm ficheiro atrelado na memória atual)
+      const isLegacyLocal = url.startsWith('blob:') || url.startsWith('data:');
+      
+      if (isLegacyLocal && url) {
+        foundCorruptImages = true;
+      }
+
+      return {
+        ...DEFAULT_SLOT,
+        preview: url,
+        deleteToken: restoredTokens[i] || null,
+        error: isLegacyLocal ? t('product_form_image_corrupt_hint', { defaultValue: 'Inválido' }) : '',
+      };
+    });
 
     setSlots(initialSlots);
 
-    const filledCount = mergedImages.filter(Boolean).length;
+    // Aviso visual se houver lixo da BD
+    if (foundCorruptImages) {
+      setTimeout(() => {
+        toast.error(t('product_form_orphan_global_alert_desc', { defaultValue: 'Fotos inválidas detetadas (invisíveis para clientes). Apague ou substitua as fotos a vermelho.' }), { duration: 6000 });
+      }, 500);
+    }
+
+    const filledCount = rawImages.filter(Boolean).length;
     setVisibleCount(Math.min(PRODUCT_IMAGE_SLOTS, Math.max(2, filledCount + 1)));
 
     const parsed = splitPrice(initialData.price);
     setPriceMajor(parsed.major || '');
     setPriceCents(parsed.cents === '00' ? '' : parsed.cents);
-  }, [initialData, storageKey]);
+  }, [initialData, storageKey, t]);
 
-  // Sincronização do preço
   useEffect(() => {
     const centsForSave = priceCents === '' ? '00' : priceCents.padEnd(2, '0').slice(0, 2);
     setFormData(prev => ({ ...prev, price: composePrice(priceMajor, centsForSave) }));
   }, [priceMajor, priceCents]);
 
-  // Persistência segura de tokens no localStorage
   useEffect(() => {
     const tokensToSave = slots
       .map((s, slot) => s.deleteToken ? { slot, token: s.deleteToken, savedAt: Date.now() } : null)
       .filter(Boolean);
-
-    try {
-      window.localStorage.setItem(storageKey, JSON.stringify(tokensToSave));
-    } catch (err) {
-      console.warn('[LocalStorage] Falha ao persistir tokens:', err);
+    try { 
+      window.localStorage.setItem(storageKey, JSON.stringify(tokensToSave)); 
+    } catch {
+      // Ignora falhas de gravação (ex: modo incógnito)
     }
   }, [slots, storageKey]);
 
@@ -121,32 +134,21 @@ export function useProductForm({ productId, isCreating, initialData, onCancel, o
     latestSlots.current = slots;
   }, [slots]);
 
-  // Limpeza de recursos e fotos órfãs na desmontagem do componente
   useEffect(() => {
     const newlyUploadedTokens = newlyUploadedTokensRef.current;
-
     return () => {
-      // Se a página for fechada/navegada sem salvar, remove os arquivos recém-enviados do Cloudinary
       if (!isSavedRef.current && newlyUploadedTokens.size > 0) {
-        console.log(`[Cloudinary Cleanup] Fechamento sem salvar. Limpando ${newlyUploadedTokens.size} foto(s)...`);
-        newlyUploadedTokens.forEach(token => {
-          deleteFromCloudinary(token)
-            .then(() => console.log(`[Cloudinary Cleanup] Foto apagada: ${token}`))
-            .catch(err => console.error(`[Cloudinary Cleanup] Erro ao apagar foto: ${token}`, err));
-        });
+        newlyUploadedTokens.forEach(token => deleteFromCloudinary(token).catch(() => {}));
         newlyUploadedTokens.clear();
       }
-
-      // Libera memória de ObjectURLs
       latestSlots.current.forEach(s => { 
-        if (s.preview.startsWith('blob:')) {
-          URL.revokeObjectURL(s.preview);
-        }
+        if (s.preview.startsWith('blob:')) URL.revokeObjectURL(s.preview);
       });
     };
   }, []);
 
   const updateSlot = useCallback((index: number, partial: Partial<SlotState>) => {
+    // Usamos setState com callback para garantir que a atualização não baralha em redes lentas
     setSlots(prev => {
       const next = [...prev];
       next[index] = { ...next[index], ...partial };
@@ -154,7 +156,11 @@ export function useProductForm({ productId, isCreating, initialData, onCancel, o
     });
   }, []);
 
-  // Upload com tratamento de conexões instáveis
+  // INTERCETOR DE ERROS DE IMAGEM DA UI
+  const handleImageError = useCallback((index: number) => {
+    updateSlot(index, { error: t('product_form_image_corrupt_hint', { defaultValue: 'Invisível p/ clientes. Substitua.' }) });
+  }, [updateSlot, t]);
+
   const handleFileSelect = useCallback(async (file: File | undefined, index: number) => {
     if (!file || slots[index].isProcessing) return;
 
@@ -163,13 +169,9 @@ export function useProductForm({ productId, isCreating, initialData, onCancel, o
       return;
     }
 
-    // Se já havia uma imagem na nuvem no mesmo slot nesta sessão, remove a anterior
     if (slots[index].deleteToken) {
       const oldToken = slots[index].deleteToken!;
-      console.log(`[Cloudinary] Substituição. Apagando foto anterior: ${oldToken}`);
-      deleteFromCloudinary(oldToken)
-        .then(() => console.log(`[Cloudinary] Foto anterior removida: ${oldToken}`))
-        .catch(err => console.error(`[Cloudinary] Erro ao remover anterior:`, err));
+      deleteFromCloudinary(oldToken).catch(() => {});
       newlyUploadedTokensRef.current.delete(oldToken);
     }
 
@@ -202,7 +204,6 @@ export function useProductForm({ productId, isCreating, initialData, onCancel, o
 
       if (uploaded?.delete_token) {
         newlyUploadedTokensRef.current.add(uploaded.delete_token);
-        console.log(`[Cloudinary] Nova foto registrada: ${uploaded.delete_token}`);
       }
 
       updateSlot(index, {
@@ -213,15 +214,14 @@ export function useProductForm({ productId, isCreating, initialData, onCancel, o
         error: '',
       });
     } catch {
-      // Conexão lenta/falha: preserva o arquivo local para possibilitar retry via botão de sincronização
+      // Se falhar a conexão, guarda o File e o preview local na memória. "hasPendingUploads" garante que Sincronizar resolva.
       updateSlot(index, {
         isProcessing: false,
-        error: t('product_form_upload_error', { defaultValue: 'Falha no envio. Clique em Sincronizar.' }),
+        error: t('product_form_upload_error', { defaultValue: 'Falha no envio.' }),
       });
     }
   }, [slots, visibleCount, updateSlot, t]);
 
-  // Remoção individual
   const removePhoto = useCallback(async (index: number) => {
     if (slots[index].isProcessing) return;
 
@@ -230,19 +230,14 @@ export function useProductForm({ productId, isCreating, initialData, onCancel, o
 
     try {
       if (deleteToken) {
-        console.log(`[Cloudinary] Removendo foto individual: ${deleteToken}`);
-        const result = await deleteFromCloudinary(deleteToken);
+        await deleteFromCloudinary(deleteToken);
         newlyUploadedTokensRef.current.delete(deleteToken);
-        if (result?.ok) {
-          toast.success(t('product_form_photo_removed_cloud'));
-        } else {
-          toast.error(t('product_form_photo_removed_cloud_failed'));
-        }
+        toast.success(t('product_form_photo_removed_cloud'));
       } else if (file) {
         toast.success(t('product_form_photo_removed'));
       }
-    } catch (err) {
-      console.error(`[Cloudinary] Erro ao remover foto:`, err);
+    } catch {
+      // Retirado o (err) para resolver o aviso do ESLint
       toast.error(t('product_form_photo_removed_cloud_failed'));
     } finally {
       if (preview.startsWith('blob:')) URL.revokeObjectURL(preview);
@@ -260,50 +255,65 @@ export function useProductForm({ productId, isCreating, initialData, onCancel, o
     }
   }, [slots, updateSlot, t]);
 
-  // Sincronização manual em lote
   const handleSyncPhotos = async () => {
     setIsSyncingPhotos(true);
     let successCount = 0;
 
-    const promises = slots.map(async (slot, index) => {
-      if (!slot.file) return null;
-      updateSlot(index, { isProcessing: true, error: '' });
-      try {
-        const uploaded = await uploadToCloudinary(slot.file);
-        const permanentUrl = uploaded?.url;
-        if (!permanentUrl) throw new Error();
-        return { index, uploaded, permanentUrl };
-      } catch {
-        updateSlot(index, { error: t('product_form_upload_error'), isProcessing: false });
-        return null;
-      }
-    });
+    const pendingUploads = slots
+      .map((slot, index) => ({ slot, index }))
+      .filter(item => item.slot.file !== null);
 
-    const results = await Promise.all(promises);
+    if (pendingUploads.length === 0) {
+      setIsSyncingPhotos(false);
+      return;
+    }
 
     setSlots(prev => {
       const next = [...prev];
-      results.forEach(res => {
-        if (!res) return;
-        successCount++;
-        const { index, uploaded, permanentUrl } = res;
-        
-        if (next[index].preview.startsWith('blob:')) {
-          URL.revokeObjectURL(next[index].preview);
-        }
-        
-        if (uploaded?.delete_token) {
-          newlyUploadedTokensRef.current.add(uploaded.delete_token);
-        }
+      pendingUploads.forEach(({ index }) => {
+        next[index] = { ...next[index], isProcessing: true, error: '' };
+      });
+      return next;
+    });
 
-        next[index] = {
-          ...next[index],
-          preview: permanentUrl,
-          deleteToken: uploaded.delete_token ?? null,
-          file: null,
-          isProcessing: false,
-          error: '',
-        };
+    const results = await Promise.all(
+      pendingUploads.map(async ({ slot, index }) => {
+        try {
+          const uploaded = await uploadToCloudinary(slot.file!);
+          if (!uploaded?.url) throw new Error();
+          return { index, success: true, url: uploaded.url, deleteToken: uploaded.delete_token };
+        } catch {
+          return { index, success: false };
+        }
+      })
+    );
+
+    // Único bloco update state após promises, garantindo que não há corrupção se a internet estiver lenta
+    setSlots(prev => {
+      const next = [...prev];
+      results.forEach(res => {
+        const { index } = res;
+        if (res.success) {
+          successCount++;
+          if (next[index].preview.startsWith('blob:')) {
+            URL.revokeObjectURL(next[index].preview);
+          }
+          if (res.deleteToken) newlyUploadedTokensRef.current.add(res.deleteToken);
+          next[index] = {
+            ...next[index],
+            preview: res.url!,
+            deleteToken: res.deleteToken ?? null,
+            file: null,
+            isProcessing: false,
+            error: '',
+          };
+        } else {
+          next[index] = {
+            ...next[index],
+            isProcessing: false,
+            error: t('product_form_upload_error', { defaultValue: 'Falha.' }),
+          };
+        }
       });
       return next;
     });
@@ -314,68 +324,56 @@ export function useProductForm({ productId, isCreating, initialData, onCancel, o
     setIsSyncingPhotos(false);
   };
 
-  // Cancelamento com limpeza assíncrona garantida e estado de carregamento
   const handleCancel = useCallback(async () => {
     setIsCancelling(true);
     try {
       const tokensToDelete = Array.from(newlyUploadedTokensRef.current);
-      
       if (tokensToDelete.length > 0) {
-        console.log(`[Cloudinary Cancel] Cancelando. Removendo ${tokensToDelete.length} foto(s)...`);
-        await Promise.allSettled(
-          tokensToDelete.map(async (token) => {
-            try {
-              await deleteFromCloudinary(token);
-              console.log(`[Cloudinary Cancel] Foto apagada: ${token}`);
-            } catch (err) {
-              console.error(`[Cloudinary Cancel] Falha ao apagar: ${token}`, err);
-            }
-          })
-        );
+        await Promise.allSettled(tokensToDelete.map(token => deleteFromCloudinary(token)));
         newlyUploadedTokensRef.current.clear();
       }
-
-      // Revoga blobs locais
       latestSlots.current.forEach(s => {
-        if (s.preview.startsWith('blob:')) {
-          URL.revokeObjectURL(s.preview);
-        }
+        if (s.preview.startsWith('blob:')) URL.revokeObjectURL(s.preview);
       });
-
       if (isCreating) {
-        try {
-          window.localStorage.removeItem(storageKey);
-        } catch (err) {
-          console.warn('[LocalStorage] Erro ao limpar storageKey:', err);
-        }
+        try { window.localStorage.removeItem(storageKey); } catch { /* ignore */ }
       }
-
       onCancel?.();
     } finally {
       setIsCancelling(false);
     }
   }, [onCancel, isCreating, storageKey]);
 
-  const hasPendingUploads = slots.some(s => s.file !== null || (s.preview.startsWith('blob:') && !s.isProcessing));
-  const hasOrphanBlobs = slots.some(s => s.preview.startsWith('blob:') && s.file === null);
-  const hasAnyLocalBlob = slots.some(s => s.preview.startsWith('blob:'));
+  // VALIDAÇÕES INFALÍVEIS
+  const hasPendingUploads = slots.some(s => s.file !== null);
+  const hasAnyLocalBlob = slots.some(s => s.preview.startsWith('blob:') || s.preview.startsWith('data:'));
+  // Um "Orphan Blob" é qualquer blob/data que esteja na lista mas NÃO exista na memória temporária do utilizador (file === null)
+  const hasOrphanBlobs = slots.some(s => (s.preview.startsWith('blob:') || s.preview.startsWith('data:')) && s.file === null);
+  
+  // Deteção global de links quebrados (seja órfão local, ou erro de rede 404 marcado pela UI)
+  const hasBrokenImages = hasOrphanBlobs || slots.some(s => Boolean(s.error));
   const isAnyProcessing = slots.some(s => s.isProcessing);
 
   const fieldErrors = useMemo(() => {
     const name = formData.name.trim().length === 0 ? t('product_form_error_name_required') : formData.name.trim().length < 2 ? t('product_form_error_name_short') : '';
     const category = formData.category.trim().length === 0 ? t('product_form_error_category_required') : '';
     const price = !formData.price ? t('product_form_error_price_required') : Number(formData.price) <= 0 ? t('product_form_error_price_invalid') : '';
-    const cover = !slots[0].preview || slots[0].preview.startsWith('blob:') ? t('product_form_error_cover_required') : '';
-    const images = slots.some(s => Boolean(s.error)) ? t('product_form_error_images_invalid') : '';
+    
+    // Regra Rígida de Cover e Imagens
+    const cover = !slots[0].preview || !slots[0].preview.startsWith('http') ? t('product_form_error_cover_required') : '';
+    const images = hasBrokenImages ? t('product_form_error_images_invalid') : '';
+    
     return { name, category, price, cover, images };
-  }, [formData, slots, t]);
+  }, [formData, slots, hasBrokenImages, t]);
 
+  // BLOQUEIO TOTAL
   const canSave = !fieldErrors.name && 
     !fieldErrors.category && 
     !fieldErrors.price && 
     !fieldErrors.cover && 
     !fieldErrors.images && 
     !hasAnyLocalBlob && 
+    !hasBrokenImages && 
     !isAnyProcessing && 
     !isSyncingPhotos &&
     !isCancelling;
@@ -383,10 +381,16 @@ export function useProductForm({ productId, isCreating, initialData, onCancel, o
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!adminStore?.id) throw new Error(t('product_form_store_not_found'));
-      if (hasAnyLocalBlob || hasPendingUploads) {
-        throw new Error(t('product_form_blobs_prevent_save', { defaultValue: 'Existem fotos pendentes de envio. Sincronize as fotos antes de salvar.' }));
+      
+      // BARREIRAS DE SANITIZAÇÃO ABSOLUTA (Double check)
+      if (hasBrokenImages) {
+        throw new Error(t('product_form_orphan_blob_prevent_save', { defaultValue: 'Não é possível guardar. Substitua as fotos danificadas (a vermelho) primeiro.' }));
+      }
+      if (hasPendingUploads) {
+        throw new Error(t('product_form_blobs_prevent_save', { defaultValue: 'Existem fotos pendentes de envio. Sincronize antes de salvar.' }));
       }
 
+      // FILTRAGEM SEGURA (Garante que só links da nuvem entram na base de dados, prevenindo lixo acidental)
       const validMainImage = slots[0].preview.startsWith('http') ? slots[0].preview : '';
       const validGallery = slots.slice(1).map(s => s.preview).filter(url => Boolean(url) && url.startsWith('http'));
 
@@ -404,8 +408,8 @@ export function useProductForm({ productId, isCreating, initialData, onCancel, o
         price: Number(normalizePriceString(formData.price)),
         unit: formData.unit.trim() || 'un',
         full_description: formData.full_description.trim(),
-        main_image: validMainImage,
-        gallery: validGallery,
+        main_image: validMainImage, // Link totalmente seguro
+        gallery: validGallery,      // Array de links totalmente seguros
         store_id: adminStore.id,
         discount_percent: safeDiscountPercent,
       };
@@ -458,6 +462,7 @@ export function useProductForm({ productId, isCreating, initialData, onCancel, o
     removePhoto,
     handleSyncPhotos,
     handleCancel,
+    handleImageError,
     saveMutation,
     adminStore,
   };

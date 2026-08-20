@@ -2232,6 +2232,219 @@ network_restored_desc: "Data loaded and connection speed normalized.",
 network_close_aria: "Close network alert",
 
 swipe_down_to_close: "Swipe down",
+
+
+
+
+
+  product_form_image_corrupt_hint: "Invisible to customers. Replace.",
+  product_form_image_local_only: "Local",
+  product_form_image_not_saved: "Not saved to cloud",
+  product_form_orphan_global_alert: "Action Required",
+  product_form_orphan_global_alert_desc: "Corrupted photos detected (invisible to customers). Delete or replace the red photos before saving.",
+  product_form_orphan_blob_prevent_save: "Cannot save. Replace the corrupted photos (in red) first.",
+
+
+
+
+
+
+
+
+  // Audience
+  quick_tag_baby: "🍼 Baby",
+  val_baby: "Baby / Newborn",
+  quick_tag_teen: "🛹 Teen",
+  val_teen: "Teenager",
+ 
+  quick_tag_maternity: "🤰 Maternity",
+  val_maternity: "Maternity",
+
+  // Sizes
+  quick_tag_xs: "📏 XS",
+  val_xs: "Size: XS",
+  quick_tag_s: "📏 S",
+  val_s: "Size: S",
+ 
+  quick_tag_l: "📏 L",
+  val_l: "Size: L",
+  quick_tag_xl: "📏 XL",
+  val_xl: "Size: XL",
+  quick_tag_xxl: "📏 XXL",
+  val_xxl: "Size: XXL",
+  quick_tag_3xl: "📏 3XL",
+  val_3xl: "Size: 3XL",
+
+ 
+  quick_tag_minimalist: "⚪ Minimalist",
+  val_minimalist: "Minimalist",
+  quick_tag_vintage: "📻 Vintage",
+  val_vintage: "Vintage / Retro",
+  quick_tag_elegant: "💎 Elegant",
+  val_elegant: "Elegant / Chic",
+
+  quick_tag_polyester: "🧵 Polyester",
+  val_polyester: "Polyester",
+  quick_tag_linen: "🌾 Linen",
+  val_linen: "Linen",
+  quick_tag_silk: "🦋 Silk",
+  val_silk: "Silk",
+  quick_tag_wool: "🐑 Wool",
+  val_wool: "Wool / Knit",
+
+  quick_tag_viscose: "🌬️ Viscose",
+  val_viscose: "Viscose",
+  quick_tag_elastane: "🤸 Elastane",
+  val_elastane: "Elastane / Spandex",
+  quick_tag_velvet: "🍷 Velvet",
+  val_velvet: "Velvet",
+
+
+  quick_tag_grey: "🔘 Grey",
+  val_grey: "Grey / Silver",
+  quick_tag_beige: "🟤 Beige",
+  val_beige: "Beige / Nude",
+  quick_tag_brown: "🟫 Brown",
+  val_brown: "Brown",
+
+  quick_tag_green: "🟢 Green",
+  val_green: "Green",
+  quick_tag_yellow: "🟡 Yellow",
+  val_yellow: "Yellow",
+  quick_tag_orange: "🟠 Orange",
+  val_orange: "Orange",
+  quick_tag_purple: "🟣 Purple",
+  val_purple: "Purple / Lilac",
+
+  quick_tag_multicolor: "🌈 Pattern",
+  val_multicolor: "Multicolor / Pattern",
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+  quick_tag_gamers: "🎮 Gamers",
+  val_gamers: "Gamers",
+  quick_tag_professionals: "💼 Professionals",
+  val_professionals: "Professional Use",
+  quick_tag_dogs: "🐶 Dogs",
+  val_dogs: "For Dogs",
+  quick_tag_cats: "🐱 Cats",
+  val_cats: "For Cats",
+  quick_tag_birthday: "🎂 Birthday",
+  val_birthday: "Birthday / Party",
+  quick_tag_wedding: "💍 Wedding",
+  val_wedding: "Wedding / Engagement",
+  quick_tag_gift: "🎁 Gift",
+  val_gift: "Perfect for Gifting",
+
+ 
+  quick_tag_mini: "🧁 Mini / Bento",
+  val_mini: "Mini / Bento Cake",
+  quick_tag_slice: "🍰 Slice",
+  val_slice: "Slice / Piece",
+  quick_tag_500g: "⚖️ 500g",
+  val_500g: "Approx. 500g",
+  quick_tag_1kg: "⚖️ 1 Kg",
+  val_1kg: "Approx. 1 Kg",
+  quick_tag_2kg: "⚖️ 2 Kg",
+  val_2kg: "Approx. 2 Kg",
+  quick_tag_10p: "👥 10 Servings",
+  val_10p: "Serves ~10 People",
+  quick_tag_30ml: "💧 30ml",
+  val_30ml: "30ml",
+  quick_tag_50ml: "💧 50ml",
+  val_50ml: "50ml",
+  quick_tag_100ml: "💧 100ml",
+  val_100ml: "100ml",
+  quick_tag_500ml: "💧 500ml",
+  val_500ml: "500ml",
+  quick_tag_64gb: "💾 64GB",
+  val_64gb: "64GB",
+  quick_tag_128gb: "💾 128GB",
+  val_128gb: "128GB",
+  quick_tag_256gb: "💾 256GB",
+  val_256gb: "256GB",
+  quick_tag_512gb: "💾 512GB",
+  val_512gb: "512GB",
+  quick_tag_1tb: "💾 1TB",
+  val_1tb: "1TB",
+  quick_tag_a4: "📄 A4",
+  val_a4: "A4 Size",
+  quick_tag_a3: "📄 A3",
+  val_a3: "A3 Size",
+
+ 
+  quick_tag_homemade: "🏠 Homemade",
+  val_homemade: "Homemade / Artisanal",
+  quick_tag_gourmet: "✨ Gourmet",
+  val_gourmet: "Gourmet",
+  quick_tag_vegan: "🌱 Vegan",
+  val_vegan: "Vegan / Plant-based",
+  quick_tag_gluten_free: "🌾 Gluten Free",
+  val_gluten_free: "Gluten Free",
+  quick_tag_sugar_free: "🚫 Sugar Free",
+  val_sugar_free: "Diet / Sugar Free",
+  quick_tag_organic: "🌿 Organic",
+  val_organic: "Organic / Natural",
+  quick_tag_new: "🆕 New",
+  val_new: "New / Sealed",
+  quick_tag_used: "♻️ Used",
+  val_used: "Used / Pre-owned",
+  quick_tag_refurbished: "🔧 Refurbished",
+  val_refurbished: "Refurbished",
+
+
+  quick_tag_chocolate: "🍫 Chocolate",
+  val_chocolate: "Chocolate / Cocoa",
+  quick_tag_vanilla: "🍦 Vanilla",
+  val_vanilla: "Vanilla",
+  quick_tag_strawberry: "🍓 Strawberry",
+  val_strawberry: "Strawberry",
+  quick_tag_red_velvet: "🍰 Red Velvet",
+  val_red_velvet: "Red Velvet",
+  quick_tag_fruits: "🍒 Fruits",
+  val_fruits: "Fruits / Tropical",
+  quick_tag_caramel: "🍯 Caramel",
+  val_caramel: "Caramel / Dulce de Leche",
+  quick_tag_nuts: "🥜 Nuts/Peanuts",
+  val_nuts: "Nuts / Peanuts / Crunchy",
+  quick_tag_savory: "🧀 Savory",
+  val_savory: "Savory / Cheese",
+  quick_tag_plastic: "🛢️ Plastic",
+  val_plastic: "ABS Plastic",
+  quick_tag_metal: "🔩 Metal",
+  val_metal: "Metal / Steel",
+  quick_tag_aluminum: "⚙️ Aluminum",
+  val_aluminum: "Aluminum",
+  quick_tag_glass: "🪟 Glass",
+  val_glass: "Glass / Crystal",
+  quick_tag_wood: "🪵 Wood",
+  val_wood: "Solid Wood",
+  quick_tag_resin: "💧 Resin",
+  val_resin: "Resin",
+  quick_tag_silicone: "🧪 Silicone",
+  val_silicone: "Silicone",
+  quick_tag_gold_mat: "✨ Gold",
+  val_gold_mat: "18k Gold",
+  quick_tag_silver_mat: "💍 Silver",
+  val_silver_mat: "925 Silver",
+  quick_tag_stainless: "🛡️ Stainless Steel",
+  val_stainless: "Stainless Steel",
+
+  
+  quick_tag_transparent: "🫥 Transparent",
+  val_transparent: "Transparent / Clear",
+  
+
   },
 
 
@@ -4502,6 +4715,227 @@ network_restored_title: "Conexão restabelecida",
 network_restored_desc: "Dados carregados e velocidade normalizada.",
 network_close_aria: "Fechar aviso de rede",
 swipe_down_to_close: "Deslize para baixo",
+
+
+
+
+
+
+
+  product_form_image_corrupt_hint: "Invisível p/ clientes. Substitua.",
+  product_form_image_local_only: "Local",
+  product_form_image_not_saved: "Não salvo na nuvem",
+  product_form_orphan_global_alert: "Ação Necessária",
+  product_form_orphan_global_alert_desc: "Fotos danificadas detetadas (invisíveis para clientes). Apague ou substitua as fotos a vermelho antes de salvar.",
+  product_form_orphan_blob_prevent_save: "Não é possível guardar. Substitua as fotos danificadas (a vermelho) primeiro.",
+
+
+
+
+
+
+
+
+
+  quick_tag_baby: "🍼 Bebé",
+  val_baby: "Bebé / Recém-nascido",
+  
+  quick_tag_teen: "🛹 Jovem",
+  val_teen: "Jovem / Adolescente",
+
+  quick_tag_maternity: "🤰 Grávida",
+  val_maternity: "Maternidade / Grávida",
+
+  // Tamanhos
+  quick_tag_xs: "📏 PP / XS",
+  val_xs: "Tam: PP (XS)",
+  quick_tag_s: "📏 P / S",
+  val_s: "Tam: P (S)",
+
+  quick_tag_l: "📏 G / L",
+  val_l: "Tam: G (L)",
+  quick_tag_xl: "📏 GG / XL",
+  val_xl: "Tam: GG (XL)",
+  quick_tag_xxl: "📏 XG / XXL",
+  val_xxl: "Tam: XG (XXL)",
+  quick_tag_3xl: "📏 XXG / 3XL",
+  val_3xl: "Tam: XXG (3XL)",
+
+
+  
+  quick_tag_minimalist: "⚪ Minimalista",
+  val_minimalist: "Minimalista",
+  quick_tag_vintage: "📻 Vintage",
+  val_vintage: "Vintage / Retrô",
+  quick_tag_elegant: "💎 Elegante",
+  val_elegant: "Elegante / Chic",
+ 
+
+  quick_tag_polyester: "🧵 Poliéster",
+  val_polyester: "Poliéster",
+  quick_tag_linen: "🌾 Linho",
+  val_linen: "Linho",
+  quick_tag_silk: "🦋 Seda",
+  val_silk: "Seda",
+  quick_tag_wool: "🐑 Lã",
+  val_wool: "Lã / Tricô",
+  
+  quick_tag_viscose: "🌬️ Viscose",
+  val_viscose: "Viscose",
+  quick_tag_elastane: "🤸 Elastano",
+  val_elastane: "Elastano / Lycra",
+  quick_tag_velvet: "🍷 Veludo",
+  val_velvet: "Veludo",
+
+
+  quick_tag_grey: "🔘 Cinza",
+  val_grey: "Cinza / Prata",
+  quick_tag_beige: "🟤 Bege",
+  val_beige: "Bege / Nude",
+  quick_tag_brown: "🟫 Marrom",
+  val_brown: "Marrom / Castanho",
+
+  quick_tag_green: "🟢 Verde",
+  val_green: "Verde",
+  quick_tag_yellow: "🟡 Amarelo",
+  val_yellow: "Amarelo",
+  quick_tag_orange: "🟠 Laranja",
+  val_orange: "Laranja",
+  quick_tag_purple: "🟣 Roxo",
+  val_purple: "Roxo / Lilás",
+  quick_tag_multicolor: "🌈 Estampado",
+  val_multicolor: "Multicolorido / Estampado",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+  quick_tag_gamers: "🎮 Gamers",
+  val_gamers: "Gamers",
+  quick_tag_professionals: "💼 Profissionais",
+  val_professionals: "Uso Profissional",
+  quick_tag_dogs: "🐶 Cães",
+  val_dogs: "Para Cães",
+  quick_tag_cats: "🐱 Gatos",
+  val_cats: "Para Gatos",
+  quick_tag_birthday: "🎂 Aniversário",
+  val_birthday: "Aniversário / Festa",
+  quick_tag_wedding: "💍 Casamento",
+  val_wedding: "Casamento / Noivado",
+  quick_tag_gift: "🎁 Presente",
+  val_gift: "Ideal para Presente",
+
+
+  quick_tag_mini: "🧁 Mini / Bento",
+  val_mini: "Mini / Bento Cake",
+  quick_tag_slice: "🍰 Fatia",
+  val_slice: "Fatia / Pedaço",
+  quick_tag_500g: "⚖️ 500g",
+  val_500g: "Aprox. 500g",
+  quick_tag_1kg: "⚖️ 1 Kg",
+  val_1kg: "Aprox. 1 Kg",
+  quick_tag_2kg: "⚖️ 2 Kg",
+  val_2kg: "Aprox. 2 Kg",
+  quick_tag_10p: "👥 10 Pessoas",
+  val_10p: "Serve ~10 Pessoas",
+  quick_tag_30ml: "💧 30ml",
+  val_30ml: "30ml",
+  quick_tag_50ml: "💧 50ml",
+  val_50ml: "50ml",
+  quick_tag_100ml: "💧 100ml",
+  val_100ml: "100ml",
+  quick_tag_500ml: "💧 500ml",
+  val_500ml: "500ml",
+  quick_tag_64gb: "💾 64GB",
+  val_64gb: "64GB",
+  quick_tag_128gb: "💾 128GB",
+  val_128gb: "128GB",
+  quick_tag_256gb: "💾 256GB",
+  val_256gb: "256GB",
+  quick_tag_512gb: "💾 512GB",
+  val_512gb: "512GB",
+  quick_tag_1tb: "💾 1TB",
+  val_1tb: "1TB",
+  quick_tag_a4: "📄 A4",
+  val_a4: "Formato A4",
+  quick_tag_a3: "📄 A3",
+  val_a3: "Formato A3",
+
+  
+  quick_tag_homemade: "🏠 Caseiro",
+  val_homemade: "Caseiro / Artesanal",
+  quick_tag_gourmet: "✨ Gourmet",
+  val_gourmet: "Gourmet",
+  quick_tag_vegan: "🌱 Vegano",
+  val_vegan: "Vegano / Plant-based",
+  quick_tag_gluten_free: "🌾 Sem Glúten",
+  val_gluten_free: "Sem Glúten",
+  quick_tag_sugar_free: "🚫 Zero Açúcar",
+  val_sugar_free: "Diet / Zero Açúcar",
+  quick_tag_organic: "🌿 Orgânico",
+  val_organic: "Orgânico / Natural",
+  quick_tag_new: "🆕 Novo",
+  val_new: "Novo / Lacrado",
+  quick_tag_used: "♻️ Usado",
+  val_used: "Usado / Semi-novo",
+  quick_tag_refurbished: "🔧 Recondicionado",
+  val_refurbished: "Recondicionado",
+
+
+  quick_tag_chocolate: "🍫 Chocolate",
+  val_chocolate: "Chocolate / Cacau",
+  quick_tag_vanilla: "🍦 Baunilha",
+  val_vanilla: "Baunilha",
+  quick_tag_strawberry: "🍓 Morango",
+  val_strawberry: "Morango",
+  quick_tag_red_velvet: "🍰 Red Velvet",
+  val_red_velvet: "Red Velvet",
+  quick_tag_fruits: "🍒 Frutas",
+  val_fruits: "Frutas / Tropical",
+  quick_tag_caramel: "🍯 Doce de Leite",
+  val_caramel: "Doce de Leite / Caramelo",
+  quick_tag_nuts: "🥜 Nozes/Amendoim",
+  val_nuts: "Nozes / Amendoim / Crocante",
+  quick_tag_savory: "🧀 Salgado",
+  val_savory: "Salgado / Queijo",
+  quick_tag_plastic: "🛢️ Plástico",
+  val_plastic: "Plástico ABS",
+  quick_tag_metal: "🔩 Metal",
+  val_metal: "Metal / Aço",
+  quick_tag_aluminum: "⚙️ Alumínio",
+  val_aluminum: "Alumínio",
+  quick_tag_glass: "🪟 Vidro",
+  val_glass: "Vidro / Cristal",
+  quick_tag_wood: "🪵 Madeira",
+  val_wood: "Madeira Maciça",
+  quick_tag_resin: "💧 Resina",
+  val_resin: "Resina",
+  quick_tag_silicone: "🧪 Silicone",
+  val_silicone: "Silicone",
+  quick_tag_gold_mat: "✨ Ouro",
+  val_gold_mat: "Ouro 18k",
+  quick_tag_silver_mat: "💍 Prata",
+  val_silver_mat: "Prata 925",
+  quick_tag_stainless: "🛡️ Aço Inox",
+  val_stainless: "Aço Inoxidável",
+
+ 
+  quick_tag_transparent: "🫥 Transparente",
+  val_transparent: "Transparente / Claro",
+
 
 }
 
