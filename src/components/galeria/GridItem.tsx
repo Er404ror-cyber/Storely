@@ -49,11 +49,10 @@ const GridItemComponent = ({
     
     if (cols === '2') {
       return index === 0 
-        ? 'col-span-2 row-span-3 md:col-span-2 md:row-span-3 h-full' 
+        ? 'col-span-2 row-span-3 md:col-span-2 md:row-span-3 h-full min-h-[200px]' 
         : 'col-span-1 aspect-[6/5] md:aspect-[6/5]';
     }
 
-    // CORREÇÃO AQUI: break-inside-avoid mais forte e margem mb-3 para casar com o gap-3 do container
     return 'break-inside-avoid inline-block w-full mb-3 min-h-[100px] h-auto';
   }, [cols, index]);
 
@@ -106,7 +105,6 @@ const GridItemComponent = ({
       onDragLeave={isEditable ? handleDragLeave : undefined}
       onDrop={isEditable ? handleDrop : undefined}
       onClick={handleInteraction}
-      // CORREÇÃO AQUI: Adicionado transform-gpu e will-change-transform para evitar os cards fantasmas
       className={`relative rounded-2xl overflow-hidden group border border-zinc-600/60 dark:border-zinc-800/50 
         cursor-pointer bg-zinc-200 dark:bg-zinc-900 
         transition-colors duration-200 ease-in-out
@@ -119,10 +117,12 @@ const GridItemComponent = ({
         ${isTooLarge && isEditable && !isSelected ? 'ring-2 ring-red-500' : ''}
         ${itemClass}
       `}
+      style={{ contain: 'layout paint' }}
     >
       <div className={`${isPinterest ? 'relative w-full' : 'absolute inset-0'} pointer-events-none flex items-center justify-center`}>
         <MediaRenderer
           media={{ url: item.url, type: item.type }}
+          isEditable={isEditable}
           className={`w-full block ${isPinterest ? 'h-auto object-contain' : 'h-full object-cover'}`}
         />
       </div>
@@ -175,7 +175,9 @@ export const GridItem = memo(GridItemComponent, (prev, next) => {
   if (wasSelected !== isSelected) return false; 
   
   return (
-    prev.item === next.item &&
+    prev.item.url === next.item.url &&
+    prev.item.size === next.item.size &&
+    prev.item.type === next.item.type &&
     prev.cols === next.cols &&
     prev.isEditable === next.isEditable &&
     prev.index === next.index

@@ -12,7 +12,7 @@ export function EmptyPages({ onCreateClick, isSearching }: EmptyPagesProps) {
   return (
     <div className="flex flex-col items-center justify-center py-20 px-6 text-center animate-in fade-in zoom-in-95 duration-700">
       <div className="relative mb-8">
-        <div className="absolute inset-0 bg-indigo-500/10 blur-3xl rounded-full scale-150" />
+        <div className="absolute inset-0 bg-indigo-500/10  rounded-full scale-150" />
         <div className="relative bg-white p-8 rounded-[40px] shadow-2xl shadow-indigo-100 border border-slate-50">
           <Rocket size={48} className="text-indigo-600 animate-bounce-slow" />
         </div>
