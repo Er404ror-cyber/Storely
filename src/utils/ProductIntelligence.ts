@@ -1,5 +1,7 @@
 import { useCallback } from "react";
 import { useTranslate } from "../context/LanguageContext";
+// 👇 IMPORTAÇÃO CORRIGIDA: Adicionada a tipagem SmartTagDefinition
+import { STATIC_TAG_GROUPS, type SmartTagDefinition } from "../components/produtos/ProductForm/productTags";
 
 export interface MockCategory {
   nameKey: string;
@@ -147,14 +149,14 @@ const SUB_CATEGORY_RULES = [
 
 // MATERIAIS SEGUROS (Validam no título ou em composição explícita)
 const SAFE_MATERIAL_MAP = [
-  { labelKey: "Couro", regex: /\b(couro|pele|leather)\b/i },
-  { labelKey: "Jeans", regex: /\b(calca jeans|calça jeans|jaqueta jeans|short jeans|bermuda jeans|saia jeans|vestido jeans|em jeans|de jeans|100% jeans|denim|ganga)\b/i },
-  { labelKey: "Algodão", regex: /\b(100% algodao|100% algodão|puro algodao|cotton|tecido algodao)\b/i }
+  { labelKey: "Couro / Pele", regex: /\b(couro|pele|leather)\b/i },
+  { labelKey: "Jeans / Denim", regex: /\b(calca jeans|calça jeans|jaqueta jeans|short jeans|bermuda jeans|saia jeans|vestido jeans|em jeans|de jeans|100% jeans|denim|ganga)\b/i },
+  { labelKey: "100% Algodão", regex: /\b(100% algodao|100% algodão|puro algodao|cotton|tecido algodao)\b/i }
 ];
 
 // 4. DICIONÁRIO MULTILÍNGUE COMPLETO (PT / EN)
 const TRANSLATION_MAP: Record<string, { pt: string; en: string }> = {
-  // Públicos
+  // Públicos Originais
   "Criança": { pt: "Criança", en: "Kids" },
   "Crianças": { pt: "Criança", en: "Kids" },
   "Kids": { pt: "Criança", en: "Kids" },
@@ -167,6 +169,93 @@ const TRANSLATION_MAP: Record<string, { pt: string; en: string }> = {
   "Men": { pt: "Homem", en: "Men" },
   "Unissexo": { pt: "Unissexo", en: "Unisex" },
   "Unisex": { pt: "Unissexo", en: "Unisex" },
+  
+  // Novas Tradução das Tags Dinâmicas (productTags)
+  "Bebé / Recém-nascido": { pt: "Bebé / Recém-nascido", en: "Baby / Newborn" },
+  "Infantil (Criança)": { pt: "Infantil (Criança)", en: "Kids / Children" },
+  "Jovem / Adolescente": { pt: "Jovem / Adolescente", en: "Teenager" },
+  "Feminino (Mulher)": { pt: "Feminino (Mulher)", en: "Women's" },
+  "Masculino (Homem)": { pt: "Masculino (Homem)", en: "Men's" },
+  "Unissexo / Geral": { pt: "Unissexo / Geral", en: "Unisex / General" },
+  "Adulto": { pt: "Adulto", en: "Adult" },
+  "Maternidade / Grávida": { pt: "Maternidade / Grávida", en: "Maternity" },
+  "Gamers": { pt: "Gamers", en: "Gamers" },
+  "Uso Profissional": { pt: "Uso Profissional", en: "Professional Use" },
+  "Para Cães": { pt: "Para Cães", en: "For Dogs" },
+  "Para Gatos": { pt: "Para Gatos", en: "For Cats" },
+  "Aniversário / Festa": { pt: "Aniversário / Festa", en: "Birthday / Party" },
+  "Casamento / Noivado": { pt: "Casamento / Noivado", en: "Wedding / Engagement" },
+  "Ideal para Presente": { pt: "Ideal para Presente", en: "Perfect for Gifting" },
+  "Tam: PP (XS)": { pt: "Tam: PP (XS)", en: "Size: XS" },
+  "Tam: P (S)": { pt: "Tam: P (S)", en: "Size: S" },
+  "Tam: M": { pt: "Tam: M", en: "Size: M" },
+  "Tam: G (L)": { pt: "Tam: G (L)", en: "Size: L" },
+  "Tam: GG (XL)": { pt: "Tam: GG (XL)", en: "Size: XL" },
+  "Tam: XG (XXL)": { pt: "Tam: XG (XXL)", en: "Size: XXL" },
+  "Tam: XXG (3XL)": { pt: "Tam: XXG (3XL)", en: "Size: 3XL" },
+  "Tamanho Único": { pt: "Tamanho Único", en: "One Size" },
+  "Plus Size": { pt: "Plus Size", en: "Plus Size" },
+  "Mini / Bento Cake": { pt: "Mini / Bento Cake", en: "Mini / Bento Cake" },
+  "Fatia / Pedaço": { pt: "Fatia / Pedaço", en: "Slice / Piece" },
+  "Aprox. 500g": { pt: "Aprox. 500g", en: "Approx. 500g" },
+  "Aprox. 1 Kg": { pt: "Aprox. 1 Kg", en: "Approx. 1 Kg" },
+  "Aprox. 2 Kg": { pt: "Aprox. 2 Kg", en: "Approx. 2 Kg" },
+  "Serve ~10 Pessoas": { pt: "Serve ~10 Pessoas", en: "Serves ~10 People" },
+  "30ml": { pt: "30ml", en: "30ml" },
+  "50ml": { pt: "50ml", en: "50ml" },
+  "100ml": { pt: "100ml", en: "100ml" },
+  "500ml": { pt: "500ml", en: "500ml" },
+  "64GB": { pt: "64GB", en: "64GB" },
+  "128GB": { pt: "128GB", en: "128GB" },
+  "256GB": { pt: "256GB", en: "256GB" },
+  "512GB": { pt: "512GB", en: "512GB" },
+  "1TB": { pt: "1TB", en: "1TB" },
+  "Formato A4": { pt: "Formato A4", en: "A4 Size" },
+  "Formato A3": { pt: "Formato A3", en: "A3 Size" },
+  "Casual / Dia a dia": { pt: "Casual / Dia a dia", en: "Casual / Everyday" },
+  "Social / Trabalho": { pt: "Social / Trabalho", en: "Formal / Work" },
+  "Treino / Fitness": { pt: "Treino / Fitness", en: "Workout / Fitness" },
+  "Festa / Noite": { pt: "Festa / Noite", en: "Party / Night out" },
+  "Minimalista": { pt: "Minimalista", en: "Minimalist" },
+  "Vintage / Retrô": { pt: "Vintage / Retrô", en: "Vintage / Retro" },
+  "Elegante / Premium": { pt: "Elegante / Premium", en: "Elegant / Premium" },
+  "Caseiro / Artesanal": { pt: "Caseiro / Artesanal", en: "Homemade / Artisanal" },
+  "Gourmet": { pt: "Gourmet", en: "Gourmet" },
+  "Vegano / Plant-based": { pt: "Vegano / Plant-based", en: "Vegan / Plant-based" },
+  "Sem Glúten": { pt: "Sem Glúten", en: "Gluten Free" },
+  "Diet / Zero Açúcar": { pt: "Diet / Zero Açúcar", en: "Diet / Sugar Free" },
+  "Orgânico / Natural": { pt: "Orgânico / Natural", en: "Organic / Natural" },
+  "Novo / Lacrado": { pt: "Novo / Lacrado", en: "New / Sealed" },
+  "Usado / Semi-novo": { pt: "Usado / Semi-novo", en: "Used / Pre-owned" },
+  "Recondicionado": { pt: "Recondicionado", en: "Refurbished" },
+  "100% Algodão": { pt: "100% Algodão", en: "100% Cotton" },
+  "Poliéster": { pt: "Poliéster", en: "Polyester" },
+  "Linho": { pt: "Linho", en: "Linen" },
+  "Seda": { pt: "Seda", en: "Silk" },
+  "Lã / Tricô": { pt: "Lã / Tricô", en: "Wool / Knit" },
+  "Couro / Pele": { pt: "Couro / Pele", en: "Leather" },
+  "Jeans / Denim": { pt: "Jeans / Denim", en: "Jeans / Denim" },
+  "Viscose": { pt: "Viscose", en: "Viscose" },
+  "Elastano / Lycra": { pt: "Elastano / Lycra", en: "Elastane / Spandex" },
+  "Veludo": { pt: "Veludo", en: "Velvet" },
+  "Chocolate / Cacau": { pt: "Chocolate / Cacau", en: "Chocolate / Cocoa" },
+  "Baunilha": { pt: "Baunilha", en: "Vanilla" },
+  "Morango": { pt: "Morango", en: "Strawberry" },
+  "Red Velvet": { pt: "Red Velvet", en: "Red Velvet" },
+  "Frutas / Tropical": { pt: "Frutas / Tropical", en: "Fruits / Tropical" },
+  "Doce de Leite / Caramelo": { pt: "Doce de Leite / Caramelo", en: "Caramel / Dulce de Leche" },
+  "Nozes / Amendoim / Crocante": { pt: "Nozes / Amendoim / Crocante", en: "Nuts / Peanuts / Crunchy" },
+  "Salgado / Queijo": { pt: "Salgado / Queijo", en: "Savory / Cheese" },
+  "Plástico ABS": { pt: "Plástico ABS", en: "ABS Plastic" },
+  "Metal / Aço": { pt: "Metal / Aço", en: "Metal / Steel" },
+  "Alumínio": { pt: "Alumínio", en: "Aluminum" },
+  "Vidro / Cristal": { pt: "Vidro / Cristal", en: "Glass / Crystal" },
+  "Madeira Maciça": { pt: "Madeira Maciça", en: "Solid Wood" },
+  "Resina": { pt: "Resina", en: "Resin" },
+  "Silicone": { pt: "Silicone", en: "Silicone" },
+  "Ouro 18k": { pt: "Ouro 18k", en: "18k Gold" },
+  "Prata 925": { pt: "Prata 925", en: "925 Silver" },
+  "Aço Inoxidável": { pt: "Aço Inoxidável", en: "Stainless Steel" },
   
   // Categorias Principais
   "Tecnologia": { pt: "Tecnologia", en: "Technology" },
@@ -242,9 +331,6 @@ const TRANSLATION_MAP: Record<string, { pt: string; en: string }> = {
   "Acessórios e Brinquedos Pet": { pt: "Acessórios e Brinquedos Pet", en: "Pet Toys & Gear" },
   "Ferramentas Elétricas e Manuais": { pt: "Ferramentas Elétricas e Manuais", en: "Power & Hand Tools" },
   "Construção e Tintas": { pt: "Construção e Tintas", en: "Construction & Paints" },
-  "Couro": { pt: "Couro", en: "Leather" },
-  "Jeans": { pt: "Jeans", en: "Denim" },
-  "Algodão": { pt: "Algodão", en: "Cotton" },
   "Tam: Único": { pt: "Tam: Único", en: "Size: One Size" }
 };
 
@@ -276,7 +362,7 @@ class UniqueTagManager {
 }
 
 /**
- * MOTOR PRINCIPAL DE INTELIGÊNCIA
+ * MOTOR PRINCIPAL DE INTELIGÊNCIA (USADO NO DASHBOARD/ADMIN PARA GERAR METADADOS)
  */
 export function useProductIntelligence() {
   const { language } = useTranslate();
@@ -426,11 +512,22 @@ export function useProductIntelligence() {
       const translatedDisplayCategory = translateTag(displayCategory);
       const translatedGender = translateTag(finalGender);
 
-      // ATRIBUTOS ENRIQUECIDOS SEGUROS
+      // ATRIBUTOS ENRIQUECIDOS SEGUROS (INTEGRAÇÃO COM AS NOVAS TAGS SMART)
       const attributesManager = new UniqueTagManager();
+      
+      // 1. Atríbutos Base Antigos
       SAFE_MATERIAL_MAP.forEach(attr => {
         if (attr.regex.test(titleText) || (attr.regex.test(descText) && !/\b(combina|usar|vestir|com)\s+/i.test(descText))) {
           attributesManager.add(translateTag(attr.labelKey));
+        }
+      });
+
+      // 2. Novos Atributos Smart (Estilos, Condições, Sabores, Materiais)
+      const smartTags: SmartTagDefinition[] = [...STATIC_TAG_GROUPS.materials, ...STATIC_TAG_GROUPS.styles];
+      smartTags.forEach((tag) => {
+        if (tag.regex.test(titleText) || tag.regex.test(descText)) {
+          const translated = TRANSLATION_MAP[tag.defaultValue] ? TRANSLATION_MAP[tag.defaultValue][targetLang] : tag.defaultValue;
+          attributesManager.add(translated);
         }
       });
 
@@ -442,7 +539,7 @@ export function useProductIntelligence() {
           parentCategory: translatedParentCategory,
           subCategory: translatedSubCategory,
           gender: translatedGender, 
-          sizes: [], // 🚀 Não julga tamanhos
+          sizes: [], // Não julga tamanhos na base de dados
           attributes: attributesManager.values()
         } 
       };
@@ -453,7 +550,7 @@ export function useProductIntelligence() {
 }
 
 /**
- * EXTRAÇÃO RÁPIDA DE TAGS (SHORT-CIRCUIT) - SEM JULGAR TAMANHOS E SEM FALHAS EM CRIANÇAS
+ * EXTRAÇÃO RÁPIDA DE TAGS (SHORT-CIRCUIT) - EXIBIDA NA LOJA PÚBLICA
  */
 export function enrichProductsWithSubcategories(products: any[], lang: "pt" | "en" = "pt") {
   if (!products || !Array.isArray(products)) return [];
@@ -523,9 +620,33 @@ export function enrichProductsWithSubcategories(products: any[], lang: "pt" | "e
       tagsManager.add(TRANSLATION_MAP["Criança"][lang]);
     }
 
+    // 🚀 INTEGRAÇÃO COM AS NOVAS TAGS SMART (Tamanhos, Capacidades, Dietas, Sabores)
+    const extractSmartTags = (text: string) => {
+      const allSmartTags = Object.values(STATIC_TAG_GROUPS).flat() as SmartTagDefinition[];
+      allSmartTags.forEach((tag) => {
+        if (tag.regex.test(text)) {
+           // Encontra a tradução baseada na defaultValue pura
+           const translatedText = TRANSLATION_MAP[tag.defaultValue] ? TRANSLATION_MAP[tag.defaultValue][lang] : tag.defaultValue;
+           // Isola o ícone emoji para manter a beleza na montra
+           const emoji = tag.defaultLabel.split(' ')[0];
+           tagsManager.add(`${emoji} ${translatedText}`);
+        }
+      });
+    };
+    
+    extractSmartTags(fullText);
+
+    // Mantém a extração crua de tamanhos de numeração manual ex: Tam: 38 (como fallback)
+    const sizeRegex = /\b(?:tamanho|tam|size)\s*[:=]?\s*([3-5][0-9])\b/gi;
+    let match;
+    while ((match = sizeRegex.exec(fullText)) !== null) {
+      const extractedSize = match[1].toUpperCase();
+      tagsManager.add(lang === "en" ? `Size: ${extractedSize}` : `Tam: ${extractedSize}`);
+    }
+
     return { 
       ...product, 
-      displayTags: tagsManager.values() // 🚀 Tags 100% limpas sem extração arbitrária de tamanhos
+      displayTags: tagsManager.values() // Tags 100% limpas sem duplicados e extraídas automaticamente
     };
   });
 }

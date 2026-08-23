@@ -329,7 +329,8 @@ section_precos_moderno: "Pricing Table",
 section_estatisticas_larga: "Statistics",
 modal_library_subtitle: "Select a block to build",
 
-
+view_table: "Table",
+view_grid: "Grid",
 
 
   action_new_product: "New Product",
@@ -4936,7 +4937,8 @@ swipe_down_to_close: "Deslize para baixo",
   quick_tag_transparent: "🫥 Transparente",
   val_transparent: "Transparente / Claro",
 
-
+  view_table: "Tabela",
+  view_grid: "Grade",
 }
 
 

@@ -20,7 +20,7 @@ export type StoreCachePayload = {
   signature: string;
 };
 
-export const STORE_CACHE_TTL = 1000 * 60 * 60 * 4; // 4 Horas
+export const STORE_CACHE_TTL = 1000 * 60 * 60 * 12;
 const STORE_CACHE_VERSION = 4;
 
 export function getCacheKey(slug?: string): string {

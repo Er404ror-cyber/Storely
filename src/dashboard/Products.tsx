@@ -1,71 +1,82 @@
-import { useCallback, memo } from 'react';
+import { useCallback, memo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Loader2, Search, Package, X, Boxes, PauseCircle, LayoutGrid, Table, Inbox } from 'lucide-react';
+import { Plus, Loader2, Search, Package, X, Boxes, PauseCircle, LayoutGrid, Table, Inbox, Settings2 } from 'lucide-react';
 
 import { useTranslate } from '../context/LanguageContext';
 import { useProductsLogic } from '../components/produtos/componentsAdmim/useProductsLogic';
 import { useCurrencyLogic } from '../components/produtos/componentsAdmim/useCurrencyLogic';
 import type { Product } from '../types/productsListTypes';
 
-// Componentes da Interface
 import { CurrencySection } from '../components/produtos/componentsAdmim/CurrencySection';
 import { ProgressGuide } from '../components/produtos/componentsAdmim/ProgressGuide';
 import { SectionHeader } from '../components/produtos/componentsAdmim/SectionHeader';
 import { ProductCard } from '../components/produtos/componentsAdmim/ProductCard';
 import { ProductTable } from '../components/produtos/componentsAdmim/ProductTable';
-import { StatCard } from '../components/produtos/componentsAdmim/StatCard';
 import { ConfirmDeleteModal } from '../components/produtos/componentsAdmim/ConfirmDeleteModal';
 import { ProductDetails } from './ProdutcsDetails';
+import { VisualStatsDashboard } from '../components/produtos/componentsAdmim/VisualStats';
 
-// OTIMIZAÇÃO: Componente de Loading leve
 const LoadingState = memo(({ t }: { t: any }) => (
-  <div className="flex flex-col items-center justify-center py-20 opacity-70">
-    <Loader2 className="animate-spin text-blue-600 mb-4" size={32} />
-    <p className="text-sm font-semibold text-slate-500">{t('loading_engine') || 'Carregando produtos...'}</p>
+  <div className="flex flex-col items-center justify-center py-24 opacity-85">
+    <div className="rounded-[20px] bg-white p-4 shadow-[0_8px_30px_-8px_rgba(0,0,0,0.06)] mb-4">
+      <Loader2 className="animate-spin text-blue-600" size={28} />
+    </div>
+    <p className="text-[12px] font-black uppercase tracking-[0.2em] text-slate-400">
+      {t('loading_engine', { defaultValue: 'A carregar catálogo...' })}
+    </p>
   </div>
 ));
 LoadingState.displayName = 'LoadingState';
 
-// OTIMIZAÇÃO: Componente de "Vazio" direto no ficheiro (ou podes usar o teu importado)
 const EmptyProducts = memo(({ onAdd, t }: { onAdd: () => void, t: any }) => (
-  <div className="flex flex-col items-center justify-center rounded-3xl border border-slate-200 border-dashed bg-white py-16 px-6 text-center shadow-sm">
-    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-blue-600 mb-4">
-      <Inbox size={28} />
+  <div className="flex flex-col items-center justify-center rounded-[32px] bg-white py-14 px-6 text-center shadow-[0_4px_25px_-5px_rgba(0,0,0,0.04)]">
+    <div className="flex h-20 w-20 items-center justify-center rounded-[24px] bg-blue-50 text-blue-600 shadow-[inset_0_2px_8px_rgba(0,0,0,0.04)] mb-5">
+      <Inbox size={36} strokeWidth={2} />
     </div>
-    <h3 className="text-lg font-black text-slate-900 mb-2">{t('empty_products_title') || 'Nenhum produto encontrado'}</h3>
-    <p className="text-sm text-slate-500 max-w-md mb-6">
-      {t('empty_products_desc') || 'Comece a construir o seu catálogo adicionando o seu primeiro produto à loja.'}
+    <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mb-2">
+      {t('empty_products_title', { defaultValue: 'O seu inventário está vazio' })}
+    </h3>
+    <p className="text-[13px] text-slate-500 max-w-sm mb-8 leading-relaxed">
+      {t('empty_products_desc', { defaultValue: 'Adicione o seu primeiro produto para começar a vender.' })}
     </p>
     <button 
       onClick={onAdd}
-      className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-blue-600 px-6 text-[12px] font-black uppercase tracking-[0.1em] text-white transition hover:bg-blue-700 shadow-md shadow-blue-500/20"
+      className="inline-flex h-14 items-center justify-center gap-2 rounded-[18px] bg-blue-600 px-8 text-[12px] font-black uppercase tracking-[0.2em] text-white shadow-[0_8px_25px_-5px_rgba(37,99,235,0.4)] transition-transform hover:-translate-y-1 active:scale-95"
     >
-      <Plus size={16} />{t('btn_new_product')}
+      <Plus size={18} strokeWidth={3} />
+      {t('btn_new_product', { defaultValue: 'Novo Produto' })}
     </button>
   </div>
 ));
 EmptyProducts.displayName = 'EmptyProducts';
 
+// ============================================================================
+// COMPONENTE PRINCIPAL
+// ============================================================================
+
 export function ProductsList() {
   const { t, language } = useTranslate();
   const navigate = useNavigate();
   
-  // 1. Cérebro dos Produtos
   const { state, actions, status } = useProductsLogic(language, t);
   const { store, isLoadingStore, isAdding, searchTerm, layoutMode, isMobile, filteredProducts, deleteTarget, products } = state;
-
-  // 2. Cérebro da Moeda
   const currency = useCurrencyLogic(store, language, t, products.length > 0);
 
-  // =======================================================================
-  // OTIMIZAÇÃO DE CPU: Callbacks fixos para evitar Garbage Collection
-  // =======================================================================
+  // Botão "Scroll to Management"
+  const settingsSectionRef = useRef<HTMLDivElement>(null);
+  const scrollToSettings = useCallback(() => {
+    if (settingsSectionRef.current) {
+      settingsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
   const handleAddProductClick = useCallback(() => actions.setIsAdding(true), [actions]);
   const handleCloseAddProduct = useCallback(() => actions.setIsAdding(false), [actions]);
   const handleSetTableMode = useCallback(() => actions.setLayoutMode('table'), [actions]);
   const handleSetGridMode = useCallback(() => actions.setLayoutMode('grid'), [actions]);
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => actions.setSearchTerm(e.target.value), [actions]);
   const handleCloseDelete = useCallback(() => actions.setDeleteTarget(null), [actions]);
+  
   const handleConfirmDelete = useCallback(() => {
     if (deleteTarget?.id) actions.deleteProduct(deleteTarget.id);
   }, [deleteTarget, actions]);
@@ -77,164 +88,253 @@ export function ProductsList() {
     });
   }, [navigate, store]);
 
-  // Loading principal da loja
   if (isLoadingStore || !store) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
         <Loader2 className="animate-spin text-blue-600" size={32} />
       </div>
     );
   }
 
-  // Cálculos de estado visual
   const hasProducts = products.length > 0;
   const isLoadingProducts = state.isLoadingProducts;
-    const activeProducts = filteredProducts.filter(p => p.is_active);
+  const activeProducts = filteredProducts.filter(p => p.is_active);
   const pausedProducts = filteredProducts.filter(p => !p.is_active);
 
-  // Botão reutilizável memoizado via variável
-  const addButton = (
-    <button 
-      onClick={handleAddProductClick} 
-      className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 text-[11px] font-black uppercase tracking-[0.1em] text-white transition hover:bg-blue-700 shadow-sm"
-    >
-      <Plus size={14} />{t('btn_new_product')}
-    </button>
-  );
+  // Condições separadas
+  const hasCurrencySet = Boolean(currency.backendCurrency);
+  const showCurrencyOnTop = !hasCurrencySet;
+  const showGuideOnTop = !currency.hasCompletedGuide;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-700 antialiased">
-      <main className="mx-auto w-full max-w-7xl px-3 py-3 sm:px-4 md:px-6 md:py-6 xl:px-8">
-        <div className="space-y-3 md:space-y-4">
-          
-          {/* HEADER PRINCIPAL */}
-          <section className="rounded-3xl border border-slate-200 bg-white p-3 shadow-sm md:p-4 contain-layout">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white">
-                  <Package size={17} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.12em] text-blue-600">{store.name}</p>
-                  <h1 className="text-base font-black text-slate-900">{t('inventory_title')}</h1>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 self-end sm:self-center">
-                {!isMobile && hasProducts && (
-                  <div className="flex gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
-                    <button onClick={handleSetTableMode} className={`p-2 rounded-lg transition-colors ${layoutMode === 'table' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`} aria-label="Modo Tabela"><Table size={15} /></button>
-                    <button onClick={handleSetGridMode} className={`p-2 rounded-lg transition-colors ${layoutMode === 'grid' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`} aria-label="Modo Grid"><LayoutGrid size={15} /></button>
-                  </div>
-                )}
-                {hasProducts && addButton}
-              </div>
+    <div className="min-h-[100dvh] bg-slate-50/80 text-slate-800 antialiased selection:bg-blue-200">
+      <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 md:py-8 lg:px-8 flex flex-col gap-8">
+        
+        {/* ========================================================= */}
+        {/* TOPO: DIRETO AO ASSUNTO                                   */}
+        {/* ========================================================= */}
+        <section className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 bg-transparent">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] bg-slate-900 text-white shadow-[0_8px_20px_rgba(15,23,42,0.15)]">
+              <Package size={22} strokeWidth={2} />
             </div>
-          </section>
+            <div className="flex flex-col min-w-0 justify-center">
+              <p className="truncate text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">
+                {store.name}
+              </p>
+              <h1 className="truncate text-2xl sm:text-3xl font-black tracking-tight text-slate-900 leading-none mt-1">
+                {t('inventory_title', { defaultValue: 'Inventário' })}
+              </h1>
+            </div>
+          </div>
 
-          {/* SECÇÃO DE MOEDA */}
-          <CurrencySection {...currency.currencyProps} t={t} />
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            {hasProducts && (hasCurrencySet || currency.hasCompletedGuide) && (
+              <button 
+                onClick={scrollToSettings}
+                className="w-full sm:w-auto inline-flex h-14 items-center justify-center gap-2 rounded-[18px] bg-white border border-slate-100 px-6 text-[12px] font-black uppercase tracking-[0.1em] text-slate-600 shadow-[0_4px_15px_rgba(0,0,0,0.03)] transition-colors hover:bg-slate-50 active:scale-95 shrink-0"
+              >
+                <Settings2 size={16} strokeWidth={2.5} />
+                {t('currency_label', { defaultValue: 'Gerir Loja' })}
+              </button>
+            )}
 
-          {!currency.hasCompletedGuide && (
+            <button 
+              onClick={handleAddProductClick} 
+              className="w-full sm:w-auto inline-flex h-14 items-center justify-center gap-2 rounded-[18px] bg-blue-600 px-8 text-[12px] font-black uppercase tracking-[0.15em] text-white shadow-[0_6px_20px_-5px_rgba(37,99,235,0.4)] transition-transform hover:-translate-y-0.5 hover:shadow-[0_12px_25px_-5px_rgba(37,99,235,0.5)] active:scale-95 shrink-0"
+            >
+              <Plus size={18} strokeWidth={3} />
+              {t('btn_new_product', { defaultValue: 'Novo Produto' })}
+            </button>
+          </div>
+        </section>
+
+        {/* ========================================================= */}
+        {/* SEÇÃO DA MOEDA NO TOPO (Apenas se NÃO definida)            */}
+        {/* ========================================================= */}
+        {showCurrencyOnTop && (
+          <div className="flex flex-col gap-6 w-full bg-white p-6 rounded-[28px] border border-blue-100 shadow-[0_4px_25px_rgba(37,99,235,0.06)]">
+            <CurrencySection {...currency.currencyProps} t={t} />
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* GUIA DE PROGRESSO NO TOPO (Apenas se NÃO concluído)         */}
+        {/* ========================================================= */}
+        {showGuideOnTop && (
+          <div className="w-full">
             <ProgressGuide hasCurrency={!!currency.backendCurrency} hasProducts={hasProducts} t={t} />
-          )}
+          </div>
+        )}
 
-          {/* OTIMIZAÇÃO: Só renderiza o resto se tivermos produtos ou se estiver carregando */}
-          {isLoadingProducts ? (
-            <LoadingState t={t} />
-          ) : !hasProducts ? (
-            <EmptyProducts onAdd={handleAddProductClick} t={t} />
-          ) : (
-            <>
-              {/* BARRA DE PESQUISA */}
-              <section className="rounded-3xl border border-slate-200 bg-white p-3 shadow-sm md:p-4 flex gap-3 flex-col sm:flex-row contain-layout">
-                <div className="relative w-full sm:max-w-md">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" size={15} />
-                  <input 
-                    type="text" 
-                    placeholder={t('placeholder_search')} 
-                    value={searchTerm} 
-                    onChange={handleSearchChange}
-                    className="h-10 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm font-semibold outline-none transition focus:border-blue-500 focus:bg-white"
-                  />
-                </div>
-              </section>
+        {/* ========================================================= */}
+        {/* BARRA DE PESQUISA & VISUALIZAÇÃO                            */}
+        {/* ========================================================= */}
+        {hasProducts && (
+          <section className="flex flex-col sm:flex-row items-center gap-3 rounded-[24px] sm:rounded-[28px] bg-white p-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-100/50">
+            <div className="relative w-full flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input 
+                type="text" 
+                placeholder={t('placeholder_search', { defaultValue: 'Pesquisar produtos...' })} 
+                value={searchTerm} 
+                onChange={handleSearchChange}
+                className="h-12 w-full rounded-[18px] bg-slate-50/50 pl-12 pr-4 text-[16px] sm:text-[14px] font-bold text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:bg-slate-50 focus:shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]"
+              />
+            </div>
 
-              {/* MENSAGEM PESQUISA VAZIA */}
-              {searchTerm && filteredProducts.length === 0 && (
-                <div className="py-10 text-center text-slate-500 text-sm font-semibold">
-                  {t('no_search_results') || 'Nenhum produto encontrado para esta pesquisa.'}
-                </div>
-              )}
+            {!isMobile && (
+              <div className="flex gap-1.5 rounded-[18px] bg-slate-50 p-1.5 shrink-0">
+                <button 
+                  onClick={handleSetTableMode} 
+                  className={`flex items-center gap-2 h-10 px-4 rounded-[14px] text-[11px] font-black uppercase tracking-wider transition-all ${layoutMode === 'table' ? 'bg-white text-blue-600 shadow-[0_2px_10px_rgba(0,0,0,0.04)]' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100/50'}`}
+                >
+                  <Table size={16} strokeWidth={2.5} /> {t('view_table', { defaultValue: 'Tabela' })}
+                </button>
+                <button 
+                  onClick={handleSetGridMode} 
+                  className={`flex items-center gap-2 h-10 px-4 rounded-[14px] text-[11px] font-black uppercase tracking-wider transition-all ${layoutMode === 'grid' ? 'bg-white text-blue-600 shadow-[0_2px_10px_rgba(0,0,0,0.04)]' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100/50'}`}
+                >
+                  <LayoutGrid size={16} strokeWidth={2.5} /> {t('view_grid', { defaultValue: 'Grade' })}
+                </button>
+              </div>
+            )}
+          </section>
+        )}
 
-              {/* LISTA PRODUTOS ATIVOS */}
-              {activeProducts.length > 0 && (
-                <div className="content-visibility-auto space-y-2"> {/* Alivia a GPU e CPU forçando lazy render do CSS */}
-                  <SectionHeader icon={<Boxes size={17} />} title={t('active_products_title')} count={activeProducts.length} action={addButton} />
-                  {layoutMode === 'table' ? (
+        {/* ========================================================= */}
+        {/* O CATÁLOGO (Lazy Loaded Content)                          */}
+        {/* ========================================================= */}
+        {isLoadingProducts ? (
+          <LoadingState t={t} />
+        ) : !hasProducts ? (
+          <EmptyProducts onAdd={handleAddProductClick} t={t} />
+        ) : (
+          <div className="flex flex-col gap-6">
+            
+            {searchTerm && filteredProducts.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 opacity-60">
+                <Search size={40} className="text-slate-300 mb-4" />
+                <p className="text-[14px] font-bold text-slate-500">
+                  {t('no_search_results', { defaultValue: 'Nenhum resultado encontrado.' })}
+                </p>
+              </div>
+            )}
+
+            {activeProducts.length > 0 && (
+              <div className="content-visibility-auto space-y-4">
+                <SectionHeader icon={<Boxes size={18} />} title={t('active_products_title', { defaultValue: 'Produtos Ativos' })} count={activeProducts.length} />
+                
+                {layoutMode === 'table' ? (
+                  <div className="rounded-[24px] bg-white shadow-[0_4px_25px_rgba(0,0,0,0.03)] border border-slate-100/50 overflow-hidden transform-gpu">
                     <ProductTable 
                       products={activeProducts} storeCurrency={currency.storeCurrency} togglePending={status.isToggling}
                       onClick={handleEditProduct} onToggle={actions.toggleProduct} onDelete={actions.setDeleteTarget} t={t} 
                     />
-                  ) : (
-                    <section className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                      {activeProducts.map(p => (
-                        <ProductCard 
-                          key={p.id} product={p} storeCurrency={currency.storeCurrency} togglePending={status.isToggling}
-                          onClick={() => handleEditProduct(p)} onToggle={() => actions.toggleProduct(p)} onDelete={() => actions.setDeleteTarget(p)} t={t} 
-                        />
-                      ))}
-                    </section>
-                  )}
-                </div>
-              )}
+                  </div>
+                ) : (
+                  <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {activeProducts.map(p => (
+                      <ProductCard 
+                        key={p.id} product={p} storeCurrency={currency.storeCurrency} togglePending={status.isToggling}
+                        onClick={() => handleEditProduct(p)} onToggle={() => actions.toggleProduct(p)} onDelete={() => actions.setDeleteTarget(p)} t={t} 
+                      />
+                    ))}
+                  </section>
+                )}
+              </div>
+            )}
 
-              {/* LISTA PRODUTOS PAUSADOS */}
-              {pausedProducts.length > 0 && (
-                <div className="opacity-80 content-visibility-auto space-y-2 mt-6">
-                  <SectionHeader icon={<PauseCircle size={17} />} title={t('paused_products_title')} count={pausedProducts.length} action={addButton} />
-                  {layoutMode === 'table' ? (
+            {pausedProducts.length > 0 && (
+              <div className="opacity-80 hover:opacity-100 transition-opacity content-visibility-auto space-y-4 mt-2">
+                <SectionHeader icon={<PauseCircle size={18} />} title={t('paused_products_title', { defaultValue: 'Produtos Pausados' })} count={pausedProducts.length} />
+                
+                {layoutMode === 'table' ? (
+                  <div className="rounded-[24px] bg-white p-2 shadow-[0_4px_25px_rgba(0,0,0,0.03)] border border-slate-100/50 overflow-hidden transform-gpu">
                     <ProductTable 
                       products={pausedProducts} storeCurrency={currency.storeCurrency} togglePending={status.isToggling}
                       onClick={handleEditProduct} onToggle={actions.toggleProduct} onDelete={actions.setDeleteTarget} t={t} 
                     />
-                  ) : (
-                    <section className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                      {pausedProducts.map(p => (
-                        <ProductCard 
-                          key={p.id} product={p} storeCurrency={currency.storeCurrency} togglePending={status.isToggling}
-                          onClick={() => handleEditProduct(p)} onToggle={() => actions.toggleProduct(p)} onDelete={() => actions.setDeleteTarget(p)} t={t} 
-                        />
-                      ))}
-                    </section>
-                  )}
-                </div>
-              )}
+                  </div>
+                ) : (
+                  <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {pausedProducts.map(p => (
+                      <ProductCard 
+                        key={p.id} product={p} storeCurrency={currency.storeCurrency} togglePending={status.isToggling}
+                        onClick={() => handleEditProduct(p)} onToggle={() => actions.toggleProduct(p)} onDelete={() => actions.setDeleteTarget(p)} t={t} 
+                      />
+                    ))}
+                  </section>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
-              {/* ESTATÍSTICAS */}
-              <section className="grid grid-cols-2 gap-2 md:gap-3 lg:grid-cols-4 mt-6 contain-layout">
-                <StatCard label={t('stat_total')} value={products.length} />
-                <StatCard label={t('status_active')} value={activeProducts.length} />
-                <StatCard label={t('status_paused')} value={pausedProducts.length} />
-                <StatCard label={t('currency')} value={currency.backendCurrency || '—'} />
-              </section>
-            </>
-          )}
+        {/* ========================================================= */}
+        {/* GESTÃO & ESTATÍSTICAS (Exibido embaixo caso itens já estejam configurados) */}
+        {/* ========================================================= --> */}
+        {(!showCurrencyOnTop || !showGuideOnTop) && (
+          <div ref={settingsSectionRef} className="mt-12 pt-10 border-t border-slate-200/60 flex flex-col gap-6 pb-12 scroll-mt-6 content-visibility-auto">
+            
+            <div className="flex items-center gap-3 px-2 mb-2">
+              <Settings2 size={20} className="text-slate-400" />
+              <h2 className="text-[14px] font-black uppercase tracking-[0.2em] text-slate-500">
+                {t('currency_label', { defaultValue: 'Gestão da Loja' })}
+              </h2>
+            </div>
 
-        </div>
+            <div className="flex flex-col gap-8 w-full">
+              <div className="flex flex-col gap-6 w-full">
+                {/* Se a moeda já estiver definida em cima, exibe aqui na gestão */}
+                {!showCurrencyOnTop && (
+                  <CurrencySection {...currency.currencyProps} t={t} />
+                )}
+                
+                {/* Se o guia já estiver concluído em cima, exibe aqui na gestão se necessário (ou oculta) */}
+                {!showGuideOnTop && !currency.hasCompletedGuide && (
+                  <ProgressGuide hasCurrency={!!currency.backendCurrency} hasProducts={hasProducts} t={t} />
+                )}
+              </div>
+
+              <VisualStatsDashboard
+                total={products.length} 
+                active={activeProducts.length} 
+                paused={pausedProducts.length} 
+                t={t} 
+              />
+            </div>
+          </div>
+        )}
+
       </main>
 
-      {/* MODAL DE ADIÇÃO (CARREGAMENTO PREGUIÇOSO E GPU HARDWARE ACCEL) */}
+      {/* MODAL NOVO PRODUTO (OVERLAY) */}
       {isAdding && (
-        <div className="fixed inset-0 bg-white z-[150] overflow-y-auto transform-gpu will-change-transform contain-strict">
-          <div className="sticky top-0 bg-white border-b px-4 h-14 flex items-center justify-between z-10">
-            <div className="flex items-center gap-2"><Plus size={15} className="text-blue-600" strokeWidth={3} /><span className="font-black uppercase text-[11px]">{t('new_product')}</span></div>
-            <button onClick={handleCloseAddProduct} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={18} className="text-slate-400" /></button>
+        <div className="fixed inset-0 z-[150] bg-slate-50 overflow-y-auto transform-gpu will-change-transform contain-strict pb-safe">
+          <div className="sticky top-0 bg-white/90 border-b border-slate-200/50 px-4 h-16 flex items-center justify-between z-20 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-[12px] bg-blue-100 text-blue-600">
+                <Plus size={18} strokeWidth={3} />
+              </div>
+              <span className="font-black uppercase text-[12px] tracking-widest text-slate-800">
+                {t('new_product', { defaultValue: 'Novo Produto' })}
+              </span>
+            </div>
+            <button 
+              onClick={handleCloseAddProduct} 
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors active:scale-95"
+            >
+              <X size={18} strokeWidth={2.5} />
+            </button>
           </div>
-          <ProductDetails isCreating={true} onClose={handleCloseAddProduct} />
+          <div className="p-4 sm:p-6 max-w-5xl mx-auto">
+            <ProductDetails isCreating={true} onClose={handleCloseAddProduct} />
+          </div>
         </div>
       )}
 
+      {/* MODAL CONFIRMAR DELETE */}
       <ConfirmDeleteModal
         open={!!deleteTarget} loading={status.isDeleting} productName={deleteTarget?.name || ''}
         onClose={handleCloseDelete} onConfirm={handleConfirmDelete} t={t}
