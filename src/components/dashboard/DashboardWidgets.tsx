@@ -1,8 +1,9 @@
 import { memo, useState, useEffect, useMemo } from 'react';
 import { 
   type LucideIcon, ArrowRight, Layout, Package, Play, Sparkles, Plus, 
-  Calendar, Fingerprint, Mail, ExternalLink, Store, Copy, Check, 
-  Palette,  TrendingUp, MessageCircle, Instagram, Users, Megaphone
+  Calendar, Fingerprint, Mail, ExternalLink, Store, Check, 
+  Palette, TrendingUp, MessageCircle, Instagram, Users, Megaphone,
+  Share2
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { pt } from 'date-fns/locale';
@@ -71,15 +72,14 @@ export const PageRow = memo(function PageRow({ page, onNavigate, homeLabel, subP
   );
 });
 
-// --- HERO BANNER (COM TIKER ESTILO TELEJORNAL) ---
+// --- HERO BANNER (COM BOTÃO DE PARTILHA DESTACADO + TICKER TELEJORNAL) ---
 export const HeroBanner = memo(function HeroBanner({ storeName, storeSlug, progress, t, onNavigate }: { storeName: string; storeSlug: string; progress: number; t: any; onNavigate: (r: string) => void }) {
-  const [copied, setCopied] = useState(false);
+  const [copiedFallback, setCopiedFallback] = useState(false);
   const [tipIndex, setTipIndex] = useState(0);
   
   const storeUrl = `${window.location.origin}/${storeSlug || ''}`;
   const heroTips = ['tip_hero_1', 'tip_hero_2', 'tip_hero_3', 'tip_hero_4'];
 
-  // Roda as dicas a cada 6 segundos de forma otimizada
   useEffect(() => {
     const interval = setInterval(() => {
       setTipIndex((prev) => (prev + 1) % heroTips.length);
@@ -87,10 +87,27 @@ export const HeroBanner = memo(function HeroBanner({ storeName, storeSlug, progr
     return () => clearInterval(interval);
   }, [heroTips.length]);
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(storeUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleShare = async () => {
+    const shareTitle = storeName || t('share_default_title') || 'Loja Online';
+    const rawShareMessage = t('share_store_message') || 'Confira os nossos produtos e novidades na nossa loja oficial {name}:';
+    const shareMessage = rawShareMessage.replace('{name}', storeName ? `(${storeName})` : '').trim();
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: `${shareMessage}\n\n`,
+          url: storeUrl,
+        });
+      } catch {
+        // Operação cancelada pelo usuário
+      }
+    } else {
+      // Fallback para ambientes de desktop sem API de partilha nativa
+      navigator.clipboard.writeText(storeUrl);
+      setCopiedFallback(true);
+      setTimeout(() => setCopiedFallback(false), 2000);
+    }
   };
 
   return (
@@ -104,23 +121,29 @@ export const HeroBanner = memo(function HeroBanner({ storeName, storeSlug, progr
         </p>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <button onClick={() => onNavigate('/admin/produtos')} className="inline-flex items-center gap-2 rounded-full bg-[#9A81E9] px-5 py-2.5 text-[11px] sm:text-[12px] font-black tracking-wide text-white transition-transform active:scale-95 shadow-sm">
+          <button onClick={() => onNavigate('/admin/produtos')} className="inline-flex items-center gap-2 rounded-full bg-[#9A81E9] px-5 py-2.5 text-[11px] sm:text-[12px] font-black tracking-wide text-white transition-transform active:scale-95 shadow-sm hover:bg-[#886CE4]">
             <Play size={14} fill="currentColor" /> {t('btn_manage_products') || 'Gerir Artigos'}
           </button>
           
-          <div className="flex items-center bg-white/50 rounded-full border border-white/60  shadow-sm p-1">
-             <button onClick={() => window.open(storeUrl, '_blank')} className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[11px] sm:text-[12px] font-black tracking-wide text-[#5C5370] hover:text-[#2D263B] transition-colors">
+          <div className="flex items-center gap-1.5 bg-white/60 p-1 rounded-full border border-white/80 shadow-xs backdrop-blur-xs">
+             <button onClick={() => window.open(storeUrl, '_blank')} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] sm:text-[12px] font-black tracking-wide text-[#5C5370] hover:text-[#2D263B] transition-colors">
                <ExternalLink size={14} /> {t('btn_view_store') || 'Ver Loja'}
              </button>
-             <div className="w-[1px] h-4 bg-white/50 mx-1"></div>
-             <button onClick={handleCopyLink} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-[#9175E6] shadow-sm active:scale-90 transition-transform" title="Copiar Link">
-               {copied ? <Check size={12} strokeWidth={3} /> : <Copy size={12} strokeWidth={2.5} />}
+             
+             {/* Botão de Partilha Destacado */}
+             <button 
+               onClick={handleShare} 
+               className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-[11px] sm:text-[12px] font-black tracking-wide text-[#8862DF] shadow-xs hover:bg-[#8862DF] hover:text-white transition-all active:scale-95 border border-[#E9E0F8]"
+               title={t('btn_share_store') || 'Partilhar Loja'}
+             >
+               {copiedFallback ? <Check size={13} strokeWidth={3} className="text-emerald-600" /> : <Share2 size={13} strokeWidth={2.5} />}
+               <span>{copiedFallback ? (t('copied_label') || 'Copiado!') : (t('btn_share_store') || 'Partilhar')}</span>
              </button>
           </div>
         </div>
 
-        {/* Estilo Telejornal (Ticker Inferior) Otimizado para Celulares Fracos */}
-        <div className="mt-4 flex items-center gap-2 bg-white/40 px-3.5 py-2 rounded-xl border border-white/60  w-full max-w-full overflow-hidden shadow-xs">
+        {/* Estilo Telejornal (Ticker Inferior) */}
+        <div className="mt-4 flex items-center gap-2 bg-white/40 px-3.5 py-2 rounded-xl border border-white/60 w-full max-w-full overflow-hidden shadow-xs">
           <div className="flex items-center gap-1 bg-[#8862DF] text-white px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider shrink-0 animate-pulse">
             <MessageCircle size={10} />
             <span>{t('tip_hero_title') || 'AO VIVO'}</span>

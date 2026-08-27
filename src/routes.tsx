@@ -25,6 +25,7 @@ import { StartHome } from './pages/home/startHome';
 import { Blog } from './pages/home/blog';
 import { Duvidas } from './pages/home/duvidas';
 import { Faq } from './pages/faq';
+import { GrowthGuide } from './dashboard/GrowthGuide';
 
 export const route = createBrowserRouter([
   {
@@ -69,6 +70,7 @@ export const route = createBrowserRouter([
           { path: 'produtos', element: <ProductsList /> },
           { path: 'produtos/:productId', element: <ProductDetails /> },
           { path: 'configuracoes', element: <AdminSettings /> },
+          { path: 'guide', element: <GrowthGuide /> },
         ],
       },
       {

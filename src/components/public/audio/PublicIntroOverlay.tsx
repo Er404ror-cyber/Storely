@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useState } from "react";
+import React, { memo, useEffect, useState, useMemo } from "react";
 import { ArrowRight, MapPin, Globe, Tag, Volume2, Sparkles } from "lucide-react";
 import type { IntroPhase } from "../../../types/publicAudio";
 import { useTranslate } from "../../../context/LanguageContext";
@@ -19,10 +19,20 @@ export const PublicIntroOverlay = memo(function PublicIntroOverlay({
   onActivate,
 }: PublicIntroOverlayProps) {
   const { t } = useTranslate();
+
+  // 0. Detecção de ambiente iframe
+  const isInsideIframe = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return window.self !== window.top || window.frameElement !== null;
+    } catch {
+      return true;
+    }
+  }, []);
+
   const [isMinimalMode, setIsMinimalMode] = useState<boolean>(false);
   const [showMinimalButton, setShowMinimalButton] = useState<boolean>(true);
   
-  // Estados locais para controlar rigorosamente a física de entrada e saída
   const [isMounted, setIsMounted] = useState<boolean>(false);
   const [isLeavingLocal, setIsLeavingLocal] = useState<boolean>(false);
 
@@ -31,6 +41,8 @@ export const PublicIntroOverlay = memo(function PublicIntroOverlay({
 
   // 1. Controle de Sessão / LocalStorage
   useEffect(() => {
+    if (isInsideIframe) return;
+
     const TEN_MINUTES = 600000;
     const lastDismissed = localStorage.getItem(storageKey);
     const now = Date.now();
@@ -44,20 +56,24 @@ export const PublicIntroOverlay = memo(function PublicIntroOverlay({
     } else {
       setIsMinimalMode(false);
     }
-  }, [storageKey, storeName]);
+  }, [storageKey, storeName, isInsideIframe]);
 
-  // 2. Dispara a animação de chegada (Fade In & Slide Up) um frame após a montagem
+  // 2. Animação de entrada
   useEffect(() => {
+    if (isInsideIframe) return;
+
     if (introPhase === "visible" && !isMinimalMode) {
       const raf = requestAnimationFrame(() => {
         setIsMounted(true);
       });
       return () => cancelAnimationFrame(raf);
     }
-  }, [introPhase, isMinimalMode]);
+  }, [introPhase, isMinimalMode, isInsideIframe]);
 
-  // 3. Bloqueio nativo do scroll do corpo
+  // 3. Bloqueio nativo do scroll
   useEffect(() => {
+    if (isInsideIframe) return;
+
     if (!isMinimalMode && introPhase !== "hidden" && introPhase !== "leaving" && !isLeavingLocal) {
       const originalOverflow = document.documentElement.style.overflow;
       document.documentElement.style.overflow = "hidden";
@@ -65,31 +81,29 @@ export const PublicIntroOverlay = memo(function PublicIntroOverlay({
         document.documentElement.style.overflow = originalOverflow;
       };
     }
-  }, [isMinimalMode, introPhase, isLeavingLocal]);
+  }, [isMinimalMode, introPhase, isLeavingLocal, isInsideIframe]);
 
-  if (introPhase === "hidden") return null;
+  if (isInsideIframe || introPhase === "hidden") return null;
 
-  const handleActivation = (e: React.MouseEvent<HTMLElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleActivation = (e?: React.MouseEvent<HTMLElement>) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     
     onActivate();
     localStorage.setItem(storageKey, String(Date.now()));
     
-    // Inicia a transição de saída invertendo o estado de montagem e ativando a saída
     setIsLeavingLocal(true);
     setIsMounted(false);
     
-    // Aguarda os 500ms da animação de saída nativa por hardware antes de chavear para o mini-botão
     setTimeout(() => {
       setIsMinimalMode(true);
       setShowMinimalButton(false);
     }, 500); 
   };
 
-  // =========================================================================
-  // MODO DISCRETO / MINIMALISTA
-  // =========================================================================
+  // MODO MINIMALISTA
   if (isMinimalMode) {
     if (!showMinimalButton) return null;
 
@@ -98,7 +112,7 @@ export const PublicIntroOverlay = memo(function PublicIntroOverlay({
         <button
           onClick={handleActivation}
           type="button"
-          className="pointer-events-auto flex items-center gap-3 rounded-full bg-[#090A0F]/95 px-5 py-3 text-white shadow-2xl transition-all active:scale-95 text-[10px] font-black uppercase tracking-[0.2em] border border-[#7B61FF]/40  dynamic-gpu animate-[brandSlideUp_0.4s_ease-out]"
+          className="pointer-events-auto flex items-center gap-3 rounded-full bg-[#090A0F]/95 px-5 py-3 text-white shadow-2xl transition-all active:scale-95 text-[10px] font-black uppercase tracking-[0.2em] border border-[#7B61FF]/40 dynamic-gpu animate-[brandSlideUp_0.4s_ease-out] cursor-pointer"
         >
           <Volume2 size={13} className="text-[#7B61FF] shrink-0" />
           <span>{t("activate_audio") || "Ativar Som"}</span>
@@ -108,22 +122,19 @@ export const PublicIntroOverlay = memo(function PublicIntroOverlay({
     );
   }
 
-  // Define os gatilhos dinâmicos baseados no frame de montagem e desmontagem real
   const isLayerActive = isMounted && !isLeavingLocal && introPhase !== "leaving";
 
   return (
     <div
-      className={`fixed inset-0 z-[2147483646] flex flex-col justify-end md:justify-center p-6 sm:p-12 md:p-24 select-none dynamic-gpu transition-all duration-500 ease-in-out ${
+      onClick={handleActivation}
+      className={`fixed inset-0 z-[2147483646] flex flex-col justify-end md:justify-center p-6 sm:p-12 md:p-24 select-none dynamic-gpu transition-all duration-500 ease-in-out cursor-pointer ${
         isLayerActive ? "opacity-100" : "opacity-0 pointer-events-none"
       }`}
     >
-      {/* Película Protetora Gradiente Transparente */}
-      <div 
-        onClick={handleActivation}
-        className="absolute inset-0 bg-gradient-to-t from-[#090A0F]/98 via-[#090A0F]/80 to-transparent md:bg-gradient-to-r md:from-[#090A0F]/98 md:via-[#090A0F]/75 md:to-transparent cursor-pointer touch-none z-0"
-      />
+      {/* Fundo Gradiente */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#090A0F]/98 via-[#090A0F]/80 to-transparent md:bg-gradient-to-r md:from-[#090A0F]/98 md:via-[#090A0F]/75 md:to-transparent z-0 pointer-events-none" />
 
-      {/* Bloco Narrativo de Marca - Efeito Simétrico de Entrada e Saída (Slide & Scale) */}
+      {/* Conteúdo Informativo */}
       <div
         className={`relative w-full max-w-[500px] text-left z-10 transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) dynamic-gpu ${
           isLayerActive 
@@ -145,7 +156,7 @@ export const PublicIntroOverlay = memo(function PublicIntroOverlay({
         {/* Linha Neon */}
         <div className="w-12 h-[2.5px] bg-[#7B61FF] my-5" />
 
-        {/* Detalhes do Catálogo */}
+        {/* Detalhes */}
         <div className="space-y-4 max-w-sm">
           {shortDescription && (
             <div className="flex gap-3 items-start">
@@ -174,26 +185,18 @@ export const PublicIntroOverlay = memo(function PublicIntroOverlay({
           )}
         </div>
 
-        {/* CTA Principal */}
+        {/* Botão de Entrada */}
         <div className="mt-8 w-full max-w-xs flex flex-col items-start shrink-0 pb-safari-dynamic">
-          <button
-            onClick={handleActivation}
-            type="button"
-            className="group w-full flex items-center justify-between rounded-full bg-white text-black pl-7 pr-1.5 py-1.5 font-black text-[10px] sm:text-[11px] uppercase tracking-[0.25em] shadow-[0_20px_50px_rgba(123,97,255,0.25)] hover:bg-[#7B61FF] hover:text-white transition-all duration-300 ease-out cursor-pointer touch-manipulation active:scale-[0.985]"
-          >
+          <div className="group w-full flex items-center justify-between rounded-full bg-white text-black pl-7 pr-1.5 py-1.5 font-black text-[10px] sm:text-[11px] uppercase tracking-[0.25em] shadow-[0_20px_50px_rgba(123,97,255,0.25)] hover:bg-[#7B61FF] hover:text-white transition-all duration-300 ease-out">
             <span>{t("enter_btn") || "Ver Catálogo"}</span>
             <div className="w-9 h-9 rounded-full bg-black flex items-center justify-center text-white transition-transform group-hover:translate-x-0.5 duration-300">
               <ArrowRight size={13} strokeWidth={2.5} />
             </div>
-          </button>
+          </div>
 
-          <button
-            onClick={handleActivation}
-            type="button"
-            className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400/80 hover:text-white transition-colors mt-5 bg-transparent border-none p-0 cursor-pointer hidden sm:block"
-          >
-            {t("click_anywhere") || "Ou clique na vitrine exposta para entrar"}
-          </button>
+          <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400/80 mt-5 hidden sm:block">
+            {t("click_anywhere") || "Clique em qualquer parte para entrar"}
+          </span>
         </div>
 
       </div>
