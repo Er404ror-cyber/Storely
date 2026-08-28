@@ -12,7 +12,7 @@ import { EmptyPages } from '../components/pageslist/EmptyPages';
 import { notify } from '../utils/toast';
 import { useTranslate } from '../context/LanguageContext';
 import { MAX_PAGES } from '../utils/maxSections';
-import { PagesHero } from '../components/pageslist/pagesHero';
+import { PagesHero } from '../components/pageslist/PagesHero';
 
 interface PageItem {
   id: string;

@@ -196,7 +196,7 @@ export function AdminSettings() {
           </div>
 
           {/* ABAS DE NAVEGAÇÃO */}
-          <nav className="grid grid-cols-3 gap-2 sm:gap-3 p-1.5 bg-white/70 backdrop-blur-md rounded-2xl sm:rounded-[1.4rem] border border-white mt-5 sm:mt-6 relative z-10 shadow-xs">
+          <nav className="grid grid-cols-3 gap-2 sm:gap-3 p-1.5 bg-white/70  rounded-2xl sm:rounded-[1.4rem] border border-white mt-5 sm:mt-6 relative z-10 shadow-xs">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;

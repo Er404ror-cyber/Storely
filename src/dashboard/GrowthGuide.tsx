@@ -1,5 +1,14 @@
-import { useState, useMemo, useCallback, memo } from 'react';
-import { Instagram, MessageCircle, Video, MapPin } from 'lucide-react';
+import { useState, useMemo, useCallback, memo, useEffect, useRef } from 'react';
+import { 
+  Instagram, 
+  MessageCircle, 
+  Video, 
+  MapPin, 
+  Share2, 
+  MessageSquareQuote, 
+  Smartphone, 
+  HelpCircle 
+} from 'lucide-react';
 
 import { useAdminStore } from '../hooks/useAdminStore';
 import { useTranslate } from '../context/LanguageContext';
@@ -10,17 +19,64 @@ import { GrowthTemplates } from '../components/growth/GrowthTemplates';
 import { GrowthPlatforms } from '../components/growth/GrowthPlatforms';
 import { GrowthTroubleshoot } from '../components/growth/GrowthTroubleshoot';
 import { PresentationLetterModal } from '../components/growth/PresentationLetterModal';
+import { GrowthNavigation, type NavItem } from '../components/growth/GrowthNavigation';
+
+const SECTIONS = ['sec-hero', 'sec-templates', 'sec-platforms', 'sec-troubleshoot'] as const;
 
 export const GrowthGuide = memo(function GrowthGuide() {
-  const { t, language } = useTranslate();
+  const { t } = useTranslate();
   const { data: store } = useAdminStore();
   
   const [selectedLinkType, setSelectedLinkType] = useState<'products' | 'store'>('products');
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [copiedTemplateIdx, setCopiedTemplateIdx] = useState<number | null>(null);
   const [activePlatform, setActivePlatform] = useState<number>(0);
-  const [isSharing, setIsSharing] = useState<boolean>(false);
   const [isLetterModalOpen, setIsLetterModalOpen] = useState<boolean>(false);
+  
+  const [activeSec, setActiveSec] = useState<string>('sec-hero');
+  const [pulsingSec, setPulsingSec] = useState<string | null>(null);
+
+  const isNavigatingRef = useRef<boolean>(false);
+  const pulseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navLockTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const templateCopyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Rastreio leve via IntersectionObserver na thread nativa do browser
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (isNavigatingRef.current) return;
+
+        for (let i = 0; i < entries.length; i++) {
+          const entry = entries[i];
+          if (entry.isIntersecting) {
+            setActiveSec(entry.target.id);
+            break;
+          }
+        }
+      },
+      {
+        rootMargin: '-20% 0px -55% 0px',
+        threshold: 0,
+      }
+    );
+
+    SECTIONS.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => {
+      observer.disconnect();
+      if (pulseTimeoutRef.current) clearTimeout(pulseTimeoutRef.current);
+      if (navLockTimeoutRef.current) clearTimeout(navLockTimeoutRef.current);
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+      if (templateCopyTimeoutRef.current) clearTimeout(templateCopyTimeoutRef.current);
+    };
+  }, []);
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://storelyy.vercel.app';
   
@@ -39,67 +95,9 @@ export const GrowthGuide = memo(function GrowthGuide() {
   const handleCopyActiveLink = useCallback(() => {
     copyUrl();
     setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
+    if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    copyTimeoutRef.current = setTimeout(() => setCopiedLink(false), 2000);
   }, [copyUrl]);
-
-  const naturalShareMessage = useMemo(() => {
-    const storeName = store?.name || 'Storely';
-    const intro = t('guide_share_text_intro') || 'Olá! Veja o nosso catálogo oficial da';
-    const body = t('guide_share_text_body') || 'Temos novidades incríveis com fotos e preços atualizados. Acesse agora:';
-    
-    return `🛍️ *${storeName}*\n\n${intro} *${storeName}*! ✨\n${body}\n👉 ${activeUrl}`;
-  }, [store?.name, activeUrl, t]);
-
-  const fetchLogoFile = useCallback(async (logoUrl: string): Promise<File | null> => {
-    try {
-      const response = await fetch(logoUrl, { mode: 'cors' });
-      const blob = await response.blob();
-      const ext = blob.type.split('/')[1] || 'png';
-      return new File([blob], `loja-logo.${ext}`, { type: blob.type });
-    } catch {
-      return null;
-    }
-  }, []);
-
-  const handleNativeShare = useCallback(async (customText?: string) => {
-    const textToShare = customText || naturalShareMessage;
-    const storeName = store?.name || 'Storely';
-
-    if (typeof navigator === 'undefined' || !navigator.share) {
-      if (navigator.clipboard) {
-        await navigator.clipboard.writeText(textToShare);
-        setCopiedLink(true);
-        setTimeout(() => setCopiedLink(false), 2000);
-      }
-      return;
-    }
-
-    setIsSharing(true);
-
-    try {
-      let filesToSend: File[] = [];
-
-      if (store?.logo_url) {
-        const logoFile = await fetchLogoFile(store.logo_url);
-        if (logoFile && navigator.canShare && navigator.canShare({ files: [logoFile] })) {
-          filesToSend = [logoFile];
-        }
-      }
-
-      await navigator.share({
-        title: storeName,
-        text: textToShare,
-        url: activeUrl,
-        ...(filesToSend.length > 0 ? { files: filesToSend } : {})
-      });
-    } catch (err: any) {
-      if (err?.name !== 'AbortError') {
-        handleCopyActiveLink();
-      }
-    } finally {
-      setIsSharing(false);
-    }
-  }, [store?.name, store?.logo_url, naturalShareMessage, activeUrl, fetchLogoFile, handleCopyActiveLink]);
 
   const handleAppRedirect = useCallback((deepLink: string, webFallback: string) => {
     if (typeof window === 'undefined') return;
@@ -107,7 +105,8 @@ export const GrowthGuide = memo(function GrowthGuide() {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(activeUrl).catch(() => {});
       setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2000);
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+      copyTimeoutRef.current = setTimeout(() => setCopiedLink(false), 2000);
     }
 
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -127,26 +126,11 @@ export const GrowthGuide = memo(function GrowthGuide() {
   }, [activeUrl]);
 
   const handleShareWhatsApp = useCallback((customText?: string) => {
-    const textToSend = customText || naturalShareMessage;
+    const defaultText = `🛍️ *${store?.name || 'Storely'}*\n👉 ${activeUrl}`;
+    const textToSend = customText || defaultText;
     const encoded = encodeURIComponent(textToSend);
     handleAppRedirect(`whatsapp://send?text=${encoded}`, `https://api.whatsapp.com/send?text=${encoded}`);
-  }, [naturalShareMessage, handleAppRedirect]);
-
-  const handleShareTelegram = useCallback(() => {
-    const encodedMsg = encodeURIComponent(naturalShareMessage);
-    const encodedUrl = encodeURIComponent(activeUrl);
-    handleAppRedirect(`tg://msg_url?url=${encodedUrl}&text=${encodedMsg}`, `https://t.me/share/url?url=${encodedUrl}&text=${encodedMsg}`);
-  }, [naturalShareMessage, activeUrl, handleAppRedirect]);
-
-  const handleShareFacebook = useCallback(() => {
-    const encodedUrl = encodeURIComponent(activeUrl);
-    handleAppRedirect(`fb://facewebmodal/f?href=https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`, `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`);
-  }, [activeUrl, handleAppRedirect]);
-
-  const handleShareTwitter = useCallback(() => {
-    const text = encodeURIComponent(`${t('guide_share_text_intro') || 'Olá! Veja a loja'} ${store?.name || ''}! ${activeUrl}`);
-    handleAppRedirect(`twitter://post?message=${text}`, `https://twitter.com/intent/tweet?text=${text}`);
-  }, [t, store?.name, activeUrl, handleAppRedirect]);
+  }, [store?.name, activeUrl, handleAppRedirect]);
 
   const messageTemplates = useMemo(() => {
     const storeName = store?.name || 'Storely';
@@ -154,7 +138,7 @@ export const GrowthGuide = memo(function GrowthGuide() {
     return [
       {
         titleKey: 'guide_template_status_title',
-        badge: 'WhatsApp Status & Stories',
+        badge: t('guide_badge_status') || 'WhatsApp Status & Stories',
         targetRoute: '/products',
         badgeStyle: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
         text: (t('guide_template_status_text') || 'Confira nosso catálogo de produtos: {{products_url}}')
@@ -163,7 +147,7 @@ export const GrowthGuide = memo(function GrowthGuide() {
       },
       {
         titleKey: 'guide_template_greeting_title',
-        badge: 'Saudação no WhatsApp',
+        badge: t('guide_badge_greeting') || 'Saudação no WhatsApp',
         targetRoute: '/products',
         badgeStyle: 'bg-indigo-50 text-indigo-700 border-indigo-200/80',
         text: (t('guide_template_greeting_text') || 'Olá! Seja bem-vindo à {{store}}: {{products_url}}')
@@ -173,7 +157,7 @@ export const GrowthGuide = memo(function GrowthGuide() {
       },
       {
         titleKey: 'guide_template_bio_title',
-        badge: 'Bio do Instagram & TikTok',
+        badge: t('guide_badge_bio') || 'Bio do Instagram & TikTok',
         targetRoute: 'Link Oficial',
         badgeStyle: 'bg-amber-50 text-amber-800 border-amber-200/80',
         text: (t('guide_template_bio_text') || '🛍️ {{store}}\n👇 Veja todos os produtos:\n{{store_url}}')
@@ -185,10 +169,11 @@ export const GrowthGuide = memo(function GrowthGuide() {
   }, [productsCatalogUrl, mainStoreUrl, store?.name, t]);
 
   const handleCopyTemplate = useCallback((text: string, index: number) => {
-    if (typeof navigator !== 'undefined') {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(text);
       setCopiedTemplateIdx(index);
-      setTimeout(() => setCopiedTemplateIdx(null), 2000);
+      if (templateCopyTimeoutRef.current) clearTimeout(templateCopyTimeoutRef.current);
+      templateCopyTimeoutRef.current = setTimeout(() => setCopiedTemplateIdx(null), 2000);
     }
   }, []);
 
@@ -247,61 +232,123 @@ export const GrowthGuide = memo(function GrowthGuide() {
     }
   ], [t]);
 
+  // Salto direto por ID com indicação de foco temporária
+  const scrollToSection = useCallback((id: string) => {
+    setActiveSec(id);
+    setPulsingSec(id);
+    isNavigatingRef.current = true;
+
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    if (pulseTimeoutRef.current) clearTimeout(pulseTimeoutRef.current);
+    pulseTimeoutRef.current = setTimeout(() => {
+      setPulsingSec(null);
+    }, 1100);
+
+    if (navLockTimeoutRef.current) clearTimeout(navLockTimeoutRef.current);
+    navLockTimeoutRef.current = setTimeout(() => {
+      isNavigatingRef.current = false;
+    }, 850);
+  }, []);
+
+  const navItems: NavItem[] = useMemo(() => [
+    { id: 'sec-hero', label: t('guide_tab_share') || 'Partilhar', icon: Share2 },
+    { id: 'sec-templates', label: t('guide_tab_texts') || 'Textos', icon: MessageSquareQuote },
+    { id: 'sec-platforms', label: t('guide_tab_places') || 'Redes', icon: Smartphone },
+    { id: 'sec-troubleshoot', label: t('guide_tab_tips') || 'Dicas', icon: HelpCircle },
+  ], [t]);
+
   return (
-    <div className="w-full min-h-screen bg-[#F9FAFB] pb-28 text-zinc-800 antialiased font-sans">
-      <div className="max-w-6xl mx-auto px-3.5 sm:px-6 w-full space-y-6 pt-4 sm:pt-7">
+    <div className="w-full min-h-screen bg-[#F9FAFB] pb-24 sm:pb-16 text-zinc-800 antialiased font-sans">
+      <div className="max-w-4xl 2xl:max-w-5xl mx-auto px-3.5 sm:px-6 w-full pt-4 sm:pt-8 space-y-6 sm:space-y-8">
         
-        {/* Cockpit de Ação & Disparo */}
-        <GrowthHero
-          storeName={store?.name || ''}
-          logoUrl={store?.logo_url}
-          activeUrl={activeUrl}
-          selectedLinkType={selectedLinkType}
-          onSelectLinkType={setSelectedLinkType}
-          copiedLink={copiedLink}
-          onCopyLink={handleCopyActiveLink}
-          isSharing={isSharing}
-          onNativeShare={() => handleNativeShare()}
-          onShareWhatsApp={() => handleShareWhatsApp()}
-          onShareTelegram={handleShareTelegram}
-          onShareFacebook={handleShareFacebook}
-          onShareTwitter={handleShareTwitter}
-          onOpenLetterModal={() => setIsLetterModalOpen(true)}
-          t={t as (k: string) => string}
-                  />
+        {/* 1. Partilhar */}
+        <section 
+          id="sec-hero" 
+          className={`scroll-mt-8 rounded-3xl ${
+            pulsingSec === 'sec-hero' ? 'ring-2 ring-zinc-900 ring-offset-4 ring-offset-[#F9FAFB]' : ''
+          }`}
+          style={{ contain: 'content' }}
+        >
+          <GrowthHero
+            storeName={store?.name || ''}
+            logoUrl={store?.logo_url}
+            activeUrl={activeUrl}
+            selectedLinkType={selectedLinkType}
+            onSelectLinkType={setSelectedLinkType}
+            copiedLink={copiedLink}
+            onCopyLink={handleCopyActiveLink}
+            onOpenLetterModal={() => setIsLetterModalOpen(true)}
+            t={t as (k: string) => string}
+          />
+        </section>
 
-        {/* Mensagens Prontas */}
-        <GrowthTemplates
-          templates={messageTemplates}
-          copiedIdx={copiedTemplateIdx}
-          onCopy={handleCopyTemplate}
-          onShareWhatsApp={handleShareWhatsApp}
-          t={t as (k: string) => string}
-                  />
+        {/* 2. Mensagens Prontas */}
+        <section 
+          id="sec-templates" 
+          className={`scroll-mt-8 rounded-3xl ${
+            pulsingSec === 'sec-templates' ? 'ring-2 ring-zinc-900 ring-offset-4 ring-offset-[#F9FAFB]' : ''
+          }`}
+          style={{ contain: 'content' }}
+        >
+          <GrowthTemplates
+            templates={messageTemplates}
+            copiedIdx={copiedTemplateIdx}
+            onCopy={handleCopyTemplate}
+            onShareWhatsApp={handleShareWhatsApp}
+            t={t as (k: string) => string}
+          />
+        </section>
 
-        {/* Onde Configurar & Mockups */}
-        <GrowthPlatforms
-          platforms={platformsList}
-          activeIdx={activePlatform}
-          onSelect={setActivePlatform}
-          onOpenApp={handleAppRedirect}
-          storeName={store?.name || ''}
-          logoUrl={store?.logo_url}
-          activeUrl={activeUrl}
-          t={t as (k: string) => string}
-                  />
+        {/* 3. Onde Configurar */}
+        <section 
+          id="sec-platforms" 
+          className={`scroll-mt-8 rounded-3xl ${
+            pulsingSec === 'sec-platforms' ? 'ring-2 ring-zinc-900 ring-offset-4 ring-offset-[#F9FAFB]' : ''
+          }`}
+          style={{ contain: 'content' }}
+        >
+          <GrowthPlatforms
+            platforms={platformsList}
+            activeIdx={activePlatform}
+            onSelect={setActivePlatform}
+            onOpenApp={handleAppRedirect}
+            storeName={store?.name || ''}
+            logoUrl={store?.logo_url}
+            activeUrl={activeUrl}
+            t={t as (k: string) => string}
+          />
+        </section>
 
-        {/* Dicas de Apoio */}
-        <GrowthTroubleshoot t={t as (k: string) => string} />
+        {/* 4. Dicas */}
+        <section 
+          id="sec-troubleshoot" 
+          className={`scroll-mt-8 rounded-3xl ${
+            pulsingSec === 'sec-troubleshoot' ? 'ring-2 ring-zinc-900 ring-offset-4 ring-offset-[#F9FAFB]' : ''
+          }`}
+          style={{ contain: 'content' }}
+        >
+          <GrowthTroubleshoot t={t as (k: string) => string} />
+        </section>
 
-        {/* Modal de Carta de Apresentação / PDF com dados reais da tabela */}
+        {/* Modal de Carta / PDF */}
         <PresentationLetterModal
-  isOpen={isLetterModalOpen}
-  onClose={() => setIsLetterModalOpen(false)}
-  store={store || {}}
-/>
+          isOpen={isLetterModalOpen}
+          onClose={() => setIsLetterModalOpen(false)}
+          store={store || {}}
+        />
 
       </div>
+
+      {/* Navegação Flutuante Desktop & Mobile */}
+      <GrowthNavigation
+        navItems={navItems}
+        activeSec={activeSec}
+        onNavigate={scrollToSection}
+      />
     </div>
   );
 });

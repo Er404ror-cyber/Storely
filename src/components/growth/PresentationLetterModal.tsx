@@ -1,6 +1,22 @@
 import { useState, useMemo, memo, useEffect, useCallback, useRef } from 'react';
-import { FileText, Printer, X, Building2, Phone, Mail, Globe, AlertCircle, ArrowUpRight, Languages, Sparkles, CheckCircle2, Lock, Loader2 } from 'lucide-react';
-import { generateStorePresentationPDF, type StoreDBData,  } from '../../utils/generateStorePresentationPDF';
+import { Link } from 'react-router-dom';
+import { 
+  FileText, 
+  Printer, 
+  X, 
+  Building2, 
+  Phone, 
+  Mail, 
+  Globe, 
+  AlertCircle, 
+  ArrowUpRight, 
+  Languages, 
+  Sparkles, 
+  CheckCircle2, 
+  Lock, 
+  Loader2 
+} from 'lucide-react';
+import { generateStorePresentationPDF, type StoreDBData } from '../../utils/generateStorePresentationPDF';
 import { useTranslate } from '../../context/LanguageContext';
 
 interface Props {
@@ -9,6 +25,48 @@ interface Props {
   store: StoreDBData;
 }
 
+// Dicionário estático fora do ciclo de render para economizar memória e garbage collection
+const FALLBACK_DICTIONARY: Record<'pt' | 'en', Record<string, string>> = {
+  pt: {
+    pdf_doc_badge: 'Carta de Apresentação Comercial',
+    pdf_doc_subtitle: 'Dossiê profissional A4 para clientes, parceiros e propostas',
+    modal_feature_desc: 'Gera um documento em folha timbrada com a apresentação da sua marca, catálogo de produtos em tempo real e contactos verificados.',
+    pdf_about_title: 'Descrição da Loja',
+    pdf_about_default_desc: 'Fornecemos artigos selecionados com garantia de qualidade, preços transparentes e atendimento direto.',
+    pdf_contact_whatsapp: 'WhatsApp Comercial',
+    pdf_contact_email: 'E-mail de Contacto',
+    pdf_contact_unavailable: 'Não configurado',
+    modal_doc_lang: 'Idioma da Folha:',
+    modal_missing_alert: 'Dados obrigatórios em falta para gerar o PDF',
+    modal_missing_desc: 'Para emitir um documento oficial válido, preencha os dados em falta nas definições.',
+    modal_go_settings: 'Ir às Definições para Preencher',
+    modal_official_store: 'Loja Oficial',
+    modal_official_logo: 'Logotipo Oficial',
+    modal_generate_btn: 'Gerar Documento PDF A4',
+    modal_generating: 'A preparar documento...',
+    modal_preview_tag: 'Pré-visualização do Conteúdo'
+  },
+  en: {
+    pdf_doc_badge: 'Commercial Presentation Letter',
+    pdf_doc_subtitle: 'Professional A4 business dossier for clients, partners & proposals',
+    modal_feature_desc: 'Generates a branded formal document featuring your company overview, live catalog link, and verified communication channels.',
+    pdf_about_title: 'Store Description',
+    pdf_about_default_desc: 'We provide curated products with verified provenance, transparent pricing, and fast fulfillment.',
+    pdf_contact_whatsapp: 'Business WhatsApp',
+    pdf_contact_email: 'Contact Email',
+    pdf_contact_unavailable: 'Not configured',
+    modal_doc_lang: 'Document Language:',
+    modal_missing_alert: 'Mandatory information missing to generate PDF',
+    modal_missing_desc: 'To generate a valid official dossier, complete the missing details in settings.',
+    modal_go_settings: 'Go to Settings to Complete',
+    modal_official_store: 'Official Store',
+    modal_official_logo: 'Official Logo',
+    modal_generate_btn: 'Generate A4 PDF Document',
+    modal_generating: 'Preparing document...',
+    modal_preview_tag: 'Content Preview'
+  }
+};
+
 export const PresentationLetterModal = memo(function PresentationLetterModal({
   isOpen,
   onClose,
@@ -16,17 +74,23 @@ export const PresentationLetterModal = memo(function PresentationLetterModal({
 }: Props) {
   const { t: systemT, language: systemLanguage } = useTranslate();
 
-  const initialLang: 'pt' | 'en' = systemLanguage?.toLowerCase().startsWith('en') ? 'en' : 'pt';
-  const [selectedLanguage, setSelectedLanguage] = useState<'pt' | 'en'>(initialLang);
+  const isEnglish = useMemo(() => systemLanguage?.toLowerCase().startsWith('en'), [systemLanguage]);
+  const [selectedLanguage, setSelectedLanguage] = useState<'pt' | 'en'>(isEnglish ? 'en' : 'pt');
   const [hasManualOverride, setHasManualOverride] = useState<boolean>(false);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!hasManualOverride) {
-      setSelectedLanguage(systemLanguage?.toLowerCase().startsWith('en') ? 'en' : 'pt');
+      setSelectedLanguage(isEnglish ? 'en' : 'pt');
     }
-  }, [systemLanguage, hasManualOverride]);
+  }, [isEnglish, hasManualOverride]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   const handleClose = useCallback(() => {
     if (isGenerating) return;
@@ -36,63 +100,27 @@ export const PresentationLetterModal = memo(function PresentationLetterModal({
     onClose();
   }, [onClose, isGenerating]);
 
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://storelyy.vercel.app';
+  const baseUrl = useMemo(() => {
+    return typeof window !== 'undefined' ? window.location.origin : 'https://storelyy.vercel.app';
+  }, []);
+
   const productsUrl = useMemo(() => {
     return store?.slug ? `${baseUrl}/${store.slug}/products` : `${baseUrl}/store/products`;
   }, [store?.slug, baseUrl]);
 
   const modalT = useCallback((key: string): string => {
-    if (selectedLanguage === (systemLanguage?.toLowerCase().startsWith('en') ? 'en' : 'pt')) {
-      return (systemT as any)(key) || key;
+    const currentIsSysLang = selectedLanguage === (isEnglish ? 'en' : 'pt');
+    if (currentIsSysLang) {
+      const translated = (systemT as (k: string) => string)(key);
+      if (translated && translated !== key) return translated;
     }
-    
-    const fallbackDictionary: Record<'pt' | 'en', Record<string, string>> = {
-      pt: {
-        pdf_doc_badge: 'Carta de Apresentação Comercial',
-        pdf_doc_subtitle: 'Dossiê profissional A4 para clientes, parceiros e propostas',
-        modal_feature_desc: 'Gera um documento em folha timbrada com a apresentação da sua marca, catálogo de produtos em tempo real e contactos verificados.',
-        pdf_about_title: 'Sobre a Loja',
-        pdf_about_default_desc: 'Fornecemos artigos selecionados com garantia de qualidade, preços transparentes e atendimento direto.',
-        pdf_contact_whatsapp: 'WhatsApp Comercial',
-        pdf_contact_email: 'E-mail de Contacto',
-        pdf_contact_unavailable: 'Não configurado',
-        modal_doc_lang: 'Idioma da Folha:',
-        modal_missing_alert: 'Dados obrigatórios em falta para gerar o PDF',
-        modal_missing_desc: 'Para emitir um documento oficial válido, preencha os dados em falta nas definições.',
-        modal_go_settings: 'Ir às Definições para Preencher',
-        modal_official_store: 'Loja Oficial',
-        modal_official_logo: 'Logotipo Oficial',
-        modal_generate_btn: 'Gerar Documento PDF A4',
-        modal_generating: 'A preparar documento...',
-        modal_preview_tag: 'Pré-visualização do Conteúdo'
-      },
-      en: {
-        pdf_doc_badge: 'Commercial Presentation Letter',
-        pdf_doc_subtitle: 'Professional A4 business dossier for clients, partners & proposals',
-        modal_feature_desc: 'Generates a branded formal document featuring your company overview, live catalog link, and verified communication channels.',
-        pdf_about_title: 'Store Description',
-        pdf_about_default_desc: 'We provide curated products with verified provenance, transparent pricing, and fast fulfillment.',
-        pdf_contact_whatsapp: 'Business WhatsApp',
-        pdf_contact_email: 'Contact Email',
-        pdf_contact_unavailable: 'Not configured',
-        modal_doc_lang: 'Document Language:',
-        modal_missing_alert: 'Mandatory information missing to generate PDF',
-        modal_missing_desc: 'To generate a valid official dossier, complete the missing details in settings.',
-        modal_go_settings: 'Go to Settings to Complete',
-        modal_official_store: 'Official Store',
-        modal_official_logo: 'Official Logo',
-        modal_generate_btn: 'Generate A4 PDF Document',
-        modal_generating: 'Preparing document...',
-        modal_preview_tag: 'Content Preview'
-      }
-    };
+    return FALLBACK_DICTIONARY[selectedLanguage]?.[key] || (systemT as (k: string) => string)(key) || key;
+  }, [selectedLanguage, isEnglish, systemT]);
 
-    return fallbackDictionary[selectedLanguage]?.[key] || (systemT as any)(key) || key;
-  }, [selectedLanguage, systemLanguage, systemT]);
-
-  // Diagnóstico estrito dos dados obrigatórios
+  // Diagnóstico estrito local sem disparar chamadas de API
   const missingFields = useMemo(() => {
     const missing: { label: string; field: string }[] = [];
+    
     if (!store?.whatsapp_number && !store?.settings?.phone) {
       missing.push({ 
         label: modalT('pdf_contact_whatsapp'), 
@@ -105,7 +133,7 @@ export const PresentationLetterModal = memo(function PresentationLetterModal({
         field: 'owner_email' 
       });
     }
-    if (!store?.description) {
+    if (!store?.description?.trim()) {
       missing.push({ 
         label: modalT('pdf_about_title'), 
         field: 'description' 
@@ -117,23 +145,21 @@ export const PresentationLetterModal = memo(function PresentationLetterModal({
         field: 'logo_url' 
       });
     }
+
     return missing;
   }, [store, modalT]);
 
   const hasMissingData = missingFields.length > 0;
 
-  const handleManualLanguageChange = (lang: 'pt' | 'en') => {
+  const handleManualLanguageChange = useCallback((lang: 'pt' | 'en') => {
     if (isGenerating) return;
     setSelectedLanguage(lang);
     setHasManualOverride(true);
-  };
+  }, [isGenerating]);
 
-  // Função anti-spam com debounce e bloqueio de cliques múltiplos
+  // Gerador de PDF protegido com debounce
   const handlePrintPDF = useCallback(() => {
-    if (hasMissingData || isGenerating) {
-      if (hasMissingData) window.location.href = '/admin/settings';
-      return;
-    }
+    if (hasMissingData || isGenerating) return;
 
     setIsGenerating(true);
 
@@ -146,11 +172,10 @@ export const PresentationLetterModal = memo(function PresentationLetterModal({
     } catch (error) {
       console.error('Erro ao gerar apresentação PDF:', error);
     } finally {
-      // Debounce/Reset de segurança após 1.5 segundos para desbloquear o botão sem falhas
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {
         setIsGenerating(false);
-      }, 1500);
+      }, 1200);
     }
   }, [hasMissingData, isGenerating, store, baseUrl, selectedLanguage]);
 
@@ -159,42 +184,51 @@ export const PresentationLetterModal = memo(function PresentationLetterModal({
   return (
     <>
       <style>{`
-        @keyframes sheetSlideUpHW {
-          from {
-            transform: translate3d(0, 100%, 0);
-            opacity: 0.85;
-          }
-          to {
-            transform: translate3d(0, 0, 0);
-            opacity: 1;
-          }
-        }
-        @keyframes backdropFadeHW {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        .anim-sheet-up {
-          animation: sheetSlideUpHW 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-          will-change: transform;
-        }
-        .anim-backdrop-fade {
-          animation: backdropFadeHW 0.16s ease-out forwards;
-        }
-      `}</style>
+  @keyframes sheetSlideUpHW {
+    from {
+      transform: translate3d(0, 100%, 0);
+    }
+    to {
+      transform: translate3d(0, 0, 0);
+    }
+  }
+  @keyframes backdropFadeHW {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .anim-sheet-up {
+    animation: sheetSlideUpHW 0.18s ease-out forwards;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+    contain: layout paint;
+  }
+  .anim-backdrop-fade {
+    animation: backdropFadeHW 0.12s linear forwards;
+    background-color: rgba(0, 0, 0, 0.55);
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    backface-visibility: hidden;
+    contain: strict;
+  }
+`}</style>
 
-      {/* Backdrop responsivo com compensação de recuo da sidebar no desktop */}
+      {/* Backdrop com isolamento de render */}
       <div 
-        className="fixed inset-0 z-50 flex items-end justify-center bg-zinc-950/50 anim-backdrop-fade overflow-x-hidden w-full lg:pl-72 xl:pl-72 box-border"
-        style={{ contain: 'strict' }}
+        className="fixed inset-0 z-50 flex items-end justify-center bg-zinc-950/50 anim-backdrop-fade overflow-x-hidden w-full lg:pl-72 xl:pl-72 box-border transform-gpu"
+        style={{ contain: 'layout style paint' }}
         onClick={handleClose}
       >
         <div 
-          className="w-full bg-[#fafafa] rounded-t-[2rem] lg:rounded-t-3xl p-4.5 sm:p-6 lg:p-7 shadow-[0_-12px_45px_rgba(0,0,0,0.12)] border-t border-zinc-200/90 space-y-3.5 max-h-[90vh] overflow-y-auto overflow-x-hidden anim-sheet-up pb-8 sm:pb-7 box-border"
+          className="w-full bg-[#fafafa] rounded-t-[2rem] lg:rounded-t-3xl p-4.5 sm:p-6 lg:p-7 shadow-[0_-12px_45px_rgba(0,0,0,0.12)] border-t border-zinc-200/90 space-y-3.5 max-h-[90vh] overflow-y-auto overflow-x-hidden anim-sheet-up pb-8 sm:pb-7 box-border transform-gpu"
           style={{ contain: 'content' }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Puxador mobile */}
-          <div className="w-12 h-1.5 bg-zinc-300 rounded-full mx-auto -mt-1 mb-2 shrink-0 cursor-pointer lg:hidden" onClick={handleClose} />
+          <div 
+            className="w-12 h-1.5 bg-zinc-300 rounded-full mx-auto -mt-1 mb-2 shrink-0 cursor-pointer lg:hidden" 
+            onClick={handleClose} 
+          />
 
           <div className="max-w-5xl mx-auto w-full space-y-3.5 min-w-0">
             
@@ -264,7 +298,7 @@ export const PresentationLetterModal = memo(function PresentationLetterModal({
             {hasMissingData && (
               <div className="p-3.5 rounded-2xl bg-amber-50/95 border border-amber-200 text-xs space-y-2.5 min-w-0">
                 <div className="flex items-start justify-between gap-2 min-w-0">
-                  <div className="flex items-center gap-2 font-black text-amber-950 min-w-0">
+                  <div className="flex items-start gap-2 font-black text-amber-950 min-w-0">
                     <AlertCircle size={17} className="text-amber-600 shrink-0 mt-0.5" />
                     <div>
                       <div className="truncate text-xs sm:text-sm font-bold">
@@ -279,7 +313,7 @@ export const PresentationLetterModal = memo(function PresentationLetterModal({
 
                 <div className="flex flex-wrap gap-1.5 pt-0.5">
                   {missingFields.map((f, i) => (
-                    <span key={i} className="px-2.5 py-1 rounded-lg bg-white border border-amber-300/80 text-[11px] font-semibold text-amber-900 shadow-2xs">
+                    <span key={f.field || i} className="px-2.5 py-1 rounded-lg bg-white border border-amber-300/80 text-[11px] font-semibold text-amber-900 shadow-2xs">
                       ✕ {f.label}
                     </span>
                   ))}
@@ -329,17 +363,18 @@ export const PresentationLetterModal = memo(function PresentationLetterModal({
               </div>
             </div>
 
-            {/* Botão de Ação: Condicional (Anti-spam protegido) */}
+            {/* Botão de Ação: Link do Router se faltar dados */}
             <div className="pt-1">
               {hasMissingData ? (
-                <a
-                  href="/admin/settings"
-                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-bold transition-all active:scale-95 shadow-md shadow-amber-500/20 cursor-pointer text-center"
+                <Link
+                  to="/admin/settings"
+                  onClick={onClose}
+                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-bold transition-all active:scale-95 shadow-md shadow-amber-500/20 cursor-pointer text-center no-underline"
                 >
                   <Lock size={16} className="shrink-0" />
                   <span className="truncate">{modalT('modal_go_settings')}</span>
                   <ArrowUpRight size={15} className="shrink-0" />
-                </a>
+                </Link>
               ) : (
                 <button
                   type="button"

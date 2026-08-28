@@ -167,6 +167,7 @@ function Dashboard() {
           onNavigate={handleNavigate} 
         />
 
+
         {/* STATS GRID */}
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
           <StatCard label={t('stat_total_products') || 'Total Artigos'} value={ui.productCount} icon={Music} bgColor="bg-[#F8F4FD]" iconBgColor="bg-[#D8C7F5]" iconColor="text-[#8862DF]" trendText={ui.hasProducts ? (t('stat_updated_recently') || "Sincronizado") : (t('stat_zero_records') || "Vazio")} trendColor="text-[#32A873]" />

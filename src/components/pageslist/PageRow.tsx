@@ -127,7 +127,7 @@ interface PageInfoProps {
   displayUrl: string;
   onCopy: () => void;
   isConflict: boolean;
-  t: (key: string) => string;
+  t: (key: any, variables?: Record<string, any>) => string;
 }
 
 const PageInfo = memo(({ slug, isHome, displayUrl, onCopy, isConflict, t }: PageInfoProps) => {

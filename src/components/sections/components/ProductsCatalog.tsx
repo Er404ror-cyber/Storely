@@ -1,24 +1,21 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Package, Sparkles } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Package } from "lucide-react";
 
 import { LayoutGrid, LayoutList, ProductShowcaseSkeleton } from "../../produtos/layouts";
 import { useTranslate } from "../../../context/LanguageContext";
-import { supabase } from "../../../lib/supabase";
 import { useAdminStore } from "../../../hooks/useAdminStore";
 
-import { cacheKey, readCache, writeCache, CACHE_VERSION } from "../../../utils/text";
-import { useStoreProducts, SUPER_CACHE_CONFIG } from "../../../hooks/useStoreProducts"; 
+import { cacheKey, writeCache, CACHE_VERSION } from "../../../utils/text";
+import { useStoreProducts } from "../../../hooks/useStoreProducts"; 
 import { FONT_SIZE_MAPS, HERO_PALETTES } from "../../produtos/componentsAdmim/theme";
 
-// 1. IMPORTAÇÃO DO HOOK
 import { useProductIntelligence } from "../../../utils/ProductIntelligence";
 import { CatalogFilters } from "../../produtos/componentsAdmim/CatalogFilters";
+import { CatalogHeader } from "../../produtos/componentsAdmim/CatalogHeader";
 
-const EDITOR_PREVIEW_LIMIT = 5; 
-const MAX_TITLE = 60;
-const MAX_SUBTITLE = 120;
+const EDITOR_PREVIEW_LIMIT = 4;
 
 export type SectionStyles = {
   theme?: "dark" | "light";
@@ -38,102 +35,85 @@ export interface CatalogProps {
 
 export function ProductsCatalog(props: CatalogProps) {
   const { t } = useTranslate();
-  
-  // 2. INICIALIZAÇÃO DO HOOK
   const { enrichProductsIntelligently } = useProductIntelligence();
 
   const navigate = useNavigate();
   const location = useLocation();
   const { storeSlug, pageSlug } = useParams();
   const queryClient = useQueryClient();
-  
+
   const isEditor = location.pathname.includes("/editor/");
   const isReadOnly = !isEditor;
   const isDark = props.style?.theme === "dark";
+  const isCenter = props.style?.align === "center";
 
   const [activeParent, setActiveParent] = useState<string>("Todos");
   const [activeChild, setActiveChild] = useState<string>("");
   const [activeAttribute, setActiveAttribute] = useState<string>("");
+  const [onlyDiscounts, setOnlyDiscounts] = useState<boolean>(false);
 
-  const fallbackTitle = useMemo(() => t("catalog_default_title") || "Catálogo Completo", [t]);
-  const fallbackSubtitle = useMemo(() => t("catalog_default_subtitle") || "Confira os nossos produtos disponíveis", [t]);
-
-  const [editableTitle, setEditableTitle] = useState(props.content?.title || fallbackTitle);
-  const [editableSubtitle, setEditableSubtitle] = useState(props.content?.subtitle || fallbackSubtitle);
-
-  useEffect(() => {
-    setEditableTitle(props.content?.title || fallbackTitle);
-    setEditableSubtitle(props.content?.subtitle || fallbackSubtitle);
-  }, [props.content, fallbackTitle, fallbackSubtitle]);
+  const fallbackTitle = useMemo(() => t("catalog_default_title") || "Catálogo Oficial", [t]);
+  const fallbackSubtitle = useMemo(() => t("catalog_default_subtitle") || "Explore produtos selecionados com garantia e qualidade.", [t]);
 
   const layoutCols = Math.min(Math.max(Number(props.style?.cols) || 4, 1), 4);
   const currentFonts = FONT_SIZE_MAPS[props.style?.fontSize || "base"];
 
   const { data: adminStore } = useAdminStore();
 
-  const { data: publicStore, isLoading: isLoadingPublicStore } = useQuery({
-    queryKey: ["public-store-info", storeSlug], 
-    queryFn: async () => {
-      if (!storeSlug) return null;
-      const key = cacheKey("storely_public_store", CACHE_VERSION, storeSlug);
-      const cached = readCache<{ id: string; currency: string | null; slug: string }>(key, storeSlug);
-      if (cached) return cached;
-      
-      const { data, error } = await supabase
-        .from("stores")
-        .select("id, currency, slug")
-        .eq("slug", storeSlug)
-        .maybeSingle();
-        
-      if (error || !data) return null;
-      
-      const safeStore = { 
-        id: String(data.id), 
-        currency: data.currency ? String(data.currency) : null, 
-        slug: String(data.slug) 
-      };
-      writeCache(key, safeStore, storeSlug);
-      return safeStore;
-    },
-    enabled: Boolean(storeSlug && isReadOnly),
-    ...SUPER_CACHE_CONFIG,
-  });
+  const rawStoreId = props.storeId || props.store_id || props.section?.store_id;
+  const effectiveStoreId = isReadOnly ? rawStoreId : (rawStoreId || adminStore?.id);
 
-  const effectiveStoreId = isReadOnly 
-    ? (publicStore?.id || props.storeId || props.store_id || props.section?.store_id)
-    : (props.storeId || props.store_id || props.section?.store_id || adminStore?.id);
-
-  const storeCurrency = isReadOnly ? (publicStore?.currency || "MZN") : (adminStore?.currency || "MZN");
-  const activeStoreSlug = isReadOnly ? (storeSlug || publicStore?.slug) : adminStore?.slug;
-  
-  const designPalette = useMemo(() => {
-    if (!effectiveStoreId) return isDark ? HERO_PALETTES.dark[0] : HERO_PALETTES.light[0];
-    let hash = 0;
-    for (let i = 0; i < effectiveStoreId.length; i++) hash = effectiveStoreId.charCodeAt(i) + ((hash << 5) - hash);
-    const index = Math.abs(hash) % HERO_PALETTES[isDark ? "dark" : "light"].length;
-    return HERO_PALETTES[isDark ? "dark" : "light"][index];
-  }, [effectiveStoreId, isDark]);
-
-  const { data: rawProducts = [], isLoading: isLoadingProducts } = useStoreProducts(
+  // Leitura síncrona do cache
+  const { data: storeBundle, isLoading: isLoadingProducts } = useStoreProducts(
     effectiveStoreId, 
-    storeCurrency, 
-    activeStoreSlug, 
+    adminStore?.currency || "MZN", 
+    storeSlug || adminStore?.slug, 
     t
   );
 
-  // 3 e 4. ATUALIZAÇÃO DO PROCESSAMENTO COM CÁLCULO DE DESCONTO
+  // 1. Extração garantida como Array plano
+  const rawProducts = useMemo(() => {
+    if (Array.isArray(storeBundle)) return storeBundle;
+    if (storeBundle && Array.isArray((storeBundle as any).products)) return (storeBundle as any).products;
+    return [];
+  }, [storeBundle]);
+
+  const fetchedStore = useMemo(() => {
+    if (storeBundle && !Array.isArray(storeBundle) && (storeBundle as any).store) {
+      return (storeBundle as any).store;
+    }
+    return null;
+  }, [storeBundle]);
+
+  const activeStoreSlug = isReadOnly ? (storeSlug || fetchedStore?.slug) : adminStore?.slug;
+  const storeName = isReadOnly ? (fetchedStore?.name || t("store_official_title") || "Loja Oficial") : (adminStore?.name || t("store_official_title") || "Loja Oficial");
+  const storeLogo = isReadOnly ? fetchedStore?.logo_url : adminStore?.logo_url;
+  const storeCurrency = isReadOnly ? (fetchedStore?.currency || "MZN") : (adminStore?.currency || "MZN");
+
+  const resolvedStoreId = effectiveStoreId || fetchedStore?.id;
+
+  const designPalette = useMemo(() => {
+    if (!resolvedStoreId) return isDark ? HERO_PALETTES.dark[0] : HERO_PALETTES.light[0];
+    let hash = 0;
+    for (let i = 0; i < resolvedStoreId.length; i++) hash = resolvedStoreId.charCodeAt(i) + ((hash << 5) - hash);
+    const index = Math.abs(hash) % HERO_PALETTES[isDark ? "dark" : "light"].length;
+    return HERO_PALETTES[isDark ? "dark" : "light"][index];
+  }, [resolvedStoreId, isDark]);
+
+  // 2. Processamento defensivo garantindo que o retorno seja sempre um Array
   const processedProducts = useMemo(() => {
-    const enriched = enrichProductsIntelligently(rawProducts);
-    
-    return enriched.map(p => {
-      // Cálculo do desconto centralizado
+    const safeRaw = Array.isArray(rawProducts) ? rawProducts : [];
+    const enriched = enrichProductsIntelligently ? enrichProductsIntelligently(safeRaw) : safeRaw;
+
+    const targetArray = Array.isArray(enriched) 
+      ? enriched 
+      : (enriched && Array.isArray((enriched as any).products) ? (enriched as any).products : safeRaw);
+
+    return targetArray.map((p: any) => {
       const discount = Number(p.discount_percent) || 0;
       const hasDiscount = discount > 0;
       const originalPrice = Number(p.price) || 0;
-      
-      const finalPrice = hasDiscount 
-        ? originalPrice - (originalPrice * (discount / 100))
-        : originalPrice;
+      const finalPrice = hasDiscount ? originalPrice - (originalPrice * (discount / 100)) : originalPrice;
 
       return {
         ...p,
@@ -145,39 +125,71 @@ export function ProductsCatalog(props: CatalogProps) {
     });
   }, [rawProducts, enrichProductsIntelligently]);
 
+  // Capa: 1 produto mais recente de cada categoria existente
+  const categoryCoverImages = useMemo(() => {
+    if (!processedProducts.length) return [];
+    const categoryMap = new Map<string, string>();
+
+    for (const p of processedProducts) {
+      const img = p.image_url || p.main_image || p.gallery?.[0];
+      if (!img) continue;
+
+      const cat = p.metadata?.parentCategory || p.category || (t("common_general") || "Geral");
+      if (!categoryMap.has(cat)) {
+        categoryMap.set(cat, img);
+      }
+    }
+    return Array.from(categoryMap.values());
+  }, [processedProducts, t]);
+
+  const editorMockupImage = useMemo(() => {
+    return categoryCoverImages[0] || processedProducts[0]?.image_url || processedProducts[0]?.main_image || null;
+  }, [categoryCoverImages, processedProducts]);
+
+  const categoriesCount = useMemo(() => {
+    const categories = new Set(processedProducts.map((p: any) => p.metadata?.parentCategory || p.category).filter(Boolean));
+    return categories.size;
+  }, [processedProducts]);
+
+  const onSaleCount = useMemo(() => {
+    return processedProducts.filter((p: any) => p.has_discount).length;
+  }, [processedProducts]);
+
   useEffect(() => {
-    if (processedProducts.length > 0 && effectiveStoreId) {
-      const searchCacheKey = cacheKey("store_catalog", CACHE_VERSION, effectiveStoreId);
+    if (processedProducts.length > 0 && resolvedStoreId) {
+      const searchCacheKey = cacheKey("store_catalog", CACHE_VERSION, resolvedStoreId);
       writeCache(searchCacheKey, processedProducts, activeStoreSlug);
-      queryClient.setQueryData(["catalog-products-full", effectiveStoreId, storeCurrency], processedProducts);
+      queryClient.setQueryData(["catalog-products-full", resolvedStoreId, storeCurrency], processedProducts);
     }
-  }, [processedProducts, effectiveStoreId, storeCurrency, activeStoreSlug, queryClient]);
+  }, [processedProducts, resolvedStoreId, storeCurrency, activeStoreSlug, queryClient]);
 
-  const isLoading = (isLoadingPublicStore || isLoadingProducts) && processedProducts.length === 0;
+  const isLoading = isLoadingProducts && processedProducts.length === 0;
 
-  // ==========================================
-  // LÓGICA DE FILTRAGEM ATUALIZADA (UNISSEXO)
-  // ==========================================
+  // 3. Filtragem garantida como Array
   const displayProducts = useMemo(() => {
-    let filtered = processedProducts;
+    let filtered = Array.isArray(processedProducts) ? processedProducts : [];
 
-    if (activeParent !== "Todos") {
-      filtered = filtered.filter(p => p.metadata?.parentCategory === activeParent);
+    if (!isEditor && onlyDiscounts) {
+      filtered = filtered.filter((p: any) => p.has_discount);
     }
-    
-    if (activeChild) {
-      filtered = filtered.filter(p => p.metadata?.subCategory === activeChild);
+
+    if (!isEditor && activeParent !== "Todos") {
+      filtered = filtered.filter((p: any) => p.metadata?.parentCategory === activeParent);
     }
-    
-    if (activeAttribute) {
+
+    if (!isEditor && activeChild) {
+      filtered = filtered.filter((p: any) => p.metadata?.subCategory === activeChild);
+    }
+
+    if (!isEditor && activeAttribute) {
       const genderFilters = ["Homem", "Mulher", "Criança", "Men", "Women", "Kids"];
       const isGenderFilter = genderFilters.includes(activeAttribute);
 
-      filtered = filtered.filter(p => {
+      filtered = filtered.filter((p: any) => {
         if (isGenderFilter) {
           return p.metadata?.gender === activeAttribute || !p.metadata?.gender;
         }
-        
+
         return (
           (p.metadata?.sizes || []).includes(activeAttribute) ||
           (p.metadata?.attributes || []).includes(activeAttribute)
@@ -187,97 +199,112 @@ export function ProductsCatalog(props: CatalogProps) {
 
     if (isEditor) return filtered.slice(0, EDITOR_PREVIEW_LIMIT);
     return filtered;
-  }, [processedProducts, activeParent, activeChild, activeAttribute, isEditor]);
+  }, [processedProducts, activeParent, activeChild, activeAttribute, onlyDiscounts, isEditor]);
 
   const handleProductClick = useCallback((productId: string) => {
     if (isEditor || !activeStoreSlug) return;
-    const clickedProduct = processedProducts.find(p => p.id === productId);
+    const clickedProduct = processedProducts.find((p: any) => p.id === productId);
 
-    // O state agora transporta o clickedProduct que já contém os campos matemáticos
-    // final_price, original_price, discount_percent e has_discount
     navigate(`/${activeStoreSlug}/${pageSlug || "products"}/${productId}`, { 
       state: { 
         fromStore: true,
-        product: clickedProduct, // Já inclui o desconto injetado pelo useMemo acima
+        product: clickedProduct,
         initialProducts: processedProducts,
         storeCurrency: storeCurrency,
-        effectiveStoreId: effectiveStoreId
+        effectiveStoreId: resolvedStoreId
       } 
     });
-  }, [isEditor, activeStoreSlug, navigate, pageSlug, processedProducts, storeCurrency, effectiveStoreId]);
+  }, [isEditor, activeStoreSlug, navigate, pageSlug, processedProducts, storeCurrency, resolvedStoreId]);
 
-  const handleBlurText = (field: "title" | "subtitle", value: string) => {
-    let sanitized = value.trim();
-    if (!sanitized) {
-      sanitized = field === "title" ? fallbackTitle : fallbackSubtitle;
-      if (field === "title") setEditableTitle(fallbackTitle);
-      else setEditableSubtitle(fallbackSubtitle);
+  const handleUpdateText = useCallback((field: "title" | "subtitle", value: string) => {
+    if (props.onUpdate) {
+      props.onUpdate(field, value);
     }
-    if (props.onUpdate) props.onUpdate(field, sanitized);
-  };
+  }, [props]);
 
-  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>, maxLength: number) => {
-    e.preventDefault();
-    const text = e.clipboardData.getData("text/plain").slice(0, maxLength);
-    document.execCommand("insertText", false, text);
-  };
-
-  if (!effectiveStoreId) return null;
-
-  const alignClass = props.style?.align === 'center' ? 'text-center items-center mx-auto' : props.style?.align === 'justify' ? 'text-left items-stretch w-full' : 'text-left items-start';
+  const handleToggleDiscounts = useCallback(() => {
+    setOnlyDiscounts((prev) => !prev);
+  }, []);
 
   return (
-    <section className={`w-full overflow-hidden subpixel-antialiased ${isDark ? "bg-[#050505] text-zinc-100" : "bg-white text-black"}`} style={{ contentVisibility: 'auto', containIntrinsicSize: '650px', isolation: "isolate", transform: "translateZ(0)" }}>
-      
-      {/* HEADER DA SECÇÃO */}
-      <div className={`relative w-full border-b px-4 py-6 md:px-8 md:py-10 flex flex-col justify-center transition-all duration-200 ${designPalette.bg} ${designPalette.border}`}>
-        <div className="mx-auto w-full max-w-[1400px] relative z-10">
-          <div className={`flex flex-col max-w-3xl ${alignClass}`}>
-            <div className={`inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-widest mb-3 shadow-sm ${designPalette.badge}`}>
-              <Sparkles size={9} className="shrink-0" /><span>{t("catalog_collection") || "Coleção"}</span>
-            </div>
-            
-            <div className="w-full relative group mb-1.5 will-change-[transform,opacity]">
-              <h2 className={`transition-all outline-none ${currentFonts.title} ${isDark ? "text-white" : "text-black"} ${isEditor ? "border border-dashed border-zinc-400/20 hover:border-amber-500/40 bg-amber-500/[0.01] focus:bg-amber-500/[0.03] rounded-lg px-2.5 py-1 cursor-text focus:border-solid focus:border-amber-500 focus:ring-1 focus:ring-amber-500/10" : ""}`} contentEditable={isEditor} suppressContentEditableWarning={true} onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); if (e.currentTarget.textContent!.length >= MAX_TITLE && e.key !== "Backspace" && !e.key.startsWith("Arrow")) e.preventDefault(); }} onPaste={(e) => handlePaste(e, MAX_TITLE)} onBlur={(e) => { const text = e.currentTarget.textContent?.slice(0, MAX_TITLE) || ""; const final = text.trim() || fallbackTitle; setEditableTitle(final); handleBlurText("title", final); }}>{editableTitle}</h2>
-              {isEditor && <span className={`absolute right-2 bottom-0.5 text-[8px] font-mono opacity-30 pointer-events-none ${isDark ? "text-zinc-400" : "text-black"}`}>{editableTitle.length}/{MAX_TITLE}</span>}
-            </div>
+    <section 
+      className={`w-full overflow-hidden subpixel-antialiased ${isDark ? "bg-[#09090b] text-zinc-100" : "bg-[#fcfcfd] text-zinc-900"}`} 
+      style={{ contentVisibility: "auto", contain: "layout style", transform: "translateZ(0)" }}
+    >
+      {/* HEADER MODULARIZADO */}
+      <CatalogHeader
+        isEditor={isEditor}
+        isDark={isDark}
+        isCenter={isCenter}
+        storeName={storeName}
+        storeLogo={storeLogo}
+        activeStoreSlug={activeStoreSlug}
+        storeCurrency={storeCurrency}
+        designPalette={designPalette}
+        currentFonts={currentFonts}
+        initialTitle={props.content?.title}
+        initialSubtitle={props.content?.subtitle}
+        fallbackTitle={fallbackTitle}
+        fallbackSubtitle={fallbackSubtitle}
+        processedProductsCount={processedProducts.length}
+        categoriesCount={categoriesCount}
+        onSaleCount={onSaleCount}
+        categoryCoverImages={categoryCoverImages}
+        editorMockupImage={editorMockupImage}
+        onlyDiscounts={onlyDiscounts}
+        onToggleDiscounts={handleToggleDiscounts}
+        onUpdateText={handleUpdateText}
+        t={t as (key: string, params?: Record<string, any>) => string}
+              />
 
-            <div className="w-full relative group will-change-[transform,opacity]">
-              <p data-placeholder={t("catalog_add_description") || "Adicione uma descrição..."} className={`transition-all outline-none font-medium empty:before:text-zinc-400/60 empty:before:content-[attr(data-placeholder)] ${currentFonts.subtitle} ${isDark ? "text-zinc-400" : "text-zinc-800"} ${isEditor ? "border border-dashed border-zinc-400/20 hover:border-amber-500/40 bg-amber-500/[0.01] focus:bg-amber-500/[0.03] rounded-lg px-2.5 py-1 cursor-text focus:border-solid focus:border-amber-500 focus:ring-1 focus:ring-amber-500/10 min-h-[2em]" : ""}`} contentEditable={isEditor} suppressContentEditableWarning={true} onKeyDown={(e) => { const currentText = e.currentTarget.innerText || ""; if (e.key === "Enter") { const lineCount = (currentText.match(/\n/g) || []).length; if (lineCount >= 1) e.preventDefault(); } if (currentText.length >= MAX_SUBTITLE && e.key !== "Backspace" && !e.key.startsWith("Arrow")) e.preventDefault(); }} onPaste={(e) => handlePaste(e, MAX_SUBTITLE)} onBlur={(e) => { const text = e.currentTarget.innerText || ""; const final = text.trim() || fallbackSubtitle; setEditableSubtitle(final); handleBlurText("subtitle", final); }}>{editableSubtitle === fallbackSubtitle && isEditor ? "" : editableSubtitle}</p>
-              {isEditor && <span className={`absolute right-2 bottom-0.5 text-[8px] font-mono opacity-30 pointer-events-none ${isDark ? "text-zinc-400" : "text-black"}`}>{editableSubtitle.length}/{MAX_SUBTITLE}</span>}
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* ÁREA DE FILTROS & LISTA DE PRODUTOS */}
+      <div className="mx-auto w-full max-w-[1400px] px-4 py-5 sm:px-6 md:px-8 md:py-6">
 
-      <div className="mx-auto w-full max-w-[1400px] px-4 py-6 md:px-8 md:py-10">
-        
-        {/* FILTROS HIERÁRQUICOS */}
+        {/* Filtros Hierárquicos (Apenas no modo público) */}
         {isReadOnly && !isLoading && processedProducts.length > 0 && (
-          <CatalogFilters
-            products={processedProducts}
-            activeParent={activeParent}
-            setActiveParent={setActiveParent}
-            activeChild={activeChild}
-            setActiveChild={setActiveChild}
-            activeAttribute={activeAttribute}
-            setActiveAttribute={setActiveAttribute}
-            isDark={isDark}
-          />
-        )}
-
-        {isEditor && processedProducts.length > 0 && (
-          <div className="mb-3.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 flex items-center gap-1.5 select-none pointer-events-none">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />{t("catalog_layout_sample") || "Amostra de Layout"} ({displayProducts.length} {t("common_of") || "de"} {processedProducts.length} {t("catalog_actives") || "ativos"})
+          <div className="mb-5">
+            <CatalogFilters
+              products={processedProducts}
+              activeParent={activeParent}
+              setActiveParent={setActiveParent}
+              activeChild={activeChild}
+              setActiveChild={setActiveChild}
+              activeAttribute={activeAttribute}
+              setActiveAttribute={setActiveAttribute}
+              isDark={isDark}
+            />
           </div>
         )}
 
-        {/* LISTA DE PRODUTOS */}
-        <div className="w-full grid grid-cols-1 min-h-[220px]" style={{ contain: "layout style" }}>
+        {/* Mockup de Filtros no Editor */}
+        {isEditor && (
+          <div className="mb-4 flex items-center justify-between border-b border-zinc-200/60 dark:border-zinc-800 pb-3 pointer-events-none select-none opacity-80">
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                {t("common_all") || "Todos"}
+              </span>
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
+                {t("categories") || "Categorias"}
+              </span>
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
+                {t("filters") || "Filtros"}
+              </span>
+            </div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-amber-500 flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+              <span>{t("catalog_layout_sample") || "Amostra de Layout"} ({displayProducts.length} {t("common_of") || "de"} {processedProducts.length} {t("catalog_actives") || "itens"})</span>
+            </div>
+          </div>
+        )}
+
+        {/* Grade de Produtos */}
+        <div className="w-full grid grid-cols-1 min-h-[220px]">
           {isLoading ? (
-            <div className="w-full"><ProductShowcaseSkeleton cols={layoutCols} isDark={isDark} /></div>
+            <div className="w-full">
+              <ProductShowcaseSkeleton cols={layoutCols} isDark={isDark} />
+            </div>
           ) : (
-            <div className="w-full animate-in fade-in duration-200 select-text">
+            <div className="w-full select-text">
               {layoutCols === 1 ? (
                 <LayoutList products={displayProducts} onAction={handleProductClick} isDark={isDark} t={t} />
               ) : (
@@ -286,11 +313,29 @@ export function ProductsCatalog(props: CatalogProps) {
             </div>
           )}
 
-          {/* EMPTY STATE */}
+          {/* Estado Vazio */}
           {!isLoading && displayProducts.length === 0 && (
-            <div className={`rounded-xl border border-dashed py-12 flex flex-col items-center justify-center ${isDark ? "border-zinc-800 bg-zinc-900/5" : "border-zinc-200 bg-zinc-50/30"}`}>
-              <Package size={30} className="mb-2 text-zinc-500 opacity-25" />
-              <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">{props.content?.empty_text || "Nenhum produto encontrado com estes filtros"}</p>
+            <div className={`rounded-xl border border-dashed py-12 flex flex-col items-center justify-center text-center px-4 ${isDark ? "border-zinc-800 bg-zinc-900/20" : "border-zinc-300 bg-zinc-50"}`}>
+              <Package size={32} className="mb-2 text-zinc-400 opacity-50" />
+              <h3 className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>
+                {onlyDiscounts ? (t("catalog_no_discounts_title") || "Nenhum Produto em Promoção") : (t("catalog_no_products_title") || "Nenhum Produto Encontrado")}
+              </h3>
+              <p className="text-[11px] text-zinc-500 mt-1 max-w-xs">
+                {onlyDiscounts 
+                  ? (t("catalog_no_discounts_desc") || "Não há produtos com desconto ativo no momento.") 
+                  : (props.content?.empty_text || t("catalog_no_products_desc") || "Não encontramos itens para estes filtros.")}
+              </p>
+              {onlyDiscounts && !isEditor && (
+                <button
+                  type="button"
+                  onClick={handleToggleDiscounts}
+                  className={`mt-3 px-3.5 py-1 rounded-full text-xs font-semibold transition-colors ${
+                    isDark ? "bg-zinc-800 text-white hover:bg-zinc-700" : "bg-zinc-900 text-white hover:bg-black"
+                  }`}
+                >
+                  {t("catalog_show_all") || "Mostrar Todos os Produtos"}
+                </button>
+              )}
             </div>
           )}
         </div>

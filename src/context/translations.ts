@@ -2493,20 +2493,15 @@ swipe_down_to_close: "Swipe down",
 
 
 
-  guide_badge: 'Quick Growth Hub',
   guide_title: 'How to Get Customers & Boost Sales',
   guide_subtitle: 'Choose which link to promote, copy ready-to-use messages, and configure your apps directly.',
   guide_tab_products: 'Product Catalog',
-  guide_tab_store: 'Main Storefront',
   guide_copied: 'Link successfully copied!',
   guide_copy_btn: 'Copy Link',
-  guide_preview_btn: 'View My Page',
-  guide_native_share_btn: 'Share via Phone',
-  guide_social_broadcast: 'Quick Social Broadcast',
+  guide_native_share_btn: "Share with Photo & Message",  guide_social_broadcast: 'Quick Social Broadcast',
   guide_share_whatsapp: 'WhatsApp',
   guide_share_telegram: 'Telegram',
   guide_share_facebook: 'Facebook',
-  guide_share_x: 'Twitter / X',
   guide_share_text_intro: 'Hey! Check out the official catalog from',
   guide_share_text_body: 'We have exciting new arrivals with live pricing and photos. Browse now:',
   guide_mockup_preview_badge: 'Customer View Preview',
@@ -2649,7 +2644,122 @@ modal_generating: 'Preparing document...',
 
 
 
+
+
+
+
+
+  store_default_name: "Our Store",
+  share_msg_products_intro: "✨ Hi! Check out the complete product catalog from",
+  share_msg_store_intro: "🛍️ Visit the official store page of",
+  
+  guide_copied_msg: "Message and link copied!",
+  guide_copy_msg_btn: "Copy Promotion Message",
+
+  guide_letter_modal_title: "Intro Letter & QR Code",
+  guide_letter_modal_places: "Counter • Store Window • WhatsApp Status • Groups & Events",
+
+
+  guide_share_instagram: "Instagram",
+
+
+
+
+
+
+  guide_share_x: 'Twitter',
+
+  guide_badge: "Promote",
+  guide_preview_btn: "View Store",
+  guide_tab_store: "Home Page",
  
+
+
+
+
+
+  guide_nav_title: "Promotion Step-by-Step",
+  guide_nav_hero: "1. Share",
+  guide_nav_templates: "2. Messages",
+  guide_nav_platforms: "3. Setup Networks",
+  guide_nav_troubleshoot: "4. Tips",
+  guide_badge_status: "WhatsApp Status & Stories",
+  guide_badge_greeting: "WhatsApp Greeting",
+  guide_badge_bio: "Instagram & TikTok Bio",
+
+
+  guide_tab_share: "Share",
+  guide_tab_texts: "Texts",
+  guide_tab_places: "Networks",
+  guide_tab_tips: "Tips",
+
+
+
+
+
+
+
+
+
+
+  
+guide_template_send_wa: "Send via WhatsApp",
+
+
+
+
+
+
+
+
+guide_letter_tag_qr: "With QR Code",
+guide_letter_tag_print: "Ready to Print",
+guide_letter_open_btn: "Generate",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  store_official_title: "Official Store",
+  verified_store: "Official",
+  safe_browsing: "Verified",
+  catalog_highlights: "Highlights",
+  catalog_recent_highlights: "Highlights",
+  catalog_filter_discounts: "On Sale",
+  catalog_show_all: "Show All",
+  catalog_no_products_title: "No Products Found",
+  catalog_no_products_desc: "We couldn't find any items matching these filters.",
+  catalog_no_discounts_title: "No Discounted Products",
+  catalog_no_discounts_desc: "There are no products on sale at the moment.",
+  share_store_recommendation_msg: "Check out the products from {{store}}! Found great deals in their official catalog:",
+  common_home: "Home Page",
+  common_share: "Recommend",
+  
+  categories: "categories",
+  filters: "Filters",
+  on_sale: "on sale",
+reset: "Reset",
+
+
+beta_badge: "Storely Beta",
+  welcome_beta_title: "Welcome to Storely Beta",
+  welcome_beta_desc: "Your environment has been updated and fully optimized with the latest version. Enjoy the new tools!",
+  welcome_beta_button: "Start Exploring",
+  current_version_label: "Running version:",
+  new_version_label: "New version:",
+  build_date_label: "Build date:",
+  
   },
 
 
@@ -5195,20 +5305,17 @@ swipe_down_to_close: "Deslize para baixo",
 
 
 
-  guide_badge: 'Divulgação Rápida',
   guide_title: 'Como Atrair Clientes e Vender',
   guide_subtitle: 'Escolha o link que quer partilhar, copie as mensagens prontas e aceda diretamente aos seus aplicativos.',
   guide_tab_products: 'Catálogo de Produtos',
-  guide_tab_store: 'Página da Loja',
   guide_copied: 'Link copiado com sucesso!',
   guide_copy_btn: 'Copiar Link',
-  guide_preview_btn: 'Ver Minha Página',
-  guide_native_share_btn: 'Partilhar no Telemóvel',
+
   guide_social_broadcast: 'Disparar Agora nos Aplicativos',
   guide_share_whatsapp: 'WhatsApp',
   guide_share_telegram: 'Telegram',
   guide_share_facebook: 'Facebook',
-  guide_share_x: 'Twitter / X',
+  guide_share_x: 'Twitter',
   guide_share_text_intro: 'Olá! Veja o nosso catálogo oficial da',
   guide_share_text_body: 'Temos novidades incríveis com fotos e preços atualizados. Acesse agora:',
   guide_mockup_preview_badge: 'Como o seu cliente vai ver',
@@ -5330,6 +5437,111 @@ modal_generating: 'A preparar documento...',
 
 
 
+
+
+
+
+
+  store_default_name: "Nossa Loja",
+  share_msg_products_intro: "✨ Olá! Veja o catálogo com todos os produtos de",
+  share_msg_store_intro: "🛍️ Visite a página oficial de",
+  
+  guide_copied_msg: "Mensagem e link copiados!",
+  guide_copy_msg_btn: "Copiar Mensagem de Divulgação",
+ 
+  guide_letter_modal_title: "Carta de Apresentação & QR Code",
+  guide_letter_modal_places: "Balcão • Montra • Status do WhatsApp • Grupos & Eventos",
+  guide_share_instagram: "Instagram",
+
+
+  guide_badge: "Divulgação",
+  guide_preview_btn: "Ver Loja",
+  guide_tab_store: "Página Inicial",
+  
+  guide_native_share_btn: "Partilhar com Foto & Mensagem",
+
+
+  guide_nav_title: "Passo a Passo da Divulgação",
+  guide_nav_hero: "1. Partilhar",
+  guide_nav_templates: "2. Mensagens",
+  guide_nav_platforms: "3. Configurar Redes",
+  guide_nav_troubleshoot: "4. Dicas",
+  guide_badge_status: "WhatsApp Status & Stories",
+  guide_badge_greeting: "Saudação no WhatsApp",
+  guide_badge_bio: "Bio do Instagram & TikTok",
+  guide_tab_share: "Partilhar",
+  guide_tab_texts: "Textos",
+  guide_tab_places: "Redes",
+  guide_tab_tips: "Dicas",
+
+
+
+
+
+
+
+
+
+
+
+
+
+guide_template_send_wa: "Enviar no WhatsApp",
+
+
+
+guide_letter_tag_qr: "Com QR Code",
+guide_letter_tag_print: "Pronto a Imprimir",
+guide_letter_open_btn: "Gerar",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  store_official_title: "Loja Oficial",
+  verified_store: "Oficial",
+  safe_browsing: "Verificado",
+  catalog_highlights: "Destaques",
+  catalog_recent_highlights: "Destaques",
+  catalog_filter_discounts: "Promoções",
+  catalog_show_all: "Ver Todos",
+  catalog_no_products_title: "Nenhum Produto Encontrado",
+  catalog_no_products_desc: "Não encontramos itens para estes filtros.",
+  catalog_no_discounts_title: "Nenhum Produto em Promoção",
+  catalog_no_discounts_desc: "Não há produtos com desconto ativo no momento.",
+  share_store_recommendation_msg: "Dá uma olhada nos produtos da {{store}}! Encontrei ótimas opções no catálogo oficial:",
+  common_home: "Página Inicial",
+  common_share: "Recomendar",
+
+  categories: "categorias",
+  filters: "Filtros",
+  on_sale: "em promoção",
+
+  reset: "Redefinir",
+
+
+
+
+
+
+
+  beta_badge: "Storely Beta",
+  welcome_beta_title: "Bem-vindo ao Beta da Storely",
+  welcome_beta_desc: "O teu ambiente foi atualizado e totalmente otimizado com a versão mais recente. Aproveita as novas ferramentas!",
+  welcome_beta_button: "Começar a Explorar",
+  current_version_label: "Versão em execução:",
+  new_version_label: "Nova versão:",
+  build_date_label: "Compilação:",
+  
 }
 
 

@@ -304,7 +304,7 @@ export const LogoSection = memo(function LogoSection({
       {/* MODAL / BOTTOM SHEET MOBILE-FRIENDLY (PORTAL z-[99999]) */}
       {mounted && imageSrc && createPortal(
         <div 
-          className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-xs"
+          className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 "
           style={{ contain: 'strict' }}
         >
           <div className="relative bg-[#1A1624] border border-[#2D263B] w-full sm:max-w-md h-[90dvh] sm:h-[600px] rounded-t-[2.5rem] sm:rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col justify-between select-none">
