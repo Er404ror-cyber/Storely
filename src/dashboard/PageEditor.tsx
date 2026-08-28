@@ -382,7 +382,7 @@ export function Editor() {
   }
 
   return (
-    <div className="h-screen w-full bg-[#F1F5F9] flex flex-col md:flex-row overflow-hidden font-sans">
+    <div className="h-screen w-full bg-[#F1F5F9] flex flex-col lg:flex-row overflow-hidden font-sans">
       <DesktopSidebar
         sections={sections}
         hasChanges={hasChanges}

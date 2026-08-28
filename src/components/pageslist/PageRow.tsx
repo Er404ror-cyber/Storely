@@ -1,22 +1,33 @@
-import { memo, useCallback, useMemo } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Home, AlertCircle, Globe, Check, X, 
-  Copy, Edit3, Star, Trash2, ArrowRight 
+  Home, 
+  AlertCircle, 
+  Globe, 
+  Check, 
+  X, 
+  Copy, 
+  Edit3, 
+  Star, 
+  Trash2, 
+  ArrowRight,
+  Sparkles
 } from 'lucide-react';
 import { useTranslate } from '../../context/LanguageContext';
 import { useClipboard } from '../../hooks/useClipboard';
 
-// --- Interfaces ---
-interface PageData {
+export interface PageData {
   id: string;
   slug: string;
-  is_home: boolean;
+  is_home?: boolean;
+  type?: string;
+  title?: string;
+  [key: string]: unknown;
 }
 
 interface PageRowProps {
   page: PageData;
-  storeSlug: string;
+  storeSlug?: string;
   isConflict: boolean;
   setAsHome: { mutate: (id: string) => void };
   updateSlug: { mutate: (data: { id: string; newSlug: string }) => void };
@@ -31,71 +42,197 @@ interface PageRowProps {
 
 const BASE_DOMAIN = "https://storelyy.vercel.app";
 
-// --- Sub-componentes Memoizados para evitar re-renderizações inúteis ---
-
-const PageIcon = memo(({ isHome, isConflict }: { isHome: boolean, isConflict: boolean }) => (
-  <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-    isHome ? 'bg-indigo-600 text-white' 
-    : isConflict ? 'bg-red-100 text-red-600' 
-    : 'bg-slate-50 text-slate-400 border border-slate-100'
-  }`}>
-    {isHome ? <Home size={20} /> : isConflict ? <AlertCircle size={20} /> : <Globe size={20} />}
+// 1. ÍCONE COM HIERARQUIA MODERNA
+const PageIcon = memo(({ isHome, isConflict }: { isHome: boolean; isConflict: boolean }) => (
+  <div 
+    className={`relative w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-xs border ${
+      isConflict 
+        ? 'bg-rose-50 text-rose-600 border-rose-200/80 shadow-rose-500/10' 
+        : isHome 
+          ? 'bg-gradient-to-br from-[#8862DF] to-[#6E42D3] text-white border-white/20 shadow-[#8862DF]/20 shadow-md' 
+          : 'bg-[#F6F3FB] text-[#7A6E94] border-[#E9E2F5] hover:bg-[#EFEAF7]'
+    }`}
+  >
+    {isConflict ? (
+      <AlertCircle size={19} className="shrink-0 animate-pulse" />
+    ) : isHome ? (
+      <Home size={19} className="shrink-0" />
+    ) : (
+      <Globe size={19} className="shrink-0" />
+    )}
   </div>
 ));
 
-const EditForm = memo(({ value, onChange, onSave, onCancel }: any) => (
-  <div className="flex items-center gap-2">
-    <div className="relative flex-1">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">/</span>
-      <input 
-        autoFocus
-        className="w-full bg-slate-50 pl-6 pr-3 py-2.5 rounded-lg text-base font-bold outline-none text-indigo-600 border-2 border-indigo-500"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && onSave()}
-      />
-    </div>
-    <div className="flex gap-1">
-      <button onClick={onSave} className="p-2.5 bg-indigo-600 text-white rounded-lg"><Check size={18} strokeWidth={3} /></button>
-      <button onClick={onCancel} className="p-2.5 bg-white border border-slate-200 text-slate-400 rounded-lg"><X size={18} strokeWidth={3} /></button>
-    </div>
-  </div>
-));
+PageIcon.displayName = 'PageIcon';
 
-const PageInfo = memo(({ slug, isHome, displayUrl, onCopy, isConflict, t }: any) => (
-  <div className="flex flex-col min-w-0">
-    <div className="flex items-center gap-2">
-      <span className={`text-base font-bold truncate ${isConflict ? 'text-red-700' : 'text-slate-900'}`}>
-        /{slug}
-      </span>
-      {isHome && (
-        <span className="bg-indigo-50 text-indigo-600 text-[9px] font-black uppercase px-2 py-0.5 rounded border border-indigo-100">
-          {t('primary_tag')}
+// 2. FORMULÁRIO DE EDIÇÃO INLINE
+interface EditFormProps {
+  value: string;
+  onChange: (val: string) => void;
+  onSave: () => void;
+  onCancel: () => void;
+}
+
+const EditForm = memo(({ value, onChange, onSave, onCancel }: EditFormProps) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      onSave();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      onCancel();
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2 w-full animate-in fade-in zoom-in-95 duration-150">
+      <div className="relative flex-1 min-w-0">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8862DF] font-black text-sm pointer-events-none">/</span>
+        <input 
+          autoFocus
+          className="w-full bg-[#FAF8FE] pl-7 pr-3 py-2 rounded-xl text-base sm:text-xs font-bold outline-none text-[#231A38] border-2 border-[#8862DF] focus:ring-4 focus:ring-[#8862DF]/15 transition-all shadow-inner"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+        />
+      </div>
+      <div className="flex items-center gap-1 shrink-0">
+        <button 
+          type="button" 
+          onClick={onSave} 
+          className="p-2 bg-[#8862DF] hover:bg-[#774ED8] text-white rounded-xl active:scale-90 shadow-md shadow-[#8862DF]/25 transition-all cursor-pointer"
+          title="Guardar"
+        >
+          <Check size={15} strokeWidth={3} />
+        </button>
+        <button 
+          type="button" 
+          onClick={onCancel} 
+          className="p-2 bg-white border border-[#EBE3F8] text-[#867B9E] hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 rounded-xl active:scale-90 transition-all cursor-pointer"
+          title="Cancelar"
+        >
+          <X size={15} strokeWidth={3} />
+        </button>
+      </div>
+    </div>
+  );
+});
+
+EditForm.displayName = 'EditForm';
+
+// 3. INFORMAÇÕES E URL COM FEEDBACK VISUAL
+interface PageInfoProps {
+  slug: string;
+  isHome: boolean;
+  displayUrl: string;
+  onCopy: () => void;
+  isConflict: boolean;
+  t: (key: any, variables?: Record<string, any>) => string;
+}
+
+const PageInfo = memo(({ slug, isHome, displayUrl, onCopy, isConflict, t }: PageInfoProps) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyClick = () => {
+    onCopy();
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  };
+
+  return (
+    <div className="flex flex-col min-w-0 justify-center">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className={`text-sm sm:text-[15px] font-black tracking-tight truncate ${
+          isConflict ? 'text-rose-600' : 'text-[#231A38]'
+        }`}>
+          /{slug}
         </span>
-      )}
-    </div>
-    <button onClick={onCopy} className="flex items-center gap-1.5 mt-0.5 text-slate-400 hover:text-indigo-600 transition-colors w-fit">
-      <span className="text-[10px] font-medium truncate max-w-[150px] md:max-w-full">{displayUrl}</span>
-      <Copy size={10} className="shrink-0" />
-    </button>
-  </div>
-));
+        
+        {isHome && (
+          <span className="inline-flex items-center gap-1 bg-[#8862DF]/10 text-[#7343DF] border border-[#8862DF]/20 text-[9px] font-black uppercase px-2 py-0.5 rounded-full shadow-2xs">
+            <Sparkles size={10} fill="currentColor" />
+            <span>{t('primary_tag') || 'Principal'}</span>
+          </span>
+        )}
 
-const ActionButtons = memo(({ isHome, onEdit, onSetHome, onDelete }: any) => (
-  <div className="flex items-center bg-slate-50 p-1 rounded-xl border border-slate-100">
-    <button onClick={onEdit} className="p-2.5 text-slate-500 hover:text-indigo-600"><Edit3 size={18} /></button>
+        {isConflict && (
+          <span className="inline-flex items-center gap-1 bg-rose-100 text-rose-700 border border-rose-200 text-[9px] font-black uppercase px-2 py-0.5 rounded-full">
+            {t('conflict_badge') || 'Duplicado'}
+          </span>
+        )}
+      </div>
+
+      <button 
+        type="button" 
+        onClick={handleCopyClick} 
+        className="group inline-flex items-center gap-1.5 mt-1 text-[#8C82A3] hover:text-[#8862DF] transition-colors w-fit text-left cursor-pointer"
+        title="Copiar link da página"
+      >
+        <span className="text-[11px] font-semibold text-slate-500 group-hover:text-[#8862DF] transition-colors truncate max-w-[170px] sm:max-w-xs">
+          {displayUrl}
+        </span>
+        
+        <div className="w-4 h-4 rounded-md flex items-center justify-center transition-all group-hover:bg-[#8862DF]/10">
+          {copied ? (
+            <Check size={11} className="text-emerald-500 shrink-0" strokeWidth={3} />
+          ) : (
+            <Copy size={11} className="opacity-50 group-hover:opacity-100 shrink-0 transition-opacity" />
+          )}
+        </div>
+      </button>
+    </div>
+  );
+});
+
+PageInfo.displayName = 'PageInfo';
+
+// 4. AÇÕES COM MICROINTERAÇÕES
+interface ActionButtonsProps {
+  isHome: boolean;
+  onEdit: () => void;
+  onSetHome: () => void;
+  onDelete: () => void;
+}
+
+const ActionButtons = memo(({ isHome, onEdit, onSetHome, onDelete }: ActionButtonsProps) => (
+  <div className="flex items-center bg-[#F7F4FB] p-1 rounded-2xl border border-[#ECE5F6] gap-0.5 shadow-2xs">
+    <button 
+      type="button" 
+      onClick={onEdit} 
+      className="p-2 text-[#7C7196] hover:text-[#8862DF] hover:bg-white rounded-xl active:scale-90 transition-all cursor-pointer"
+      title="Editar Caminho"
+    >
+      <Edit3 size={15} />
+    </button>
+
     {!isHome && (
       <>
-        <button onClick={onSetHome} className="p-2.5 text-slate-500 hover:text-amber-500"><Star size={18} /></button>
-        <button onClick={onDelete} className="p-2.5 text-slate-500 hover:text-red-500"><Trash2 size={18} /></button>
+        <button 
+          type="button" 
+          onClick={onSetHome} 
+          className="p-2 text-[#7C7196] hover:text-amber-500 hover:bg-white rounded-xl active:scale-90 transition-all cursor-pointer"
+          title="Tornar Página Principal"
+        >
+          <Star size={15} />
+        </button>
+
+        <button 
+          type="button" 
+          onClick={onDelete} 
+          className="p-2 text-[#7C7196] hover:text-rose-600 hover:bg-rose-50 rounded-xl active:scale-90 transition-all cursor-pointer"
+          title="Eliminar Página"
+        >
+          <Trash2 size={15} />
+        </button>
       </>
     )}
   </div>
 ));
 
-// --- Componente Principal ---
+ActionButtons.displayName = 'ActionButtons';
 
-export const PageRow = memo(({ 
+// 5. COMPONENTE PRINCIPAL
+export const PageRow = memo(function PageRow({ 
   page, 
   storeSlug, 
   isConflict, 
@@ -103,12 +240,13 @@ export const PageRow = memo(({
   updateSlug, 
   deletePage, 
   editingState 
-}: PageRowProps) => {
+}: PageRowProps) {
   
   const { t } = useTranslate();
   const { editingId, setEditingId, editValue, setEditValue } = editingState;
   
   const isEditing = editingId === page.id;
+  const isHome = Boolean(page.is_home);
   
   const fullUrl = useMemo(() => 
     `${BASE_DOMAIN}/${storeSlug || 'store'}/${page.slug}`, 
@@ -117,8 +255,8 @@ export const PageRow = memo(({
   
   const copyUrl = useClipboard(fullUrl, t('link_copied'), t('copy_error'));
 
-  // Handlers memorizados para não quebrar o React.memo dos sub-componentes
   const handleSave = useCallback(() => {
+    if (!editValue.trim()) return;
     updateSlug.mutate({ id: page.id, newSlug: editValue });
   }, [page.id, editValue, updateSlug]);
 
@@ -137,23 +275,30 @@ export const PageRow = memo(({
   }, [page.id, setAsHome]);
 
   const handleDelete = useCallback(() => {
-    if (window.confirm(`${t('delete_confirm')} "/${page.slug}"?`)) {
+    if (typeof window !== 'undefined' && window.confirm(`${t('delete_confirm') || 'Eliminar'} "/${page.slug}"?`)) {
       deletePage.mutate(page.id);
     }
   }, [page.id, page.slug, deletePage, t]);
 
-  const containerClasses = useMemo(() => `
-    bg-white border rounded-2xl p-4 md:p-5 
-    flex flex-col md:grid md:grid-cols-12 md:items-center gap-4 
-    ${isConflict ? 'border-red-200 bg-red-50' : 'border-slate-100'}
-  `, [isConflict]);
-
   return (
-    <div className={containerClasses}>
-      
-      {/* Esquerda: Ícone e Info */}
-      <div className="md:col-span-7 flex items-center gap-3">
-        <PageIcon isHome={page.is_home} isConflict={isConflict} />
+    <div 
+      className={`group relative bg-white border rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 transition-all duration-200 hover:shadow-md ${
+        isConflict 
+          ? 'border-rose-200/90 bg-rose-50/25 shadow-xs' 
+          : isHome
+            ? 'border-[#8862DF]/30 shadow-xs shadow-[#8862DF]/5'
+            : 'border-[#EDE8F5] shadow-xs hover:border-[#DDD4EB]'
+      }`}
+      style={{ contain: 'content' }}
+    >
+      {/* Marcador lateral visual para a página Home */}
+      {isHome && (
+        <div className="hidden sm:block absolute left-0 top-3 bottom-3 w-1 bg-gradient-to-b from-[#8862DF] to-[#6E42D3] rounded-r-full" />
+      )}
+
+      {/* Lado Esquerdo: Ícone e Detalhes */}
+      <div className="flex items-center gap-3.5 min-w-0 flex-1">
+        <PageIcon isHome={isHome} isConflict={isConflict} />
         
         <div className="min-w-0 flex-1">
           {isEditing ? (
@@ -166,7 +311,7 @@ export const PageRow = memo(({
           ) : (
             <PageInfo 
               slug={page.slug} 
-              isHome={page.is_home} 
+              isHome={isHome} 
               displayUrl={fullUrl.replace('https://', '')}
               onCopy={copyUrl}
               isConflict={isConflict}
@@ -176,11 +321,11 @@ export const PageRow = memo(({
         </div>
       </div>
 
-      {/* Direita: Ações */}
-      <div className="md:col-span-5 flex items-center justify-between md:justify-end gap-2">
+      {/* Lado Direito: Ações e Botão Editor */}
+      <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#F5F1FB]">
         {!isEditing && (
           <ActionButtons 
-            isHome={page.is_home}
+            isHome={isHome}
             onEdit={handleEditClick}
             onSetHome={handleSetHome}
             onDelete={handleDelete}
@@ -189,12 +334,14 @@ export const PageRow = memo(({
 
         <Link 
           to={`/admin/editor/${page.id}`} 
-          className="flex-1 md:flex-none bg-slate-900 text-white px-5 py-3.5 rounded-xl text-xs font-black hover:bg-indigo-600 transition-colors flex items-center justify-center gap-2 active:scale-95 shadow-sm"
+          className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#8862DF] to-[#764AD8] hover:from-[#7B52D9] hover:to-[#6A3BCF] text-white text-xs font-black uppercase tracking-wider active:scale-95 transition-all shadow-md shadow-[#8862DF]/25 hover:shadow-lg hover:shadow-[#8862DF]/35 cursor-pointer"
         >
-          {t('design_btn')} 
-          <ArrowRight size={14} />
+          <span>{t('design_btn') || 'Editor'}</span>
+          <ArrowRight size={13} strokeWidth={2.5} className="transition-transform group-hover:translate-x-0.5" />
         </Link>
       </div>
     </div>
   );
 });
+
+PageRow.displayName = 'PageRow';

@@ -28,7 +28,7 @@ export function MobileElements({
     <>
       {/* PEEK BAR MOBILE */}
       {editingId && !showMobileSidebar && (
-        <div className="md:hidden fixed bottom-6 left-6 right-28 bg-slate-900 text-white p-2 rounded-[2rem] shadow-2xl flex items-center justify-between z-[45] transition-all animate-in slide-in-from-bottom-8">
+        <div className="lg:hidden fixed bottom-6 left-6 right-28 bg-slate-900 text-white p-2 rounded-[2rem] shadow-2xl flex items-center justify-between z-[45] transition-all animate-in slide-in-from-bottom-8">
           <div 
             className="flex items-center gap-3 flex-1 px-2 py-1 cursor-pointer active:scale-95 transition-transform"
             onClick={() => setShowMobileSidebar(true)}
@@ -58,14 +58,14 @@ export function MobileElements({
       {/* OVERLAY DA GAVETA */}
       {showMobileSidebar && (
         <div 
-          className="fixed inset-0 bg-slate-900/40 z-[45] md:hidden transition-all animate-in fade-in" 
+          className="fixed inset-0 bg-slate-900/40 z-[45] lg:hidden transition-all animate-in fade-in" 
           onClick={() => setShowMobileSidebar(false)}
         />
       )}
 
       {/* GAVETA / MENU MOBILE */}
       <div 
-        className={`md:hidden fixed bottom-0 inset-x-0 z-50 bg-white rounded-t-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.5)] transition-transform duration-300 flex flex-col ${showMobileSidebar ? 'translate-y-0' : 'translate-y-full'}`}
+        className={`lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white rounded-t-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.5)] transition-transform duration-300 flex flex-col ${showMobileSidebar ? 'translate-y-0' : 'translate-y-full'}`}
         style={{ maxHeight: '85vh' }}
       >
         <div onClick={() => setShowMobileSidebar(false)} className="h-14 flex flex-col items-center justify-center cursor-pointer shrink-0 border-b border-slate-100 bg-slate-50/50 rounded-t-[2.5rem]">

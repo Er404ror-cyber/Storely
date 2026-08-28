@@ -2444,8 +2444,322 @@ swipe_down_to_close: "Swipe down",
   
   quick_tag_transparent: "🫥 Transparent",
   val_transparent: "Transparent / Clear",
-  
 
+
+
+  btn_share_store: "Share",
+  copied_label: "Copied!",
+  share_default_title: "Online Store",
+  share_store_message: "🛍️ Hello! Check out the best products and latest arrivals at our official store {name}:",
+
+
+  settings_badge: 'Control & System',
+  
+  tab_store_tag: 'Visual & Brand',
+  tab_account_tag: 'Info & Email',
+  tab_security_tag: 'Access & Password',
+  
+  pages_builder_badge: 'Page Manager',
+  pages_title: 'Pages',
+  pages_count: 'Pages',
+  search_pages_placeholder: 'Search pages...',
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  nav_guide: 'Get Customers',
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  guide_title: 'How to Get Customers & Boost Sales',
+  guide_subtitle: 'Choose which link to promote, copy ready-to-use messages, and configure your apps directly.',
+  guide_tab_products: 'Product Catalog',
+  guide_copied: 'Link successfully copied!',
+  guide_copy_btn: 'Copy Link',
+  guide_native_share_btn: "Share with Photo & Message",  guide_social_broadcast: 'Quick Social Broadcast',
+  guide_share_whatsapp: 'WhatsApp',
+  guide_share_telegram: 'Telegram',
+  guide_share_facebook: 'Facebook',
+  guide_share_text_intro: 'Hey! Check out the official catalog from',
+  guide_share_text_body: 'We have exciting new arrivals with live pricing and photos. Browse now:',
+  guide_mockup_preview_badge: 'Customer View Preview',
+  guide_mockup_followers: 'followers',
+  guide_mockup_following: 'following',
+  guide_mockup_likes: 'likes',
+  guide_mockup_posts: 'posts',
+  guide_mockup_official_tag: 'Catalog & Orders',
+  guide_mockup_verified: 'Verified Store',
+  guide_mockup_online: 'Online',
+  guide_mockup_business_account: 'Official Business Account',
+  guide_mockup_wa_catalog_btn: 'View Full Catalog',
+  guide_mockup_tap_to_open: 'Tap to open the app',
+  guide_templates_title: 'High-Converting Ready Messages',
+  guide_templates_sub: 'Copy pre-written messages that persuade customers to click and buy:',
+  guide_copy_msg: 'Copy Message',
+  guide_msg_copied: 'Message Copied!',
+  guide_template_status_title: 'Status & Stories',
+  guide_template_status_text: '🔥 We just updated our product catalog with fresh arrivals! 😍\n\nCheck models, sizes and live prices right here:\n{{products_url}}',
+  guide_template_greeting_title: 'WhatsApp Greeting Message',
+  guide_template_greeting_text: 'Hi! So glad to have you at {{store}}! ✨\n\nTo make browsing easy, you can explore all our products with photos and pricing directly in our catalog:\n🔗 {{products_url}}\n\nLet me know right here once you pick your favorite items!',
+  guide_template_bio_title: 'Bio Description (Instagram & TikTok)',
+  guide_template_bio_text: '🛍️ {{store}} - Official Store\n📦 Fast shipping & premium service\n👇 Explore all products and order now:\n{{store_url}}',
+  guide_platforms_title: 'Where to Place Your Link',
+  guide_platforms_sub: 'Follow the 3 illustrated steps and open the app to paste your link:',
+  guide_platform_open: 'Open Settings in App',
+  guide_platform_ig_name: 'Instagram',
+  guide_platform_ig_step1: 'Open Instagram, go to your profile, and tap "Edit Profile".',
+  guide_platform_ig_step2: 'Tap "Links" > "Add external link" and paste your official link.',
+  guide_platform_ig_step3: 'Use the "Link" sticker in product Stories pointing to your catalog.',
+  guide_platform_wa_name: 'WhatsApp Business',
+  guide_platform_wa_step1: 'Open WhatsApp, go to "Settings" > "Business Tools" > "Business Profile".',
+  guide_platform_wa_step2: 'Add your /products catalog link into the "Website" field.',
+  guide_platform_wa_step3: 'Turn on the automated greeting message featuring your catalog link.',
+  guide_platform_tt_name: 'TikTok',
+  guide_platform_tt_step1: 'In profile, tap the top menu > "Settings & Privacy" > "Account" > "Switch to Business Account".',
+  guide_platform_tt_step2: 'Tap "Edit Profile" and add your official link into the "Website" field.',
+  guide_platform_tt_step3: 'Record short product showcase videos and say: "Product link in bio!".',
+  guide_platform_gmb_name: 'Google Maps',
+  guide_platform_gmb_step1: 'Open your Google Business listing on Maps.',
+  guide_platform_gmb_step2: 'Add your Storely website URL into the "Website" field.',
+  guide_platform_gmb_step3: 'Shoppers searching on Google Maps will see a direct website button.',
+  guide_troubleshoot_title: 'Sales Tips',
+  guide_troubleshoot_p1_title: 'Traffic without orders?',
+  guide_troubleshoot_p1_desc: 'Send the direct /products link so customers can view prices and specs without waiting.',
+  guide_troubleshoot_p2_title: 'Low catalog traffic?',
+  guide_troubleshoot_p2_desc: 'Add the link to your bio and post Stories at least 3 times a week using the link sticker.',
+  guide_troubleshoot_p3_title: 'Inquiries go cold on WhatsApp?',
+  guide_troubleshoot_p3_desc: 'Reply in the first 5 minutes with the catalog link to keep buyer intent high.',
+
+
+
+
+
+
+
+
+
+
+
+
+
+  pdf_doc_badge: 'Commercial Presentation Letter',
+  pdf_doc_subtitle: 'Professional A4 business dossier for clients, partners & proposals',
+  pdf_doc_ref: 'Ref. Code',
+  pdf_doc_date: 'Issue Date',
+  pdf_doc_active_since: 'Active Since',
+  pdf_doc_currency: 'Base Currency',
+  pdf_doc_title: 'Commercial Profile & Official Catalog',
+  pdf_about_title: 'About the Business & Mission',
+  pdf_about_default_desc: 'We specialize in supplying carefully selected products with proven provenance, transparent pricing, and fast fulfillment from inquiry to delivery.',
+  pdf_pillars_title: 'Core Commitments & Quality Standards',
+  pdf_pillar1_title: 'Real-Time Inventory',
+  pdf_pillar1_desc: 'Live digital storefront featuring authentic photos, explicit specs, and real-time pricing.',
+  pdf_pillar2_title: 'Direct Customer Care',
+  pdf_pillar2_desc: 'Personalized messaging support for technical inquiries, quotations, and instant order booking.',
+  pdf_pillar3_title: 'Safe Logistics',
+  pdf_pillar3_desc: 'Secure and monitored order dispatch with dedicated support throughout transit.',
+  pdf_pillar4_title: 'Quality Guarantee',
+  pdf_pillar4_desc: 'Rigorous inspection standards ensuring each product matches specifications and client expectations.',
+  pdf_access_subtitle: 'Explore our verified product selection via the direct address below and submit your order to our team:',
+  pdf_contacts_title: 'Verified Contact Channels',
+  pdf_contact_whatsapp: 'Business WhatsApp',
+  pdf_contact_email: 'Official Email',
+  pdf_contact_website: 'Web Address',
+  pdf_footer_rights: 'All rights reserved.',
+  pdf_footer_generated: 'Generated via Storely platform',
+
+  // --- Presentation Letter Modal ---
+  modal_feature_desc: 'Generates a branded formal document featuring your company overview, live catalog link, and verified communication channels.',
+  modal_doc_lang: 'Document Language:',
+  modal_missing_alert: 'Missing fields for a complete document',
+  modal_go_settings: 'Complete in Settings',
+  modal_official_store: 'Official Store',
+  modal_official_logo: 'Official Logo',
+  modal_generate_btn: 'Generate A4 PDF Document',
+  modal_preview_tag: 'Content Preview',
+
+
+
+
+
+
+
+
+pdf_access_title: 'How to Browse & Place Orders',
+
+pdf_contact_unavailable: 'Available on official storefront',
+pdf_closing_note: 'This formal document is issued to clients, organizations, and partners verifying official sales channels and business identity.',
+
+
+
+
+
+
+
+modal_generating: 'Preparing document...',
+
+
+
+
+
+
+  guide_mockup_default_store: 'My Store',
+  guide_mockup_wa_welcome_msg: 'Hello! Welcome. Check out our complete catalog with photos and prices:',
+  guide_mockup_official_catalog_label: 'Official Catalog',
+  guide_mockup_official_store_label: 'Official Store',
+
+  guide_mockup_google_open_status: 'OPEN',
+  guide_mockup_google_default_title: 'Your Official Store',
+  guide_mockup_google_store_type: 'Store',
+  guide_mockup_google_tab_website: 'Website',
+  guide_mockup_google_tab_directions: 'Directions',
+  guide_mockup_google_tab_call: 'Call',
+  guide_mockup_google_tab_share: 'Share',
+ 
+  guide_mockup_ig_edit_profile: 'Edit Profile',
+
+
+
+
+
+
+
+
+
+
+  store_default_name: "Our Store",
+  share_msg_products_intro: "✨ Hi! Check out the complete product catalog from",
+  share_msg_store_intro: "🛍️ Visit the official store page of",
+  
+  guide_copied_msg: "Message and link copied!",
+  guide_copy_msg_btn: "Copy Promotion Message",
+
+  guide_letter_modal_title: "Intro Letter & QR Code",
+  guide_letter_modal_places: "Counter • Store Window • WhatsApp Status • Groups & Events",
+
+
+  guide_share_instagram: "Instagram",
+
+
+
+
+
+
+  guide_share_x: 'Twitter',
+
+  guide_badge: "Promote",
+  guide_preview_btn: "View Store",
+  guide_tab_store: "Home Page",
+ 
+
+
+
+
+
+  guide_nav_title: "Promotion Step-by-Step",
+  guide_nav_hero: "1. Share",
+  guide_nav_templates: "2. Messages",
+  guide_nav_platforms: "3. Setup Networks",
+  guide_nav_troubleshoot: "4. Tips",
+  guide_badge_status: "WhatsApp Status & Stories",
+  guide_badge_greeting: "WhatsApp Greeting",
+  guide_badge_bio: "Instagram & TikTok Bio",
+
+
+  guide_tab_share: "Share",
+  guide_tab_texts: "Texts",
+  guide_tab_places: "Networks",
+  guide_tab_tips: "Tips",
+
+
+
+
+
+
+
+
+
+
+  
+guide_template_send_wa: "Send via WhatsApp",
+
+
+
+
+
+
+
+
+guide_letter_tag_qr: "With QR Code",
+guide_letter_tag_print: "Ready to Print",
+guide_letter_open_btn: "Generate",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  store_official_title: "Official Store",
+  verified_store: "Official",
+  safe_browsing: "Verified",
+  catalog_highlights: "Highlights",
+  catalog_recent_highlights: "Highlights",
+  catalog_filter_discounts: "On Sale",
+  catalog_show_all: "Show All",
+  catalog_no_products_title: "No Products Found",
+  catalog_no_products_desc: "We couldn't find any items matching these filters.",
+  catalog_no_discounts_title: "No Discounted Products",
+  catalog_no_discounts_desc: "There are no products on sale at the moment.",
+  share_store_recommendation_msg: "Check out the products from {{store}}! Found great deals in their official catalog:",
+  common_home: "Home Page",
+  common_share: "Recommend",
+  
+  categories: "categories",
+  filters: "Filters",
+  on_sale: "on sale",
+reset: "Reset",
+
+
+beta_badge: "Storely Beta",
+  welcome_beta_title: "Welcome to Storely Beta",
+  welcome_beta_desc: "Your environment has been updated and fully optimized with the latest version. Enjoy the new tools!",
+  welcome_beta_button: "Start Exploring",
+  current_version_label: "Running version:",
+  new_version_label: "New version:",
+  build_date_label: "Build date:",
+  
   },
 
 
@@ -4939,6 +5253,295 @@ swipe_down_to_close: "Deslize para baixo",
 
   view_table: "Tabela",
   view_grid: "Grade",
+
+
+
+ 
+  btn_share_store: "Partilhar",
+  copied_label: "Copiado!",
+  share_default_title: "Loja Online",
+  share_store_message: "🛍️ Olá! Venha conferir os melhores produtos e novidades na nossa loja oficial {name}:",
+
+
+  
+  settings_badge: 'Controlo & Sistema',
+
+  tab_store_tag: 'Visual & Marca',
+  tab_account_tag: 'Dados & Email',
+  tab_security_tag: 'Acesso & Senha',
+
+
+
+
+  pages_builder_badge: 'Gestor de Páginas',
+  pages_title: 'Páginas',
+  pages_count: 'Páginas',
+  search_pages_placeholder: 'Pesquisar páginas...',
+ 
+
+  
+
+
+
+
+
+
+
+  
+  nav_guide: 'Atrair Clientes',
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  guide_title: 'Como Atrair Clientes e Vender',
+  guide_subtitle: 'Escolha o link que quer partilhar, copie as mensagens prontas e aceda diretamente aos seus aplicativos.',
+  guide_tab_products: 'Catálogo de Produtos',
+  guide_copied: 'Link copiado com sucesso!',
+  guide_copy_btn: 'Copiar Link',
+
+  guide_social_broadcast: 'Disparar Agora nos Aplicativos',
+  guide_share_whatsapp: 'WhatsApp',
+  guide_share_telegram: 'Telegram',
+  guide_share_facebook: 'Facebook',
+  guide_share_x: 'Twitter',
+  guide_share_text_intro: 'Olá! Veja o nosso catálogo oficial da',
+  guide_share_text_body: 'Temos novidades incríveis com fotos e preços atualizados. Acesse agora:',
+  guide_mockup_preview_badge: 'Como o seu cliente vai ver',
+  guide_mockup_followers: 'seguidores',
+  guide_mockup_following: 'a seguir',
+  guide_mockup_likes: 'curtidas',
+  guide_mockup_posts: 'posts',
+  guide_mockup_official_tag: 'Catálogo & Pedidos Oficiais',
+  guide_mockup_verified: 'Loja Verificada',
+  guide_mockup_online: 'Online',
+  guide_mockup_business_account: 'Conta Comercial Oficial',
+  guide_mockup_wa_catalog_btn: 'Ver Catálogo Completo',
+  guide_mockup_tap_to_open: 'Tocar para abrir no aplicativo',
+  guide_templates_title: 'Mensagens Prontas para Enviar',
+  guide_templates_sub: 'Copie textos já testados que convencem clientes a clicar e comprar:',
+  guide_copy_msg: 'Copiar Texto',
+  guide_msg_copied: 'Texto Copiado!',
+  guide_template_status_title: 'Status & Stories',
+  guide_template_status_text: '🔥 Acabamos de atualizar o nosso catálogo com novidades incríveis! 😍\n\nConfira as peças, tamanhos e preços atualizados aqui:\n{{products_url}}',
+  guide_template_greeting_title: 'Saudação no WhatsApp',
+  guide_template_greeting_text: 'Olá! Que bom ter você por aqui. Seja muito bem-vindo(a) à {{store}}! ✨\n\nPara facilitar a sua escolha, você pode ver todas as peças com fotos e preços em tempo real no nosso catálogo:\n🔗 {{products_url}}\n\nAssim que escolher o que deseja, me mande uma mensagem aqui para confirmarmos o seu pedido!',
+  guide_template_bio_title: 'Texto para Bio (Instagram & TikTok)',
+  guide_template_bio_text: '🛍️ {{store}} - Loja Oficial\n📦 Entregas rápidas e garantidas\n👇 Veja nosso catálogo completo e faça seu pedido:\n{{store_url}}',
+  guide_platforms_title: 'Onde configurar o seu link',
+  guide_platforms_sub: 'Siga os passos abaixo para colocar o seu link no lugar certo de cada aplicativo:',
+  guide_platform_open: 'Abrir Configuração no App',
+  guide_platform_ig_name: 'Instagram',
+  guide_platform_ig_step1: 'Abra o Instagram, vá ao seu perfil e clique em "Editar Perfil".',
+  guide_platform_ig_step2: 'Toque em "Links" > "Adicionar link externo" e cole o seu link.',
+  guide_platform_ig_step3: 'Nos Stories, use a figurinha de "Link" direcionando para os seus produtos.',
+  guide_platform_wa_name: 'WhatsApp Business',
+  guide_platform_wa_step1: 'Abra o WhatsApp, vá em "Configurações" > "Ferramentas Comerciais" > "Perfil Comercial".',
+  guide_platform_wa_step2: 'No campo "Site / Website", cole o link do seu catálogo /products.',
+  guide_platform_wa_step3: 'Ative a "Mensagem de Saudação" automática com o link para quem lhe chamar.',
+  guide_platform_tt_name: 'TikTok',
+  guide_platform_tt_step1: 'No seu perfil, toque no menu do topo > "Configurações e Privacidade" > "Conta" > "Trocar para Conta Corporativa".',
+  guide_platform_tt_step2: 'Clique em "Editar Perfil" e adicione o seu link no campo "Site".',
+  guide_platform_tt_step3: 'Grave vídeos rápidos mostrando os produtos e diga: "Link do catálogo no perfil!".',
+  guide_platform_gmb_name: 'Google Maps',
+  guide_platform_gmb_step1: 'Aceda à ficha da sua empresa no Google Meu Negócio ou Maps.',
+  guide_platform_gmb_step2: 'No campo "Website", adicione a ligação da sua loja.',
+  guide_platform_gmb_step3: 'Quem pesquisar pela sua loja no Google terá um botão direto para fazer pedidos.',
+  guide_troubleshoot_title: 'Dicas Rápidas de Conversão',
+  guide_troubleshoot_p1_title: 'Muitas visitas e poucos pedidos?',
+  guide_troubleshoot_p1_desc: 'Envie sempre o link /products direto para o cliente não precisar esperar para ver preços.',
+  guide_troubleshoot_p2_title: 'Poucas visitas?',
+  guide_troubleshoot_p2_desc: 'Fixe o link na bio e partilhe nos Stories pelo menos 3 vezes por semana com sticker de link.',
+  guide_troubleshoot_p3_title: 'Clientes desistem no WhatsApp?',
+  guide_troubleshoot_p3_desc: 'Responda nos primeiros minutos com a saudação automática para fechar o pedido enquanto o cliente tem interesse.',
+
+
+  pdf_doc_badge: 'Carta de Apresentação Comercial',
+  pdf_doc_subtitle: 'Dossiê profissional A4 para clientes, parceiros e propostas',
+  pdf_doc_ref: 'Ref. Registo',
+  pdf_doc_date: 'Data de Emissão',
+  pdf_doc_active_since: 'Atividade Desde',
+  pdf_doc_currency: 'Moeda Base',
+  pdf_doc_title: 'Apresentação Comercial & Catálogo Oficial',
+  pdf_about_title: 'Sobre a Empresa & Atuação',
+  pdf_about_default_desc: 'Dedicamo-nos ao fornecimento de artigos criteriosamente selecionados, assegurando conformidade de produto, transparência de valores e agilidade em todo o ciclo de encomenda.',
+  pdf_pillars_title: 'Compromissos & Padrões Operacionais',
+  pdf_pillar1_title: 'Catálogo em Tempo Real',
+  pdf_pillar1_desc: 'Inventário digital sincronizado com valores, disponibilidade imediata e fotografias reais.',
+  pdf_pillar2_title: 'Atendimento Direto',
+  pdf_pillar2_desc: 'Suporte personalizado via chat para esclarecimento técnico, orçamentos e reservas instantâneas.',
+  pdf_pillar3_title: 'Segurança & Rastreabilidade',
+  pdf_pillar3_desc: 'Processamento rigoroso de encomendas com acompanhamento dedicado até ao destino final.',
+  pdf_pillar4_title: 'Garantia de Qualidade',
+  pdf_pillar4_desc: 'Inspeção minuciosa dos artigos para assegurar conformidade total com as especificações.',
+  
+
+  pdf_footer_rights: 'Todos os direitos reservados.',
+  pdf_footer_generated: 'Gerado via infraestrutura Storely',
+
+  // --- Modal da Carta de Apresentação ---
+  modal_feature_desc: 'Gera um documento em folha timbrada com a apresentação da sua marca, catálogo de produtos em tempo real e contactos verificados.',
+  modal_doc_lang: 'Idioma da Folha:',
+  modal_missing_alert: 'Dados em falta para um documento completo',
+  modal_go_settings: 'Completar nas Definições',
+  modal_official_store: 'Loja Oficial',
+  modal_official_logo: 'Logotipo Oficial',
+  modal_generate_btn: 'Gerar Documento PDF A4',
+  modal_preview_tag: 'Pré-visualização do Conteúdo',
+
+
+
+
+
+
+pdf_access_title: 'Como Aceder e Fazer Encomendas',
+pdf_access_subtitle: 'Consulte o nosso portfólio completo através da ligação oficial abaixo e envie sua seleção diretamente para o nosso atendimento:',
+pdf_contacts_title: 'Canais Oficiais de Atendimento',
+pdf_contact_whatsapp: 'WhatsApp Comercial',
+pdf_contact_email: 'E-mail Institucional',
+pdf_contact_website: 'Página Web Oficial',
+pdf_contact_unavailable: 'Disponível no catálogo oficial',
+pdf_closing_note: 'Este documento é emitido formalmente para clientes, empresas e parceiros como comprovativo oficial de canais de venda da marca.',
+modal_generating: 'A preparar documento...',
+
+
+
+
+
+  guide_mockup_default_store: 'Minha Loja',
+  guide_mockup_wa_welcome_msg: 'Olá! Seja bem-vindo(a). Confira o nosso catálogo completo com fotos e preços:',
+  guide_mockup_official_catalog_label: 'Catálogo Oficial',
+  guide_mockup_official_store_label: 'Loja Oficial',
+
+  guide_mockup_google_open_status: 'ABERTO',
+  guide_mockup_google_default_title: 'Sua Loja Oficial',
+  guide_mockup_google_store_type: 'Loja',
+  guide_mockup_google_tab_website: 'Website',
+  guide_mockup_google_tab_directions: 'Rotas',
+  guide_mockup_google_tab_call: 'Ligar',
+  guide_mockup_google_tab_share: 'Partilhar',
+  
+  guide_mockup_ig_edit_profile: 'Editar Perfil',
+
+
+
+
+
+
+
+
+
+  store_default_name: "Nossa Loja",
+  share_msg_products_intro: "✨ Olá! Veja o catálogo com todos os produtos de",
+  share_msg_store_intro: "🛍️ Visite a página oficial de",
+  
+  guide_copied_msg: "Mensagem e link copiados!",
+  guide_copy_msg_btn: "Copiar Mensagem de Divulgação",
+ 
+  guide_letter_modal_title: "Carta de Apresentação & QR Code",
+  guide_letter_modal_places: "Balcão • Montra • Status do WhatsApp • Grupos & Eventos",
+  guide_share_instagram: "Instagram",
+
+
+  guide_badge: "Divulgação",
+  guide_preview_btn: "Ver Loja",
+  guide_tab_store: "Página Inicial",
+  
+  guide_native_share_btn: "Partilhar com Foto & Mensagem",
+
+
+  guide_nav_title: "Passo a Passo da Divulgação",
+  guide_nav_hero: "1. Partilhar",
+  guide_nav_templates: "2. Mensagens",
+  guide_nav_platforms: "3. Configurar Redes",
+  guide_nav_troubleshoot: "4. Dicas",
+  guide_badge_status: "WhatsApp Status & Stories",
+  guide_badge_greeting: "Saudação no WhatsApp",
+  guide_badge_bio: "Bio do Instagram & TikTok",
+  guide_tab_share: "Partilhar",
+  guide_tab_texts: "Textos",
+  guide_tab_places: "Redes",
+  guide_tab_tips: "Dicas",
+
+
+
+
+
+
+
+
+
+
+
+
+
+guide_template_send_wa: "Enviar no WhatsApp",
+
+
+
+guide_letter_tag_qr: "Com QR Code",
+guide_letter_tag_print: "Pronto a Imprimir",
+guide_letter_open_btn: "Gerar",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  store_official_title: "Loja Oficial",
+  verified_store: "Oficial",
+  safe_browsing: "Verificado",
+  catalog_highlights: "Destaques",
+  catalog_recent_highlights: "Destaques",
+  catalog_filter_discounts: "Promoções",
+  catalog_show_all: "Ver Todos",
+  catalog_no_products_title: "Nenhum Produto Encontrado",
+  catalog_no_products_desc: "Não encontramos itens para estes filtros.",
+  catalog_no_discounts_title: "Nenhum Produto em Promoção",
+  catalog_no_discounts_desc: "Não há produtos com desconto ativo no momento.",
+  share_store_recommendation_msg: "Dá uma olhada nos produtos da {{store}}! Encontrei ótimas opções no catálogo oficial:",
+  common_home: "Página Inicial",
+  common_share: "Recomendar",
+
+  categories: "categorias",
+  filters: "Filtros",
+  on_sale: "em promoção",
+
+  reset: "Redefinir",
+
+
+
+
+
+
+
+  beta_badge: "Storely Beta",
+  welcome_beta_title: "Bem-vindo ao Beta da Storely",
+  welcome_beta_desc: "O teu ambiente foi atualizado e totalmente otimizado com a versão mais recente. Aproveita as novas ferramentas!",
+  welcome_beta_button: "Começar a Explorar",
+  current_version_label: "Versão em execução:",
+  new_version_label: "Nova versão:",
+  build_date_label: "Compilação:",
+  
 }
 
 

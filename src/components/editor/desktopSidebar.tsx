@@ -22,7 +22,7 @@ export function DesktopSidebar({
 }: DesktopSidebarProps) {
   const { t } = useTranslate(); // Inicializar tradução
   return (
-    <aside className="hidden md:flex w-80 bg-white border-r border-slate-200 flex-col shrink-0 z-50">
+    <aside className="hidden lg:flex w-80 bg-white border-r border-slate-200 flex-col shrink-0 z-50">
       <div className="p-6 border-b bg-slate-50/50 flex justify-center items-center">
         <div className="flex flex-col">
           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('sidebar_title')}</span>

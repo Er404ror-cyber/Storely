@@ -8,49 +8,103 @@ interface VersionData {
 
 const KEYS_TO_PRESERVE = [
   'storely_auth_token', 
-  'country_code'        
+  'country_code'
 ];
+
+const BETA_WELCOME_KEY = 'storely_beta_welcome_pending';
 
 export default function VersionChecker() {
   const { t } = useTranslate();
   const [isOutdated, setIsOutdated] = useState(false);
-  const [currentVersion, setCurrentVersion] = useState<number | null>(null);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [currentVersionData, setCurrentVersionData] = useState<VersionData | null>(null);
   const [newVersionData, setNewVersionData] = useState<VersionData | null>(null);
 
-  const performFullCleanup = async (newVersionNumber: number) => {
+  const performDeepBrowserCleanup = async (newVersionNumber: number) => {
     try {
+      // 1. Preserva apenas os dados essenciais
       const preservedData: Record<string, string> = {};
-      KEYS_TO_PRESERVE.forEach(key => {
+      KEYS_TO_PRESERVE.forEach((key) => {
         const val = localStorage.getItem(key);
-        if (val) preservedData[key] = val;
+        if (val !== null) preservedData[key] = val;
       });
 
-      // Limpeza completa de dados locais, sessão, cache e assets antigos
+      // 2. Limpa storages locais
       localStorage.clear();
       sessionStorage.clear();
 
-      // Restaura apenas o login e configurações críticas
+      // 3. Limpa IndexedDB
+      if ('indexedDB' in window) {
+        try {
+          if (indexedDB.databases) {
+            const dbs = await indexedDB.databases();
+            await Promise.all(
+              dbs.map((db) => {
+                if (db.name) {
+                  return new Promise((resolve) => {
+                    const req = indexedDB.deleteDatabase(db.name!);
+                    req.onsuccess = () => resolve(true);
+                    req.onerror = () => resolve(false);
+                    req.onblocked = () => resolve(false);
+                  });
+                }
+                return Promise.resolve();
+              })
+            );
+          }
+        } catch (idbErr) {
+          console.warn('Falha ao limpar IndexedDB:', idbErr);
+        }
+      }
+
+      // 4. Limpa Cookies
+      try {
+        const cookies = document.cookie.split(';');
+        for (const cookie of cookies) {
+          const eqPos = cookie.indexOf('=');
+          const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim();
+          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;`;
+          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname};`;
+        }
+      } catch (cookieErr) {
+        console.warn('Falha ao limpar cookies:', cookieErr);
+      }
+
+      // 5. Limpa Cache Storage
+      if ('caches' in window) {
+        try {
+          const cacheKeys = await caches.keys();
+          await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+        } catch (cacheErr) {
+          console.warn('Falha ao limpar caches:', cacheErr);
+        }
+      }
+
+      // 6. Desregistra Service Workers
+      if ('serviceWorker' in navigator) {
+        try {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map((reg) => reg.unregister()));
+        } catch (swErr) {
+          console.warn('Falha ao desregistrar Service Workers:', swErr);
+        }
+      }
+
+      // 7. Restaura chaves preservadas e marca flags
       Object.entries(preservedData).forEach(([key, val]) => {
         localStorage.setItem(key, val);
       });
       localStorage.setItem('APP_INSTALLED_VERSION', newVersionNumber.toString());
-
-      // Remove todos os caches armazenados (imagens, assets, dados offline)
-      if ('caches' in window) {
-        const cacheKeys = await caches.keys();
-        await Promise.all(cacheKeys.map(key => caches.delete(key)));
-      }
-
-      // Remove service workers antigos para garantir que a nova versão assuma o controle
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for (const registration of registrations) {
-          await registration.unregister();
-        }
-      }
+      localStorage.setItem(BETA_WELCOME_KEY, 'true');
     } catch (error) {
-      console.error('Erro na limpeza de versão:', error);
+      console.error('Erro na limpeza:', error);
     }
+  };
+
+  const executeHardReload = () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('v_sync', Date.now().toString());
+    window.location.replace(url.toString());
   };
 
   const checkVersion = useCallback(async (isInitialLoad = false) => {
@@ -69,48 +123,52 @@ export default function VersionChecker() {
       if (isInitialLoad) {
         const localVersionStr = localStorage.getItem('APP_INSTALLED_VERSION');
 
-        // Se detetar que a versão do servidor é mais recente que a local, executa a limpeza e atualiza
         if (localVersionStr && localVersionStr !== serverVersionStr) {
-          await performFullCleanup(data.version);
-          window.location.reload(); 
+          await performDeepBrowserCleanup(data.version);
+          executeHardReload();
           return; 
         }
 
-        // Se for a primeira vez ou já estiver atualizado, guarda a versão atual
-        localStorage.setItem('APP_INSTALLED_VERSION', serverVersionStr);
-        setCurrentVersion(data.version);
-        
-      } else if (currentVersion && data.version !== currentVersion) {
+        if (!localVersionStr) {
+          localStorage.setItem('APP_INSTALLED_VERSION', serverVersionStr);
+        }
+
+        if (localStorage.getItem(BETA_WELCOME_KEY) === 'true') {
+          setShowWelcomeModal(true);
+        }
+
+        setCurrentVersionData(data);
+      } else if (currentVersionData && data.version !== currentVersionData.version) {
         setNewVersionData(data);
         setIsOutdated(true);
       }
     } catch (error) {
       console.error('Falha ao verificar versão:', error);
     }
-  }, [currentVersion]);
+  }, [currentVersionData]);
 
   useEffect(() => {
     checkVersion(true);
 
-    let intervalId: NodeJS.Timeout;
-    const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutos
+    let intervalId: NodeJS.Timeout | undefined;
+    const CHECK_INTERVAL = 5 * 60 * 1000;
 
     const startInterval = () => {
       if (!intervalId) {
-        intervalId = setInterval(() => checkVersion(), CHECK_INTERVAL);
+        intervalId = setInterval(() => checkVersion(false), CHECK_INTERVAL);
       }
     };
 
     const stopInterval = () => {
       if (intervalId) {
         clearInterval(intervalId);
-        intervalId = undefined as unknown as NodeJS.Timeout;
+        intervalId = undefined;
       }
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        checkVersion();
+        checkVersion(false);
         startInterval();
       } else {
         stopInterval();
@@ -118,7 +176,7 @@ export default function VersionChecker() {
     };
 
     const handleWindowFocus = () => {
-      checkVersion();
+      checkVersion(false);
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -137,14 +195,25 @@ export default function VersionChecker() {
 
   const handleUpdateClick = async () => {
     if (newVersionData) {
-      await performFullCleanup(newVersionData.version);
-      window.location.reload();
+      await performDeepBrowserCleanup(newVersionData.version);
+      executeHardReload();
     }
   };
 
-  if (!isOutdated) return null;
+  const handleDismissWelcome = () => {
+    localStorage.removeItem(BETA_WELCOME_KEY);
+    setShowWelcomeModal(false);
+  };
 
-  const formattedDate = newVersionData?.version
+  const currentFormattedDate = currentVersionData?.version
+    ? new Intl.DateTimeFormat(undefined, { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric' 
+      }).format(new Date(currentVersionData.version))
+    : '';
+
+  const newFormattedDate = newVersionData?.version
     ? new Intl.DateTimeFormat(undefined, { 
         day: '2-digit', 
         month: '2-digit', 
@@ -152,65 +221,134 @@ export default function VersionChecker() {
       }).format(new Date(newVersionData.version))
     : '';
 
-  return (
-    <div className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-4 sm:p-6 bg-black/10 backdrop-blur-[2px]">
-      
-      <div className="w-full sm:max-w-md bg-white/90 sm:bg-white/95 rounded-[28px] sm:rounded-[32px] p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.12)] border border-white/40 text-left relative overflow-hidden transition-all duration-300">
-        
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-indigo-500/20 via-fuchsia-500/20 to-transparent rounded-full blur-2xl pointer-events-none"></div>
+  // 1. Modal de Boas-Vindas ao Beta (Soft UI / Ultra-Light)
+  if (showWelcomeModal) {
+    return (
+      <div 
+        className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-4 sm:p-6 bg-black/55"
+        style={{ contain: 'strict' }}
+      >
+        <div 
+          className="w-full sm:max-w-md bg-[#f4f5f9] rounded-[24px] p-6 sm:p-7 border border-white/80 text-left shadow-[8px_8px_20px_#d1d5db,-8px_-8px_20px_#ffffff]"
+          style={{ contain: 'layout paint' }}
+        >
+          {/* Header & Badges */}
+          <div className="flex items-center justify-between mb-5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f4f5f9] shadow-[inset_2px_2px_4px_#d1d5db,inset_-2px_-2px_4px_#ffffff]">
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span className="text-[11px] font-mono font-bold tracking-wider text-slate-700 uppercase">
+                {t('beta_badge', { defaultValue: 'Storely Beta' })}
+              </span>
+            </div>
 
+            {/* Versão atual em execução */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#f4f5f9] shadow-[inset_1px_1px_3px_#d1d5db,inset_-1px_-1px_3px_#ffffff] text-[11px] font-mono font-medium text-slate-500">
+              <span>v{currentVersionData?.packageVersion || '0.2.4'}</span>
+            </div>
+          </div>
+
+          <h3 className="text-xl font-bold text-slate-800 tracking-tight mb-2">
+            {t('welcome_beta_title', { defaultValue: 'Bem-vindo ao Beta da Storely' })}
+          </h3>
+          
+          <p className="text-sm text-slate-600 leading-relaxed mb-5">
+            {t('welcome_beta_desc', { 
+              defaultValue: 'Seu ambiente foi atualizado e totalmente otimizado com a versão mais recente. Aproveite as novas ferramentas!' 
+            })}
+          </p>
+
+          {/* Card Soft UI com detalhes da versão atual */}
+          <div className="p-3.5 rounded-xl bg-[#f4f5f9] shadow-[inset_2px_2px_5px_#d1d5db,inset_-2px_-2px_5px_#ffffff] mb-6 space-y-1.5">
+            <div className="flex justify-between text-xs font-mono text-slate-500">
+              <span>{t('current_version_label', { defaultValue: 'Versão em execução:' })}</span>
+              <span className="font-semibold text-slate-700">v{currentVersionData?.packageVersion || '0.2.4'}</span>
+            </div>
+            {currentFormattedDate && (
+              <div className="flex justify-between text-[11px] font-mono text-slate-400">
+                <span>{t('build_date_label', { defaultValue: 'Compilação:' })}</span>
+                <span>{currentFormattedDate}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Botão Ação */}
+          <button
+            onClick={handleDismissWelcome}
+            className="w-full bg-[#f4f5f9] hover:bg-slate-100 active:shadow-[inset_3px_3px_6px_#d1d5db,inset_-3px_-3px_6px_#ffffff] shadow-[4px_4px_10px_#d1d5db,-4px_-4px_10px_#ffffff] text-slate-800 text-sm font-semibold py-3.5 px-5 rounded-xl border border-white/60 flex items-center justify-between cursor-pointer"
+          >
+            <span>{t('welcome_beta_button', { defaultValue: 'Começar a Explorar' })}</span>
+            <svg className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Modal de Nova Versão Detectada (Soft UI / Ultra-Light)
+  if (!isOutdated) return null;
+
+  return (
+    <div 
+      className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-4 sm:p-6 bg-black/55"
+      style={{ contain: 'strict' }}
+    >
+      <div 
+        className="w-full sm:max-w-md bg-[#f4f5f9] rounded-[24px] p-6 sm:p-7 border border-white/80 text-left shadow-[8px_8px_20px_#d1d5db,-8px_-8px_20px_#ffffff]"
+        style={{ contain: 'layout paint' }}
+      >
         <div className="flex items-center justify-between mb-5">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-black/[0.03] border border-black/[0.05]">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-600"></span>
-            </span>
-            <span className="text-[11px] font-mono font-semibold tracking-wider text-gray-800 uppercase">
-              {t('version_update_badge') || 'Nova Versão Disponível'}
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f4f5f9] shadow-[inset_2px_2px_4px_#d1d5db,inset_-2px_-2px_4px_#ffffff]">
+            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+            <span className="text-[11px] font-mono font-bold tracking-wider text-slate-700 uppercase">
+              {t('version_update_badge', { defaultValue: 'Nova Versão Disponível' })}
             </span>
           </div>
 
-          {newVersionData && (
-            <span className="text-xs font-mono font-medium text-gray-400 bg-gray-100/80 px-2.5 py-1 rounded-lg">
-              v{newVersionData.packageVersion}
-            </span>
-          )}
+          <span className="text-xs font-mono font-medium text-slate-500 px-2.5 py-1 rounded-lg bg-[#f4f5f9] shadow-[inset_1px_1px_3px_#d1d5db,inset_-1px_-1px_3px_#ffffff]">
+            v{newVersionData?.packageVersion}
+          </span>
         </div>
 
-        <h3 className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight mb-2">
+        <h3 className="text-xl font-bold text-slate-800 tracking-tight mb-2">
           {t('version_update_title', { defaultValue: 'Atualização Pronta' })}
         </h3>
         
-        <p className="text-sm text-gray-500 leading-relaxed mb-6">
-          {t('version_update_desc', { defaultValue: 'Novas melhorias e correções foram aplicadas. Atualize para continuar.' })}
+        <p className="text-sm text-slate-600 leading-relaxed mb-5">
+          {t('version_update_desc', { 
+            defaultValue: 'Novas melhorias e correções foram aplicadas. Atualize para continuar.' 
+          })}
         </p>
 
-        <div className="space-y-4">
-          {formattedDate && (
-            <div className="flex items-center gap-2 text-xs text-gray-400 font-mono">
-              <svg className="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>{t('version_update_released') || 'Lançado em'} {formattedDate}</span>
+        {/* Comparativo de versão rodando vs nova */}
+        <div className="p-3.5 rounded-xl bg-[#f4f5f9] shadow-[inset_2px_2px_5px_#d1d5db,inset_-2px_-2px_5px_#ffffff] mb-6 space-y-1.5 text-xs font-mono">
+          <div className="flex justify-between text-slate-500">
+            <span>{t('current_version_label', { defaultValue: 'Versão em execução:' })}</span>
+            <span className="text-slate-600">v{currentVersionData?.packageVersion || '0.2.4'}</span>
+          </div>
+          <div className="flex justify-between text-slate-700 font-semibold">
+            <span>{t('new_version_label', { defaultValue: 'Nova versão:' })}</span>
+            <span className="text-emerald-600">v{newVersionData?.packageVersion}</span>
+          </div>
+          {newFormattedDate && (
+            <div className="flex justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-200/60">
+              <span>{t('version_update_released', { defaultValue: 'Lançado em' })}</span>
+              <span>{newFormattedDate}</span>
             </div>
           )}
-
-          <button
-            onClick={handleUpdateClick}
-            className="w-full relative group overflow-hidden bg-gray-900 hover:bg-black active:scale-[0.98] text-white text-sm font-semibold py-4 px-6 rounded-2xl transition-all duration-200 flex items-center justify-between shadow-[0_10px_20px_rgba(0,0,0,0.1)]"
-          >
-            <div className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 translate-x-[-200%] group-hover:translate-x-[400%] transition-transform duration-1000"></div>
-
-            <span className="relative z-10 tracking-wide">{t('version_update_button', { defaultValue: 'Atualizar Agora' })}</span>
-            
-            <div className="relative z-10 w-7 h-7 rounded-xl bg-white/10 flex items-center justify-center group-hover:translate-x-1 transition-transform">
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </div>
-          </button>
         </div>
 
+        {/* Botão de Atualizar */}
+        <button
+          onClick={handleUpdateClick}
+          className="w-full bg-[#1e293b] hover:bg-[#0f172a] active:scale-[0.99] text-white text-sm font-semibold py-3.5 px-5 rounded-xl shadow-[4px_4px_10px_#d1d5db] flex items-center justify-between cursor-pointer"
+        >
+          <span>{t('version_update_button', { defaultValue: 'Atualizar Agora' })}</span>
+          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </button>
       </div>
     </div>
   );

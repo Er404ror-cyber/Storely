@@ -13,6 +13,8 @@ import { AudioSection } from './storetab/AudioSection';
 import { MainContactSection } from './storetab/MainContactSection';
 import { useStoreAudio } from '../../../hooks/useStoreAudio';
 import type { AdminStore } from '../../../types/admin';
+import { CurrencySection } from '../../produtos/componentsAdmim/CurrencySection';
+import { useCurrencyLogic } from '../../produtos/componentsAdmim/useCurrencyLogic';
 
 interface StoreTabProps {
   store?: AdminStore | null;
@@ -36,6 +38,9 @@ export function StoreTab({ store: propStore }: StoreTabProps) {
   const [descValue, setDescValue] = useState('');
   const [isEditingDesc, setIsEditingDesc] = useState(false);
   const [isEditingAudio, setIsEditingAudio] = useState(false);
+
+  // Hook de Gestão de Moeda (Currency)
+  const currency = useCurrencyLogic(store, language, t, false);
 
   // 1. OTIMIZAÇÃO: Evita sobrescrever o texto digitado caso haja um refetch em background
   useEffect(() => {
@@ -166,17 +171,17 @@ export function StoreTab({ store: propStore }: StoreTabProps) {
 
   const setAudioVolumeNoop = useCallback(() => {}, []);
 
-  if (!store) return <div className="p-10 text-center text-sm font-medium text-slate-400">{t("loading_engine")}</div>;
+  if (!store) return <div className="p-10 text-center text-sm font-medium text-slate-400">{t('loading_engine')}</div>;
 
   return (
-    // 4. OTIMIZAÇÃO GPU/BATERIA: Adicionado transform-gpu e will-change para a animação inicial rodar lisa na placa de vídeo
     <div 
       className="animate-in slide-in-from-left-4 space-y-6 pb-10 duration-500 max-w-5xl mx-auto w-full px-2 sm:px-4 transform-gpu will-change-[transform,opacity]"
-      style={{ contentVisibility: 'auto' }} // Pula a renderização profunda se estiver fora da tela
+      style={{ contentVisibility: 'auto' }}
     >
       <SectionInfo title={t('store_required_title')} subtitle={t('store_required_subtitle')} />
 
       <div className="space-y-4 w-full">
+        {/* LOGO */}
         <div className="rounded-[2rem] border border-slate-100 bg-white p-5 shadow-md md:rounded-[2.5rem] md:p-6 w-full">
           <LogoSection
             logoUrl={store?.logo_url}
@@ -187,6 +192,12 @@ export function StoreTab({ store: propStore }: StoreTabProps) {
           />
         </div>
 
+        {/* MOEDA PADRÃO (CURRENCY) */}
+        <div className="rounded-[2rem] border border-slate-100 bg-white p-5 shadow-md md:rounded-[2.5rem] md:p-6 w-full">
+          <CurrencySection {...currency.currencyProps} t={t} />
+        </div>
+
+        {/* CONTACTOS */}
         <div className="rounded-[2rem] border border-slate-100 bg-white p-5 shadow-md md:rounded-[2.5rem] md:p-6 w-full">
           <MainContactSection
             store={store}

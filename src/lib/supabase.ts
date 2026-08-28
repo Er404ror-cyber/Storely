@@ -5,8 +5,12 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
-    persistSession: true, 
+    persistSession: true,
     autoRefreshToken: true,
-    storageKey: 'storely_auth_token', 
+    storageKey: 'storely_auth_token',
+    // Assinatura correta do TypeScript para LockFunc:
+    lock: async (_name, _acquireTimeout, fn) => {
+      return await fn();
+    }
   }
 });
