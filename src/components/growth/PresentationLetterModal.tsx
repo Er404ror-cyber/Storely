@@ -1,4 +1,4 @@
-import { useState, useMemo, memo, useEffect, useCallback, useRef } from 'react';
+import { useState, useMemo, memo, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   FileText, 
@@ -25,7 +25,6 @@ interface Props {
   store: StoreDBData;
 }
 
-// Dicionário estático fora do ciclo de render para economizar memória e garbage collection
 const FALLBACK_DICTIONARY: Record<'pt' | 'en', Record<string, string>> = {
   pt: {
     pdf_doc_badge: 'Carta de Apresentação Comercial',
@@ -43,7 +42,7 @@ const FALLBACK_DICTIONARY: Record<'pt' | 'en', Record<string, string>> = {
     modal_official_store: 'Loja Oficial',
     modal_official_logo: 'Logotipo Oficial',
     modal_generate_btn: 'Gerar Documento PDF A4',
-    modal_generating: 'A preparar documento...',
+    modal_generating: 'A emitir documento...',
     modal_preview_tag: 'Pré-visualização do Conteúdo'
   },
   en: {
@@ -62,7 +61,7 @@ const FALLBACK_DICTIONARY: Record<'pt' | 'en', Record<string, string>> = {
     modal_official_store: 'Official Store',
     modal_official_logo: 'Official Logo',
     modal_generate_btn: 'Generate A4 PDF Document',
-    modal_generating: 'Preparing document...',
+    modal_generating: 'Issuing document...',
     modal_preview_tag: 'Content Preview'
   }
 };
@@ -78,7 +77,6 @@ export const PresentationLetterModal = memo(function PresentationLetterModal({
   const [selectedLanguage, setSelectedLanguage] = useState<'pt' | 'en'>(isEnglish ? 'en' : 'pt');
   const [hasManualOverride, setHasManualOverride] = useState<boolean>(false);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!hasManualOverride) {
@@ -86,17 +84,10 @@ export const PresentationLetterModal = memo(function PresentationLetterModal({
     }
   }, [isEnglish, hasManualOverride]);
 
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, []);
-
   const handleClose = useCallback(() => {
     if (isGenerating) return;
     setHasManualOverride(false);
     setIsGenerating(false);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
     onClose();
   }, [onClose, isGenerating]);
 
@@ -117,7 +108,6 @@ export const PresentationLetterModal = memo(function PresentationLetterModal({
     return FALLBACK_DICTIONARY[selectedLanguage]?.[key] || (systemT as (k: string) => string)(key) || key;
   }, [selectedLanguage, isEnglish, systemT]);
 
-  // Diagnóstico estrito local sem disparar chamadas de API
   const missingFields = useMemo(() => {
     const missing: { label: string; field: string }[] = [];
     
@@ -157,7 +147,6 @@ export const PresentationLetterModal = memo(function PresentationLetterModal({
     setHasManualOverride(true);
   }, [isGenerating]);
 
-  // Gerador de PDF protegido com debounce
   const handlePrintPDF = useCallback(() => {
     if (hasMissingData || isGenerating) return;
 
@@ -172,10 +161,9 @@ export const PresentationLetterModal = memo(function PresentationLetterModal({
     } catch (error) {
       console.error('Erro ao gerar apresentação PDF:', error);
     } finally {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => {
+      setTimeout(() => {
         setIsGenerating(false);
-      }, 1200);
+      }, 700);
     }
   }, [hasMissingData, isGenerating, store, baseUrl, selectedLanguage]);
 
@@ -184,36 +172,31 @@ export const PresentationLetterModal = memo(function PresentationLetterModal({
   return (
     <>
       <style>{`
-  @keyframes sheetSlideUpHW {
-    from {
-      transform: translate3d(0, 100%, 0);
-    }
-    to {
-      transform: translate3d(0, 0, 0);
-    }
-  }
-  @keyframes backdropFadeHW {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  .anim-sheet-up {
-    animation: sheetSlideUpHW 0.18s ease-out forwards;
-    transform: translate3d(0, 0, 0);
-    backface-visibility: hidden;
-    perspective: 1000px;
-    contain: layout paint;
-  }
-  .anim-backdrop-fade {
-    animation: backdropFadeHW 0.12s linear forwards;
-    background-color: rgba(0, 0, 0, 0.55);
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    backface-visibility: hidden;
-    contain: strict;
-  }
-`}</style>
+        @keyframes sheetSlideUpHW {
+          from { transform: translate3d(0, 100%, 0); }
+          to { transform: translate3d(0, 0, 0); }
+        }
+        @keyframes backdropFadeHW {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .anim-sheet-up {
+          animation: sheetSlideUpHW 0.18s ease-out forwards;
+          transform: translate3d(0, 0, 0);
+          backface-visibility: hidden;
+          perspective: 1000px;
+          contain: layout paint;
+        }
+        .anim-backdrop-fade {
+          animation: backdropFadeHW 0.12s linear forwards;
+          background-color: rgba(0, 0, 0, 0.55);
+          backdrop-filter: none !important;
+          -webkit-backdrop-filter: none !important;
+          backface-visibility: hidden;
+          contain: strict;
+        }
+      `}</style>
 
-      {/* Backdrop com isolamento de render */}
       <div 
         className="fixed inset-0 z-50 flex items-end justify-center bg-zinc-950/50 anim-backdrop-fade overflow-x-hidden w-full lg:pl-72 xl:pl-72 box-border transform-gpu"
         style={{ contain: 'layout style paint' }}
@@ -363,11 +346,11 @@ export const PresentationLetterModal = memo(function PresentationLetterModal({
               </div>
             </div>
 
-            {/* Botão de Ação: Link do Router se faltar dados */}
+            {/* Botão de Ação */}
             <div className="pt-1">
               {hasMissingData ? (
                 <Link
-                  to="/admin/settings"
+                  to="/admin/configuracoes"
                   onClick={onClose}
                   className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-bold transition-all active:scale-95 shadow-md shadow-amber-500/20 cursor-pointer text-center no-underline"
                 >

@@ -2759,6 +2759,7 @@ beta_badge: "Storely Beta",
   current_version_label: "Running version:",
   new_version_label: "New version:",
   build_date_label: "Build date:",
+  catalog_view_products: "Enjoy Now"
   
   },
 
@@ -5542,6 +5543,9 @@ guide_letter_open_btn: "Gerar",
   new_version_label: "Nova versão:",
   build_date_label: "Compilação:",
   
+
+
+  catalog_view_products: "Apreciar Já"
 }
 
 

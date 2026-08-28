@@ -41,8 +41,11 @@ export const GrowthGuide = memo(function GrowthGuide() {
   const navLockTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const templateCopyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  // Cache de arquivo do logo em memória para poupar dados e bateria
+  const logoFileCacheRef = useRef<{ url: string; file: File } | null>(null);
 
-  // Rastreio leve via IntersectionObserver na thread nativa do browser
+  // Rastreio leve de visibilidade sem sobrecarregar a thread principal
   useEffect(() => {
     if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
 
@@ -99,38 +102,76 @@ export const GrowthGuide = memo(function GrowthGuide() {
     copyTimeoutRef.current = setTimeout(() => setCopiedLink(false), 2000);
   }, [copyUrl]);
 
-  const handleAppRedirect = useCallback((deepLink: string, webFallback: string) => {
-    if (typeof window === 'undefined') return;
+  // Carrega e armazena a imagem com segurança
+  const fetchLogoFile = useCallback(async (url: string): Promise<File | null> => {
+    if (logoFileCacheRef.current?.url === url) {
+      return logoFileCacheRef.current.file;
+    }
 
-    if (navigator.clipboard) {
+    try {
+      const response = await fetch(url, { mode: 'cors', cache: 'force-cache' });
+      const blob = await response.blob();
+      const ext = blob.type.split('/')[1] || 'png';
+      const file = new File([blob], `logo.${ext}`, { type: blob.type || 'image/png' });
+      
+      logoFileCacheRef.current = { url, file };
+      return file;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const handleAppRedirect = useCallback((targetUrl: string) => {
+    if (typeof window === 'undefined') return;
+  
+    // Copia o link para área de transferência em background
+    if (navigator.clipboard?.writeText) {
       navigator.clipboard.writeText(activeUrl).catch(() => {});
       setCopiedLink(true);
       if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
       copyTimeoutRef.current = setTimeout(() => setCopiedLink(false), 2000);
     }
-
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-    if (isMobile) {
-      const start = Date.now();
-      window.location.href = deepLink;
-
-      setTimeout(() => {
-        if (Date.now() - start < 1500) {
-          window.open(webFallback, '_blank', 'noopener,noreferrer');
-        }
-      }, 700);
-    } else {
-      window.open(webFallback, '_blank', 'noopener,noreferrer');
-    }
+  
+    // Redirecionamento instantâneo síncrono (o SO intercepta e abre o App nativo)
+    window.location.href = targetUrl;
   }, [activeUrl]);
+  
+// Web Share Nativo com Fallback em cascata
+const handleNativeShare = useCallback(async (customText?: string) => {
+  const storeName = store?.name || 'Storely';
+  const textToSend = customText || `🛍️ *${storeName}*\n👉 ${activeUrl}`;
+
+  if (typeof navigator !== 'undefined' && navigator.share) {
+    try {
+      let filesToSend: File[] = [];
+
+      if (store?.logo_url && navigator.canShare) {
+        const logoFile = await fetchLogoFile(store.logo_url);
+        if (logoFile && navigator.canShare({ files: [logoFile] })) {
+          filesToSend = [logoFile];
+        }
+      }
+
+      await navigator.share({
+        title: storeName,
+        text: textToSend,
+        url: activeUrl,
+        ...(filesToSend.length > 0 ? { files: filesToSend } : {})
+      });
+      return;
+    } catch (err: any) {
+      if (err?.name === 'AbortError') return;
+    }
+  }
+
+  // Fallback WhatsApp (1 único argumento universal)
+  const encoded = encodeURIComponent(textToSend);
+  handleAppRedirect(`https://wa.me/?text=${encoded}`);
+}, [store?.name, store?.logo_url, activeUrl, fetchLogoFile, handleAppRedirect]);
 
   const handleShareWhatsApp = useCallback((customText?: string) => {
-    const defaultText = `🛍️ *${store?.name || 'Storely'}*\n👉 ${activeUrl}`;
-    const textToSend = customText || defaultText;
-    const encoded = encodeURIComponent(textToSend);
-    handleAppRedirect(`whatsapp://send?text=${encoded}`, `https://api.whatsapp.com/send?text=${encoded}`);
-  }, [store?.name, activeUrl, handleAppRedirect]);
+    handleNativeShare(customText);
+  }, [handleNativeShare]);
 
   const messageTemplates = useMemo(() => {
     const storeName = store?.name || 'Storely';
@@ -169,7 +210,7 @@ export const GrowthGuide = memo(function GrowthGuide() {
   }, [productsCatalogUrl, mainStoreUrl, store?.name, t]);
 
   const handleCopyTemplate = useCallback((text: string, index: number) => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
       navigator.clipboard.writeText(text);
       setCopiedTemplateIdx(index);
       if (templateCopyTimeoutRef.current) clearTimeout(templateCopyTimeoutRef.current);
@@ -182,7 +223,7 @@ export const GrowthGuide = memo(function GrowthGuide() {
       name: t('guide_platform_ig_name') || 'Instagram',
       icon: <Instagram size={18} className="text-pink-600 shrink-0" />,
       color: 'bg-pink-50 border-pink-200 text-pink-700',
-      deepLink: 'instagram://editprofile',
+      deepLink: 'instagram://edit_profile',
       webUrl: 'https://www.instagram.com/accounts/edit/',
       mockupType: 'instagram' as const,
       steps: [
@@ -195,7 +236,7 @@ export const GrowthGuide = memo(function GrowthGuide() {
       name: t('guide_platform_wa_name') || 'WhatsApp Business',
       icon: <MessageCircle size={18} className="text-emerald-600 shrink-0" />,
       color: 'bg-emerald-50 border-emerald-200 text-emerald-700',
-      deepLink: 'whatsapp://settings',
+      deepLink: 'https://wa.me/',
       webUrl: 'https://web.whatsapp.com',
       mockupType: 'whatsapp' as const,
       steps: [
@@ -221,8 +262,8 @@ export const GrowthGuide = memo(function GrowthGuide() {
       name: t('guide_platform_gmb_name') || 'Google Maps',
       icon: <MapPin size={18} className="text-amber-600 shrink-0" />,
       color: 'bg-amber-50 border-amber-200 text-amber-700',
-      deepLink: 'https://business.google.com',
-      webUrl: 'https://business.google.com',
+      deepLink: 'https://www.google.com/maps',
+      webUrl: 'https://www.google.com/maps',
       mockupType: 'google' as const,
       steps: [
         t('guide_platform_gmb_step1') || 'Aceda à ficha da sua empresa no Google Meu Negócio ou Maps.',
@@ -232,7 +273,6 @@ export const GrowthGuide = memo(function GrowthGuide() {
     }
   ], [t]);
 
-  // Salto direto por ID com indicação de foco temporária
   const scrollToSection = useCallback((id: string) => {
     setActiveSec(id);
     setPulsingSec(id);
@@ -246,12 +286,12 @@ export const GrowthGuide = memo(function GrowthGuide() {
     if (pulseTimeoutRef.current) clearTimeout(pulseTimeoutRef.current);
     pulseTimeoutRef.current = setTimeout(() => {
       setPulsingSec(null);
-    }, 1100);
+    }, 1000);
 
     if (navLockTimeoutRef.current) clearTimeout(navLockTimeoutRef.current);
     navLockTimeoutRef.current = setTimeout(() => {
       isNavigatingRef.current = false;
-    }, 850);
+    }, 800);
   }, []);
 
   const navItems: NavItem[] = useMemo(() => [
@@ -268,7 +308,7 @@ export const GrowthGuide = memo(function GrowthGuide() {
         {/* 1. Partilhar */}
         <section 
           id="sec-hero" 
-          className={`scroll-mt-8 rounded-3xl ${
+          className={`scroll-mt-8 rounded-3xl transition-transform duration-200 transform-gpu ${
             pulsingSec === 'sec-hero' ? 'ring-2 ring-zinc-900 ring-offset-4 ring-offset-[#F9FAFB]' : ''
           }`}
           style={{ contain: 'content' }}
@@ -289,7 +329,7 @@ export const GrowthGuide = memo(function GrowthGuide() {
         {/* 2. Mensagens Prontas */}
         <section 
           id="sec-templates" 
-          className={`scroll-mt-8 rounded-3xl ${
+          className={`scroll-mt-8 rounded-3xl transition-transform duration-200 transform-gpu ${
             pulsingSec === 'sec-templates' ? 'ring-2 ring-zinc-900 ring-offset-4 ring-offset-[#F9FAFB]' : ''
           }`}
           style={{ contain: 'content' }}
@@ -306,7 +346,7 @@ export const GrowthGuide = memo(function GrowthGuide() {
         {/* 3. Onde Configurar */}
         <section 
           id="sec-platforms" 
-          className={`scroll-mt-8 rounded-3xl ${
+          className={`scroll-mt-8 rounded-3xl transition-transform duration-200 transform-gpu ${
             pulsingSec === 'sec-platforms' ? 'ring-2 ring-zinc-900 ring-offset-4 ring-offset-[#F9FAFB]' : ''
           }`}
           style={{ contain: 'content' }}
@@ -326,7 +366,7 @@ export const GrowthGuide = memo(function GrowthGuide() {
         {/* 4. Dicas */}
         <section 
           id="sec-troubleshoot" 
-          className={`scroll-mt-8 rounded-3xl ${
+          className={`scroll-mt-8 rounded-3xl transition-transform duration-200 transform-gpu ${
             pulsingSec === 'sec-troubleshoot' ? 'ring-2 ring-zinc-900 ring-offset-4 ring-offset-[#F9FAFB]' : ''
           }`}
           style={{ contain: 'content' }}
@@ -343,7 +383,7 @@ export const GrowthGuide = memo(function GrowthGuide() {
 
       </div>
 
-      {/* Navegação Flutuante Desktop & Mobile */}
+      {/* Navegação Flutuante */}
       <GrowthNavigation
         navItems={navItems}
         activeSec={activeSec}

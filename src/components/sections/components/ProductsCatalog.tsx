@@ -92,14 +92,16 @@ export function ProductsCatalog(props: CatalogProps) {
 
   const resolvedStoreId = effectiveStoreId || fetchedStore?.id;
 
-  const designPalette = useMemo(() => {
-    if (!resolvedStoreId) return isDark ? HERO_PALETTES.dark[0] : HERO_PALETTES.light[0];
-    let hash = 0;
-    for (let i = 0; i < resolvedStoreId.length; i++) hash = resolvedStoreId.charCodeAt(i) + ((hash << 5) - hash);
-    const index = Math.abs(hash) % HERO_PALETTES[isDark ? "dark" : "light"].length;
-    return HERO_PALETTES[isDark ? "dark" : "light"][index];
-  }, [resolvedStoreId, isDark]);
+  // 1. Sorteia o índice UMA ÚNICA VEZ ao carregar o componente
+const [randomPaletteIndex] = useState(() => 
+  Math.floor(Math.random() * HERO_PALETTES.dark.length)
+);
 
+// 2. Apenas alterna o tema (dark/light) mantendo o mesmo índice de cor
+const designPalette = useMemo(() => {
+  const list = HERO_PALETTES[isDark ? "dark" : "light"];
+  return list[randomPaletteIndex % list.length];
+}, [isDark, randomPaletteIndex]);
   // 2. Processamento defensivo garantindo que o retorno seja sempre um Array
   const processedProducts = useMemo(() => {
     const safeRaw = Array.isArray(rawProducts) ? rawProducts : [];
@@ -273,27 +275,6 @@ export function ProductsCatalog(props: CatalogProps) {
               setActiveAttribute={setActiveAttribute}
               isDark={isDark}
             />
-          </div>
-        )}
-
-        {/* Mockup de Filtros no Editor */}
-        {isEditor && (
-          <div className="mb-4 flex items-center justify-between border-b border-zinc-200/60 dark:border-zinc-800 pb-3 pointer-events-none select-none opacity-80">
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                {t("common_all") || "Todos"}
-              </span>
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
-                {t("categories") || "Categorias"}
-              </span>
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
-                {t("filters") || "Filtros"}
-              </span>
-            </div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-amber-500 flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-              <span>{t("catalog_layout_sample") || "Amostra de Layout"} ({displayProducts.length} {t("common_of") || "de"} {processedProducts.length} {t("catalog_actives") || "itens"})</span>
-            </div>
           </div>
         )}
 

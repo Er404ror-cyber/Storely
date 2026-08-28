@@ -26,7 +26,7 @@ export const GrowthNavigation = memo(function GrowthNavigation({
         className="hidden lg:flex fixed lg:right-0 xl:right-2 top-1/2 -translate-y-1/2 z-40 group/dock select-none"
         style={{ contain: 'paint' }}
       >
-        <div className="flex flex-col items-end gap-1.5 p-1 rounded-2xl bg-white border border-zinc-200">
+        <div className="flex flex-col items-end gap-1.5 p-1 rounded-2xl bg-white border border-zinc-200 shadow-sm">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeSec === item.id;
@@ -37,7 +37,7 @@ export const GrowthNavigation = memo(function GrowthNavigation({
                 type="button"
                 onClick={() => onNavigate(item.id)}
                 aria-label={item.label}
-                className={`flex items-center h-8 rounded-xl cursor-pointer overflow-hidden ${
+                className={`flex items-center h-8 rounded-xl cursor-pointer overflow-hidden transition-colors ${
                   isActive
                     ? 'bg-zinc-900 text-white'
                     : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100'
@@ -56,13 +56,13 @@ export const GrowthNavigation = memo(function GrowthNavigation({
         </div>
       </aside>
 
-      {/* BARRA INFERIOR (MOBILE < LG) */}
+      {/* BARRA INFERIOR COLADA NO CHÃO (MOBILE < LG) */}
       <nav
         aria-label="Navegação rápida mobile"
-        className="lg:hidden fixed bottom-1.5 inset-x-2.5 z-30 bg-zinc-900 rounded-2xl p-1 border border-zinc-800 pb-[calc(4px+env(safe-area-inset-bottom,0px))]"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-zinc-900/95 border-t border-zinc-800 px-2 pt-1 pb-[env(safe-area-inset-bottom,0px)]"
         style={{ contain: 'paint' }}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-1 py-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeSec === item.id;
@@ -72,13 +72,13 @@ export const GrowthNavigation = memo(function GrowthNavigation({
                 key={item.id}
                 type="button"
                 onClick={() => onNavigate(item.id)}
-                className={`flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-xl cursor-pointer ${
+                className={`flex-1 flex flex-col items-center gap-1 py-1 rounded-lg cursor-pointer transition-colors active:scale-95 ${
                   isActive
-                    ? 'text-white font-bold bg-zinc-800'
+                    ? 'text-white font-bold bg-zinc-800/80'
                     : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
-                <Icon size={14} />
+                <Icon size={16} />
                 <span className="text-[10px] leading-none">{item.label}</span>
               </button>
             );

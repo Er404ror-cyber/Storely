@@ -140,7 +140,6 @@ export function generateStorePresentationPDF({
   const storeUrl = `${baseUrl}/${storeSlug}`;
   const productsUrl = `${baseUrl}/${storeSlug}/products`;
 
-  // QR Code de altíssima nitidez 400x400
   const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(productsUrl)}&color=0f172a&bgcolor=ffffff&margin=0`;
   const fileName = langKey === 'pt' ? `Apresentacao - ${storeName}` : `Profile - ${storeName}`;
 
@@ -171,6 +170,7 @@ export function generateStorePresentationPDF({
     <html lang="${langKey}">
     <head>
       <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
       <title>${fileName}</title>
       <style>
         @page {
@@ -181,60 +181,59 @@ export function generateStorePresentationPDF({
           box-sizing: border-box;
           margin: 0;
           padding: 0;
+          -webkit-font-smoothing: antialiased;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
         html, body {
-          width: 210mm;
-          height: 297mm;
-          max-height: 297mm;
-          overflow: hidden;
-          background: #ffffff;
+          width: 100%;
+          min-height: 100vh;
+          background: #f8fafc;
         }
         body {
           color: #0f172a;
-          background: #f8fafc;
-          line-height: 1.5;
+          line-height: 1.48;
           font-size: 12.5px;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           padding: 5mm 7mm;
-          page-break-after: avoid;
-          page-break-inside: avoid;
+          page-break-after: avoid !important;
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
         }
+
         .page-container {
           position: relative;
           width: 100%;
-          height: 100%;
-          max-height: 287mm;
+          max-width: 196mm;
           background: #ffffff;
           border-radius: 20px;
-          padding: 20px 24px 16px 24px;
-          border: 1.5px solid #e2e8f0;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+          padding: 18px 22px 14px 22px;
+          border: 1px solid #e2e8f0;
+          box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.02);
           overflow: hidden;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          page-break-inside: avoid;
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
         }
 
-        /* Ambient Glow Decorativo */
         .ambient-glow-top {
           position: absolute;
-          top: -80px;
-          right: -80px;
-          width: 320px;
-          height: 320px;
+          top: -70px;
+          right: -70px;
+          width: 300px;
+          height: 300px;
           background: radial-gradient(circle, rgba(99, 102, 241, 0.09) 0%, rgba(255, 255, 255, 0) 70%);
           border-radius: 50%;
           pointer-events: none;
         }
         .ambient-glow-bottom {
           position: absolute;
-          bottom: -90px;
-          left: -90px;
-          width: 340px;
-          height: 340px;
+          bottom: -70px;
+          left: -70px;
+          width: 300px;
+          height: 300px;
           background: radial-gradient(circle, rgba(16, 185, 129, 0.07) 0%, rgba(255, 255, 255, 0) 70%);
           border-radius: 50%;
           pointer-events: none;
@@ -243,7 +242,7 @@ export function generateStorePresentationPDF({
         .content-main {
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 11px;
         }
 
         /* Topo */
@@ -253,20 +252,20 @@ export function generateStorePresentationPDF({
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 14px 18px;
-          background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.95) 45%, rgba(238, 242, 255, 0.95) 100%);
+          padding: 13px 18px;
+          background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.95) 50%, rgba(238, 242, 255, 0.95) 100%);
           border: 1px solid #e2e8f0;
-          border-radius: 18px;
+          border-radius: 16px;
         }
         .brand-box {
           display: flex;
           align-items: center;
-          gap: 16px;
+          gap: 15px;
         }
         .brand-logo {
-          width: 90px;
-          height: 90px;
-          border-radius: 18px;
+          width: 86px;
+          height: 86px;
+          border-radius: 16px;
           object-fit: cover;
           border: 2.5px solid #ffffff;
           background: #ffffff;
@@ -274,24 +273,24 @@ export function generateStorePresentationPDF({
           flex-shrink: 0;
         }
         .brand-placeholder {
-          width: 90px;
-          height: 90px;
-          border-radius: 18px;
+          width: 86px;
+          height: 86px;
+          border-radius: 16px;
           background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
           color: #ffffff;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 40px;
+          font-size: 38px;
           font-weight: 900;
           box-shadow: 0 4px 16px rgba(79, 70, 229, 0.2);
           flex-shrink: 0;
         }
         .brand-title {
-          font-size: 23px;
+          font-size: 22.5px;
           font-weight: 900;
           color: #0f172a;
-          letter-spacing: -0.5px;
+          letter-spacing: -0.4px;
           line-height: 1.15;
         }
         .brand-badge {
@@ -313,7 +312,7 @@ export function generateStorePresentationPDF({
           text-align: right;
           font-size: 10.5px;
           color: #64748b;
-          line-height: 1.45;
+          line-height: 1.5;
         }
         .meta-box strong {
           color: #0f172a;
@@ -321,7 +320,7 @@ export function generateStorePresentationPDF({
         .currency-tag {
           color: #047857;
           background: #d1fae5;
-          padding: 2px 7px;
+          padding: 2px 7.5px;
           border-radius: 5px;
           font-weight: 800;
           display: inline-block;
@@ -333,15 +332,15 @@ export function generateStorePresentationPDF({
           position: relative;
           z-index: 10;
           background: linear-gradient(to right, #f8fafc, #ffffff);
-          border-left: 5px solid #4f46e5;
-          padding: 10px 16px;
-          border-radius: 0 12px 12px 0;
+          border-left: 4.5px solid #4f46e5;
+          padding: 9px 15px;
+          border-radius: 0 11px 11px 0;
           border-top: 1px solid #f1f5f9;
           border-bottom: 1px solid #f1f5f9;
           border-right: 1px solid #f1f5f9;
         }
         .title-banner h1 {
-          font-size: 15px;
+          font-size: 14.5px;
           font-weight: 900;
           color: #0f172a;
           letter-spacing: -0.2px;
@@ -349,21 +348,23 @@ export function generateStorePresentationPDF({
         .title-banner p {
           font-size: 11px;
           color: #64748b;
-          margin-top: 2px;
+          margin-top: 1.5px;
         }
 
         /* Seções */
         .section-block {
           position: relative;
           z-index: 10;
+          break-inside: avoid;
+          page-break-inside: avoid;
         }
         .section-heading {
           font-size: 11px;
           font-weight: 900;
           text-transform: uppercase;
           color: #334155;
-          letter-spacing: 0.6px;
-          margin-bottom: 5px;
+          letter-spacing: 0.55px;
+          margin-bottom: 4.5px;
           display: flex;
           align-items: center;
           gap: 6px;
@@ -377,15 +378,15 @@ export function generateStorePresentationPDF({
         .about-text {
           background: #ffffff;
           border: 1px solid #e2e8f0;
-          border-radius: 14px;
-          padding: 11px 16px;
+          border-radius: 13px;
+          padding: 10px 15px;
           color: #334155;
-          line-height: 1.55;
+          line-height: 1.52;
           font-size: 12px;
           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.015);
         }
         .about-text p {
-          margin-bottom: 4px;
+          margin-bottom: 3.5px;
         }
         .about-text p:last-child {
           margin-bottom: 0;
@@ -395,11 +396,11 @@ export function generateStorePresentationPDF({
         .pillars-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
-          gap: 8px;
+          gap: 7.5px;
         }
         .pillar-card {
           border-radius: 12px;
-          padding: 9px 13px;
+          padding: 8.5px 12px;
           border: 1px solid transparent;
         }
         .pillar-blue {
@@ -448,7 +449,7 @@ export function generateStorePresentationPDF({
         .pillar-desc {
           font-size: 11px;
           color: #475569;
-          line-height: 1.4;
+          line-height: 1.38;
           padding-left: 26px;
         }
 
@@ -456,7 +457,7 @@ export function generateStorePresentationPDF({
         .contacts-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 8px;
+          gap: 7.5px;
         }
         .contact-box {
           border-radius: 12px;
@@ -468,7 +469,7 @@ export function generateStorePresentationPDF({
           display: flex;
           align-items: center;
           gap: 5px;
-          font-size: 9px;
+          font-size: 8.8px;
           font-weight: 800;
           text-transform: uppercase;
           color: #64748b;
@@ -481,33 +482,35 @@ export function generateStorePresentationPDF({
           word-break: break-all;
         }
 
-        /* Painel Centralizado do QR Code (146px) */
+        /* Painel Centralizado do QR Code (Ajustado com perfil mais compacto) */
         .hero-qr-section {
           position: relative;
           z-index: 10;
           background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 50%, #f0fdf4 100%);
           border: 1.5px solid #a5b4fc;
-          border-radius: 16px;
-          padding: 12px 16px;
+          border-radius: 15px;
+          padding: 8px 14px;
           display: flex;
           flex-direction: column;
           align-items: center;
           text-align: center;
           box-shadow: 0 4px 18px rgba(79, 70, 229, 0.07);
+          break-inside: avoid;
+          page-break-inside: avoid;
         }
         .hero-qr-header {
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 7px;
-          margin-bottom: 2px;
+          margin-bottom: 1.5px;
         }
         .hero-qr-title {
           font-size: 13px;
           font-weight: 900;
           color: #312e81;
           text-transform: uppercase;
-          letter-spacing: 0.4px;
+          letter-spacing: 0.35px;
         }
         .hero-qr-badge {
           background: #4338ca;
@@ -522,13 +525,13 @@ export function generateStorePresentationPDF({
         .hero-qr-desc {
           font-size: 11px;
           color: #3730a3;
-          margin-bottom: 8px;
+          margin-bottom: 5px;
           max-width: 520px;
         }
 
-        /* Moldura do QR Code */
+        /* Moldura do QR Code (QR Code intacto com 148x148 / 164px) */
         .hero-qr-card {
-          width: 168px;
+          width: 164px;
           background: #ffffff;
           border: 2px solid #a5b4fc;
           border-radius: 15px;
@@ -536,13 +539,13 @@ export function generateStorePresentationPDF({
           display: flex;
           flex-direction: column;
           align-items: center;
-          box-shadow: 0 6px 20px rgba(79, 70, 229, 0.12);
-          margin-bottom: 7px;
+          box-shadow: 0 5px 18px rgba(79, 70, 229, 0.12);
+          margin-bottom: 5px;
         }
         .hero-qr-image-wrapper {
           position: relative;
-          width: 150px;
-          height: 150px;
+          width: 148px;
+          height: 148px;
           border-radius: 10px;
           overflow: hidden;
           background: #ffffff;
@@ -558,15 +561,15 @@ export function generateStorePresentationPDF({
         }
         .hero-qr-watermark {
           position: absolute;
-          width: 32px;
-          height: 32px;
+          width: 31px;
+          height: 31px;
           background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%);
           border-radius: 8px;
-          border: 2.5px solid #ffffff;
+          border: 2px solid #ffffff;
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+          box-shadow: 0 3px 8px rgba(0,0,0,0.28);
         }
         .hero-qr-watermark span {
           color: #ffffff;
@@ -575,12 +578,12 @@ export function generateStorePresentationPDF({
           line-height: 1;
         }
         .hero-qr-hint {
-          font-size: 8px;
+          font-size: 8.5px;
           font-weight: 800;
           text-transform: uppercase;
           color: #4338ca;
           text-align: center;
-          margin-top: 4px;
+          margin-top: 3.5px;
           letter-spacing: 0.3px;
         }
 
@@ -589,7 +592,7 @@ export function generateStorePresentationPDF({
           background: #ffffff;
           border: 1px solid #c7d2fe;
           border-radius: 9px;
-          padding: 5px 14px;
+          padding: 3.5px 12px;
           display: inline-flex;
           align-items: center;
           gap: 6px;
@@ -610,25 +613,44 @@ export function generateStorePresentationPDF({
 
         /* Fechamento e Rodapé */
         .footer-block {
-          margin-top: 4px;
+          margin-top: 9px;
+          break-inside: avoid;
+          page-break-inside: avoid;
         }
         .formal-note {
-          font-size: 9.5px;
+          font-size: 9.3px;
           color: #64748b;
           font-style: italic;
           line-height: 1.35;
           text-align: center;
-          margin-bottom: 4px;
-          padding: 0 12px;
+          margin-bottom: 4.5px;
+          padding: 0 10px;
         }
         .footer {
           border-top: 1px solid #e2e8f0;
-          padding-top: 5px;
+          padding-top: 4.5px;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          font-size: 8.5px;
+          font-size: 8.8px;
           color: #94a3b8;
+        }
+
+        @media print {
+          html, body {
+            background: #ffffff !important;
+            height: 100% !important;
+            min-height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important;
+          }
+          .page-container {
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: none !important;
+            margin: auto !important;
+          }
         }
       </style>
     </head>
@@ -786,28 +808,45 @@ export function generateStorePresentationPDF({
     </html>
   `;
 
-  let printFrame = document.getElementById('presentation-pdf-iframe') as HTMLIFrameElement;
-  if (!printFrame) {
-    printFrame = document.createElement('iframe');
-    printFrame.id = 'presentation-pdf-iframe';
-    printFrame.style.position = 'fixed';
-    printFrame.style.right = '0';
-    printFrame.style.bottom = '0';
-    printFrame.style.width = '0';
-    printFrame.style.height = '0';
-    printFrame.style.border = '0';
-    document.body.appendChild(printFrame);
+  const existingFrame = document.getElementById('presentation-pdf-iframe');
+  if (existingFrame) {
+    existingFrame.remove();
   }
 
-  const frameDoc = printFrame.contentDocument || printFrame.contentWindow?.document;
-  if (frameDoc) {
-    frameDoc.open();
-    frameDoc.write(html);
-    frameDoc.close();
+  const printFrame = document.createElement('iframe');
+  printFrame.id = 'presentation-pdf-iframe';
+  printFrame.style.position = 'fixed';
+  printFrame.style.top = '0';
+  printFrame.style.left = '0';
+  printFrame.style.width = '1px';
+  printFrame.style.height = '1px';
+  printFrame.style.opacity = '0.01';
+  printFrame.style.pointerEvents = 'none';
+  printFrame.style.border = '0';
+  document.body.appendChild(printFrame);
 
-    setTimeout(() => {
+  const doc = printFrame.contentWindow?.document || printFrame.contentDocument;
+  if (!doc) return;
+
+  doc.open();
+  doc.write(html);
+  doc.close();
+
+  let hasPrinted = false;
+  const triggerNativePrint = () => {
+    if (hasPrinted) return;
+    hasPrinted = true;
+    try {
       printFrame.contentWindow?.focus();
       printFrame.contentWindow?.print();
-    }, 450);
+    } catch (e) {
+      console.warn('Erro ao abrir diálogo de impressão nativo:', e);
+    }
+  };
+
+  if (printFrame.contentWindow) {
+    printFrame.contentWindow.onload = triggerNativePrint;
   }
+
+  setTimeout(triggerNativePrint, 150);
 }
