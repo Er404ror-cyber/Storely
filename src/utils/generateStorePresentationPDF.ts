@@ -38,7 +38,7 @@ const DICTIONARY = {
     p4Title: 'Garantia de Qualidade',
     p4Desc: 'Inspeção minuciosa para assegurar conformidade total com o pedido.',
     accessTitle: 'Catálogo Digital & Encomendas em Tempo Real',
-    accessSubtitle: 'Aponte a câmara do telemóvel ao Código QR abaixo para aceder instantaneamente ao catálogo oficial:',
+    accessSubtitle: 'Aponte a câmara do telemóvel ao Código QR ao lado para aceder instantaneamente ao catálogo oficial:',
     officialBadge: 'Canal Oficial Verificado',
     directUrlLabel: 'Ligação Web Oficial:',
     qrScanHint: 'Aponte a câmara para abrir o catálogo',
@@ -70,7 +70,7 @@ const DICTIONARY = {
     p4Title: 'Quality Guarantee',
     p4Desc: 'Rigorous inspection standards ensuring each product matches specifications.',
     accessTitle: 'Live Digital Storefront & Orders',
-    accessSubtitle: 'Point your mobile camera at the QR Code below to instantly open our official verified catalog:',
+    accessSubtitle: 'Point your mobile camera at the QR Code to instantly open our official verified catalog:',
     officialBadge: 'Verified Official Channel',
     directUrlLabel: 'Official Web Address:',
     qrScanHint: 'Point your camera to scan & open catalog',
@@ -482,31 +482,39 @@ export function generateStorePresentationPDF({
           word-break: break-all;
         }
 
-        /* Painel Centralizado do QR Code (Ajustado com perfil mais compacto) */
+        /* Painel Horizontal do QR Code (Reduz altura e mantém proporções) */
         .hero-qr-section {
           position: relative;
           z-index: 10;
           background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 50%, #f0fdf4 100%);
           border: 1.5px solid #a5b4fc;
           border-radius: 15px;
-          padding: 8px 14px;
+          padding: 10px 16px;
           display: flex;
-          flex-direction: column;
+          flex-direction: row;
           align-items: center;
-          text-align: center;
+          justify-content: space-between;
+          gap: 16px;
           box-shadow: 0 4px 18px rgba(79, 70, 229, 0.07);
           break-inside: avoid;
           page-break-inside: avoid;
         }
+        .hero-qr-left {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          text-align: left;
+          gap: 6px;
+        }
         .hero-qr-header {
           display: flex;
           align-items: center;
-          justify-content: center;
           gap: 7px;
-          margin-bottom: 1.5px;
+          flex-wrap: wrap;
         }
         .hero-qr-title {
-          font-size: 13px;
+          font-size: 12.5px;
           font-weight: 900;
           color: #312e81;
           text-transform: uppercase;
@@ -525,11 +533,10 @@ export function generateStorePresentationPDF({
         .hero-qr-desc {
           font-size: 11px;
           color: #3730a3;
-          margin-bottom: 5px;
-          max-width: 520px;
+          line-height: 1.4;
         }
 
-        /* Moldura do QR Code (QR Code intacto com 148x148 / 164px) */
+        /* Moldura do QR Code */
         .hero-qr-card {
           width: 164px;
           background: #ffffff;
@@ -540,7 +547,7 @@ export function generateStorePresentationPDF({
           flex-direction: column;
           align-items: center;
           box-shadow: 0 5px 18px rgba(79, 70, 229, 0.12);
-          margin-bottom: 5px;
+          flex-shrink: 0;
         }
         .hero-qr-image-wrapper {
           position: relative;
@@ -578,7 +585,7 @@ export function generateStorePresentationPDF({
           line-height: 1;
         }
         .hero-qr-hint {
-          font-size: 8.5px;
+          font-size: 8.2px;
           font-weight: 800;
           text-transform: uppercase;
           color: #4338ca;
@@ -592,23 +599,26 @@ export function generateStorePresentationPDF({
           background: #ffffff;
           border: 1px solid #c7d2fe;
           border-radius: 9px;
-          padding: 3.5px 12px;
+          padding: 4px 10px;
           display: inline-flex;
-          align-items: center;
-          gap: 6px;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 2px;
           box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+          max-width: 100%;
         }
         .hero-url-label {
-          font-size: 9px;
+          font-size: 8.5px;
           font-weight: 800;
           text-transform: uppercase;
           color: #6366f1;
         }
         .hero-url-text {
           font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
-          font-size: 11px;
+          font-size: 10.5px;
           font-weight: 800;
           color: #1e1b4b;
+          word-break: break-all;
         }
 
         /* Fechamento e Rodapé */
@@ -765,14 +775,21 @@ export function generateStorePresentationPDF({
             </div>
           </section>
 
-          <!-- Bloco do QR Code Centralizado no Final -->
+          <!-- Bloco do QR Code Horizontal -->
           <section class="hero-qr-section">
-            <div class="hero-qr-header">
-              ${SVG_ICONS.qrScanIcon}
-              <div class="hero-qr-title">${t.accessTitle}</div>
-              <span class="hero-qr-badge">${t.officialBadge}</span>
+            <div class="hero-qr-left">
+              <div class="hero-qr-header">
+                ${SVG_ICONS.qrScanIcon}
+                <div class="hero-qr-title">${t.accessTitle}</div>
+                <span class="hero-qr-badge">${t.officialBadge}</span>
+              </div>
+              <p class="hero-qr-desc">${t.accessSubtitle}</p>
+              
+              <div class="hero-url-badge">
+                <span class="hero-url-label">${t.directUrlLabel}</span>
+                <span class="hero-url-text">${productsUrl}</span>
+              </div>
             </div>
-            <p class="hero-qr-desc">${t.accessSubtitle}</p>
 
             <div class="hero-qr-card">
               <div class="hero-qr-image-wrapper">
@@ -782,11 +799,6 @@ export function generateStorePresentationPDF({
                 </div>
               </div>
               <div class="hero-qr-hint">${t.qrScanHint}</div>
-            </div>
-
-            <div class="hero-url-badge">
-              <span class="hero-url-label">${t.directUrlLabel}</span>
-              <span class="hero-url-text">${productsUrl}</span>
             </div>
           </section>
         </div>

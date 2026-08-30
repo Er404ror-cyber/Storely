@@ -2,6 +2,7 @@ import React, {
   useEffect, 
   useRef, 
   useState, 
+  useCallback,
   type MouseEvent, 
   type ChangeEvent,
   type TouchEvent,
@@ -14,7 +15,7 @@ import type { MediaItem } from '../types/library';
 interface MediaModalProps {
   media: MediaItem | null;
   onClose: () => void;
-  t: (key: string) => string;
+  t: (key: string | any, ...args: any[]) => string;
 }
 
 export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => {
@@ -45,9 +46,17 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
   const lastPosition = useRef({ x: 0, y: 0 });
   const initialTouch = useRef({ x: 0, y: 0 });
   const touchStartY = useRef<number>(0);
-  const hasMoved = useRef<boolean>(false); // Previne cliques acidentais ao arrastar
+  const hasMoved = useRef<boolean>(false);
 
-  // 1. Resetar estados SEMPRE que a mídia mudar (Corrige o bug de "abrir mal")
+  const handleInteraction = useCallback((): void => {
+    setVisible(true);
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    hideTimerRef.current = setTimeout(() => {
+      setVisible(false);
+    }, 3000);
+  }, []);
+
+  // 1. Resetar estados e disparar timer SEMPRE que uma nova mídia for aberta
   useEffect(() => {
     if (media) {
       setScale(1);
@@ -55,33 +64,28 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
       setSwipeY(0);
       setIsSwiping(false);
       setIsDragging(false);
-      setVisible(true);
+      handleInteraction(); // Garante que inicia a contagem de 3s logo na abertura
     }
     
     return () => {
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
       if (closeAnimTimerRef.current) clearTimeout(closeAnimTimerRef.current);
     };
-  }, [media]);
-
-  const handleInteraction = (): void => {
-    setVisible(true);
-    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-    hideTimerRef.current = setTimeout(() => setVisible(false), 3000);
-  };
+  }, [media, handleInteraction]);
 
   const toggleVisibility = (e: React.MouseEvent | React.TouchEvent): void => {
     e.stopPropagation();
-    if (hasMoved.current) return; // Se estava a arrastar, não esconde os controlos
-    setVisible((prev) => !prev);
-    if (!visible) handleInteraction();
+    if (hasMoved.current) return;
+    setVisible((prev) => {
+      const nextState = !prev;
+      if (nextState) {
+        handleInteraction();
+      } else if (hideTimerRef.current) {
+        clearTimeout(hideTimerRef.current);
+      }
+      return nextState;
+    });
   };
-
-  useEffect(() => {
-    handleInteraction();
-    return () => {
-      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-    };
-  }, []);
 
   useEffect(() => {
     const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
@@ -105,7 +109,7 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
     y: (touches[0].clientY + touches[1].clientY) / 2
   });
 
-  // --- LÓGICA DE GESTOS CORRIGIDA ---
+  // --- LÓGICA DE GESTOS ---
   const onTouchStart = (e: TouchEvent) => {
     handleInteraction();
     hasMoved.current = false;
@@ -157,28 +161,23 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
         });
       } else if (scale === 1 && isSwiping) {
         const deltaY = e.touches[0].clientY - touchStartY.current;
-        if (Math.abs(deltaY) > 10) hasMoved.current = true; // Confirma que houve movimento
-        setSwipeY(deltaY); // Permite arrastar para cima ou para baixo livremente
+        if (Math.abs(deltaY) > 10) hasMoved.current = true;
+        setSwipeY(deltaY);
       }
     }
   };
 
   const onTouchEnd = () => {
     if (scale === 1 && isSwiping) {
-      // Se arrastou mais de 100px (para cima ou para baixo), fecha o modal
       if (Math.abs(swipeY) > 100) {
-        // Empurra a imagem completamente para fora do ecrã na direção do arrasto
         const direction = swipeY > 0 ? 1 : -1;
         setSwipeY(direction * window.innerHeight);
         
-        // Aguarda a animação terminar (200ms) e então chama onClose
         closeAnimTimerRef.current = setTimeout(() => {
           onClose();
-          // Reseta silenciosamente no fundo para a próxima abertura
           setTimeout(() => setSwipeY(0), 50); 
         }, 200);
       } else {
-        // Se não arrastou o suficiente, volta suavemente para o centro
         setSwipeY(0);
       }
     } else if (scale < 1) {
@@ -187,11 +186,8 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
 
     setIsDragging(false);
     setIsSwiping(false);
-    
-    // Reseta o hasMoved após um pequeno delay para não disparar cliques
     setTimeout(() => { hasMoved.current = false; }, 50);
   };
-  // ----------------------------------
 
   const onWheel = (e: WheelEvent) => {
     const delta = e.deltaY * -0.005;
@@ -311,7 +307,6 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
 
   if (!media) return null;
 
-  // Opacidade dinâmica conforme arrasta para cima ou para baixo
   const bgOpacity = Math.max(0, 1 - Math.abs(swipeY) / 300);
 
   return createPortal(
@@ -323,7 +318,7 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
         contain: 'strict' 
       }}
       onMouseMove={handleInteraction}
-      onClick={() => { if (!hasMoved.current) onClose(); }} // Apenas fecha se não tiver arrastado
+      onClick={() => { if (!hasMoved.current) onClose(); }}
     >
       {scale === 1 && (
         <div 
@@ -381,7 +376,7 @@ export const MediaModal: React.FC<MediaModalProps> = ({ media, onClose, t }) => 
         </div>
       )}
 
-      {/* ÁREA DE INTERAÇÃO (Toda a tela) */}
+      {/* ÁREA DE INTERAÇÃO */}
       <div 
         className="w-full h-full flex items-center justify-center pointer-events-auto overflow-hidden"
         onTouchStart={onTouchStart}

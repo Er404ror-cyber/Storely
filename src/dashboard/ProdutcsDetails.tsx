@@ -65,18 +65,17 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
   const forceLightUI = isEditorRoute;
   const showVisitStore = !pageState?.fromStore;
 
-  const styles = useMemo(() => ({
-    pageBg: forceLightUI ? "bg-slate-50 text-slate-900" : "bg-slate-50 text-slate-900 dark:bg-zinc-950 dark:text-zinc-100",
-    nav: forceLightUI ? "border-slate-200 bg-white/92 " : "border-slate-200 bg-white/92  dark:border-zinc-800 dark:bg-zinc-950/92",
-    panel: forceLightUI ? "border-slate-200 bg-white" : "border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900",
-    softPanel: forceLightUI ? "border-slate-200 bg-slate-50" : "border-slate-200 bg-slate-50 dark:border-zinc-800 dark:bg-zinc-900/60",
-    imageWrap: forceLightUI ? "bg-slate-200" : "bg-slate-200 dark:bg-zinc-900",
-    mutedText: forceLightUI ? "text-slate-500" : "text-slate-500 dark:text-zinc-400",
-    strongText: forceLightUI ? "text-slate-950" : "text-slate-950 dark:text-white",
-    softMutedText: forceLightUI ? "text-slate-400" : "text-slate-400 dark:text-zinc-500",
-    hoverSoft: forceLightUI ? "hover:bg-slate-100" : "hover:bg-slate-100 dark:hover:bg-zinc-900"
+const styles = useMemo(() => ({
+    pageBg: forceLightUI ? "bg-zinc-50 text-zinc-900" : "bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100",
+    nav: forceLightUI ? "border-zinc-200/80 bg-white/90 " : "border-zinc-200/80 bg-white/90  dark:border-zinc-800 dark:bg-zinc-950/90",
+    panel: forceLightUI ? "border-zinc-200/70 bg-white shadow-xs" : "border-zinc-200/70 bg-white dark:border-zinc-800 dark:bg-zinc-900 shadow-xs",
+    softPanel: forceLightUI ? "border-zinc-200/60 bg-zinc-100/70" : "border-zinc-200/60 bg-zinc-100/70 dark:border-zinc-800 dark:bg-zinc-900/60",
+    imageWrap: forceLightUI ? "bg-zinc-100" : "bg-zinc-100 dark:bg-zinc-900",
+    mutedText: forceLightUI ? "text-zinc-500" : "text-zinc-500 dark:text-zinc-400",
+    strongText: forceLightUI ? "text-zinc-950" : "text-zinc-950 dark:text-white",
+    softMutedText: forceLightUI ? "text-zinc-400" : "text-zinc-400 dark:text-zinc-500",
+    hoverSoft: forceLightUI ? "hover:bg-zinc-100/80" : "hover:bg-zinc-100/80 dark:hover:bg-zinc-900"
   }), [forceLightUI]);
-
   const [isEditing, setIsEditing] = useState(isCreating);
   const [quantity, setQuantity] = useState(1);
   const [customNote, setCustomNote] = useState("");
@@ -195,7 +194,6 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
 
   const translatedUnit = UNIT_TRANSLATION_KEY_MAP[initialData.unit as keyof typeof UNIT_TRANSLATION_KEY_MAP] ? t(UNIT_TRANSLATION_KEY_MAP[initialData.unit as keyof typeof UNIT_TRANSLATION_KEY_MAP] as any) : initialData.unit;
 
-  // Gatilhos Mentais de Venda Embutidos e Dinâmicos via Traduções
   const handleWhatsAppOrder = useCallback(() => {
     const totalOriginal = unitPriceOriginal * quantity;
     const totalSaved = totalOriginal - totalPriceFinal;
@@ -225,14 +223,43 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
   }, [sendWhatsAppOrder, resolvedStore, adminStore, storeSlug, initialData.name, quantity, translatedUnit, totalPriceFinal, formatMoney, customNote, initialData.main_image, discountPercent, unitPriceOriginal, t]);
 
   const handleShare = useCallback(async () => {
-    const shareData = { title: initialData?.name || "Storely", text: `Confira ${initialData?.name || "este link"}!`, url: window.location.href };
-    if (navigator.share && navigator.canShare?.(shareData)) {
-      try { await navigator.share(shareData); } catch (err) { console.log("Erro share nativo", err); }
-    } else {
-      try { await navigator.clipboard.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 2000); } 
-      catch (err) { console.log("Erro clipboard", err); }
+    const shareData: ShareData = { 
+      title: initialData?.name || "Storely", 
+      text: `Confira ${initialData?.name || "este produto"}!`, 
+      url: window.location.href 
+    };
+
+    if (initialData.main_image) {
+      try {
+        const response = await fetch(initialData.main_image);
+        const blob = await response.blob();
+        const ext = blob.type.split("/")[1] || "jpg";
+        const file = new File([blob], `product.${ext}`, { type: blob.type });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          shareData.files = [file];
+        }
+      } catch (err) {
+        console.warn("Não foi possível carregar o arquivo de imagem para compartilhar:", err);
+      }
     }
-  }, [initialData?.name]);
+
+    if (navigator.share && navigator.canShare?.(shareData)) {
+      try { 
+        await navigator.share(shareData); 
+      } catch (err) { 
+        console.log("Erro share nativo", err); 
+      }
+    } else {
+      try { 
+        await navigator.clipboard.writeText(window.location.href); 
+        setCopied(true); 
+        setTimeout(() => setCopied(false), 2000); 
+      } catch (err) { 
+        console.log("Erro clipboard", err); 
+      }
+    }
+  }, [initialData?.name, initialData?.main_image]);
 
   return createPortal(
     <div ref={scrollRef} className={`fixed inset-0 z-[10000] h-[100dvh] w-full overflow-y-auto overflow-x-hidden ${styles.pageBg}`}>
@@ -240,7 +267,7 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
         isCreating={isCreating} onClose={onClose} isEditorRoute={isEditorRoute}
         isEditing={isEditing} setIsEditing={setIsEditing} handleShare={handleShare}
         copied={copied} storeSlug={storeSlug} navClass={styles.nav} 
-        hoverSoftClass={styles.hoverSoft} t={t}
+        hoverSoftClass={styles.hoverSoft} t={t as any}
       />
 
       <main className="mx-auto w-full max-w-6xl px-0 pb-36 md:px-4 md:pt-10 lg:px-8">
@@ -257,59 +284,116 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] md:gap-10 lg:gap-14">
-              <ProductGallery images={previews} productName={initialData.name} fallbackImage={FALLBACK_PRODUCT} imageWrapClass={styles.imageWrap} t={t} />
+              <ProductGallery images={previews} productName={initialData.name} fallbackImage={FALLBACK_PRODUCT} imageWrapClass={styles.imageWrap} t={t as any} />
 
-              <div className="px-4 pt-4 md:px-0 md:pt-0 flex flex-col">
-                <span className={`inline-block mb-3 self-start rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] ${forceLightUI ? "bg-slate-200/60 text-slate-700" : "bg-slate-200/60 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300"}`}>
-                  {initialData.category || t("common_category_general" as any) || "Geral"}
-                </span>
-                
-                <h1 className={`text-[2rem] md:text-[2.5rem] font-extrabold leading-[1.15] tracking-tight mb-2 [overflow-wrap:anywhere] ${styles.strongText}`}>
-                  {initialData.name}
-                </h1>
-                
-                <div className="flex flex-wrap items-end gap-3 mb-8">
-                  <p className={`text-2xl font-black tracking-tight ${styles.strongText}`}>
-                    {formatMoney(unitPriceFinal)} <span className="text-[15px] font-semibold text-slate-500">/ {translatedUnit}</span>
-                  </p>
-                  
-                  {discountPercent > 0 && (
-                    <>
-                      <p className="text-lg font-semibold text-slate-400 line-through mb-[2px]">
-                        {formatMoney(unitPriceOriginal)}
-                      </p>
-                      <span className="mb-1 rounded-lg bg-amber-100 px-2 py-0.5 text-[11px] font-black text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
-                        -{discountPercent}%
-                      </span>
-                    </>
-                  )}
-                </div>
+              <div className="w-full max-w-full px-4 pt-4 md:px-0 md:pt-0 flex flex-col">
+  {/* Categoria */}
+  <span className={`self-start mb-2 rounded-md px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider ${forceLightUI ? "bg-slate-100 text-slate-700" : "bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300"}`}>
+    {initialData.category || t("common_category_general" as any) || "Geral"}
+  </span>
 
-                <ProductCheckout quantity={quantity} setQuantity={setQuantity} customNote={customNote} setCustomNote={setCustomNote} localizedTotalPrice={formatMoney(totalPriceFinal)} translatedUnit={translatedUnit} handleWhatsAppOrder={handleWhatsAppOrder} forceLightUI={forceLightUI} panelClass={styles.panel} softMutedTextClass={styles.softMutedText} strongTextClass={styles.strongText} isEditorRoute={isEditorRoute} t={t} />
+  {/* Nome do Produto */}
+  <h1 className={`text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight mb-3 break-words ${styles.strongText}`}>
+    {initialData.name}
+  </h1>
 
-                {!isEditorRoute && showVisitStore && (
-                  <StoreTrustCard storeName={resolvedStore?.name || storeSlug} storeLogo={resolvedStore?.logo_url || ""} siteUrl={window.location.origin + "/" + storeSlug} softPanelClass={styles.softPanel} strongTextClass={styles.strongText} mutedTextClass={styles.mutedText} t={t} />
-                )}
-              </div>
+  {/* Preço com Ancoragem e Poupança Traduzida */}
+  <div className="mb-5 p-4 rounded-xl border border-slate-300/80 dark:border-zinc-800 bg-slate-100/70 dark:bg-zinc-900/40 shadow-xs">
+    {discountPercent > 0 && (
+      <div className="flex items-center gap-2 mb-1">
+        <span className="text-sm font-semibold text-slate-500 line-through dark:text-zinc-400">
+          {formatMoney(unitPriceOriginal)}
+        </span>
+        <span className="rounded bg-rose-600 text-white px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide">
+          -{discountPercent}%
+        </span>
+      </div>
+    )}
+
+    <div className="flex items-baseline flex-wrap gap-1.5">
+      <span className="text-3xl sm:text-4xl font-black tracking-tight text-emerald-700 dark:text-emerald-400">
+        {formatMoney(unitPriceFinal)}
+      </span>
+      <span className="text-sm font-semibold text-slate-600 dark:text-zinc-400">
+        / {translatedUnit}
+      </span>
+    </div>
+
+  {discountPercent > 0 && unitPriceOriginal > unitPriceFinal && (
+  <p className="mt-2 text-xs font-bold text-emerald-800 dark:text-emerald-400">
+    {(t("product_save_amount" as any) || "Poupa {amount}").replace(
+      "{amount}",
+      formatMoney(unitPriceOriginal - unitPriceFinal)
+    )}
+  </p>
+)}
+  </div>
+
+  {/* Descrição antes do Checkout */}
+  <div className="mb-5 text-sm">
+    <ProductDescription
+      fullDescription={initialData.full_description}
+      styles={{ mutedText: styles.mutedText, strongText: styles.strongText }}
+      t={t as any}
+    />
+  </div>
+
+  {/* Checkout / Ação de Compra */}
+  <div className="w-full mb-6">
+    <ProductCheckout 
+      quantity={quantity} 
+      setQuantity={setQuantity} 
+      customNote={customNote} 
+      setCustomNote={setCustomNote} 
+      localizedTotalPrice={formatMoney(totalPriceFinal)} 
+      translatedUnit={translatedUnit} 
+      handleWhatsAppOrder={handleWhatsAppOrder} 
+      forceLightUI={forceLightUI} 
+      panelClass={styles.panel} 
+      softMutedTextClass={styles.softMutedText} 
+      strongTextClass={styles.strongText} 
+      isEditorRoute={isEditorRoute} 
+      t={t as any} 
+    />
+  </div>
+
+  {!isEditorRoute && showVisitStore && (
+    <div className="w-full">
+      <StoreTrustCard 
+        storeName={resolvedStore?.name || storeSlug} 
+        storeLogo={resolvedStore?.logo_url || ""} 
+        siteUrl={window.location.origin + "/" + storeSlug} 
+        softPanelClass={styles.softPanel} 
+        strongTextClass={styles.strongText} 
+        mutedTextClass={styles.mutedText} 
+        t={t as any} 
+      />
+    </div>
+  )}
+</div>
             </div>
 
-            {/* Componente de Descrição Estruturada */}
-            <ProductDescription
-              fullDescription={initialData.full_description}
-              styles={{ mutedText: styles.mutedText, strongText: styles.strongText }}
-              t={t}
-            />
-
-            {!isEditorRoute && !isEditing && (
-              <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 400px' }}>
-                <RelatedProductsCache currentProductId={productId || ""} currentCategory={initialData.category} currentStoreId={resolvedStore?.id} storeSlugFallback={storeSlug} panelClass={styles.panel} strongTextClass={styles.strongText} mutedTextClass={styles.mutedText} formatMoney={formatMoney} t={t} />
+           {/* Produtos Relacionados */}
+           {!isEditorRoute && !isEditing && (
+              <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 320px' }}>
+                <RelatedProductsCache 
+                  currentProductId={productId || ""} 
+                  currentCategory={initialData.category} 
+                  currentStoreId={resolvedStore?.id} 
+                  storeSlugFallback={storeSlug} 
+                  panelClass={styles.panel} 
+                  strongTextClass={styles.strongText} 
+                  mutedTextClass={styles.mutedText} 
+                  formatMoney={formatMoney} 
+                  t={t as any} 
+                />
               </div>
             )}
           </>
         )}
       </main>
 
-      {!isEditing && <MobileStickyBar localizedTotalPrice={formatMoney(totalPriceFinal)} handleWhatsAppOrder={handleWhatsAppOrder} mutedTextClass={styles.mutedText} strongTextClass={styles.strongText} t={t} />}
+      {!isEditing && <MobileStickyBar localizedTotalPrice={formatMoney(totalPriceFinal)} handleWhatsAppOrder={handleWhatsAppOrder} mutedTextClass={styles.mutedText} strongTextClass={styles.strongText} t={t as any} />}
 
       <style>{`.pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); } .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
     </div>, document.body

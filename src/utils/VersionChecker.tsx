@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslate } from '../context/LanguageContext';
 
 interface VersionData {
@@ -12,6 +12,7 @@ const KEYS_TO_PRESERVE = [
 ];
 
 const BETA_WELCOME_KEY = 'storely_beta_welcome_pending';
+const INSTALLED_VERSION_KEY = 'APP_INSTALLED_VERSION';
 
 export default function VersionChecker() {
   const { t } = useTranslate();
@@ -19,6 +20,7 @@ export default function VersionChecker() {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [currentVersionData, setCurrentVersionData] = useState<VersionData | null>(null);
   const [newVersionData, setNewVersionData] = useState<VersionData | null>(null);
+  const isUpdatingRef = useRef(false);
 
   const performDeepBrowserCleanup = async (newVersionNumber: number) => {
     try {
@@ -94,7 +96,7 @@ export default function VersionChecker() {
       Object.entries(preservedData).forEach(([key, val]) => {
         localStorage.setItem(key, val);
       });
-      localStorage.setItem('APP_INSTALLED_VERSION', newVersionNumber.toString());
+      localStorage.setItem(INSTALLED_VERSION_KEY, newVersionNumber.toString());
       localStorage.setItem(BETA_WELCOME_KEY, 'true');
     } catch (error) {
       console.error('Erro na limpeza:', error);
@@ -108,7 +110,7 @@ export default function VersionChecker() {
   };
 
   const checkVersion = useCallback(async (isInitialLoad = false) => {
-    if (import.meta.env.DEV) return;
+    if (import.meta.env.DEV || isUpdatingRef.current) return;
 
     try {
       const res = await fetch(`/version.json?t=${Date.now()}`, {
@@ -117,30 +119,31 @@ export default function VersionChecker() {
       
       if (!res.ok) return;
       
-      const data: VersionData = await res.json();
-      const serverVersionStr = data.version.toString();
+      const serverData: VersionData = await res.json();
+      const serverVersionStr = serverData.version.toString();
+      const localVersionStr = localStorage.getItem(INSTALLED_VERSION_KEY);
 
       if (isInitialLoad) {
-        const localVersionStr = localStorage.getItem('APP_INSTALLED_VERSION');
-
+        // Se a página já foi recarregada diretamente com nova versão (ex: F5)
         if (localVersionStr && localVersionStr !== serverVersionStr) {
-          await performDeepBrowserCleanup(data.version);
-          executeHardReload();
-          return; 
+          await performDeepBrowserCleanup(serverData.version);
+          setShowWelcomeModal(true);
+        } else if (!localVersionStr) {
+          localStorage.setItem(INSTALLED_VERSION_KEY, serverVersionStr);
         }
 
-        if (!localVersionStr) {
-          localStorage.setItem('APP_INSTALLED_VERSION', serverVersionStr);
-        }
-
+        // Se veio de um reload pós-update ou nova versão detectada
         if (localStorage.getItem(BETA_WELCOME_KEY) === 'true') {
           setShowWelcomeModal(true);
         }
 
-        setCurrentVersionData(data);
-      } else if (currentVersionData && data.version !== currentVersionData.version) {
-        setNewVersionData(data);
-        setIsOutdated(true);
+        setCurrentVersionData(serverData);
+      } else {
+        // Verificação periódica ou ao focar na janela: apenas avisa, sem reload automático
+        if (currentVersionData && serverData.version !== currentVersionData.version) {
+          setNewVersionData(serverData);
+          setIsOutdated(true);
+        }
       }
     } catch (error) {
       console.error('Falha ao verificar versão:', error);
@@ -194,7 +197,8 @@ export default function VersionChecker() {
   }, [checkVersion]);
 
   const handleUpdateClick = async () => {
-    if (newVersionData) {
+    if (newVersionData && !isUpdatingRef.current) {
+      isUpdatingRef.current = true;
       await performDeepBrowserCleanup(newVersionData.version);
       executeHardReload();
     }
@@ -221,7 +225,7 @@ export default function VersionChecker() {
       }).format(new Date(newVersionData.version))
     : '';
 
-  // 1. Modal de Boas-Vindas ao Beta (Soft UI / Ultra-Light)
+  // 1. Modal de Boas-Vindas ao Beta (Soft UI)
   if (showWelcomeModal) {
     return (
       <div 
@@ -257,7 +261,7 @@ export default function VersionChecker() {
             })}
           </p>
 
-          {/* Card Soft UI com detalhes da versão atual */}
+          {/* Card com detalhes da versão atual */}
           <div className="p-3.5 rounded-xl bg-[#f4f5f9] shadow-[inset_2px_2px_5px_#d1d5db,inset_-2px_-2px_5px_#ffffff] mb-6 space-y-1.5">
             <div className="flex justify-between text-xs font-mono text-slate-500">
               <span>{t('current_version_label', { defaultValue: 'Versão em execução:' })}</span>
@@ -286,7 +290,7 @@ export default function VersionChecker() {
     );
   }
 
-  // 2. Modal de Nova Versão Detectada (Soft UI / Ultra-Light)
+  // 2. Modal de Nova Versão Detectada
   if (!isOutdated) return null;
 
   return (
@@ -321,7 +325,7 @@ export default function VersionChecker() {
           })}
         </p>
 
-        {/* Comparativo de versão rodando vs nova */}
+        {/* Comparativo de versões */}
         <div className="p-3.5 rounded-xl bg-[#f4f5f9] shadow-[inset_2px_2px_5px_#d1d5db,inset_-2px_-2px_5px_#ffffff] mb-6 space-y-1.5 text-xs font-mono">
           <div className="flex justify-between text-slate-500">
             <span>{t('current_version_label', { defaultValue: 'Versão em execução:' })}</span>
@@ -339,7 +343,7 @@ export default function VersionChecker() {
           )}
         </div>
 
-        {/* Botão de Atualizar */}
+        {/* Botão de Ação Manual */}
         <button
           onClick={handleUpdateClick}
           className="w-full bg-[#1e293b] hover:bg-[#0f172a] active:scale-[0.99] text-white text-sm font-semibold py-3.5 px-5 rounded-xl shadow-[4px_4px_10px_#d1d5db] flex items-center justify-between cursor-pointer"

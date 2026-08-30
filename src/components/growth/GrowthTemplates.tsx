@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useRef, useCallback } from 'react';
 import { Flame, MessageCircle, Check, Copy } from 'lucide-react';
 
 interface TemplateItem {
@@ -24,6 +24,16 @@ export const GrowthTemplates = memo(function GrowthTemplates({
   onShareWhatsApp,
   t
 }: Props) {
+  const lastActionRef = useRef<number>(0);
+
+  // Impede ações repetidas em rajada (spam)
+  const handleSafeAction = useCallback((callback: () => void) => {
+    const now = Date.now();
+    if (now - lastActionRef.current < 400) return;
+    lastActionRef.current = now;
+    callback();
+  }, []);
+
   return (
     <section className="space-y-3" style={{ contain: 'content' }}>
       <div>
@@ -62,8 +72,8 @@ export const GrowthTemplates = memo(function GrowthTemplates({
               <div className="flex items-center gap-2 pt-1 border-t border-zinc-100">
                 <button
                   type="button"
-                  onClick={() => onShareWhatsApp(item.text)}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 active:opacity-80 text-emerald-800 text-xs font-bold border border-emerald-200 cursor-pointer"
+                  onClick={() => handleSafeAction(() => onShareWhatsApp(item.text))}
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 active:scale-[0.98] transition-transform text-emerald-800 text-xs font-bold border border-emerald-200 cursor-pointer"
                 >
                   <MessageCircle size={13} className="text-emerald-600 shrink-0" />
                   <span className="truncate">{t('guide_template_send_wa') || 'Enviar no WhatsApp'}</span>
@@ -71,8 +81,8 @@ export const GrowthTemplates = memo(function GrowthTemplates({
 
                 <button
                   type="button"
-                  onClick={() => onCopy(item.text, idx)}
-                  className={`p-2 rounded-xl border cursor-pointer active:opacity-80 ${
+                  onClick={() => handleSafeAction(() => onCopy(item.text, idx))}
+                  className={`p-2 rounded-xl border cursor-pointer active:scale-[0.98] transition-transform ${
                     isCopied 
                       ? 'bg-emerald-50 border-emerald-300 text-emerald-700' 
                       : 'bg-zinc-50 hover:bg-zinc-100 border-zinc-200 text-zinc-700'

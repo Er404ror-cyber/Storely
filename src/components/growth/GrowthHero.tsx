@@ -74,19 +74,34 @@ export const GrowthHero = memo(function GrowthHero({
   }, [isBusy]);
 
   const fetchLogoFile = useCallback(async (url: string): Promise<File | null> => {
+    if (!url) return null;
     if (logoFileCacheRef.current?.url === url) {
       return logoFileCacheRef.current.file;
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
+
     try {
-      const response = await fetch(url, { mode: 'cors', cache: 'force-cache' });
+      const response = await fetch(url, { 
+        mode: 'cors', 
+        cache: 'force-cache',
+        signal: controller.signal 
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) return null;
+
       const blob = await response.blob();
+      if (!blob || blob.size === 0) return null;
+
       const ext = blob.type.split('/')[1] || 'png';
       const file = new File([blob], `logo.${ext}`, { type: blob.type || 'image/png' });
       
       logoFileCacheRef.current = { url, file };
       return file;
     } catch {
+      clearTimeout(timeoutId);
       return null;
     }
   }, []);
@@ -143,7 +158,26 @@ export const GrowthHero = memo(function GrowthHero({
   }, [executeShare, throttleAction]);
 
   const handleShareWhatsApp = useCallback(() => {
-    throttleAction(() => {
+    throttleAction(async () => {
+      // 1. Tenta partilha nativa enviando o ficheiro do logótipo anexo
+      if (typeof navigator !== 'undefined' && navigator.share && logoUrl) {
+        try {
+          const logoFile = await fetchLogoFile(logoUrl);
+          if (logoFile && navigator.canShare && navigator.canShare({ files: [logoFile] })) {
+            await navigator.share({
+              title: displayName,
+              text: naturalShareMessage,
+              url: activeUrl,
+              files: [logoFile]
+            });
+            return;
+          }
+        } catch (err: any) {
+          if (err?.name === 'AbortError') return;
+        }
+      }
+
+      // 2. Fallback direto caso o dispositivo não suporte envio de ficheiros
       const encoded = encodeURIComponent(naturalShareMessage);
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       const url = isMobile 
@@ -152,7 +186,7 @@ export const GrowthHero = memo(function GrowthHero({
       
       window.open(url, '_blank', 'noopener,noreferrer');
     });
-  }, [naturalShareMessage, throttleAction]);
+  }, [displayName, naturalShareMessage, activeUrl, logoUrl, fetchLogoFile, throttleAction]);
 
   const handleShareInstagram = useCallback(() => {
     throttleAction(async () => {

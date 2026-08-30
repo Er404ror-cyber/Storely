@@ -90,6 +90,9 @@ export const CatalogHeader = memo(function CatalogHeader({
 
   const isEditingTitleRef = useRef(false);
   const isEditingSubRef = useRef(false);
+  const isSharingRef = useRef(false);
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const logoFileCacheRef = useRef<{ url: string; file: File } | null>(null);
 
   // Sincronização direta de DOM sem re-render do cursor
   useEffect(() => {
@@ -138,37 +141,90 @@ export const CatalogHeader = memo(function CatalogHeader({
 
     return () => {
       if (intervalId) clearInterval(intervalId);
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [categoryCoverImages.length, isEditor]);
 
-  // Partilha Nativa
+  // Carregamento resiliente do logótipo em ficheiro com timeout e cache
+  const fetchLogoFile = useCallback(async (url: string): Promise<File | null> => {
+    if (!url) return null;
+    if (logoFileCacheRef.current?.url === url) {
+      return logoFileCacheRef.current.file;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
+
+    try {
+      const response = await fetch(url, { 
+        mode: "cors", 
+        cache: "force-cache",
+        signal: controller.signal 
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) return null;
+
+      const blob = await response.blob();
+      if (!blob || blob.size === 0) return null;
+
+      const ext = blob.type.split("/")[1] || "png";
+      const file = new File([blob], `logo.${ext}`, { type: blob.type || "image/png" });
+      
+      logoFileCacheRef.current = { url, file };
+      return file;
+    } catch {
+      clearTimeout(timeoutId);
+      return null;
+    }
+  }, []);
+
+  // Partilha Nativa com Envio do Ficheiro do Logo
   const handleShare = useCallback(async () => {
-    if (isEditor) return;
+    if (isEditor || isSharingRef.current) return;
+    isSharingRef.current = true;
+
     const currentUrl = typeof window !== "undefined" ? window.location.href : "";
     const shareTitle = `${storeName} | ${t("catalog_title") || "Catálogo Oficial"}`;
     const shareText = t("share_store_recommendation_msg", { store: storeName }) || 
-      `Dá uma olhada nos produtos da ${storeName}! Catálogo oficial:`;
+      `Dá uma olhada nos produtos da ${storeName}! Catálogo oficial:\n👉 ${currentUrl}`;
 
-    if (typeof navigator !== "undefined" && navigator.share) {
-      try {
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) {
+        let filesToSend: File[] = [];
+
+        if (storeLogo && navigator.canShare) {
+          const logoFile = await fetchLogoFile(storeLogo);
+          if (logoFile && navigator.canShare({ files: [logoFile] })) {
+            filesToSend = [logoFile];
+          }
+        }
+
         await navigator.share({
           title: shareTitle,
           text: shareText,
-          url: currentUrl
+          url: currentUrl,
+          ...(filesToSend.length > 0 ? { files: filesToSend } : {})
         });
         return;
-      } catch (err: any) {
-        if (err?.name === "AbortError") return;
       }
+    } catch (err: any) {
+      if (err?.name === "AbortError") return;
+    } finally {
+      setTimeout(() => {
+        isSharingRef.current = false;
+      }, 500);
     }
 
+    // Fallback para cópia se não partilhou nativamente
     if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(`${shareText} ${currentUrl}`);
+      await navigator.clipboard.writeText(`${shareText}\n${currentUrl}`);
       setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2000);
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+      copyTimeoutRef.current = setTimeout(() => setCopiedLink(false), 2000);
     }
-  }, [isEditor, storeName, t]);
+  }, [isEditor, storeName, storeLogo, fetchLogoFile, t]);
 
   const scrollToProducts = useCallback(() => {
     const productsTarget = 

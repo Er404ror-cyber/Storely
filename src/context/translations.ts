@@ -2759,8 +2759,18 @@ beta_badge: "Storely Beta",
   current_version_label: "Running version:",
   new_version_label: "New version:",
   build_date_label: "Build date:",
-  catalog_view_products: "Enjoy Now"
-  
+  catalog_view_products: "Enjoy Now",
+
+
+  more_from_this_store: "More from this store",
+  buy_together_tip: "Order more items from this store with combined shipping",
+  explore_other_stores: "Explore popular alternatives",
+  similar_in_category: "Similar products from other stores",
+  product_default_name: "Product",
+  product_save_amount: "Save {amount}",
+
+  fast_response: "Fast response",
+  limit_reached: "Limit reached",
   },
 
 
@@ -5545,7 +5555,15 @@ guide_letter_open_btn: "Gerar",
   
 
 
-  catalog_view_products: "Apreciar Já"
+  catalog_view_products: "Apreciar Já",
+  more_from_this_store: "Aproveite o mesmo pedido",
+  buy_together_tip: "Peça outros itens desta loja no mesmo frete",
+  explore_other_stores: "Outras opções populares",
+  similar_in_category: "Modelos semelhantes em outras lojas",
+  product_default_name: "Produto",
+  product_save_amount: "Poupa {amount}",
+  fast_response: "Resposta rápida",
+  limit_reached: "Limite atingido",
 }
 
 

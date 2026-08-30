@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react";
+import { memo, useMemo, type ReactNode } from "react";
 import { 
   Sparkles, 
   Ruler, 
@@ -15,35 +15,66 @@ interface ProductDescriptionProps {
     mutedText: string;
     strongText: string;
   };
-  t: any;
+  t: (key: string, options?: { defaultValue?: string }) => string;
 }
 
-// 🎯 Regras de tradução dinâmica para valores de tags
+// 🎯 Regex unificado para números, quantias, porcentagens e termos financeiros (PT & EN)
+const HIGHLIGHT_REGEX = new RegExp(
+  "(" +
+  // 1. Números, valores monetários, parcelas e porcentagens (ex: 50%, 1.500, R$ 50, 500 MT, $20, 2x)
+  "(?:\\b\\d+[.,]?\\d*(?:%|x|mt|mzn|kz|usd|eur|\\$|€)?\\b)|" +
+  // 2. Termos de Pagamento Antecipado / Sinal / Depósito (PT)
+  "\\b(?:dep[oó]sito|adiantado|adiantamento|sinal|entrada|pagamento\\s*adiantado|pago\\s*adiantado|" +
+  "metade\\s*do\\s*valor|taxa\\s*de\\s*reserva|garantia|pagamento\\s*parcial|" +
+  "a\\s*vista|[àa]\\s*prazo|transfer[eê]ncia|dinheiro|valor\\s*restante|saldo\\s*devedor)\\b|" +
+  // 3. Payment terms / In advance / Deposits (EN)
+  "\\b(?:in\\s*advance|deposit|down\\s*payment|advance\\s*payment|upfront|prepayment|pre-payment|" +
+  "paid\\s*in\\s*advance|partial\\s*payment|booking\\s*fee|reservation\\s*fee|" +
+  "remaining\\s*balance|wire\\s*transfer|cash|full\\s*payment)\\b" +
+  ")",
+  "gi"
+);
+
+function highlightContent(text: string): ReactNode[] {
+  if (!text) return [];
+  const parts = text.split(HIGHLIGHT_REGEX);
+  if (parts.length === 1) return [text];
+
+  return parts.map((part, i) => {
+    if (i % 2 === 1) {
+      return (
+        <strong
+          key={i}
+          className="font-bold text-slate-900 dark:text-zinc-100"
+        >
+          {part}
+        </strong>
+      );
+    }
+    return part;
+  });
+}
+
 const VALUE_TRANSLATION_RULES = [
-  // Tamanhos
   { regex: /^(?:tam(?:anho)?\s*[:=]?\s*)?(p|s|small)$/i, key: "val_p" },
   { regex: /^(?:tam(?:anho)?\s*[:=]?\s*)?(m|m[eé]dio|medium)$/i, key: "val_m" },
   { regex: /^(?:tam(?:anho)?\s*[:=]?\s*)?(g|l|grande|large)$/i, key: "val_g" },
   { regex: /^(?:tam(?:anho)?\s*[:=]?\s*)?(gg|xl|extra\s*grande)$/i, key: "val_gg" },
   { regex: /\b(tamanho\s*único|tamanho\s*unico|one\s*size|único|unico)\b/i, key: "val_onesize" },
   { regex: /\b(plus\s*size|tamanho\s*grande)\b/i, key: "val_plussize" },
-  
-  // Cores
   { regex: /\b(preto|preta|black)\b/i, key: "val_black" },
   { regex: /\b(branco|branca|white)\b/i, key: "val_white" },
   { regex: /\b(azul|blue)\b/i, key: "val_blue" },
   { regex: /\b(vermelho|vermelha|red)\b/i, key: "val_red" },
   { regex: /\b(rosa|pink)\b/i, key: "val_pink" },
   { regex: /\b(dourado|dourada|gold)\b/i, key: "val_gold" },
-
-  // Público
+  { regex: /\b(verde|green)\b/i, key: "val_green" },
+  { regex: /\b(cinza|gray|grey)\b/i, key: "val_gray" },
   { regex: /\b(infantil|criança|crianca|bebé|bebe|kids|baby)\b/i, key: "val_kids" },
   { regex: /\b(feminino|mulher|women|female)\b/i, key: "val_women" },
   { regex: /\b(masculino|homem|men|male)\b/i, key: "val_men" },
   { regex: /\b(unissexo|unisex)\b/i, key: "val_unisex" },
   { regex: /\b(adulto|adultos|adult|adults)\b/i, key: "val_adult" },
-
-  // Estilos & Materiais
   { regex: /\b(casual|dia\s*a\s*dia|everyday)\b/i, key: "val_casual" },
   { regex: /\b(social|trabalho|formal|work)\b/i, key: "val_social" },
   { regex: /\b(treino|fitness|academia|workout)\b/i, key: "val_fitness" },
@@ -57,150 +88,132 @@ const VALUE_TRANSLATION_RULES = [
 function translateTagItem(item: string, t: any): string {
   const trimmed = item.trim();
   const match = VALUE_TRANSLATION_RULES.find((rule) => rule.regex.test(trimmed));
-  return match ? t(match.key as any, { defaultValue: trimmed }) : trimmed;
+  return match ? t(match.key, { defaultValue: trimmed }) : trimmed;
 }
 
-// 🎨 Cores reais e naturais por item
-function getItemVisuals(item: string, isSizeCategory: boolean, isColorCategory: boolean, defaultClass: string, t: any) {
+function getItemVisuals(item: string, isSizeCategory: boolean, isColorCategory: boolean, t: any) {
   const raw = item.trim().toLowerCase();
   const translated = translateTagItem(item, t);
 
-  // 1. TAMANHOS: Mantém a cor Âmbar natural
   if (isSizeCategory) {
     return {
       text: translated,
-      chipClass: "bg-amber-100/70 text-amber-950 border-amber-200/80 dark:bg-amber-900/40 dark:text-amber-200 dark:border-amber-700/60 font-bold",
+      chipClass: "bg-amber-50 text-amber-900 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-200 dark:border-amber-800/50 font-semibold",
       dotClass: null,
     };
   }
 
-  // 2. CORES: Cores fiéis (Branco permanece branco com alto contraste em ambos os temas)
   if (isColorCategory || /preto|black|branco|white|azul|blue|vermelh|red|rosa|pink|dourad|gold|verde|green|cinza|gray|grey/i.test(raw)) {
-    // BRANCO: Fundo branco real com borda e texto escuro
     if (/branco|white/i.test(raw)) {
       return {
         text: translated,
-        chipClass: "bg-white text-zinc-900 border-zinc-300 dark:bg-white dark:text-zinc-950 dark:border-zinc-300 font-bold shadow-2xs",
+        chipClass: "bg-white text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 font-semibold",
         dotClass: "bg-white border border-zinc-400",
       };
     }
-    // PRETO: Fundo preto real em ambos os temas
     if (/preto|black/i.test(raw)) {
       return {
         text: translated,
-        chipClass: "bg-zinc-950 text-white border-zinc-800 dark:bg-black dark:text-white dark:border-zinc-700 font-bold shadow-2xs",
-        dotClass: "bg-black border border-zinc-600",
+        chipClass: "bg-zinc-900 text-white border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:border-zinc-700 font-semibold",
+        dotClass: "bg-zinc-950 border border-zinc-600",
       };
     }
     if (/azul|blue/i.test(raw)) {
       return {
         text: translated,
-        chipClass: "bg-blue-50/90 text-blue-900 border-blue-200/80 dark:bg-blue-950/40 dark:text-blue-200 dark:border-blue-800/60 font-bold",
+        chipClass: "bg-blue-50/80 text-blue-900 border-blue-200/80 dark:bg-blue-950/30 dark:text-blue-200 dark:border-blue-800/50 font-medium",
         dotClass: "bg-blue-500",
       };
     }
     if (/vermelh|red/i.test(raw)) {
       return {
         text: translated,
-        chipClass: "bg-rose-50/90 text-rose-900 border-rose-200/80 dark:bg-rose-950/40 dark:text-rose-200 dark:border-rose-800/60 font-bold",
+        chipClass: "bg-rose-50/80 text-rose-900 border-rose-200/80 dark:bg-rose-950/30 dark:text-rose-200 dark:border-rose-800/50 font-medium",
         dotClass: "bg-rose-500",
       };
     }
     if (/rosa|pink/i.test(raw)) {
       return {
         text: translated,
-        chipClass: "bg-pink-50/90 text-pink-900 border-pink-200/80 dark:bg-pink-950/40 dark:text-pink-200 dark:border-pink-800/60 font-bold",
+        chipClass: "bg-pink-50/80 text-pink-900 border-pink-200/80 dark:bg-pink-950/30 dark:text-pink-200 dark:border-pink-800/50 font-medium",
         dotClass: "bg-pink-400",
       };
     }
     if (/dourad|gold/i.test(raw)) {
       return {
         text: translated,
-        chipClass: "bg-amber-50/90 text-amber-950 border-amber-200/90 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-800/60 font-bold",
+        chipClass: "bg-amber-50/80 text-amber-950 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-200 dark:border-amber-800/50 font-medium",
         dotClass: "bg-amber-400",
       };
     }
     if (/verde|green/i.test(raw)) {
       return {
         text: translated,
-        chipClass: "bg-emerald-50/90 text-emerald-950 border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-800/60 font-bold",
+        chipClass: "bg-emerald-50/80 text-emerald-950 border-emerald-200/80 dark:bg-emerald-950/30 dark:text-emerald-200 dark:border-emerald-800/50 font-medium",
         dotClass: "bg-emerald-500",
       };
     }
     if (/cinza|gray|grey/i.test(raw)) {
       return {
         text: translated,
-        chipClass: "bg-slate-100 text-slate-800 border-slate-300 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 font-bold",
-        dotClass: "bg-slate-400",
+        chipClass: "bg-zinc-100 text-zinc-800 border-zinc-200 dark:bg-zinc-800/70 dark:text-zinc-200 dark:border-zinc-700 font-medium",
+        dotClass: "bg-zinc-400",
       };
     }
   }
 
   return {
     text: translated,
-    chipClass: defaultClass,
+    chipClass: "bg-slate-100/90 text-slate-800 border-slate-200/90 dark:bg-zinc-800/70 dark:text-zinc-200 dark:border-zinc-700/80 font-medium",
     dotClass: null,
   };
 }
 
-// 🏷️ Configuração de cabeçalho e categoria
 function getSpecGroupConfig(label: string, t: any) {
   const l = label.toLowerCase();
-  const isSize = l.includes("tamanho") || l.includes("size") || l.includes("tam");
-  const isColor = l.includes("cor") || l.includes("cores") || l.includes("color");
-
-  // Tamanhos (Âmbar)
-  if (isSize) {
+  
+  if (l.includes("tamanho") || l.includes("size") || l.includes("tam")) {
     return {
       isSize: true,
       isColor: false,
-      translatedLabel: t("group_header_sizes" as any, { defaultValue: label }),
-      icon: <Ruler size={13.5} className="text-amber-600 dark:text-amber-400 shrink-0" />,
-      defaultTagClass: "bg-amber-100/70 text-amber-950 border-amber-200/80 dark:bg-amber-900/40 dark:text-amber-200 dark:border-amber-700/60 font-bold",
+      translatedLabel: t("group_header_sizes", { defaultValue: label }),
+      icon: <Ruler size={14} className="text-amber-600 dark:text-amber-400 shrink-0" />,
     };
   }
 
-  // Público (Índigo)
   if (l.includes("público") || l.includes("publico") || l.includes("audience") || l.includes("genero") || l.includes("género")) {
     return {
       isSize: false,
       isColor: false,
-      translatedLabel: t("group_header_audience" as any, { defaultValue: label }),
-      icon: <UserCheck size={13.5} className="text-indigo-600 dark:text-indigo-400 shrink-0" />,
-      defaultTagClass: "bg-slate-100 text-slate-800 border-slate-200/80 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 font-bold",
+      translatedLabel: t("group_header_audience", { defaultValue: label }),
+      icon: <UserCheck size={14} className="text-indigo-600 dark:text-indigo-400 shrink-0" />,
     };
   }
 
-  // Material (Verde Esmeralda)
   if (l.includes("material") || l.includes("materiais")) {
     return {
       isSize: false,
       isColor: false,
-      translatedLabel: t("group_header_materials" as any, { defaultValue: label }),
-      icon: <Layers size={13.5} className="text-emerald-600 dark:text-emerald-400 shrink-0" />,
-      defaultTagClass: "bg-slate-100 text-slate-800 border-slate-200/80 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 font-bold",
+      translatedLabel: t("group_header_materials", { defaultValue: label }),
+      icon: <Layers size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />,
     };
   }
 
-  // Estilo (Violeta)
   if (l.includes("estilo") || l.includes("style")) {
     return {
       isSize: false,
       isColor: false,
-      translatedLabel: t("group_header_styles" as any, { defaultValue: label }),
-      icon: <Shirt size={13.5} className="text-violet-600 dark:text-violet-400 shrink-0" />,
-      defaultTagClass: "bg-slate-100 text-slate-800 border-slate-200/80 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 font-bold",
+      translatedLabel: t("group_header_styles", { defaultValue: label }),
+      icon: <Shirt size={14} className="text-violet-600 dark:text-violet-400 shrink-0" />,
     };
   }
 
-  // Cores (Rosa)
-  if (isColor) {
+  if (l.includes("cor") || l.includes("cores") || l.includes("color")) {
     return {
       isSize: false,
       isColor: true,
-      translatedLabel: t("group_header_colors" as any, { defaultValue: label }),
-      icon: <Palette size={13.5} className="text-rose-600 dark:text-rose-400 shrink-0" />,
-      defaultTagClass: "bg-slate-100 text-slate-800 border-slate-200/80 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 font-bold",
+      translatedLabel: t("group_header_colors", { defaultValue: label }),
+      icon: <Palette size={14} className="text-rose-600 dark:text-rose-400 shrink-0" />,
     };
   }
 
@@ -208,8 +221,7 @@ function getSpecGroupConfig(label: string, t: any) {
     isSize: false,
     isColor: false,
     translatedLabel: label,
-    icon: <Tag size={13.5} className="text-slate-500 dark:text-zinc-400 shrink-0" />,
-    defaultTagClass: "bg-slate-100 text-slate-800 border-slate-200/80 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 font-bold",
+    icon: <Tag size={14} className="text-slate-500 dark:text-zinc-400 shrink-0" />,
   };
 }
 
@@ -218,12 +230,11 @@ export const ProductDescription = memo(function ProductDescription({
   styles,
   t,
 }: ProductDescriptionProps) {
-  // Parsing em passagem linear única: zero consumo de CPU/GPU em re-renders ou scroll
-  const { mainText, specGroups } = useMemo(() => {
-    if (!fullDescription) return { mainText: "", specGroups: [] };
+  const { parsedParagraphs, specGroups } = useMemo(() => {
+    if (!fullDescription) return { parsedParagraphs: [], specGroups: [] };
 
     const lines = fullDescription.split("\n");
-    const userLines: string[] = [];
+    const userParagraphs: ReactNode[][] = [];
     const groups: Array<{ label: string; items: string[] }> = [];
 
     for (let i = 0; i < lines.length; i++) {
@@ -242,75 +253,76 @@ export const ProductDescription = memo(function ProductDescription({
           groups.push({ label, items });
         }
       } else {
-        userLines.push(trimmed);
+        userParagraphs.push(highlightContent(trimmed));
       }
     }
 
     return {
-      mainText: userLines.join("\n\n"),
+      parsedParagraphs: userParagraphs,
       specGroups: groups,
     };
   }, [fullDescription]);
 
-  if (!fullDescription || (!mainText && specGroups.length === 0)) return null;
+  if (!fullDescription || (parsedParagraphs.length === 0 && specGroups.length === 0)) return null;
 
   return (
     <section
-      className="mt-10 md:mt-16 border-t border-slate-200/80 pt-7 md:pt-10 dark:border-zinc-800/80 px-4 md:px-0"
+      className="border-t border-slate-200/80 pt-6 sm:pt-8 dark:border-zinc-800/80"
       style={{ contentVisibility: "auto", containIntrinsicSize: "0 180px" }}
     >
-      <div className="max-w-3xl flex flex-col gap-5 sm:gap-6">
+      <div className="max-w-3xl flex flex-col gap-4">
         
         {/* Cabeçalho Limpo */}
-        <div className="flex items-center gap-2 border-b border-slate-200/60 pb-3 dark:border-zinc-800/60">
-          <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:bg-blue-400/15 dark:text-blue-400 shrink-0">
-            <Sparkles size={13} className="stroke-[2.5]" />
+        <div className="flex items-center gap-2 border-b border-slate-200/60 pb-2.5 dark:border-zinc-800/60">
+          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0">
+            <Sparkles size={13} className="stroke-[2.2]" />
           </span>
-          <h3 className={`text-xs font-black uppercase tracking-[0.2em] ${styles.strongText}`}>
-            {t("product_details_details" as any, { defaultValue: "Especificações & Detalhes" })}
+          <h3 className={`text-xs font-bold uppercase tracking-wider ${styles.strongText}`}>
+            {t("product_details_details", { defaultValue: "Sobre o Produto" })}
           </h3>
         </div>
 
-        {/* 1. Descrição do Usuário em Primeiro Lugar */}
-        {mainText && (
-          <div className="relative pl-4 sm:pl-4.5 border-l-[3px] border-slate-900 dark:border-blue-500 pt-0.5">
-            <p
-              className={`text-[15px] sm:text-[16px] leading-[1.75] font-normal whitespace-pre-wrap [overflow-wrap:anywhere] ${styles.mutedText}`}
-            >
-              {mainText}
-            </p>
+        {/* 1. Descrição com Destaques de Termos e Números */}
+        {parsedParagraphs.length > 0 && (
+          <div className="relative space-y-2 pl-3.5 border-l-2 border-emerald-600/70 dark:border-emerald-500/70">
+            {parsedParagraphs.map((nodes, idx) => (
+              <p
+                key={idx}
+                className={`text-sm sm:text-[15px] leading-relaxed font-normal [overflow-wrap:anywhere] ${styles.mutedText}`}
+              >
+                {nodes}
+              </p>
+            ))}
           </div>
         )}
 
-        {/* 2. Lista Estruturada com Cores Naturais e Suporte Preciso a Branco e Preto */}
+        {/* 2. Grid de Atributos */}
         {specGroups.length > 0 && (
-          <div className="rounded-2xl border border-slate-200/80 bg-white dark:bg-zinc-900/60 dark:border-zinc-800/80 overflow-hidden shadow-2xs">
+          <div className="rounded-xl border border-slate-200/80 bg-white/90 dark:bg-zinc-900/50 dark:border-zinc-800/80 overflow-hidden">
             <div className="divide-y divide-slate-100 dark:divide-zinc-800/60">
               {specGroups.map((group, idx) => {
-                const { icon, isSize, isColor, defaultTagClass, translatedLabel } = getSpecGroupConfig(group.label, t);
+                const { icon, isSize, isColor, translatedLabel } = getSpecGroupConfig(group.label, t);
 
                 return (
                   <div
                     key={idx}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 p-3 sm:px-4 sm:py-3 transition-colors duration-100 hover:bg-slate-50/50 dark:hover:bg-zinc-800/30"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 sm:px-4 sm:py-2.5 hover:bg-slate-50/60 dark:hover:bg-zinc-800/30"
                   >
-                    {/* Cabeçalho do Atributo */}
                     <div className="flex items-center gap-2 shrink-0">
                       {icon}
-                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-zinc-400">
+                      <span className="text-xs font-semibold text-slate-600 dark:text-zinc-300">
                         {translatedLabel}
                       </span>
                     </div>
 
-                    {/* Chips com Tratamento de Cores e Tamanhos */}
                     <div className="flex flex-wrap items-center gap-1.5 sm:justify-end">
                       {group.items.map((item, itemIdx) => {
-                        const { text, chipClass, dotClass } = getItemVisuals(item, isSize, isColor, defaultTagClass, t);
+                        const { text, chipClass, dotClass } = getItemVisuals(item, isSize, isColor, t);
 
                         return (
                           <span
                             key={itemIdx}
-                            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs tracking-tight border shadow-2xs transition-transform duration-100 active:scale-95 ${chipClass}`}
+                            className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs border shadow-2xs ${chipClass}`}
                           >
                             {dotClass && <span className={`h-2 w-2 rounded-full shrink-0 ${dotClass}`} />}
                             {text}

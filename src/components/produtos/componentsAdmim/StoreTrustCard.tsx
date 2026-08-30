@@ -1,6 +1,6 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { BadgeCheck, Store } from "lucide-react";
+import { BadgeCheck, Home, ShoppingBag, Store } from "lucide-react";
 import { FALLBACK_STORE } from "../../../utils/constants";
 
 interface StoreTrustCardProps {
@@ -10,7 +10,7 @@ interface StoreTrustCardProps {
   softPanelClass: string;
   strongTextClass: string;
   mutedTextClass: string;
-  t: any;
+  t: (key: string, options?: { defaultValue?: string }) => string;
 }
 
 export const StoreTrustCard = memo(function StoreTrustCard({
@@ -19,37 +19,72 @@ export const StoreTrustCard = memo(function StoreTrustCard({
   siteUrl,
   softPanelClass,
   strongTextClass,
-  mutedTextClass,
   t,
 }: StoreTrustCardProps) {
+  const productsUrl = useMemo(() => {
+    const cleanUrl = (siteUrl || "").replace(/\/+$/, "");
+    return `${cleanUrl}/products`;
+  }, [siteUrl]);
+
   return (
-    <div className={`rounded-3xl border p-5 transition hover:shadow-md ${softPanelClass}`}>
-      <div className="flex items-center gap-4">
-        <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 dark:ring-zinc-700">
+    <div
+      className={`rounded-2xl border p-4 sm:p-5 shadow-xs ${softPanelClass}`}
+      style={{ contentVisibility: "auto", containIntrinsicSize: "0 130px" }}
+    >
+      {/* Identidade Visual da Loja */}
+      <div className="flex items-center gap-3.5">
+        <div className="relative h-13 w-13 shrink-0 overflow-hidden rounded-xl bg-white shadow-2xs ring-1 ring-slate-200/80 dark:ring-zinc-700">
           <img
             src={storeLogo || FALLBACK_STORE}
             alt={storeName}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover"
-            onError={(e) => { e.currentTarget.src = FALLBACK_STORE; }}
+            onError={(e) => {
+              e.currentTarget.src = FALLBACK_STORE;
+            }}
           />
         </div>
+
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <h2 className={`truncate text-lg font-black ${strongTextClass}`}>{storeName}</h2>
+            <h2 className={`truncate text-base font-bold ${strongTextClass}`}>
+              {storeName}
+            </h2>
             <BadgeCheck size={16} className="text-blue-500 shrink-0" />
           </div>
-          <p className={`truncate text-sm mt-0.5 ${mutedTextClass}`}>
-            {t("Vendedor_Verificado") || "Vendedor Verificado"}
-          </p>
+
+          <div className="mt-0.5 flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-zinc-400">
+            <Store size={12} className="shrink-0 text-slate-400 dark:text-zinc-500" />
+            <span className="truncate">
+              {t("official_store", { defaultValue: "Loja Oficial" })}
+            </span>
+          </div>
         </div>
       </div>
-      <Link
-        to={siteUrl}
-        className="mt-4 flex w-full items-center justify-center rounded-xl bg-white border border-slate-200 py-3 text-[11px] font-black uppercase tracking-wider text-slate-900 shadow-sm transition hover:bg-slate-50 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white dark:hover:bg-zinc-800"
-      >
-        <Store size={14} className="mr-2" />
-        {t("Open_site") || "Ver toda a Loja"}
-      </Link>
+
+      {/* Botões de Ação Direta */}
+      <div className="mt-3.5 grid grid-cols-2 gap-2">
+        <Link
+          to={siteUrl}
+          className="flex h-9.5 items-center justify-center gap-1.5 rounded-xl border border-slate-200/90 bg-white px-3 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-[0.98] dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-900"
+        >
+          <Home size={13.5} className="shrink-0 text-slate-400 dark:text-zinc-500" />
+          <span className="truncate">
+            {t("store_page_links_home_badge", { defaultValue: "Início" })}
+          </span>
+        </Link>
+
+        <Link
+          to={productsUrl}
+          className="flex h-9.5 items-center justify-center gap-1.5 rounded-xl border border-emerald-600/30 bg-emerald-50/60 px-3 text-xs font-semibold text-emerald-800 shadow-2xs hover:bg-emerald-100/70 active:scale-[0.98] dark:border-emerald-500/30 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
+        >
+          <ShoppingBag size={13.5} className="shrink-0 text-emerald-600 dark:text-emerald-400" />
+          <span className="truncate">
+            {t("nav_products", { defaultValue: "Produtos" })}
+          </span>
+        </Link>
+      </div>
     </div>
   );
 });

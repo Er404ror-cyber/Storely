@@ -38,13 +38,19 @@ export const GrowthMockupPhone = memo(function GrowthMockupPhone({
 
   return (
     <div 
-      onClick={onOpenApp}
-      role="button"
-      tabIndex={0}
-      className="w-full max-w-[290px] rounded-[2.2rem] bg-white p-2.5 border-[3px] border-zinc-900 text-zinc-800 font-sans text-xs space-y-2 cursor-pointer select-none"
-      style={{ contain: 'content' }}
-      title={t('guide_mockup_tap_to_open') || 'Tocar para abrir no aplicativo'}
-    >
+  onClick={onOpenApp}
+  onKeyDown={(e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onOpenApp();
+    }
+  }}
+  role="button"
+  tabIndex={0}
+  className="w-full max-w-[290px] rounded-[2.2rem] bg-white p-2.5 border-[3px] border-zinc-900 text-zinc-800 font-sans text-xs space-y-2 cursor-pointer select-none active:scale-[0.98] transition-transform"
+  style={{ contain: 'content' }}
+  title={t('guide_mockup_tap_to_open') || 'Tocar para abrir no aplicativo'}
+>
       {/* Barra de Status do Telemóvel */}
       <div className="flex justify-between items-center px-2 text-[9px] text-zinc-400 font-bold">
         <span>9:41</span>

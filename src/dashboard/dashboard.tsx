@@ -8,14 +8,15 @@ import { useTranslate } from '../context/LanguageContext';
 // Importando Tipos
 import { type DashboardData, type Product, type Page, type StepItem, resolveCurrency } from '../types/dashboard';
 
+// Importando Utilitários de Leitura de Cache
+import { readCache, ADMIN_STORE_CACHE_KEY, getAdminPagesCacheKey } from '../utils/adminCache';
+
 // Importando Componentes Separados
 import { 
   StatCard, SetupStepCard, ProductRow, PageRow, 
   HeroBanner, SystemNodeDetails, ActionBanner 
 } from '../components/dashboard/DashboardWidgets';
 import { BlogPromoWidget } from '../components/produtos/componentsAdmim/BlogPromoWidget';
-
-// Importando o NOVO Componente do Blog
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -27,15 +28,50 @@ function Dashboard() {
   const { data, isLoading, error } = useQuery<DashboardData>({
     queryKey: ['dashboard-professional-v5'],
     queryFn: async () => {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) throw new Error('Not authenticated');
+      // 1. Tentar ler a Store do cache existente
+      const cachedStore = readCache<any>(ADMIN_STORE_CACHE_KEY)?.data;
+      let store = cachedStore;
+      let userEmail = '';
 
-      const { data: store, error: storeError } = await supabase.from('stores').select('*').eq('owner_id', user.id).single();
-      if (storeError || !store) throw new Error('Store not found');
+      if (!store) {
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) throw new Error('Not authenticated');
+        userEmail = user.email ?? '';
+
+        const { data: storeData, error: storeError } = await supabase
+          .from('stores')
+          .select('*')
+          .eq('owner_id', user.id)
+          .single();
+
+        if (storeError || !storeData) throw new Error('Store not found');
+        store = storeData;
+      }
+
+      // 2. Tentar ler as Pages do cache existente da loja
+      const cachedPages = readCache<Page[]>(getAdminPagesCacheKey(store.id))?.data;
+
+      // 3. Executar apenas as buscas estritamente necessárias
+      const fetchProducts = async () => {
+        return await supabase
+          .from('products')
+          .select('*')
+          .eq('store_id', store.id)
+          .order('created_at', { ascending: false });
+      };
+
+      const fetchPages = async () => {
+        if (cachedPages) return { data: cachedPages, error: null };
+        return await supabase
+          .from('pages')
+          .select('*')
+          .eq('store_id', store.id)
+          .order('updated_at', { ascending: false });
+      };
 
       const [productsRes, pagesRes] = await Promise.all([
-        supabase.from('products').select('*').eq('store_id', store.id).order('created_at', { ascending: false }),
-        supabase.from('pages').select('*').eq('store_id', store.id).order('updated_at', { ascending: false }),
+        fetchProducts(),
+        fetchPages(),
       ]);
 
       if (productsRes.error) throw productsRes.error;
@@ -43,7 +79,7 @@ function Dashboard() {
 
       return {
         store,
-        owner_email: user.email ?? '',
+        owner_email: userEmail,
         createdAt: store.created_at,
         products: (productsRes.data ?? []) as Product[],
         pages: (pagesRes.data ?? []) as Page[],
@@ -166,7 +202,6 @@ function Dashboard() {
           t={t} 
           onNavigate={handleNavigate} 
         />
-
 
         {/* STATS GRID */}
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">

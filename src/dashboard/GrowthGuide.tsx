@@ -37,6 +37,9 @@ export const GrowthGuide = memo(function GrowthGuide() {
   const [pulsingSec, setPulsingSec] = useState<string | null>(null);
 
   const isNavigatingRef = useRef<boolean>(false);
+  const isSharingRef = useRef<boolean>(false);
+  const isRedirectingRef = useRef<boolean>(false);
+
   const pulseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navLockTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -102,72 +105,111 @@ export const GrowthGuide = memo(function GrowthGuide() {
     copyTimeoutRef.current = setTimeout(() => setCopiedLink(false), 2000);
   }, [copyUrl]);
 
-  // Carrega e armazena a imagem com segurança
+  // Carrega e armazena a imagem com segurança (com timeout para não travar conexões lentas)
   const fetchLogoFile = useCallback(async (url: string): Promise<File | null> => {
+    if (!url) return null;
     if (logoFileCacheRef.current?.url === url) {
       return logoFileCacheRef.current.file;
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
+
     try {
-      const response = await fetch(url, { mode: 'cors', cache: 'force-cache' });
+      const response = await fetch(url, { 
+        mode: 'cors', 
+        cache: 'force-cache',
+        signal: controller.signal 
+      });
+      
+      clearTimeout(timeoutId);
+      if (!response.ok) return null;
+
       const blob = await response.blob();
+      if (!blob || blob.size === 0) return null;
+
       const ext = blob.type.split('/')[1] || 'png';
       const file = new File([blob], `logo.${ext}`, { type: blob.type || 'image/png' });
       
       logoFileCacheRef.current = { url, file };
       return file;
     } catch {
+      clearTimeout(timeoutId);
       return null;
     }
   }, []);
 
-  const handleAppRedirect = useCallback((targetUrl: string) => {
-    if (typeof window === 'undefined') return;
-  
-    // Copia o link para área de transferência em background
+  // Redirecionamento blindado contra múltiplos cliques rápidos
+  const handleAppRedirect = useCallback((deepLink: string, webUrl: string) => {
+    if (typeof window === 'undefined' || isRedirectingRef.current) return;
+    isRedirectingRef.current = true;
+
+    // Copia o catálogo para a área de transferência silenciosamente
     if (navigator.clipboard?.writeText) {
       navigator.clipboard.writeText(activeUrl).catch(() => {});
       setCopiedLink(true);
       if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
       copyTimeoutRef.current = setTimeout(() => setCopiedLink(false), 2000);
     }
-  
-    // Redirecionamento instantâneo síncrono (o SO intercepta e abre o App nativo)
-    window.location.href = targetUrl;
-  }, [activeUrl]);
-  
-// Web Share Nativo com Fallback em cascata
-const handleNativeShare = useCallback(async (customText?: string) => {
-  const storeName = store?.name || 'Storely';
-  const textToSend = customText || `🛍️ *${storeName}*\n👉 ${activeUrl}`;
 
-  if (typeof navigator !== 'undefined' && navigator.share) {
-    try {
-      let filesToSend: File[] = [];
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-      if (store?.logo_url && navigator.canShare) {
-        const logoFile = await fetchLogoFile(store.logo_url);
-        if (logoFile && navigator.canShare({ files: [logoFile] })) {
-          filesToSend = [logoFile];
-        }
-      }
-
-      await navigator.share({
-        title: storeName,
-        text: textToSend,
-        url: activeUrl,
-        ...(filesToSend.length > 0 ? { files: filesToSend } : {})
-      });
+    if (!isMobile) {
+      window.open(webUrl, '_blank', 'noopener,noreferrer');
+      setTimeout(() => {
+        isRedirectingRef.current = false;
+      }, 400);
       return;
+    }
+
+    window.location.href = deepLink;
+    setTimeout(() => {
+      isRedirectingRef.current = false;
+    }, 800);
+  }, [activeUrl]);
+
+  // Web Share Nativo com Fallback em cascata e bloqueio de concorrência
+  const handleNativeShare = useCallback(async (customText?: string) => {
+    if (isSharingRef.current) return;
+    isSharingRef.current = true;
+
+    const storeName = store?.name || 'Storely';
+    const textToSend = customText || `🛍️ *${storeName}*\n👉 ${activeUrl}`;
+
+    try {
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        let filesToSend: File[] = [];
+
+        if (store?.logo_url && navigator.canShare) {
+          const logoFile = await fetchLogoFile(store.logo_url);
+          if (logoFile && navigator.canShare({ files: [logoFile] })) {
+            filesToSend = [logoFile];
+          }
+        }
+
+        await navigator.share({
+          title: storeName,
+          text: textToSend,
+          url: activeUrl,
+          ...(filesToSend.length > 0 ? { files: filesToSend } : {})
+        });
+        return;
+      }
     } catch (err: any) {
       if (err?.name === 'AbortError') return;
+    } finally {
+      setTimeout(() => {
+        isSharingRef.current = false;
+      }, 500);
     }
-  }
 
-  // Fallback WhatsApp (1 único argumento universal)
-  const encoded = encodeURIComponent(textToSend);
-  handleAppRedirect(`https://wa.me/?text=${encoded}`);
-}, [store?.name, store?.logo_url, activeUrl, fetchLogoFile, handleAppRedirect]);
+    // Fallback WhatsApp com suporte a Mobile Deep Link e Desktop Web
+    const encoded = encodeURIComponent(textToSend);
+    const waMobileLink = `whatsapp://send?text=${encoded}`;
+    const waWebLink = `https://wa.me/?text=${encoded}`;
+
+    handleAppRedirect(waMobileLink, waWebLink);
+  }, [store?.name, store?.logo_url, activeUrl, fetchLogoFile, handleAppRedirect]);
 
   const handleShareWhatsApp = useCallback((customText?: string) => {
     handleNativeShare(customText);
@@ -236,7 +278,7 @@ const handleNativeShare = useCallback(async (customText?: string) => {
       name: t('guide_platform_wa_name') || 'WhatsApp Business',
       icon: <MessageCircle size={18} className="text-emerald-600 shrink-0" />,
       color: 'bg-emerald-50 border-emerald-200 text-emerald-700',
-      deepLink: 'https://wa.me/',
+      deepLink: 'whatsapp://settings',
       webUrl: 'https://web.whatsapp.com',
       mockupType: 'whatsapp' as const,
       steps: [
@@ -250,7 +292,7 @@ const handleNativeShare = useCallback(async (customText?: string) => {
       icon: <Video size={18} className="text-sky-600 shrink-0" />,
       color: 'bg-sky-50 border-sky-200 text-sky-700',
       deepLink: 'snssdk1233://user/profile',
-      webUrl: 'https://www.tiktok.com',
+      webUrl: 'https://www.tiktok.com/profile',
       mockupType: 'tiktok' as const,
       steps: [
         t('guide_platform_tt_step1') || 'No seu perfil, toque no menu do topo > "Configurações e Privacidade" > "Conta" > "Trocar para Conta Corporativa".',
@@ -262,8 +304,8 @@ const handleNativeShare = useCallback(async (customText?: string) => {
       name: t('guide_platform_gmb_name') || 'Google Maps',
       icon: <MapPin size={18} className="text-amber-600 shrink-0" />,
       color: 'bg-amber-50 border-amber-200 text-amber-700',
-      deepLink: 'https://www.google.com/maps',
-      webUrl: 'https://www.google.com/maps',
+      deepLink: 'https://business.google.com',
+      webUrl: 'https://business.google.com',
       mockupType: 'google' as const,
       steps: [
         t('guide_platform_gmb_step1') || 'Aceda à ficha da sua empresa no Google Meu Negócio ou Maps.',

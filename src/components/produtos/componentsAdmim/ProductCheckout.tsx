@@ -1,5 +1,12 @@
-import { memo } from "react";
-import { Minus, Plus, MessageSquarePlus, MessageCircle, ShieldCheck } from "lucide-react";
+import { memo, useCallback, useMemo } from "react";
+import {
+  Minus,
+  Plus,
+  MessageSquarePlus,
+  MessageCircle,
+  ShieldCheck,
+  Zap,
+} from "lucide-react";
 
 interface ProductCheckoutProps {
   quantity: number;
@@ -10,11 +17,12 @@ interface ProductCheckoutProps {
   translatedUnit: string;
   handleWhatsAppOrder: () => void;
   forceLightUI: boolean;
-  panelClass: string;
-  softMutedTextClass: string;
-  strongTextClass: string;
-  isEditorRoute: boolean;
-  t: any;
+  panelClass?: string;
+  softMutedTextClass?: string;
+  strongTextClass?: string;
+  isEditorRoute?: boolean;
+  maxQuantity?: number;
+  t: (key: string) => string;
 }
 
 export const ProductCheckout = memo(function ProductCheckout({
@@ -23,77 +31,174 @@ export const ProductCheckout = memo(function ProductCheckout({
   customNote,
   setCustomNote,
   localizedTotalPrice,
+  translatedUnit,
   handleWhatsAppOrder,
   forceLightUI,
-  panelClass,
-  softMutedTextClass,
-  strongTextClass,
-  isEditorRoute,
+  panelClass = "",
+  softMutedTextClass = "text-slate-500 dark:text-zinc-400",
+  strongTextClass = "text-slate-800 dark:text-zinc-100",
+  isEditorRoute = false,
+  maxQuantity = 20,
   t,
 }: ProductCheckoutProps) {
+  const safeLimit = Math.max(1, maxQuantity);
+  const currentQuantity = Math.min(Math.max(1, Number(quantity) || 1), safeLimit);
+
+  const isMin = currentQuantity <= 1;
+  const isMax = currentQuantity >= safeLimit;
+
+  const handleDecrement = useCallback(() => {
+    setQuantity((prev) => {
+      const val = Number(prev) || 1;
+      return val > 1 ? val - 1 : 1;
+    });
+  }, [setQuantity]);
+
+  const handleIncrement = useCallback(() => {
+    setQuantity((prev) => {
+      const val = Number(prev) || 1;
+      return val < safeLimit ? val + 1 : safeLimit;
+    });
+  }, [setQuantity, safeLimit]);
+
+  // Preço reduzido de leve para melhor equilíbrio visual
+  const priceTextSize = useMemo(() => {
+    const len = localizedTotalPrice.length;
+    if (len > 18) return "text-lg sm:text-xl";
+    if (len > 12) return "text-xl sm:text-2xl";
+    return "text-2xl sm:text-3xl";
+  }, [localizedTotalPrice.length]);
+
+  const containerBg = forceLightUI
+    ? "border-slate-200 bg-white"
+    : "border-slate-200 bg-white dark:border-zinc-700/60 dark:bg-zinc-950";
+
   return (
-    <div className={`rounded-3xl border p-5 md:p-6 shadow-sm mb-6 transition-colors ${panelClass}`}>
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
-        <div>
-          <p className={`text-[10px] font-black uppercase tracking-[0.16em] mb-2 ${softMutedTextClass}`}>
-            {t("product_details_quantity") || "Quantidade"}
-          </p>
-          <div className={`inline-flex items-center gap-4 rounded-2xl p-1.5 ${forceLightUI ? "bg-slate-100" : "bg-slate-100 dark:bg-zinc-950"}`}>
+    <div
+      className={`mb-6 rounded-2xl border border-slate-200/90 bg-slate-50/70 p-4 sm:p-5 dark:border-zinc-800/80 dark:bg-zinc-900/80 ${panelClass}`}
+    >
+      {/* Controles Principais */}
+      <div className="mb-4 flex flex-col gap-3.5 sm:flex-row sm:items-end sm:justify-between">
+        
+        {/* Controle de Quantidade */}
+        <div className="w-full sm:w-auto sm:shrink-0">
+          <div className="mb-1.5 flex items-center justify-between">
+            <label
+              className={`block text-xs font-semibold uppercase tracking-wider ${softMutedTextClass}`}
+            >
+              {t("product_details_quantity") || "Quantidade"}
+            </label>
+
+            {isMax && (
+              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-200/60 dark:border-amber-800/40 dark:bg-amber-950/40 dark:text-amber-300">
+                {t("limit_reached") || "Limite atingido"} ({safeLimit} {translatedUnit || "un."})
+              </span>
+            )}
+          </div>
+
+          <div
+            className={`flex h-12 w-full select-none items-center rounded-xl border shadow-xs sm:w-[185px] ${containerBg}`}
+          >
             <button
               type="button"
-              onClick={() => setQuantity((p) => Math.max(1, p - 1))}
-              className="rounded-xl bg-white p-2 text-slate-700 shadow-sm transition active:scale-95 dark:bg-zinc-800 dark:text-zinc-300 transform-gpu"
+              disabled={isMin}
+              onClick={handleDecrement}
+              aria-label={t("decrease_quantity") || "Diminuir quantidade"}
+              className="flex h-full w-12 items-center justify-center text-slate-600 transition-colors active:bg-slate-100 disabled:pointer-events-none disabled:opacity-25 dark:text-zinc-300 dark:active:bg-zinc-800"
             >
-              <Minus size={18} />
+              <Minus size={17} strokeWidth={2.2} />
             </button>
-            <span className="min-w-[2.5rem] text-center text-lg font-black tabular-nums">{quantity}</span>
+
+            <div className="flex flex-1 flex-col items-center justify-center border-x border-slate-100 px-1 dark:border-zinc-800/80">
+              <span
+                className={`text-xl font-bold tabular-nums leading-none ${strongTextClass}`}
+              >
+                {currentQuantity}
+              </span>
+              <span
+                className={`mt-0.5 text-[9px] font-medium uppercase tracking-wider ${softMutedTextClass}`}
+              >
+                {translatedUnit || "un"}
+              </span>
+            </div>
+
             <button
               type="button"
-              onClick={() => setQuantity((p) => p + 1)}
-              className="rounded-xl bg-white p-2 text-slate-700 shadow-sm transition active:scale-95 dark:bg-zinc-800 dark:text-zinc-300 transform-gpu"
+              disabled={isMax}
+              onClick={handleIncrement}
+              aria-label={t("increase_quantity") || "Aumentar quantidade"}
+              className="flex h-full w-12 items-center justify-center text-slate-600 transition-colors active:bg-slate-100 disabled:pointer-events-none disabled:opacity-25 dark:text-zinc-300 dark:active:bg-zinc-800"
             >
-              <Plus size={18} />
+              <Plus size={17} strokeWidth={2.2} />
             </button>
           </div>
         </div>
 
-        <div className="sm:text-right">
-          <p className={`text-[10px] font-black uppercase tracking-[0.16em] ${softMutedTextClass}`}>
-            {t("product_details_final_value") || "Total"}
-          </p>
-          <div className={`text-3xl font-black tabular-nums ${strongTextClass}`}>{localizedTotalPrice}</div>
+        {/* Totalizador */}
+        <div className="flex min-w-0 flex-row items-baseline justify-between gap-2 border-t border-slate-200/70 pt-3 sm:flex-col sm:items-end sm:justify-center sm:border-0 sm:pt-0 dark:border-zinc-800">
+          <span
+            className={`shrink-0 text-xs font-semibold uppercase tracking-wider ${softMutedTextClass}`}
+          >
+            {t("product_details_final_value") || "Total a Pagar"}
+          </span>
+
+          <div
+            title={localizedTotalPrice}
+            className={`max-w-full truncate font-bold tracking-tight tabular-nums text-emerald-700 dark:text-emerald-400 ${priceTextSize}`}
+          >
+            {localizedTotalPrice}
+          </div>
         </div>
       </div>
 
+      {/* Campo de Observações (16px base no mobile para prevenir zoom nativo no iOS/Android) */}
       {!isEditorRoute && (
-        <div className="mb-6 relative">
-          <div className="absolute left-3 top-3.5 text-slate-400 dark:text-zinc-500 pointer-events-none">
-            <MessageSquarePlus size={16} />
+        <div className="relative mb-4">
+          <div className="pointer-events-none absolute left-3.5 top-3 text-slate-400 dark:text-zinc-500">
+            <MessageSquarePlus size={17} />
           </div>
+
           <textarea
             value={customNote}
             onChange={(e) => setCustomNote(e.target.value)}
-            placeholder={t("add_note_placeholder") || "Adicionar nota (ex: Cor, tamanho)..."}
-            className={`w-full resize-none rounded-2xl border bg-transparent py-3 pl-10 pr-4 text-base md:text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-slate-900/10 dark:focus:ring-white/10 ${
+            maxLength={200}
+            placeholder={
+              t("add_note_placeholder") ||
+              "Alguma preferência? (ex: cor, tamanho)..."
+            }
+            className={`w-full resize-none rounded-xl border py-2.5 pl-9 pr-3 text-base sm:text-sm font-normal placeholder:text-slate-400 focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600 ${
               forceLightUI
-                ? "border-slate-200 text-slate-900 placeholder:text-slate-400"
-                : "border-slate-200 text-slate-900 placeholder:text-slate-400 dark:border-zinc-800 dark:text-white dark:placeholder:text-zinc-600"
+                ? "border-slate-200 bg-white text-slate-800"
+                : "border-slate-200 bg-white text-slate-800 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
             }`}
             rows={2}
           />
         </div>
       )}
 
-      <div className="hidden md:block">
+      {/* Botão de Finalização */}
+      <div className="block">
         <button
+          type="button"
           onClick={handleWhatsAppOrder}
-          className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl bg-slate-900 py-4 text-[13px] font-black uppercase tracking-[0.16em] text-white shadow-lg transition active:scale-[0.98] transform-gpu dark:bg-white dark:text-slate-950"
+          className="transform-gpu flex h-12 w-full items-center justify-center gap-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-5 text-sm sm:text-base font-bold uppercase tracking-wide text-white shadow-xs transition-colors active:scale-[0.99]"
         >
-          <MessageCircle size={18} />
-          {t("product_details_confirm_whatsapp") || "Pedir via WhatsApp"}
+          <MessageCircle size={19} className="fill-current" />
+          <span>
+            {t("product_details_confirm_whatsapp") || "Pedir pelo WhatsApp"}
+          </span>
         </button>
-        <div className="mt-4 flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
-          <ShieldCheck size={16} /> {t("safe_contact") || "Contacto Seguro"}
+
+        {/* Gatilhos de Confiança */}
+        <div className="mt-3 flex items-center justify-center gap-4 text-xs font-normal text-slate-500 dark:text-zinc-400">
+          <span className="flex items-center gap-1.5">
+            <ShieldCheck size={15} className="text-emerald-600 dark:text-emerald-400" />
+            {t("safe_contact") || "Atendimento Seguro"}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Zap size={14} className="text-amber-600 dark:text-amber-400" />
+            {t("fast_response") || "Resposta Rápida"}
+          </span>
         </div>
       </div>
     </div>
