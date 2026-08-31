@@ -174,44 +174,30 @@ export function generateStorePresentationPDF({
 <html lang="${langKey}">
 <head>
   <meta charset="UTF-8">
-  <!-- Permite fazer zoom livremente no telemóvel (removido user-scalable=no) -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${fileName}</title>
   <style>
-    @page {
-      size: A4 portrait;
-      margin: 0mm !important;
-    }
+    /* Oculta os links indesejados nativamente se o browser permitir */
+    @page { margin: 0 !important; size: A4 portrait; }
     
     * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
+      box-sizing: border-box; margin: 0; padding: 0;
+      -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
       text-rendering: optimizeLegibility;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     }
 
     html, body {
-      width: 100%;
-      min-height: 100%;
-      background: #0b1120;
-      color: #0f172a;
+      width: 100%; min-height: 100%;
+      background: #0b1120; color: #0f172a;
       line-height: 1.45;
-      font-size: 17px; /* Aumentado para leitura no ecrã web */
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
+      font-size: 17px; /* Letra super legível para ecrãs */
+      -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
     }
 
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 0 0 40px 0;
-    }
+    body { display: flex; flex-direction: column; align-items: center; padding: 0 0 40px 0; }
 
-    /* Topbar Visualização Web */
+    /* Topbar */
     .preview-topbar {
       position: sticky; top: 0; z-index: 1000; width: 100%;
       background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -231,7 +217,6 @@ export function generateStorePresentationPDF({
       background: #ffffff; border-radius: 20px; padding: 30px;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45); display: flex; flex-direction: column; gap: 16px;
     }
-
     .content-main { display: flex; flex-direction: column; gap: 14px; flex: 1; }
 
     /* Header */
@@ -279,7 +264,7 @@ export function generateStorePresentationPDF({
     .contact-label-row { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 4px; }
     .contact-val-link { font-size: 15px; font-weight: 800; color: #1d4ed8 !important; word-break: break-all; }
 
-    /* QR Code Section */
+    /* QR Code */
     .hero-qr-section { background: linear-gradient(135deg, #eef2ff 0%, #ffffff 50%, #f0fdf4 100%); border: 2px solid #a5b4fc; border-radius: 16px; padding: 16px 24px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 20px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.08); break-inside: avoid; page-break-inside: avoid; }
     .hero-qr-left { flex: 1; display: flex; flex-direction: column; gap: 8px; }
     .hero-qr-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -301,109 +286,124 @@ export function generateStorePresentationPDF({
     .formal-note { font-size: 13px; color: #64748b; font-style: italic; text-align: center; margin-bottom: 8px; }
     .footer { border-top: 1px solid #e2e8f0; padding-top: 10px; display: flex; justify-content: center; font-size: 12px; color: #94a3b8; font-weight: 600; }
 
-    /* ================== CSS IMPRESSÃO BLINDADA (FIM DA 2ª PÁGINA) ================== */
+    /* =========================================================================
+       CSS IMPRESSÃO: O HACK DEFINITIVO DO POSITION: ABSOLUTE PARA iOS
+       ========================================================================= */
     @media print {
       html, body {
-        width: 210mm !important;
-        height: 295mm !important; /* Ligeiramente menor que A4 para bloquear a 2ª página */
-        max-height: 295mm !important;
+        width: 100% !important;
+        height: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
         background: #ffffff !important;
         overflow: hidden !important; 
-        display: block !important;
-        font-size: 12px !important; /* Encolhe a fonte geral APENAS na impressão para garantir que o rodapé cabe */
       }
       
       .preview-topbar { display: none !important; }
 
       .page-container {
-        width: 210mm !important;
-        height: 295mm !important; 
+        /* Remover o contentor do fluxo padrão impede o telemóvel de criar página 2 */
+        position: absolute !important;
+        top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+        width: 100% !important;
+        height: 100% !important; 
         max-height: 295mm !important; 
         margin: 0 !important;
         border-radius: 0 !important;
         border: none !important;
         box-shadow: none !important;
-        padding: 10mm 10mm 10mm 10mm !important; /* Margens limpas e seguras na folha impressa */
+        
+        padding: 10mm 10mm 10mm 10mm !important; 
         box-sizing: border-box !important;
+        
         display: flex !important;
         flex-direction: column !important;
         justify-content: space-between !important;
-        gap: 8px !important; 
         overflow: hidden !important; 
         page-break-after: avoid !important;
-        page-break-inside: avoid !important;
+        page-break-before: avoid !important;
       }
       
-      /* Redução estrita dos blocos para o rodapé NUNCA saltar para a página 2 */
-      .content-main { gap: 8px !important; }
-      .header { flex-direction: row !important; align-items: center !important; padding: 8px 14px !important; }
-      .brand-title { font-size: 20px !important; }
-      .meta-box { font-size: 11px !important; }
-      .title-banner { padding: 6px 12px !important; }
-      .title-banner h1 { font-size: 15px !important; }
-      .title-banner p { font-size: 11px !important; }
+      /* Redução extrema das margens e tamanhos apenas na impressora para sobrar folga */
+      .content-main { gap: 6px !important; }
+      .header { flex-direction: row !important; align-items: center !important; padding: 6px 10px !important; }
+      .brand-title { font-size: 18px !important; }
+      .meta-box { font-size: 10px !important; }
       
-      .about-text { font-size: 12px !important; padding: 8px 14px !important; }
+      .title-banner { padding: 4px 10px !important; }
+      .title-banner h1 { font-size: 14px !important; }
+      .title-banner p { font-size: 10.5px !important; }
       
-      .pillars-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 6px !important; }
-      .pillar-card { padding: 6px 10px !important; }
-      .pillar-head { font-size: 11px !important; }
-      .pillar-desc { font-size: 10.5px !important; padding-left: 26px !important; }
+      .about-text { font-size: 11px !important; padding: 6px 10px !important; line-height: 1.3 !important; }
       
-      .contacts-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 6px !important; }
-      .contact-box { padding: 6px 10px !important; }
-      .contact-val-link { font-size: 11.5px !important; }
+      .pillars-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 4px !important; }
+      .pillar-card { padding: 4px 8px !important; }
+      .pillar-head { font-size: 10.5px !important; margin-bottom: 2px !important; }
+      .pillar-desc { font-size: 10px !important; line-height: 1.2 !important; padding-left: 24px !important; }
       
-      /* Mantém o layout horizontal para o QR Code no PDF */
-      .hero-qr-section { flex-direction: row !important; align-items: center !important; text-align: left !important; padding: 10px 14px !important; gap: 10px !important; }
+      .contacts-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 4px !important; }
+      .contact-box { padding: 4px 8px !important; }
+      .contact-val-link { font-size: 10.5px !important; }
+      
+      .hero-qr-section { flex-direction: row !important; align-items: center !important; text-align: left !important; padding: 8px 12px !important; gap: 8px !important; }
       .hero-qr-left { align-items: flex-start !important; }
       .hero-qr-header { justify-content: flex-start !important; }
-      .hero-url-badge { align-items: flex-start !important; padding: 4px 10px !important; }
-      .hero-url-text { font-size: 11px !important; }
+      .hero-url-badge { align-items: flex-start !important; padding: 4px 8px !important; }
+      .hero-url-text { font-size: 10px !important; }
+      .hero-qr-title { font-size: 14px !important; }
+      .hero-qr-desc { font-size: 12px !important; }
       
       .hero-qr-card-wrapper { gap: 4px !important; }
-      .hero-qr-card { width: 110px !important; height: 110px !important; padding: 4px !important; border-width: 2px !important; }
-      .hero-qr-watermark { width: 24px !important; height: 24px !important; }
-      .hero-qr-watermark span { font-size: 14px !important; }
-      .hero-qr-action-btn { font-size: 9px !important; padding: 4px 10px !important; border-width: 1px !important; }
+      .hero-qr-card { width: 90px !important; height: 90px !important; padding: 4px !important; border-width: 2px !important; }
+      .hero-qr-watermark { width: 20px !important; height: 20px !important; }
+      .hero-qr-watermark span { font-size: 12px !important; }
+      .hero-qr-action-btn { font-size: 8.5px !important; padding: 3px 8px !important; border-width: 1px !important; }
 
-      /* O Rodapé agora cabe sempre na mesma página */
-      .footer-block { padding-top: 4px !important; margin-top: 0 !important; }
-      .formal-note { font-size: 10px !important; margin-bottom: 4px !important; }
-      .footer { padding-top: 4px !important; font-size: 9px !important; }
+      .footer-block { padding-top: 2px !important; margin-top: 0 !important; }
+      .formal-note { font-size: 9.5px !important; margin-bottom: 2px !important; }
+      .footer { padding-top: 2px !important; font-size: 8.5px !important; }
       
       a[href]:after { content: none !important; } 
       * { break-inside: avoid !important; page-break-inside: avoid !important; }
     }
 
-    /* ================== RESPONSIVIDADE MOBILE WEB (Ecrã) ================== */
+    /* =========================================================================
+       RESPONSIVIDADE MOBILE WEB (O que o utilizador vê no ecrã)
+       ========================================================================= */
     @media screen and (max-width: 768px) {
-      body { 
-        padding: 0; 
-        background: #0b1120; /* Fundo escuro à volta do cartão */
-      }
-      .preview-topbar { padding: 10px 14px; margin-bottom: 0; }
+      body { padding: 0; background: #0b1120; }
+      .preview-topbar { padding: 12px 16px; margin-bottom: 0; }
       .preview-badge { display: none; }
       
-      /* O Cartão Flutuante e as margens escuras */
+      /* Fontes GIGANTES e Confortáveis para Ecrã Mobile */
+      .brand-title { font-size: 24px; }
+      .title-banner h1 { font-size: 20px; }
+      .title-banner p { font-size: 15px; }
+      .about-text { font-size: 17px; line-height: 1.5; padding: 18px 22px; }
+      .pillar-head { font-size: 16px; }
+      .pillar-desc { font-size: 15px; line-height: 1.4; }
+      .contact-val-link { font-size: 16px; }
+      .hero-qr-title { font-size: 18px; }
+      .hero-qr-desc { font-size: 16px; }
+      
       .page-container { 
-        width: 92% !important; /* Deixa margens laterais visíveis */
-        margin: 15px auto 30px auto !important; /* Descola das bordas em cima/baixo */
-        border-radius: 16px !important; /* Cantos redondos de volta */
-        padding: 24px 20px !important; /* Muito mais espaço e conforto interno */
+        width: 94% !important; 
+        margin: 20px auto 30px auto !important; 
+        border-radius: 16px !important; 
+        padding: 24px 20px !important; 
         box-shadow: 0 10px 40px rgba(0,0,0,0.6) !important;
       }
       
       .header { flex-direction: column; align-items: flex-start; gap: 14px; }
-      .meta-box { text-align: left; }
-      .contacts-grid, .pillars-grid { grid-template-columns: 1fr; }
+      .meta-box { text-align: left; font-size: 15px; }
+      .contacts-grid, .pillars-grid { grid-template-columns: 1fr; gap: 14px; }
       
-      .hero-qr-section { flex-direction: column; text-align: center; }
+      .hero-qr-section { flex-direction: column; text-align: center; gap: 24px; }
       .hero-qr-left { align-items: center; }
       .hero-qr-header { justify-content: center; }
       .hero-url-badge { align-items: center; }
+      .hero-qr-card { width: 180px; height: 180px; }
+      .hero-qr-action-btn { font-size: 14px; padding: 10px 24px; }
     }
   </style>
 </head>
