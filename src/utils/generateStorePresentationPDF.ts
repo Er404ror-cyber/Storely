@@ -189,7 +189,7 @@ export function generateStorePresentationPDF({
     img { image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; }
 
     /* =========================================================================
-       VISUALIZAÇÃO DESKTOP (ECRÃ DO PC)
+       VISUALIZAÇÃO DESKTOP (Ecrã do PC)
        ========================================================================= */
     html, body {
       width: 100%; min-height: 100%;
@@ -272,7 +272,7 @@ export function generateStorePresentationPDF({
     .hero-qr-header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .hero-qr-header svg { width: 32px; height: 32px; }
     .hero-qr-title { font-size: 26px; font-weight: 900; color: #1e1b4b; text-transform: uppercase; }
-    .hero-qr-badge { background: #4f46e5; color: #ffffff; font-size: 16px; font-weight: 800; text-transform: uppercase; padding: 6px 14px; border-radius: 9999px; }
+    .hero-qr-badge { background: #4f46e5; color: #ffffff; font-size: 16px; font-weight: 800; text-transform: uppercase; padding: 6px 16px; border-radius: 9999px; }
     .hero-qr-desc { font-size: 20px; color: #3730a3; font-weight: 500; line-height: 1.5; }
     .hero-url-badge { background: #ffffff; border: 3px solid #a5b4fc; border-radius: 14px; padding: 14px 22px; display: inline-flex; flex-direction: column; align-items: flex-start; margin-top: 10px; text-decoration: none !important; }
     .hero-url-label { font-size: 14px; font-weight: 800; text-transform: uppercase; color: #4f46e5; }
@@ -283,8 +283,7 @@ export function generateStorePresentationPDF({
     .hero-qr-img { width: 100%; height: 100%; object-fit: contain; }
     .hero-qr-watermark { position: absolute; width: 60px; height: 60px; background: #4f46e5; border-radius: 14px; border: 5px solid #ffffff; display: flex; align-items: center; justify-content: center; }
     .hero-qr-watermark span { color: #ffffff; font-size: 30px; font-weight: 900; line-height: 1; }
-    .hero-qr-action-btn { background: #4f46e5; color: #ffffff !important; font-size: 18px; font-weight: 900; text-transform: uppercase; padding: 16px 36px; border-radius: 9999px; text-decoration: none !important; border: 3px solid #3730a3; transition: background 0.2s; }
-    .hero-qr-action-btn:hover { background: #3730a3; }
+    .hero-qr-action-btn { background: #4f46e5; color: #ffffff !important; font-size: 18px; font-weight: 900; text-transform: uppercase; padding: 16px 36px; border-radius: 9999px; text-decoration: none !important; border: 3px solid #3730a3; }
 
     .footer-block { margin-top: auto; padding-top: 20px; }
     .formal-note { font-size: 18px; color: #64748b; font-style: italic; text-align: center; margin-bottom: 12px; }
@@ -294,17 +293,13 @@ export function generateStorePresentationPDF({
        CSS IMPRESSÃO (O MEIO TERMO PERFEITO)
        ========================================================================= */
     @media print {
-      html, body {
-        width: 100% !important; height: 100% !important; margin: 0 !important; padding: 0 !important;
-        background: #ffffff !important; overflow: hidden !important; 
-      }
+      html, body { width: 100% !important; height: 100% !important; margin: 0 !important; padding: 0 !important; background: #ffffff !important; overflow: hidden !important; }
       .preview-topbar { display: none !important; }
 
       .page-container {
         position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
         width: 100% !important; height: 100% !important; max-height: 295mm !important; 
         margin: 0 !important; border-radius: 0 !important; border: none !important; box-shadow: none !important;
-        /* Padding balanceado: garante mais largura que o inicial, mas segura a altura */
         padding: 10mm 12mm 10mm 12mm !important; box-sizing: border-box !important;
         display: flex !important; flex-direction: column !important; justify-content: space-between !important;
         overflow: hidden !important; page-break-after: avoid !important; page-break-before: avoid !important;
@@ -365,7 +360,7 @@ export function generateStorePresentationPDF({
     }
 
     /* =========================================================================
-       RESPONSIVIDADE MOBILE WEB (Protegido e Trancado)
+       RESPONSIVIDADE MOBILE WEB (Trancado e Sem Risco de Cortar)
        ========================================================================= */
     @media screen and (max-width: 768px) {
       body { padding: 0 !important; background: #0b1120 !important; font-size: 17px !important; }
@@ -417,10 +412,11 @@ export function generateStorePresentationPDF({
       .hero-url-text { font-size: 14px !important; }
       
       .hero-qr-card-wrapper { gap: 10px !important; }
-      .hero-qr-card { width: 200px !important; height: 200px !important; padding: 8px !important; border-width: 5px !important; border-radius: 16px !important; }
-      .hero-qr-watermark { width: 44px !important; height: 44px !important; border-radius: 8px !important; border-width: 3px !important; }
-      .hero-qr-watermark span { font-size: 22px !important; }
-      .hero-qr-action-btn { font-size: 14.5px !important; padding: 12px 28px !important; border-radius: 9999px !important; border-width: 2px !important; }
+      /* QR Code seguro na tela do telemóvel para não sair das bordas */
+      .hero-qr-card { width: 170px !important; height: 170px !important; padding: 8px !important; border-width: 4px !important; border-radius: 16px !important; }
+      .hero-qr-watermark { width: 38px !important; height: 38px !important; border-radius: 8px !important; border-width: 2px !important; }
+      .hero-qr-watermark span { font-size: 18px !important; }
+      .hero-qr-action-btn { font-size: 13.5px !important; padding: 10px 24px !important; border-radius: 9999px !important; border-width: 2px !important; }
 
       .formal-note { font-size: 13px !important; margin-bottom: 8px !important; }
       .footer { font-size: 12px !important; padding-top: 10px !important; border-width: 1px !important; margin-top: 0 !important; }
