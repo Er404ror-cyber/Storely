@@ -22,9 +22,9 @@ export default function VersionChecker() {
   const [currentVersionData, setCurrentVersionData] = useState<VersionData | null>(null);
   const [newVersionData, setNewVersionData] = useState<VersionData | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const isUpdatingRef = useRef(false);
+  
+  const currentVersionRef = useRef<VersionData | null>(null);
 
-  // Redireciona para a raiz '/' de forma segura
   const navigateToRoot = () => {
     if (window.location.pathname !== '/') {
       window.history.replaceState({}, '', '/');
@@ -32,21 +32,18 @@ export default function VersionChecker() {
     }
   };
 
-  // Rotina de limpeza executada EXCLUSIVAMENTE pela versão recente
+  // Limpeza executada EXCLUSIVAMENTE quando o novo bundle roda
   const performDeepBrowserCleanup = async (newVersionNumber: number) => {
     try {
-      // 1. Preserva tokens e configurações críticas
       const preservedData: Record<string, string> = {};
       KEYS_TO_PRESERVE.forEach((key) => {
         const val = localStorage.getItem(key);
         if (val !== null) preservedData[key] = val;
       });
 
-      // 2. Limpa storages locais
       localStorage.clear();
       sessionStorage.clear();
 
-      // 3. Limpa IndexedDB
       if ('indexedDB' in window) {
         try {
           if (indexedDB.databases) {
@@ -70,7 +67,6 @@ export default function VersionChecker() {
         }
       }
 
-      // 4. Limpa Cookies
       try {
         const cookies = document.cookie.split(';');
         for (const cookie of cookies) {
@@ -83,7 +79,6 @@ export default function VersionChecker() {
         console.warn('Falha ao limpar cookies:', cookieErr);
       }
 
-      // 5. Limpa Cache Storage
       if ('caches' in window) {
         try {
           const cacheKeys = await caches.keys();
@@ -93,7 +88,6 @@ export default function VersionChecker() {
         }
       }
 
-      // 6. Desregistra Service Workers antigos
       if ('serviceWorker' in navigator) {
         try {
           const registrations = await navigator.serviceWorker.getRegistrations();
@@ -103,19 +97,18 @@ export default function VersionChecker() {
         }
       }
 
-      // 7. Restaura chaves preservadas e salva a nova versão instalada
       Object.entries(preservedData).forEach(([key, val]) => {
         localStorage.setItem(key, val);
       });
       localStorage.setItem(INSTALLED_VERSION_KEY, newVersionNumber.toString());
       localStorage.setItem(BETA_WELCOME_KEY, 'true');
     } catch (error) {
-      console.error('Erro na limpeza da nova versão:', error);
+      console.error('Erro na limpeza:', error);
     }
   };
 
   const checkVersion = useCallback(async (isInitialLoad = false) => {
-    if (import.meta.env.DEV || isUpdatingRef.current) return;
+    if (import.meta.env.DEV) return;
 
     try {
       const res = await fetch(`/version.json?t=${Date.now()}`, {
@@ -129,14 +122,9 @@ export default function VersionChecker() {
       const localVersionStr = localStorage.getItem(INSTALLED_VERSION_KEY);
 
       if (isInitialLoad) {
-        // DETETA QUE ACABOU DE CARREGAR A NOVA VERSÃO
+        // CASO 1: Abriu já na versão recente vinda de um reload/F5
         if (localVersionStr && localVersionStr !== serverVersionStr) {
-          isUpdatingRef.current = true;
-          
-          // Executa a limpeza com o código e regras da nova versão
           await performDeepBrowserCleanup(serverData.version);
-          
-          // Redireciona para a raiz '/' na nova versão
           navigateToRoot();
           setShowWelcomeModal(true);
         } else if (!localVersionStr) {
@@ -147,12 +135,13 @@ export default function VersionChecker() {
           setShowWelcomeModal(true);
         }
 
+        currentVersionRef.current = serverData;
         setCurrentVersionData(serverData);
       } else {
-        // NA VERSÃO ANTIGA: Mostra o aviso e aguarda o utilizador agir
-        const currentVersionNumber = currentVersionData?.version || (localVersionStr ? Number(localVersionStr) : null);
+        // CASO 2: Plataforma aberta em execução e o servidor tem versão mais nova
+        const activeVersion = currentVersionRef.current?.version || (localVersionStr ? Number(localVersionStr) : null);
         
-        if (currentVersionNumber && serverData.version !== currentVersionNumber) {
+        if (activeVersion && serverData.version !== activeVersion) {
           setNewVersionData(serverData);
           setIsOutdated(true);
         }
@@ -160,33 +149,17 @@ export default function VersionChecker() {
     } catch (error) {
       console.error('Falha ao verificar versão:', error);
     }
-  }, [currentVersionData]);
+  }, []);
 
   useEffect(() => {
     checkVersion(true);
 
-    let intervalId: NodeJS.Timeout | undefined;
-    const CHECK_INTERVAL = 5 * 60 * 1000;
-
-    const startInterval = () => {
-      if (!intervalId) {
-        intervalId = setInterval(() => checkVersion(false), CHECK_INTERVAL);
-      }
-    };
-
-    const stopInterval = () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-        intervalId = undefined;
-      }
-    };
+    const CHECK_INTERVAL = 3 * 60 * 1000;
+    const intervalId = setInterval(() => checkVersion(false), CHECK_INTERVAL);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         checkVersion(false);
-        startInterval();
-      } else {
-        stopInterval();
       }
     };
 
@@ -197,14 +170,10 @@ export default function VersionChecker() {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleWindowFocus);
 
-    if (document.visibilityState === 'visible') {
-      startInterval();
-    }
-
     return () => {
+      clearInterval(intervalId);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleWindowFocus);
-      stopInterval();
     };
   }, [checkVersion]);
 
@@ -219,16 +188,10 @@ export default function VersionChecker() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showWelcomeModal]);
 
-  // Na versão antiga: apenas recarrega para buscar os novos arquivos HTML/JS
+  // Força recarga imediata sem executar limpezas no código antigo
   const handleUpdateClick = () => {
-    if (!isUpdatingRef.current) {
-      isUpdatingRef.current = true;
-      setIsUpdating(true);
-      
-      const url = new URL(window.location.href);
-      url.searchParams.set('v_sync', Date.now().toString());
-      window.location.replace(url.toString());
-    }
+    setIsUpdating(true);
+    window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
   };
 
   const handleDismissWelcome = () => {
@@ -252,7 +215,7 @@ export default function VersionChecker() {
       }).format(new Date(newVersionData.version))
     : '';
 
-  // 1. Modal de Boas-Vindas (Renderizado após limpeza e redirecionamento para '/')
+  // 1. Modal de Boas-Vindas (Renderizado após o reload na versão nova)
   if (showWelcomeModal) {
     return (
       <div 
@@ -323,7 +286,7 @@ export default function VersionChecker() {
     );
   }
 
-  // 2. Modal Bloqueante de Nova Versão (Apenas exibe o alerta na versão antiga)
+  // 2. Modal Bloqueante de Nova Versão Detectada
   if (!isOutdated) return null;
 
   return (

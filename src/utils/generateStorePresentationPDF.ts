@@ -146,6 +146,7 @@ export function generateStorePresentationPDF({
   const storeUrl = rawBase.startsWith('http') ? `${rawBase}/${storeSlug}` : `https://${rawBase || 'storelyy.vercel.app'}/${storeSlug}`;
   const productsUrl = `${storeUrl}/products`;
 
+  // QR Code gerado em altíssima resolução para ficar incrivelmente nítido
   const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=800x800&data=${encodeURIComponent(productsUrl)}&color=1e1b4b&bgcolor=ffffff&margin=0`;
   const fileName = langKey === 'pt' ? `Apresentacao - ${storeName}` : `Profile - ${storeName}`;
 
@@ -177,7 +178,6 @@ export function generateStorePresentationPDF({
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${fileName}</title>
   <style>
-    /* Oculta os links indesejados nativamente se o browser permitir */
     @page { margin: 0 !important; size: A4 portrait; }
     
     * {
@@ -187,11 +187,17 @@ export function generateStorePresentationPDF({
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     }
 
+    /* Força as imagens (QR e Logo) a manterem as arestas super definidas */
+    img {
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
+
     html, body {
       width: 100%; min-height: 100%;
       background: #0b1120; color: #0f172a;
       line-height: 1.45;
-      font-size: 17px; /* Letra super legível para ecrãs */
+      font-size: 17px;
       -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
     }
 
@@ -211,7 +217,7 @@ export function generateStorePresentationPDF({
     .preview-badge::before { content: ""; display: inline-block; width: 7.5px; height: 7.5px; border-radius: 50%; background: #10b981; }
     .btn-print { display: inline-flex; align-items: center; gap: 7px; background: #4f46e5; color: #ffffff; border: none; padding: 8.5px 20px; border-radius: 9999px; font-size: 15px; font-weight: 800; cursor: pointer; }
 
-    /* Container Central Desktop */
+    /* Container Desktop */
     .page-container {
       position: relative; width: 96%; max-width: 980px; margin: 0 auto;
       background: #ffffff; border-radius: 20px; padding: 30px;
@@ -226,8 +232,8 @@ export function generateStorePresentationPDF({
       border: 1px solid #e2e8f0; border-radius: 14px;
     }
     .brand-box { display: flex; align-items: center; gap: 15px; text-decoration: none; color: inherit; }
-    .brand-logo { width: 90px; height: 90px; border-radius: 14px; object-fit: cover; border: 2px solid #ffffff; box-shadow: 0 4px 16px rgba(79, 70, 229, 0.14); }
-    .brand-placeholder { width: 90px; height: 90px; border-radius: 14px; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 900; }
+    .brand-logo { width: 105px; height: 105px; border-radius: 14px; object-fit: cover; border: 2px solid #ffffff; box-shadow: 0 4px 16px rgba(79, 70, 229, 0.14); }
+    .brand-placeholder { width: 105px; height: 105px; border-radius: 14px; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 900; }
     .brand-title { font-size: 26px; font-weight: 900; color: #0f172a; letter-spacing: -0.3px; line-height: 1.1; }
     .brand-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 800; text-transform: uppercase; color: #4338ca; background: #e0e7ff; padding: 4px 10px; border-radius: 9999px; margin-top: 5px; border: 1px solid #c7d2fe; }
     .meta-box { text-align: right; font-size: 14px; color: #64748b; line-height: 1.5; }
@@ -239,7 +245,6 @@ export function generateStorePresentationPDF({
     .title-banner h1 { font-size: 19px; font-weight: 900; color: #0f172a; }
     .title-banner p { font-size: 14px; color: #64748b; margin-top: 2px; }
 
-    .section-block { break-inside: avoid; page-break-inside: avoid; }
     .section-heading { font-size: 14px; font-weight: 900; text-transform: uppercase; color: #334155; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
     .section-heading::after { content: ""; flex: 1; height: 1px; background: linear-gradient(to right, #e2e8f0, transparent); }
     .about-text { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 20px; color: #334155; font-size: 16px; }
@@ -255,7 +260,6 @@ export function generateStorePresentationPDF({
     .pillar-amber { background: #fffbeb; border-color: #fde68a; }
     .pillar-head { font-size: 14px; font-weight: 900; color: #0f172a; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
     .pillar-icon-box { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-    .icon-blue { color: #0284c7; } .icon-green { color: #16a34a; } .icon-purple { color: #9333ea; } .icon-amber { color: #d97706; }
     .pillar-desc { font-size: 14px; color: #475569; padding-left: 30px; }
 
     /* Contactos */
@@ -264,8 +268,8 @@ export function generateStorePresentationPDF({
     .contact-label-row { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 4px; }
     .contact-val-link { font-size: 15px; font-weight: 800; color: #1d4ed8 !important; word-break: break-all; }
 
-    /* QR Code */
-    .hero-qr-section { background: linear-gradient(135deg, #eef2ff 0%, #ffffff 50%, #f0fdf4 100%); border: 2px solid #a5b4fc; border-radius: 16px; padding: 16px 24px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 20px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.08); break-inside: avoid; page-break-inside: avoid; }
+    /* QR Code - Dimensões Desktop */
+    .hero-qr-section { background: linear-gradient(135deg, #eef2ff 0%, #ffffff 50%, #f0fdf4 100%); border: 2px solid #a5b4fc; border-radius: 16px; padding: 16px 24px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 20px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.08); }
     .hero-qr-left { flex: 1; display: flex; flex-direction: column; gap: 8px; }
     .hero-qr-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .hero-qr-title { font-size: 17px; font-weight: 900; color: #1e1b4b; text-transform: uppercase; }
@@ -275,135 +279,132 @@ export function generateStorePresentationPDF({
     .hero-url-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #4f46e5; }
     .hero-url-text { font-family: monospace; font-size: 14px; font-weight: 800; color: #1d4ed8 !important; text-decoration: underline; }
     .hero-qr-card-wrapper { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-    .hero-qr-card { width: 160px; height: 160px; background: #ffffff; border: 4px solid #4f46e5; border-radius: 16px; padding: 6px; display: flex; align-items: center; justify-content: center; position: relative; }
+    
+    .hero-qr-card { width: 170px; height: 170px; background: #ffffff; border: 4px solid #4f46e5; border-radius: 16px; padding: 6px; display: flex; align-items: center; justify-content: center; position: relative; }
     .hero-qr-img { width: 100%; height: 100%; object-fit: contain; }
     .hero-qr-watermark { position: absolute; width: 34px; height: 34px; background: #4f46e5; border-radius: 8px; border: 3px solid #ffffff; display: flex; align-items: center; justify-content: center; }
     .hero-qr-watermark span { color: #ffffff; font-size: 18px; font-weight: 900; line-height: 1; }
     .hero-qr-action-btn { background: #4f46e5; color: #ffffff !important; font-size: 12px; font-weight: 900; text-transform: uppercase; padding: 8px 18px; border-radius: 9999px; text-decoration: none !important; border: 1.5px solid #3730a3; }
 
     /* Rodapé */
-    .footer-block { margin-top: auto; padding-top: 10px; break-inside: avoid; page-break-inside: avoid; }
+    .footer-block { margin-top: auto; padding-top: 10px; }
     .formal-note { font-size: 13px; color: #64748b; font-style: italic; text-align: center; margin-bottom: 8px; }
     .footer { border-top: 1px solid #e2e8f0; padding-top: 10px; display: flex; justify-content: center; font-size: 12px; color: #94a3b8; font-weight: 600; }
 
     /* =========================================================================
-       CSS IMPRESSÃO: O HACK DEFINITIVO DO POSITION: ABSOLUTE PARA iOS
+       CSS IMPRESSÃO: O HACK DEFINITIVO (MANTENDO QUALIDADE)
        ========================================================================= */
     @media print {
       html, body {
-        width: 100% !important;
-        height: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        background: #ffffff !important;
-        overflow: hidden !important; 
+        width: 100% !important; height: 100% !important;
+        margin: 0 !important; padding: 0 !important;
+        background: #ffffff !important; overflow: hidden !important; 
       }
       
       .preview-topbar { display: none !important; }
 
       .page-container {
-        /* Remover o contentor do fluxo padrão impede o telemóvel de criar página 2 */
         position: absolute !important;
         top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
-        width: 100% !important;
-        height: 100% !important; 
-        max-height: 295mm !important; 
-        margin: 0 !important;
-        border-radius: 0 !important;
-        border: none !important;
-        box-shadow: none !important;
-        
+        width: 100% !important; height: 100% !important; max-height: 295mm !important; 
+        margin: 0 !important; border-radius: 0 !important; border: none !important; box-shadow: none !important;
         padding: 10mm 10mm 10mm 10mm !important; 
         box-sizing: border-box !important;
-        
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: space-between !important;
+        display: flex !important; flex-direction: column !important; justify-content: space-between !important;
         overflow: hidden !important; 
-        page-break-after: avoid !important;
-        page-break-before: avoid !important;
+        page-break-after: avoid !important; page-break-before: avoid !important;
       }
       
-      /* Redução extrema das margens e tamanhos apenas na impressora para sobrar folga */
       .content-main { gap: 6px !important; }
-      .header { flex-direction: row !important; align-items: center !important; padding: 6px 10px !important; }
-      .brand-title { font-size: 18px !important; }
-      .meta-box { font-size: 10px !important; }
+      .header { flex-direction: row !important; align-items: center !important; padding: 8px 12px !important; }
       
-      .title-banner { padding: 4px 10px !important; }
-      .title-banner h1 { font-size: 14px !important; }
-      .title-banner p { font-size: 10.5px !important; }
+      /* Letras maiores e mais escuras na impressão para Legibilidade Extrema */
+      .brand-title { font-size: 21px !important; color: #000000 !important; }
+      .brand-logo { width: 85px !important; height: 85px !important; }
+      .meta-box { font-size: 11.5px !important; color: #111827 !important; }
       
-      .about-text { font-size: 11px !important; padding: 6px 10px !important; line-height: 1.3 !important; }
+      .title-banner { padding: 6px 12px !important; }
+      .title-banner h1 { font-size: 16px !important; color: #000000 !important; }
+      .title-banner p { font-size: 12px !important; color: #374151 !important; font-weight: 500 !important; }
       
-      .pillars-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 4px !important; }
-      .pillar-card { padding: 4px 8px !important; }
-      .pillar-head { font-size: 10.5px !important; margin-bottom: 2px !important; }
-      .pillar-desc { font-size: 10px !important; line-height: 1.2 !important; padding-left: 24px !important; }
+      .about-text { font-size: 12.5px !important; padding: 10px 14px !important; line-height: 1.4 !important; color: #111827 !important; font-weight: 500 !important; }
       
-      .contacts-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 4px !important; }
-      .contact-box { padding: 4px 8px !important; }
-      .contact-val-link { font-size: 10.5px !important; }
+      .pillars-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 6px !important; }
+      .pillar-card { padding: 6px 10px !important; }
+      .pillar-head { font-size: 12px !important; margin-bottom: 2px !important; color: #000000 !important; }
+      .pillar-desc { font-size: 11px !important; line-height: 1.3 !important; padding-left: 28px !important; color: #111827 !important; font-weight: 500 !important; }
       
-      .hero-qr-section { flex-direction: row !important; align-items: center !important; text-align: left !important; padding: 8px 12px !important; gap: 8px !important; }
+      .contacts-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 6px !important; }
+      .contact-box { padding: 6px 10px !important; }
+      .contact-val-link { font-size: 12px !important; color: #000000 !important; }
+      
+      .hero-qr-section { flex-direction: row !important; align-items: center !important; text-align: left !important; padding: 10px 14px !important; gap: 10px !important; }
       .hero-qr-left { align-items: flex-start !important; }
       .hero-qr-header { justify-content: flex-start !important; }
       .hero-url-badge { align-items: flex-start !important; padding: 4px 8px !important; }
-      .hero-url-text { font-size: 10px !important; }
-      .hero-qr-title { font-size: 14px !important; }
-      .hero-qr-desc { font-size: 12px !important; }
+      .hero-url-text { font-size: 11px !important; color: #000000 !important; }
+      .hero-qr-title { font-size: 16px !important; color: #000000 !important; }
+      .hero-qr-desc { font-size: 13px !important; color: #111827 !important; font-weight: 500 !important; }
       
+      /* QR CODE MUITO MAIOR NA IMPRESSÃO (Passou de 90px para 130px) */
       .hero-qr-card-wrapper { gap: 4px !important; }
-      .hero-qr-card { width: 90px !important; height: 90px !important; padding: 4px !important; border-width: 2px !important; }
-      .hero-qr-watermark { width: 20px !important; height: 20px !important; }
-      .hero-qr-watermark span { font-size: 12px !important; }
-      .hero-qr-action-btn { font-size: 8.5px !important; padding: 3px 8px !important; border-width: 1px !important; }
+      .hero-qr-card { width: 130px !important; height: 130px !important; padding: 4px !important; border-width: 3px !important; }
+      .hero-qr-watermark { width: 26px !important; height: 26px !important; }
+      .hero-qr-watermark span { font-size: 14px !important; }
+      .hero-qr-action-btn { font-size: 9.5px !important; padding: 4px 10px !important; border-width: 1px !important; }
 
-      .footer-block { padding-top: 2px !important; margin-top: 0 !important; }
-      .formal-note { font-size: 9.5px !important; margin-bottom: 2px !important; }
-      .footer { padding-top: 2px !important; font-size: 8.5px !important; }
+      .footer-block { padding-top: 4px !important; margin-top: 0 !important; }
+      .formal-note { font-size: 10.5px !important; margin-bottom: 4px !important; font-weight: 500 !important; color: #374151 !important; }
+      .footer { padding-top: 4px !important; font-size: 9.5px !important; color: #4b5563 !important; font-weight: 700 !important; }
       
       a[href]:after { content: none !important; } 
-      * { break-inside: avoid !important; page-break-inside: avoid !important; }
     }
 
     /* =========================================================================
-       RESPONSIVIDADE MOBILE WEB (O que o utilizador vê no ecrã)
+       RESPONSIVIDADE MOBILE WEB (Ecrã Mobile)
        ========================================================================= */
     @media screen and (max-width: 768px) {
       body { padding: 0; background: #0b1120; }
       .preview-topbar { padding: 12px 16px; margin-bottom: 0; }
       .preview-badge { display: none; }
       
-      /* Fontes GIGANTES e Confortáveis para Ecrã Mobile */
-      .brand-title { font-size: 24px; }
-      .title-banner h1 { font-size: 20px; }
+      /* Logo e Textos AINDA MAIORES para o telemóvel */
+      .brand-logo { width: 115px; height: 115px; }
+      .brand-placeholder { width: 115px; height: 115px; }
+      .brand-title { font-size: 26px; }
+      .title-banner h1 { font-size: 21px; }
       .title-banner p { font-size: 15px; }
-      .about-text { font-size: 17px; line-height: 1.5; padding: 18px 22px; }
-      .pillar-head { font-size: 16px; }
-      .pillar-desc { font-size: 15px; line-height: 1.4; }
+      .about-text { font-size: 17.5px; line-height: 1.5; padding: 20px 24px; font-weight: 500; }
+      .pillar-head { font-size: 16.5px; }
+      .pillar-desc { font-size: 15.5px; line-height: 1.45; }
       .contact-val-link { font-size: 16px; }
-      .hero-qr-title { font-size: 18px; }
-      .hero-qr-desc { font-size: 16px; }
+      .hero-qr-title { font-size: 19px; }
+      .hero-qr-desc { font-size: 16.5px; line-height: 1.45; }
       
+      /* Cartão Flutuante Mobile */
       .page-container { 
         width: 94% !important; 
         margin: 20px auto 30px auto !important; 
         border-radius: 16px !important; 
-        padding: 24px 20px !important; 
+        padding: 26px 20px !important; 
         box-shadow: 0 10px 40px rgba(0,0,0,0.6) !important;
       }
       
-      .header { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .header { flex-direction: column; align-items: flex-start; gap: 16px; }
       .meta-box { text-align: left; font-size: 15px; }
       .contacts-grid, .pillars-grid { grid-template-columns: 1fr; gap: 14px; }
       
-      .hero-qr-section { flex-direction: column; text-align: center; gap: 24px; }
+      .hero-qr-section { flex-direction: column; text-align: center; gap: 26px; padding: 22px 18px; }
       .hero-qr-left { align-items: center; }
       .hero-qr-header { justify-content: center; }
       .hero-url-badge { align-items: center; }
-      .hero-qr-card { width: 180px; height: 180px; }
-      .hero-qr-action-btn { font-size: 14px; padding: 10px 24px; }
+      
+      /* QR Code Gigante no Ecrã do Telemóvel (200px) */
+      .hero-qr-card { width: 200px; height: 200px; padding: 8px; border-width: 5px; }
+      .hero-qr-watermark { width: 44px; height: 44px; }
+      .hero-qr-watermark span { font-size: 22px; }
+      
+      .hero-qr-action-btn { font-size: 14.5px; padding: 12px 28px; }
     }
   </style>
 </head>
