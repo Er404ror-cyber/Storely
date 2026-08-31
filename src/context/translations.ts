@@ -2771,6 +2771,7 @@ beta_badge: "Storely Beta",
 
   fast_response: "Fast response",
   limit_reached: "Limit reached",
+  version_updating_loading: "Syncing new version...",
   },
 
 
@@ -5564,6 +5565,7 @@ guide_letter_open_btn: "Gerar",
   product_save_amount: "Poupa {amount}",
   fast_response: "Resposta rápida",
   limit_reached: "Limite atingido",
+  version_updating_loading: "A sincronizar nova versão...",
 }
 
 
