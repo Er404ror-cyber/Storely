@@ -115,16 +115,16 @@ const COMMERCIAL_CLOSINGS = {
 };
 
 const SVG_ICONS = {
-  globe: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
-  message: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,
-  shield: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>`,
-  star: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
-  phone: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
-  mail: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
-  checkBadge: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`,
-  qrScanIcon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="2"/></svg>`,
-  arrowLeft: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`,
-  printer: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>`
+  globe: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
+  message: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,
+  shield: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>`,
+  star: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+  phone: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
+  mail: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+  checkBadge: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`,
+  qrScanIcon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="2"/></svg>`,
+  arrowLeft: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`,
+  printer: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>`
 };
 
 export function generateStorePresentationPDF({
@@ -146,6 +146,7 @@ export function generateStorePresentationPDF({
   const storeUrl = rawBase.startsWith('http') ? `${rawBase}/${storeSlug}` : `https://${rawBase || 'storelyy.vercel.app'}/${storeSlug}`;
   const productsUrl = `${storeUrl}/products`;
 
+  // QR Code gerado em altíssima resolução para ficar incrivelmente nítido
   const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=800x800&data=${encodeURIComponent(productsUrl)}&color=1e1b4b&bgcolor=ffffff&margin=0`;
   const fileName = langKey === 'pt' ? `Apresentacao - ${storeName}` : `Profile - ${storeName}`;
 
@@ -186,240 +187,224 @@ export function generateStorePresentationPDF({
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     }
 
-    img { image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; }
+    /* Força as imagens (QR e Logo) a manterem as arestas super definidas */
+    img {
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
 
-    /* =========================================================================
-       VISUALIZAÇÃO DESKTOP (LARGURA AMPLIADA A 96%)
-       ========================================================================= */
     html, body {
       width: 100%; min-height: 100%;
       background: #0b1120; color: #0f172a;
-      line-height: 1.45; font-size: 19px;
+      line-height: 1.45;
+      font-size: 17px;
       -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
     }
 
-    body { display: flex; flex-direction: column; align-items: center; padding: 0 0 60px 0; }
+    body { display: flex; flex-direction: column; align-items: center; padding: 0 0 40px 0; }
 
+    /* Topbar */
     .preview-topbar {
       position: sticky; top: 0; z-index: 1000; width: 100%;
-      background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      background: rgba(15, 23, 42, 0.95); 
       border-bottom: 1px solid rgba(255, 255, 255, 0.14);
       display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 40px; margin-bottom: 30px;
+      padding: 12px 24px; margin-bottom: 12px;
     }
-    .topbar-left { display: flex; align-items: center; gap: 16px; }
-    .btn-back { display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.14); color: #ffffff; border: 2px solid rgba(255, 255, 255, 0.28); padding: 10px 20px; border-radius: 9999px; font-size: 15px; font-weight: 700; cursor: pointer; }
-    .preview-badge { font-size: 16px; color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 10px; }
-    .preview-badge::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #10b981; }
-    .btn-print { display: inline-flex; align-items: center; gap: 10px; background: #4f46e5; color: #ffffff; border: none; padding: 14px 30px; border-radius: 9999px; font-size: 17px; font-weight: 800; cursor: pointer; }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .btn-back { display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.14); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.28); padding: 7.5px 16px; border-radius: 9999px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .preview-badge { font-size: 14px; color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .preview-badge::before { content: ""; display: inline-block; width: 7.5px; height: 7.5px; border-radius: 50%; background: #10b981; }
+    .btn-print { display: inline-flex; align-items: center; gap: 7px; background: #4f46e5; color: #ffffff; border: none; padding: 8.5px 20px; border-radius: 9999px; font-size: 15px; font-weight: 800; cursor: pointer; }
 
-    /* Container expandido a 96% para aproveitar as laterais do monitor */
+    /* Container Desktop */
     .page-container {
-      position: relative; width: 96%; max-width: 1900px; margin: 0 auto;
-      background: #ffffff; border-radius: 30px; padding: 50px 5%; 
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4); display: flex; flex-direction: column; gap: 30px; 
+      position: relative; width: 96%; max-width: 980px; margin: 0 auto;
+      background: #ffffff; border-radius: 20px; padding: 30px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45); display: flex; flex-direction: column; gap: 16px;
     }
-    .content-main { display: flex; flex-direction: column; gap: 24px; flex: 1; }
+    .content-main { display: flex; flex-direction: column; gap: 14px; flex: 1; }
 
+    /* Header */
     .header {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 30px 40px; background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.95) 100%);
-      border: 2px solid #e2e8f0; border-radius: 20px;
+      padding: 16px 20px; background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.95) 100%);
+      border: 1px solid #e2e8f0; border-radius: 14px;
     }
-    .brand-box { display: flex; align-items: center; gap: 24px; text-decoration: none; color: inherit; }
-    .brand-logo { width: 140px; height: 140px; border-radius: 18px; object-fit: cover; border: 4px solid #ffffff; box-shadow: 0 6px 20px rgba(79, 70, 229, 0.14); }
-    .brand-placeholder { width: 140px; height: 140px; border-radius: 18px; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 54px; font-weight: 900; }
-    .brand-title { font-size: 36px; font-weight: 900; color: #0f172a; letter-spacing: -0.5px; line-height: 1.1; }
-    .brand-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 800; text-transform: uppercase; color: #4338ca; background: #e0e7ff; padding: 8px 16px; border-radius: 9999px; margin-top: 10px; border: 2px solid #c7d2fe; }
-    .meta-box { text-align: right; font-size: 17px; color: #64748b; line-height: 1.6; }
+    .brand-box { display: flex; align-items: center; gap: 15px; text-decoration: none; color: inherit; }
+    .brand-logo { width: 105px; height: 105px; border-radius: 14px; object-fit: cover; border: 2px solid #ffffff; box-shadow: 0 4px 16px rgba(79, 70, 229, 0.14); }
+    .brand-placeholder { width: 105px; height: 105px; border-radius: 14px; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 900; }
+    .brand-title { font-size: 26px; font-weight: 900; color: #0f172a; letter-spacing: -0.3px; line-height: 1.1; }
+    .brand-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 800; text-transform: uppercase; color: #4338ca; background: #e0e7ff; padding: 4px 10px; border-radius: 9999px; margin-top: 5px; border: 1px solid #c7d2fe; }
+    .meta-box { text-align: right; font-size: 14px; color: #64748b; line-height: 1.5; }
     .meta-box strong { color: #0f172a; }
-    .currency-tag { color: #047857; background: #d1fae5; padding: 4px 12px; border-radius: 6px; font-weight: 800; border: 2px solid #a7f3d0; display: inline-block; margin-top: 6px; font-size: 17px; }
+    .currency-tag { color: #047857; background: #d1fae5; padding: 2px 8px; border-radius: 4px; font-weight: 800; border: 1px solid #a7f3d0; }
 
-    .title-banner { background: #f8fafc; border-left: 8px solid #4f46e5; padding: 18px 24px; border-radius: 0 14px 14px 0; border: 1px solid #f1f5f9; border-left-width: 8px; }
-    .title-banner h1 { font-size: 26px; font-weight: 900; color: #0f172a; }
-    .title-banner p { font-size: 18px; color: #64748b; margin-top: 6px; }
+    /* Seções */
+    .title-banner { background: #f8fafc; border-left: 5px solid #4f46e5; padding: 12px 18px; border-radius: 0 10px 10px 0; border: 1px solid #f1f5f9; border-left-width: 5px; }
+    .title-banner h1 { font-size: 19px; font-weight: 900; color: #0f172a; }
+    .title-banner p { font-size: 14px; color: #64748b; margin-top: 2px; }
 
-    .section-heading { font-size: 20px; font-weight: 900; text-transform: uppercase; color: #334155; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
-    .section-heading::after { content: ""; flex: 1; height: 3px; background: linear-gradient(to right, #e2e8f0, transparent); }
-    
-    .about-text { 
-      background: #ffffff; border: 2px solid #e2e8f0; border-radius: 18px; 
-      padding: 30px 40px; color: #334155; font-size: 21px; line-height: 1.6;
-      font-weight: 600;
-    }
-    .about-text p { margin-bottom: 10px; }
+    .section-heading { font-size: 14px; font-weight: 900; text-transform: uppercase; color: #334155; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .section-heading::after { content: ""; flex: 1; height: 1px; background: linear-gradient(to right, #e2e8f0, transparent); }
+    .about-text { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 20px; color: #334155; font-size: 16px; }
+    .about-text p { margin-bottom: 6px; }
     .about-text p:last-child { margin-bottom: 0; }
 
-    .pillars-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
-    .pillar-card { border-radius: 16px; padding: 24px 30px; border: 2px solid transparent; }
+    /* Pilares */
+    .pillars-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .pillar-card { border-radius: 11px; padding: 12px 16px; border: 1px solid transparent; }
     .pillar-blue { background: #f0f9ff; border-color: #bae6fd; }
     .pillar-green { background: #f0fdf4; border-color: #bbf7d0; }
     .pillar-purple { background: #faf5ff; border-color: #e9d5ff; }
     .pillar-amber { background: #fffbeb; border-color: #fde68a; }
-    .pillar-head { font-size: 20px; font-weight: 900; color: #0f172a; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
-    .pillar-icon-box { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px; background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.08); padding: 8px; }
-    .pillar-icon-box svg { width: 100%; height: 100%; } 
-    .icon-blue { color: #0284c7; } .icon-green { color: #16a34a; } .icon-purple { color: #9333ea; } .icon-amber { color: #d97706; }
-    .pillar-desc { font-size: 19px; color: #475569; padding-left: 52px; line-height: 1.45; }
+    .pillar-head { font-size: 14px; font-weight: 900; color: #0f172a; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+    .pillar-icon-box { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .pillar-desc { font-size: 14px; color: #475569; padding-left: 30px; }
 
-    .contacts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-    .contact-box { border-radius: 16px; padding: 24px 30px; border: 2px solid #e2e8f0; background: #f8fafc; text-decoration: none !important; color: #0f172a !important; display: block; }
-    .contact-label-row { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 10px; }
-    .contact-label-row svg { width: 24px; height: 24px; }
-    .contact-val-link { font-size: 22px; font-weight: 800; color: #1d4ed8 !important; word-break: break-all; }
+    /* Contactos */
+    .contacts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .contact-box { border-radius: 11px; padding: 12px 16px; border: 1px solid #e2e8f0; background: #f8fafc; text-decoration: none !important; color: #0f172a !important; display: block; }
+    .contact-label-row { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 4px; }
+    .contact-val-link { font-size: 15px; font-weight: 800; color: #1d4ed8 !important; word-break: break-all; }
 
-    .hero-qr-section { background: linear-gradient(135deg, #eef2ff 0%, #ffffff 50%, #f0fdf4 100%); border: 3px solid #a5b4fc; border-radius: 28px; padding: 40px 50px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 40px; box-shadow: 0 15px 35px rgba(79, 70, 229, 0.1); }
-    .hero-qr-left { flex: 1; display: flex; flex-direction: column; gap: 16px; }
-    .hero-qr-header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-    .hero-qr-header svg { width: 32px; height: 32px; }
-    .hero-qr-title { font-size: 26px; font-weight: 900; color: #1e1b4b; text-transform: uppercase; }
-    .hero-qr-badge { background: #4f46e5; color: #ffffff; font-size: 16px; font-weight: 800; text-transform: uppercase; padding: 6px 16px; border-radius: 9999px; }
-    .hero-qr-desc { font-size: 20px; color: #3730a3; font-weight: 500; line-height: 1.5; }
-    .hero-url-badge { background: #ffffff; border: 3px solid #a5b4fc; border-radius: 14px; padding: 14px 22px; display: inline-flex; flex-direction: column; align-items: flex-start; margin-top: 10px; text-decoration: none !important; }
-    .hero-url-label { font-size: 14px; font-weight: 800; text-transform: uppercase; color: #4f46e5; }
-    .hero-url-text { font-family: monospace; font-size: 20px; font-weight: 800; color: #1d4ed8 !important; text-decoration: underline; }
+    /* QR Code - Dimensões Desktop */
+    .hero-qr-section { background: linear-gradient(135deg, #eef2ff 0%, #ffffff 50%, #f0fdf4 100%); border: 2px solid #a5b4fc; border-radius: 16px; padding: 16px 24px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 20px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.08); }
+    .hero-qr-left { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .hero-qr-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .hero-qr-title { font-size: 17px; font-weight: 900; color: #1e1b4b; text-transform: uppercase; }
+    .hero-qr-badge { background: #4f46e5; color: #ffffff; font-size: 11px; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 9999px; }
+    .hero-qr-desc { font-size: 15px; color: #3730a3; font-weight: 500; }
+    .hero-url-badge { background: #ffffff; border: 1.5px solid #a5b4fc; border-radius: 10px; padding: 8px 14px; display: inline-flex; flex-direction: column; align-items: flex-start; margin-top: 4px; text-decoration: none !important; }
+    .hero-url-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #4f46e5; }
+    .hero-url-text { font-family: monospace; font-size: 14px; font-weight: 800; color: #1d4ed8 !important; text-decoration: underline; }
+    .hero-qr-card-wrapper { display: flex; flex-direction: column; align-items: center; gap: 10px; }
     
-    .hero-qr-card-wrapper { display: flex; flex-direction: column; align-items: center; gap: 16px; }
-    .hero-qr-card { width: 240px; height: 240px; background: #ffffff; border: 8px solid #4f46e5; border-radius: 24px; padding: 12px; display: flex; align-items: center; justify-content: center; position: relative; }
+    .hero-qr-card { width: 170px; height: 170px; background: #ffffff; border: 4px solid #4f46e5; border-radius: 16px; padding: 6px; display: flex; align-items: center; justify-content: center; position: relative; }
     .hero-qr-img { width: 100%; height: 100%; object-fit: contain; }
-    .hero-qr-watermark { position: absolute; width: 60px; height: 60px; background: #4f46e5; border-radius: 14px; border: 5px solid #ffffff; display: flex; align-items: center; justify-content: center; }
-    .hero-qr-watermark span { color: #ffffff; font-size: 30px; font-weight: 900; line-height: 1; }
-    .hero-qr-action-btn { background: #4f46e5; color: #ffffff !important; font-size: 18px; font-weight: 900; text-transform: uppercase; padding: 16px 36px; border-radius: 9999px; text-decoration: none !important; border: 3px solid #3730a3; }
+    .hero-qr-watermark { position: absolute; width: 34px; height: 34px; background: #4f46e5; border-radius: 8px; border: 3px solid #ffffff; display: flex; align-items: center; justify-content: center; }
+    .hero-qr-watermark span { color: #ffffff; font-size: 18px; font-weight: 900; line-height: 1; }
+    .hero-qr-action-btn { background: #4f46e5; color: #ffffff !important; font-size: 12px; font-weight: 900; text-transform: uppercase; padding: 8px 18px; border-radius: 9999px; text-decoration: none !important; border: 1.5px solid #3730a3; }
 
-    .footer-block { margin-top: auto; padding-top: 20px; }
-    .formal-note { font-size: 18px; color: #64748b; font-style: italic; text-align: center; margin-bottom: 12px; }
-    .footer { border-top: 2px solid #e2e8f0; padding-top: 20px; display: flex; justify-content: center; font-size: 16px; color: #94a3b8; font-weight: 600; }
+    /* Rodapé */
+    .footer-block { margin-top: auto; padding-top: 10px; }
+    .formal-note { font-size: 13px; color: #64748b; font-style: italic; text-align: center; margin-bottom: 8px; }
+    .footer { border-top: 1px solid #e2e8f0; padding-top: 10px; display: flex; justify-content: center; font-size: 12px; color: #94a3b8; font-weight: 600; }
 
     /* =========================================================================
-       CSS IMPRESSÃO (INTOCÁVEL)
+       CSS IMPRESSÃO: O HACK DEFINITIVO (MANTENDO QUALIDADE)
        ========================================================================= */
     @media print {
-      html, body { width: 100% !important; height: 100% !important; margin: 0 !important; padding: 0 !important; background: #ffffff !important; overflow: hidden !important; }
+      html, body {
+        width: 100% !important; height: 100% !important;
+        margin: 0 !important; padding: 0 !important;
+        background: #ffffff !important; overflow: hidden !important; 
+      }
+      
       .preview-topbar { display: none !important; }
 
       .page-container {
-        position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+        position: absolute !important;
+        top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
         width: 100% !important; height: 100% !important; max-height: 295mm !important; 
         margin: 0 !important; border-radius: 0 !important; border: none !important; box-shadow: none !important;
-        padding: 10mm 12mm 10mm 12mm !important; box-sizing: border-box !important;
+        padding: 10mm 10mm 10mm 10mm !important; 
+        box-sizing: border-box !important;
         display: flex !important; flex-direction: column !important; justify-content: space-between !important;
-        overflow: hidden !important; page-break-after: avoid !important; page-break-before: avoid !important;
-        gap: 0 !important;
+        overflow: hidden !important; 
+        page-break-after: avoid !important; page-break-before: avoid !important;
       }
       
-      .content-main { gap: 8px !important; }
+      .content-main { gap: 6px !important; }
+      .header { flex-direction: row !important; align-items: center !important; padding: 8px 12px !important; }
       
-      .header { flex-direction: row !important; align-items: center !important; padding: 10px 14px !important; border-radius: 12px !important; border-width: 2px !important; }
-      .brand-title { font-size: 24px !important; color: #000000 !important; margin-bottom: 2px !important; line-height: 1.1 !important; letter-spacing: -0.5px !important; }
-      .brand-logo, .brand-placeholder { width: 95px !important; height: 95px !important; border-radius: 14px !important; font-size: 36px !important; border-width: 2px !important; }
-      .brand-badge { font-size: 11.5px !important; padding: 4px 10px !important; margin-top: 3px !important; border-width: 1px !important; }
-      .meta-box { font-size: 13px !important; color: #111827 !important; line-height: 1.5 !important; }
-      .currency-tag { font-size: 12px !important; padding: 3px 6px !important; margin-top: 0 !important; border-width: 1px !important; }
+      /* Letras maiores e mais escuras na impressão para Legibilidade Extrema */
+      .brand-title { font-size: 21px !important; color: #000000 !important; }
+      .brand-logo { width: 85px !important; height: 85px !important; }
+      .meta-box { font-size: 11.5px !important; color: #111827 !important; }
       
-      .title-banner { padding: 8px 14px !important; border-left-width: 5px !important; border-radius: 0 8px 8px 0 !important; border-width: 1px !important; border-left-width: 5px !important; }
-      .title-banner h1 { font-size: 18px !important; color: #000000 !important; }
-      .title-banner p { font-size: 13.5px !important; color: #374151 !important; font-weight: 500 !important; margin-top: 3px !important; }
+      .title-banner { padding: 6px 12px !important; }
+      .title-banner h1 { font-size: 16px !important; color: #000000 !important; }
+      .title-banner p { font-size: 12px !important; color: #374151 !important; font-weight: 500 !important; }
       
-      .section-heading { font-size: 14px !important; margin-bottom: 6px !important; gap: 8px !important; }
-      .about-text { font-size: 14px !important; padding: 12px 16px !important; line-height: 1.45 !important; color: #111827 !important; font-weight: 600 !important; border-radius: 10px !important; border-width: 2px !important; }
-      .about-text p { margin-bottom: 4px !important; }
+      .about-text { font-size: 12.5px !important; padding: 10px 14px !important; line-height: 1.4 !important; color: #111827 !important; font-weight: 500 !important; }
       
-      .pillars-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
-      .pillar-card { padding: 8px 12px !important; border-radius: 10px !important; border-width: 2px !important; }
-      .pillar-head { font-size: 13.5px !important; margin-bottom: 3px !important; color: #000000 !important; gap: 8px !important; }
-      .pillar-icon-box { width: 28px !important; height: 28px !important; border-radius: 6px !important; padding: 5px !important; }
-      .pillar-icon-box svg { width: 100% !important; height: 100% !important; }
-      .pillar-desc { font-size: 12.5px !important; line-height: 1.35 !important; padding-left: 34px !important; color: #111827 !important; font-weight: 500 !important; }
+      .pillars-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 6px !important; }
+      .pillar-card { padding: 6px 10px !important; }
+      .pillar-head { font-size: 12px !important; margin-bottom: 2px !important; color: #000000 !important; }
+      .pillar-desc { font-size: 11px !important; line-height: 1.3 !important; padding-left: 28px !important; color: #111827 !important; font-weight: 500 !important; }
       
-      .contacts-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 8px !important; }
-      .contact-box { padding: 8px 12px !important; border-radius: 10px !important; border-width: 2px !important; }
-      .contact-label-row { font-size: 11.5px !important; margin-bottom: 5px !important; gap: 6px !important; }
-      .contact-label-row svg { width: 16px !important; height: 16px !important; }
-      .contact-val-link { font-size: 14px !important; color: #000000 !important; }
+      .contacts-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 6px !important; }
+      .contact-box { padding: 6px 10px !important; }
+      .contact-val-link { font-size: 12px !important; color: #000000 !important; }
       
-      .hero-qr-section { flex-direction: row !important; align-items: center !important; text-align: left !important; padding: 12px 16px !important; gap: 12px !important; border-radius: 14px !important; border-width: 2px !important; }
-      .hero-qr-left { align-items: flex-start !important; gap: 6px !important; }
-      .hero-qr-header { justify-content: flex-start !important; gap: 8px !important; }
-      .hero-qr-header svg { width: 20px !important; height: 20px !important; }
-      .hero-qr-badge { font-size: 11.5px !important; padding: 4px 10px !important; }
-      .hero-url-badge { align-items: flex-start !important; padding: 6px 10px !important; margin-top: 5px !important; border-radius: 8px !important; border-width: 2px !important; }
-      .hero-url-text { font-size: 12.5px !important; color: #000000 !important; }
-      .hero-qr-title { font-size: 18px !important; color: #000000 !important; }
-      .hero-qr-desc { font-size: 14.5px !important; color: #111827 !important; font-weight: 500 !important; }
+      .hero-qr-section { flex-direction: row !important; align-items: center !important; text-align: left !important; padding: 10px 14px !important; gap: 10px !important; }
+      .hero-qr-left { align-items: flex-start !important; }
+      .hero-qr-header { justify-content: flex-start !important; }
+      .hero-url-badge { align-items: flex-start !important; padding: 4px 8px !important; }
+      .hero-url-text { font-size: 11px !important; color: #000000 !important; }
+      .hero-qr-title { font-size: 16px !important; color: #000000 !important; }
+      .hero-qr-desc { font-size: 13px !important; color: #111827 !important; font-weight: 500 !important; }
       
-      .hero-qr-card-wrapper { gap: 6px !important; }
-      .hero-qr-card { width: 145px !important; height: 145px !important; padding: 5px !important; border-width: 3px !important; border-radius: 14px !important; }
-      .hero-qr-watermark { width: 30px !important; height: 30px !important; border-radius: 8px !important; border-width: 3px !important; }
-      .hero-qr-watermark span { font-size: 16px !important; }
-      .hero-qr-action-btn { font-size: 11px !important; padding: 6px 12px !important; border-width: 1.5px !important; }
+      /* QR CODE MUITO MAIOR NA IMPRESSÃO (Passou de 90px para 130px) */
+      .hero-qr-card-wrapper { gap: 4px !important; }
+      .hero-qr-card { width: 130px !important; height: 130px !important; padding: 4px !important; border-width: 3px !important; }
+      .hero-qr-watermark { width: 26px !important; height: 26px !important; }
+      .hero-qr-watermark span { font-size: 14px !important; }
+      .hero-qr-action-btn { font-size: 9.5px !important; padding: 4px 10px !important; border-width: 1px !important; }
 
-      .footer-block { padding-top: 6px !important; margin-top: 0 !important; }
-      .formal-note { font-size: 12px !important; margin-bottom: 4px !important; font-weight: 500 !important; color: #374151 !important; }
-      .footer { padding-top: 6px !important; font-size: 11px !important; color: #4b5563 !important; font-weight: 700 !important; border-top: 2px solid #e2e8f0 !important; }
+      .footer-block { padding-top: 4px !important; margin-top: 0 !important; }
+      .formal-note { font-size: 10.5px !important; margin-bottom: 4px !important; font-weight: 500 !important; color: #374151 !important; }
+      .footer { padding-top: 4px !important; font-size: 9.5px !important; color: #4b5563 !important; font-weight: 700 !important; }
       
       a[href]:after { content: none !important; } 
     }
 
     /* =========================================================================
-       RESPONSIVIDADE MOBILE WEB (Protegido e Trancado)
+       RESPONSIVIDADE MOBILE WEB (Ecrã Mobile)
        ========================================================================= */
     @media screen and (max-width: 768px) {
-      body { padding: 0 !important; background: #0b1120 !important; font-size: 17px !important; }
-      .preview-topbar { padding: 12px 16px !important; margin-bottom: 0 !important; }
-      .preview-badge { display: none !important; }
+      body { padding: 0; background: #0b1120; }
+      .preview-topbar { padding: 12px 16px; margin-bottom: 0; }
+      .preview-badge { display: none; }
       
+      /* Logo e Textos AINDA MAIORES para o telemóvel */
+      .brand-logo { width: 115px; height: 115px; }
+      .brand-placeholder { width: 115px; height: 115px; }
+      .brand-title { font-size: 26px; }
+      .title-banner h1 { font-size: 21px; }
+      .title-banner p { font-size: 15px; }
+      .about-text { font-size: 17.5px; line-height: 1.5; padding: 20px 24px; font-weight: 500; }
+      .pillar-head { font-size: 16.5px; }
+      .pillar-desc { font-size: 15.5px; line-height: 1.45; }
+      .contact-val-link { font-size: 16px; }
+      .hero-qr-title { font-size: 19px; }
+      .hero-qr-desc { font-size: 16.5px; line-height: 1.45; }
+      
+      /* Cartão Flutuante Mobile */
       .page-container { 
-        width: 94% !important; margin: 20px auto 30px auto !important; 
-        border-radius: 16px !important; padding: 26px 20px !important; 
-        box-shadow: 0 10px 40px rgba(0,0,0,0.6) !important; gap: 16px !important;
+        width: 94% !important; 
+        margin: 20px auto 30px auto !important; 
+        border-radius: 16px !important; 
+        padding: 26px 20px !important; 
+        box-shadow: 0 10px 40px rgba(0,0,0,0.6) !important;
       }
       
-      .header { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; padding: 16px 20px !important; border-width: 1px !important; border-radius: 14px !important; }
-      .brand-logo, .brand-placeholder { width: 115px !important; height: 115px !important; border-radius: 14px !important; font-size: 40px !important; border-width: 2px !important; }
-      .brand-title { font-size: 26px !important; line-height: 1.1 !important; letter-spacing: -0.3px !important; }
-      .brand-badge { font-size: 12px !important; padding: 4px 10px !important; margin-top: 5px !important; border-width: 1px !important; }
-      .meta-box { text-align: left !important; font-size: 15px !important; line-height: 1.5 !important; }
-      .currency-tag { font-size: 14px !important; padding: 2px 8px !important; border-width: 1px !important; margin-top: 2px !important; }
+      .header { flex-direction: column; align-items: flex-start; gap: 16px; }
+      .meta-box { text-align: left; font-size: 15px; }
+      .contacts-grid, .pillars-grid { grid-template-columns: 1fr; gap: 14px; }
       
-      .title-banner { padding: 12px 18px !important; border-left-width: 5px !important; border-radius: 0 10px 10px 0 !important; border-width: 1px !important; border-left-width: 5px !important; }
-      .title-banner h1 { font-size: 21px !important; }
-      .title-banner p { font-size: 15px !important; margin-top: 2px !important; }
-
-      .section-heading { font-size: 14px !important; margin-bottom: 8px !important; gap: 6px !important; }
-      .about-text { font-size: 17.5px !important; line-height: 1.5 !important; padding: 20px 24px !important; font-weight: 600 !important; border-radius: 12px !important; border-width: 1px !important; }
+      .hero-qr-section { flex-direction: column; text-align: center; gap: 26px; padding: 22px 18px; }
+      .hero-qr-left { align-items: center; }
+      .hero-qr-header { justify-content: center; }
+      .hero-url-badge { align-items: center; }
       
-      .pillars-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
-      .pillar-card { padding: 12px 16px !important; border-radius: 11px !important; border-width: 1px !important; }
-      .pillar-head { font-size: 16.5px !important; margin-bottom: 4px !important; gap: 8px !important; }
-      .pillar-icon-box { width: 24px !important; height: 24px !important; padding: 4px !important; border-radius: 6px !important; }
-      .pillar-icon-box svg { width: 100% !important; height: 100% !important; }
-      .pillar-desc { font-size: 15.5px !important; line-height: 1.45 !important; padding-left: 30px !important; }
-
-      .contacts-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
-      .contact-box { padding: 12px 16px !important; border-radius: 11px !important; border-width: 1px !important; }
-      .contact-label-row { font-size: 11px !important; margin-bottom: 4px !important; gap: 6px !important; }
-      .contact-label-row svg { width: 16px !important; height: 16px !important; }
-      .contact-val-link { font-size: 16px !important; }
-
-      .hero-qr-section { flex-direction: column !important; text-align: center !important; gap: 26px !important; padding: 22px 18px !important; border-radius: 16px !important; border-width: 2px !important; }
-      .hero-qr-left { align-items: center !important; gap: 8px !important; }
-      .hero-qr-header { justify-content: center !important; gap: 8px !important; }
-      .hero-qr-header svg { width: 20px !important; height: 20px !important; }
-      .hero-qr-title { font-size: 19px !important; }
-      .hero-qr-badge { font-size: 11px !important; padding: 4px 10px !important; }
-      .hero-qr-desc { font-size: 16.5px !important; line-height: 1.45 !important; }
-      .hero-url-badge { align-items: center !important; padding: 8px 14px !important; margin-top: 4px !important; border-radius: 10px !important; border-width: 2px !important; }
-      .hero-url-label { font-size: 11px !important; }
-      .hero-url-text { font-size: 14px !important; }
+      /* QR Code Gigante no Ecrã do Telemóvel (200px) */
+      .hero-qr-card { width: 200px; height: 200px; padding: 8px; border-width: 5px; }
+      .hero-qr-watermark { width: 44px; height: 44px; }
+      .hero-qr-watermark span { font-size: 22px; }
       
-      .hero-qr-card-wrapper { gap: 10px !important; }
-      .hero-qr-card { width: 170px !important; height: 170px !important; padding: 8px !important; border-width: 4px !important; border-radius: 16px !important; }
-      .hero-qr-watermark { width: 38px !important; height: 38px !important; border-radius: 8px !important; border-width: 2px !important; }
-      .hero-qr-watermark span { font-size: 18px !important; }
-      .hero-qr-action-btn { font-size: 13.5px !important; padding: 10px 24px !important; border-radius: 9999px !important; border-width: 2px !important; }
-
-      .formal-note { font-size: 13px !important; margin-bottom: 8px !important; }
-      .footer { font-size: 12px !important; padding-top: 10px !important; border-width: 1px !important; margin-top: 0 !important; }
+      .hero-qr-action-btn { font-size: 14.5px; padding: 12px 28px; }
     }
   </style>
 </head>

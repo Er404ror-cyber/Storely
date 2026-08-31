@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslate } from '../context/LanguageContext';
 
 interface VersionData {
@@ -6,13 +6,14 @@ interface VersionData {
   packageVersion: string;
 }
 
+// Chaves essenciais que NUNCA devem ser apagadas numa atualização rotineira
 const KEYS_TO_PRESERVE = [
   'storely_auth_token', 
   'country_code'
 ];
 
-const BETA_WELCOME_KEY = 'storely_beta_welcome_pending';
 const INSTALLED_VERSION_KEY = 'APP_INSTALLED_VERSION';
+const BETA_WELCOME_KEY = 'storely_beta_welcome_pending';
 
 export default function VersionChecker() {
   const { t } = useTranslate();
@@ -22,18 +23,9 @@ export default function VersionChecker() {
   const [currentVersionData, setCurrentVersionData] = useState<VersionData | null>(null);
   const [newVersionData, setNewVersionData] = useState<VersionData | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  
-  const currentVersionRef = useRef<VersionData | null>(null);
 
-  const navigateToRoot = () => {
-    if (window.location.pathname !== '/') {
-      window.history.replaceState({}, '', '/');
-      window.dispatchEvent(new PopStateEvent('popstate'));
-    }
-  };
-
-  // Limpeza executada EXCLUSIVAMENTE quando o novo bundle roda
-  const performDeepBrowserCleanup = async (newVersionNumber: number) => {
+  // Executa uma limpeza segura mantendo os dados críticos do usuário
+  const performSafeCleanup = async (newVersionNumber: number) => {
     try {
       const preservedData: Record<string, string> = {};
       KEYS_TO_PRESERVE.forEach((key) => {
@@ -41,73 +33,29 @@ export default function VersionChecker() {
         if (val !== null) preservedData[key] = val;
       });
 
+      // Limpeza controlada do armazenamento local
       localStorage.clear();
       sessionStorage.clear();
 
-      if ('indexedDB' in window) {
-        try {
-          if (indexedDB.databases) {
-            const dbs = await indexedDB.databases();
-            await Promise.all(
-              dbs.map((db) => {
-                if (db.name) {
-                  return new Promise((resolve) => {
-                    const req = indexedDB.deleteDatabase(db.name!);
-                    req.onsuccess = () => resolve(true);
-                    req.onerror = () => resolve(false);
-                    req.onblocked = () => resolve(false);
-                  });
-                }
-                return Promise.resolve();
-              })
-            );
-          }
-        } catch (idbErr) {
-          console.warn('Falha ao limpar IndexedDB:', idbErr);
-        }
-      }
-
-      try {
-        const cookies = document.cookie.split(';');
-        for (const cookie of cookies) {
-          const eqPos = cookie.indexOf('=');
-          const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim();
-          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;`;
-          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname};`;
-        }
-      } catch (cookieErr) {
-        console.warn('Falha ao limpar cookies:', cookieErr);
-      }
-
-      if ('caches' in window) {
-        try {
-          const cacheKeys = await caches.keys();
-          await Promise.all(cacheKeys.map((key) => caches.delete(key)));
-        } catch (cacheErr) {
-          console.warn('Falha ao limpar caches:', cacheErr);
-        }
-      }
-
-      if ('serviceWorker' in navigator) {
-        try {
-          const registrations = await navigator.serviceWorker.getRegistrations();
-          await Promise.all(registrations.map((reg) => reg.unregister()));
-        } catch (swErr) {
-          console.warn('Falha ao desregistrar Service Workers:', swErr);
-        }
-      }
-
+      // Restaura dados preservados
       Object.entries(preservedData).forEach(([key, val]) => {
         localStorage.setItem(key, val);
       });
+
       localStorage.setItem(INSTALLED_VERSION_KEY, newVersionNumber.toString());
       localStorage.setItem(BETA_WELCOME_KEY, 'true');
+
+      // Limpeza segura de cache se disponível
+      if ('caches' in window) {
+        const cacheKeys = await caches.keys();
+        await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+      }
     } catch (error) {
-      console.error('Erro na limpeza:', error);
+      console.error('Erro durante a limpeza segura de versão:', error);
     }
   };
 
-  const checkVersion = useCallback(async (isInitialLoad = false) => {
+  const checkVersion = useCallback(async () => {
     if (import.meta.env.DEV) return;
 
     try {
@@ -121,77 +69,62 @@ export default function VersionChecker() {
       const serverVersionStr = serverData.version.toString();
       const localVersionStr = localStorage.getItem(INSTALLED_VERSION_KEY);
 
-      if (isInitialLoad) {
-        // CASO 1: Abriu já na versão recente vinda de um reload/F5
-        if (localVersionStr && localVersionStr !== serverVersionStr) {
-          await performDeepBrowserCleanup(serverData.version);
-          navigateToRoot();
-          setShowWelcomeModal(true);
-        } else if (!localVersionStr) {
-          localStorage.setItem(INSTALLED_VERSION_KEY, serverVersionStr);
-        }
+      // Primeira execução ou app recém-instalado no navegador
+      if (!localVersionStr) {
+        localStorage.setItem(INSTALLED_VERSION_KEY, serverVersionStr);
+        setCurrentVersionData(serverData);
+        return;
+      }
 
+      // Se a versão do servidor for diferente da armazenada localmente
+      if (localVersionStr !== serverVersionStr) {
+        // Verifica se já passou pelo fluxo de boas-vindas pendente
         if (localStorage.getItem(BETA_WELCOME_KEY) === 'true') {
           setShowWelcomeModal(true);
-        }
-
-        currentVersionRef.current = serverData;
-        setCurrentVersionData(serverData);
-      } else {
-        // CASO 2: Plataforma aberta em execução e o servidor tem versão mais nova
-        const activeVersion = currentVersionRef.current?.version || (localVersionStr ? Number(localVersionStr) : null);
-        
-        if (activeVersion && serverData.version !== activeVersion) {
+        } else {
+          // Dispara atualização controlada
+          await performSafeCleanup(serverData.version);
           setNewVersionData(serverData);
           setIsOutdated(true);
         }
+      } else {
+        setCurrentVersionData(serverData);
+        if (localStorage.getItem(BETA_WELCOME_KEY) === 'true') {
+          setShowWelcomeModal(true);
+        }
       }
     } catch (error) {
-      console.error('Falha ao verificar versão:', error);
+      console.warn('Não foi possível verificar a versão atual:', error);
     }
   }, []);
 
   useEffect(() => {
-    checkVersion(true);
+    checkVersion();
 
-    const CHECK_INTERVAL = 3 * 60 * 1000;
-    const intervalId = setInterval(() => checkVersion(false), CHECK_INTERVAL);
+    // Intervalo de verificação em segundo plano (a cada 10 minutos)
+    const CHECK_INTERVAL = 10 * 60 * 1000;
+    const intervalId = setInterval(checkVersion, CHECK_INTERVAL);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        checkVersion(false);
+        checkVersion();
       }
     };
 
-    const handleWindowFocus = () => {
-      checkVersion(false);
-    };
-
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleWindowFocus);
 
     return () => {
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleWindowFocus);
     };
   }, [checkVersion]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showWelcomeModal) {
-        handleDismissWelcome();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showWelcomeModal]);
-
-  // Força recarga imediata sem executar limpezas no código antigo
+  // Recarga limpa da página com suporte a cache busting
   const handleUpdateClick = () => {
     setIsUpdating(true);
-    window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
+    setTimeout(() => {
+      window.location.reload();
+    }, 300);
   };
 
   const handleDismissWelcome = () => {
@@ -199,23 +132,20 @@ export default function VersionChecker() {
     setShowWelcomeModal(false);
   };
 
-  const currentFormattedDate = currentVersionData?.version
-    ? new Intl.DateTimeFormat(undefined, { 
+  const formattedDate = (versionNum?: number) => {
+    if (!versionNum) return '';
+    try {
+      return new Intl.DateTimeFormat(undefined, { 
         day: '2-digit', 
         month: 'short', 
         year: 'numeric' 
-      }).format(new Date(currentVersionData.version))
-    : '';
+      }).format(new Date(versionNum));
+    } catch {
+      return '';
+    }
+  };
 
-  const newFormattedDate = newVersionData?.version
-    ? new Intl.DateTimeFormat(undefined, { 
-        day: '2-digit', 
-        month: 'short', 
-        year: 'numeric' 
-      }).format(new Date(newVersionData.version))
-    : '';
-
-  // 1. Modal de Boas-Vindas (Renderizado após o reload na versão nova)
+  // 1. Modal de Boas-Vindas Pós-Atualização
   if (showWelcomeModal) {
     return (
       <div 
@@ -232,7 +162,7 @@ export default function VersionChecker() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/60">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-[11px] font-mono font-bold tracking-wider text-emerald-800 uppercase">
-                {t('beta_badge', { defaultValue: 'Storely Beta' })}
+                {t('beta_badge', { defaultValue: 'Atualizado' })}
               </span>
             </div>
 
@@ -248,12 +178,12 @@ export default function VersionChecker() {
           </div>
 
           <h3 className="text-xl font-bold text-slate-900 tracking-tight mb-2 relative z-10">
-            {t('welcome_beta_title', { defaultValue: 'Bem-vindo ao Beta da Storely' })}
+            {t('welcome_beta_title', { defaultValue: 'Aplicativo Atualizado!' })}
           </h3>
           
           <p className="text-sm text-slate-600 leading-relaxed mb-5 relative z-10">
             {t('welcome_beta_desc', { 
-              defaultValue: 'Seu ambiente foi atualizado e totalmente otimizado com a versão mais recente. Aproveite as novidades!' 
+              defaultValue: 'O seu sistema foi atualizado com sucesso para a versão mais recente.' 
             })}
           </p>
 
@@ -264,10 +194,10 @@ export default function VersionChecker() {
                 v{currentVersionData?.packageVersion || '0.2.4'}
               </span>
             </div>
-            {currentFormattedDate && (
+            {currentVersionData?.version && (
               <div className="flex justify-between items-center text-[11px] font-mono text-slate-400 pt-1.5 border-t border-slate-200/50">
                 <span>{t('build_date_label', { defaultValue: 'Compilação:' })}</span>
-                <span className="font-medium text-slate-500">{currentFormattedDate}</span>
+                <span className="font-medium text-slate-500">{formattedDate(currentVersionData.version)}</span>
               </div>
             )}
           </div>
@@ -276,7 +206,7 @@ export default function VersionChecker() {
             onClick={handleDismissWelcome}
             className="w-full bg-slate-900 hover:bg-slate-800 active:scale-[0.99] text-white text-sm font-semibold py-3.5 px-5 rounded-2xl shadow-lg shadow-slate-900/15 flex items-center justify-between transition-all cursor-pointer relative z-10"
           >
-            <span>{t('welcome_beta_button', { defaultValue: 'Começar a Explorar' })}</span>
+            <span>{t('welcome_beta_button', { defaultValue: 'Continuar' })}</span>
             <svg className="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
@@ -298,7 +228,7 @@ export default function VersionChecker() {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200">
             <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
             <span className="text-[11px] font-mono font-bold tracking-wider text-amber-800 uppercase">
-              {t('version_update_badge', { defaultValue: 'Nova Versão Disponível' })}
+              {t('version_update_badge', { defaultValue: 'Nova Versão' })}
             </span>
           </div>
 
@@ -308,12 +238,12 @@ export default function VersionChecker() {
         </div>
 
         <h3 className="text-xl font-bold text-slate-900 tracking-tight mb-2 relative z-10">
-          {t('version_update_title', { defaultValue: 'Atualização Pronta' })}
+          {t('version_update_title', { defaultValue: 'Atualização Disponível' })}
         </h3>
         
         <p className="text-sm text-slate-600 leading-relaxed mb-5 relative z-10">
           {t('version_update_desc', { 
-            defaultValue: 'Uma versão mais recente do aplicativo está pronta com melhorias e correções importantes. Atualize agora para continuar.' 
+            defaultValue: 'Uma nova versão do aplicativo está pronta. Clique abaixo para aplicar as melhorias.' 
           })}
         </p>
 
@@ -328,10 +258,10 @@ export default function VersionChecker() {
               v{newVersionData?.packageVersion}
             </span>
           </div>
-          {newFormattedDate && (
+          {newVersionData?.version && (
             <div className="flex justify-between items-center text-[11px] text-slate-400 pt-2 border-t border-slate-200/60">
               <span>{t('version_update_released', { defaultValue: 'Lançado em' })}</span>
-              <span className="text-slate-500 font-medium">{newFormattedDate}</span>
+              <span className="text-slate-500 font-medium">{formattedDate(newVersionData.version)}</span>
             </div>
           )}
         </div>
@@ -343,7 +273,7 @@ export default function VersionChecker() {
         >
           <span>
             {isUpdating 
-              ? (t('version_updating_loading', { defaultValue: 'A carregar nova versão...' }))
+              ? (t('version_updating_loading', { defaultValue: 'A atualizar...' }))
               : (t('version_update_button', { defaultValue: 'Atualizar Agora' }))}
           </span>
           {isUpdating ? (
