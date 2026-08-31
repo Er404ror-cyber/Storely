@@ -38,19 +38,19 @@ const DICTIONARY = {
     p4Title: 'Garantia de Qualidade',
     p4Desc: 'Inspeção minuciosa para assegurar conformidade total com o pedido.',
     accessTitle: 'Catálogo Digital & Encomendas em Tempo Real',
-    accessSubtitle: 'Toque no Código QR ou no link para abrir o catálogo:',
+    accessSubtitle: 'Aponte a câmara do telemóvel ao Código QR ao lado para aceder ao catálogo oficial:',
     officialBadge: 'Canal Oficial Verificado',
-    directUrlLabel: 'Ligação Web Oficial (Toque para Abrir):',
-    qrScanHint: 'Toque para abrir o catálogo',
-    contactsTitle: 'Canais Oficiais de Contacto (Toque para Abrir)',
-    whatsapp: 'WhatsApp Comercial',
+    directUrlLabel: 'Endereço Web Oficial:',
+    qrScanHint: 'Aceder ao Catálogo Oficial',
+    contactsTitle: 'Canais Oficiais de Contacto',
+    whatsapp: 'Telefone / WhatsApp',
     email: 'E-mail Institucional',
     website: 'Endereço Web',
     unavailable: 'Consulte no catálogo oficial',
     rights: 'Todos os direitos reservados.',
     generated: 'Gerado via infraestrutura Storely',
     printBtn: 'Guardar PDF / Imprimir',
-    backBtn: 'Voltar à Loja',
+    backBtn: 'Voltar',
     previewBadge: 'Dossiê Comercial'
   },
   en: {
@@ -73,19 +73,19 @@ const DICTIONARY = {
     p4Title: 'Quality Guarantee',
     p4Desc: 'Rigorous inspection standards ensuring each product matches specifications.',
     accessTitle: 'Live Digital Storefront & Orders',
-    accessSubtitle: 'Tap the QR Code or link to open the catalog:',
+    accessSubtitle: 'Point your mobile camera at the QR Code to open the official catalog:',
     officialBadge: 'Verified Official Channel',
-    directUrlLabel: 'Official Web Address (Tap to Open):',
-    qrScanHint: 'Tap to open catalog',
-    contactsTitle: 'Verified Contact Channels (Tap to Open)',
-    whatsapp: 'Business WhatsApp',
+    directUrlLabel: 'Official Web Address:',
+    qrScanHint: 'Open Official Catalog',
+    contactsTitle: 'Official Contact Channels',
+    whatsapp: 'Phone / WhatsApp',
     email: 'Official Email',
     website: 'Web Address',
     unavailable: 'Available on digital storefront',
     rights: 'All rights reserved.',
     generated: 'Generated via Storely platform',
     printBtn: 'Save PDF / Print',
-    backBtn: 'Back to Store',
+    backBtn: 'Back',
     previewBadge: 'Commercial Dossier'
   }
 };
@@ -172,11 +172,12 @@ export function generateStorePresentationPDF({
 
   const rawPhone = (store.whatsapp_number || store.settings?.phone || '').toString().trim();
   const phone = rawPhone ? (rawPhone.startsWith('+') ? rawPhone : `+${rawPhone}`) : '';
-  const cleanPhone = phone.replace(/[^0-9]/g, '');
-  const whatsappLink = cleanPhone ? `https://wa.me/${cleanPhone}` : productsUrl;
+  const callLink = phone ? `tel:${phone}` : productsUrl;
   const email = (store.owner_email || store.settings?.email || '').toString().trim();
   const emailLink = email ? `mailto:${email}` : productsUrl;
   const refCode = (store.id ? store.id.substring(0, 8) : storeSlug).toUpperCase();
+
+  const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   const html = `
     <!DOCTYPE html>
@@ -204,7 +205,7 @@ export function generateStorePresentationPDF({
         }
         body {
           color: #0f172a;
-          line-height: 1.45;
+          line-height: 1.46;
           font-size: 14px;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
@@ -212,10 +213,10 @@ export function generateStorePresentationPDF({
           flex-direction: column;
           align-items: center;
           justify-content: flex-start;
-          padding: 0 0 35px 0;
+          padding: 0 0 40px 0;
         }
 
-        /* Topbar de Ações na UI */
+        /* Topbar de Ações */
         .preview-topbar {
           position: sticky;
           top: 0;
@@ -228,13 +229,13 @@ export function generateStorePresentationPDF({
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 10px 20px;
-          margin-bottom: 16px;
+          padding: 12px 24px;
+          margin-bottom: 20px;
         }
         .topbar-left {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 12px;
         }
         .btn-back {
           display: inline-flex;
@@ -243,19 +244,20 @@ export function generateStorePresentationPDF({
           background: rgba(255, 255, 255, 0.14);
           color: #ffffff;
           border: 1px solid rgba(255, 255, 255, 0.28);
-          padding: 7px 15px;
+          padding: 7.5px 16px;
           border-radius: 9999px;
-          font-size: 13px;
+          font-size: 13.5px;
           font-weight: 700;
           cursor: pointer;
           transition: all 0.2s ease;
           text-decoration: none;
+          touch-action: manipulation;
         }
         .btn-back:hover, .btn-back:active {
           background: rgba(255, 255, 255, 0.28);
         }
         .preview-badge {
-          font-size: 12.5px;
+          font-size: 13px;
           color: #94a3b8;
           font-weight: 600;
           display: flex;
@@ -265,8 +267,8 @@ export function generateStorePresentationPDF({
         .preview-badge::before {
           content: "";
           display: inline-block;
-          width: 7px;
-          height: 7px;
+          width: 7.5px;
+          height: 7.5px;
           border-radius: 50%;
           background: #10b981;
         }
@@ -277,38 +279,40 @@ export function generateStorePresentationPDF({
           background: #4f46e5;
           color: #ffffff;
           border: none;
-          padding: 8px 18px;
+          padding: 8.5px 20px;
           border-radius: 9999px;
-          font-size: 13.5px;
+          font-size: 14px;
           font-weight: 800;
           cursor: pointer;
-          box-shadow: 0 4px 15px rgba(79, 70, 229, 0.45);
+          box-shadow: 0 4px 16px rgba(79, 70, 229, 0.45);
           transition: all 0.2s ease;
+          touch-action: manipulation;
         }
         .btn-print:hover, .btn-print:active {
           background: #4338ca;
         }
 
-        /* Container da Folha */
+        /* Container Centralizado da Folha */
         .page-container {
           position: relative;
           width: 95%;
-          max-width: 960px;
+          max-width: 1000px;
+          margin: 0 auto;
           background: #ffffff;
-          border-radius: 16px;
-          padding: 24px 30px 20px 30px;
+          border-radius: 18px;
+          padding: 28px 36px 24px 36px;
           border: 1px solid #e2e8f0;
           box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
           overflow: hidden;
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 13px;
         }
 
-        /* Mobile Total Screen */
+        /* Mobile */
         @media screen and (max-width: 768px) {
           body {
-            font-size: 12.2px;
+            font-size: 12.5px;
             padding: 0;
             background: #ffffff;
           }
@@ -320,7 +324,7 @@ export function generateStorePresentationPDF({
             display: none;
           }
           .btn-back {
-            padding: 6px 12px;
+            padding: 6.5px 12px;
             font-size: 12px;
           }
           .btn-print {
@@ -333,19 +337,19 @@ export function generateStorePresentationPDF({
             border-radius: 0 !important;
             border: none !important;
             box-shadow: none !important;
-            padding: 10px 10px 18px 10px !important;
-            gap: 8px !important;
+            padding: 12px 12px 20px 12px !important;
+            gap: 9px !important;
           }
         }
 
         .content-main {
           display: flex;
           flex-direction: column;
-          gap: 11px;
+          gap: 12px;
         }
         @media screen and (max-width: 768px) {
           .content-main {
-            gap: 8px;
+            gap: 8.5px;
           }
         }
 
@@ -354,21 +358,21 @@ export function generateStorePresentationPDF({
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 13px 18px;
+          padding: 15px 20px;
           background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.95) 50%, rgba(238, 242, 255, 0.95) 100%);
           border: 1px solid #e2e8f0;
           border-radius: 14px;
         }
         @media screen and (max-width: 768px) {
           .header {
-            padding: 9px 11px;
+            padding: 10px 12px;
             border-radius: 12px;
           }
         }
         .brand-box {
           display: flex;
           align-items: center;
-          gap: 14px;
+          gap: 16px;
           text-decoration: none;
           color: inherit;
         }
@@ -378,39 +382,39 @@ export function generateStorePresentationPDF({
           }
         }
         .brand-logo {
-          width: 88px;
-          height: 88px;
-          border-radius: 14px;
+          width: 102px;
+          height: 102px;
+          border-radius: 16px;
           object-fit: cover;
-          border: 2px solid #ffffff;
+          border: 2.5px solid #ffffff;
           background: #ffffff;
-          box-shadow: 0 4px 14px rgba(79, 70, 229, 0.12);
+          box-shadow: 0 4px 16px rgba(79, 70, 229, 0.14);
           flex-shrink: 0;
         }
         .brand-placeholder {
-          width: 88px;
-          height: 88px;
-          border-radius: 14px;
+          width: 102px;
+          height: 102px;
+          border-radius: 16px;
           background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
           color: #ffffff;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 38px;
+          font-size: 44px;
           font-weight: 900;
-          box-shadow: 0 4px 14px rgba(79, 70, 229, 0.15);
+          box-shadow: 0 4px 16px rgba(79, 70, 229, 0.18);
           flex-shrink: 0;
         }
         @media screen and (max-width: 768px) {
           .brand-logo, .brand-placeholder {
-            width: 66px;
-            height: 66px;
-            font-size: 28px;
-            border-radius: 11px;
+            width: 72px;
+            height: 72px;
+            font-size: 30px;
+            border-radius: 12px;
           }
         }
         .brand-title {
-          font-size: 22px;
+          font-size: 24px;
           font-weight: 900;
           color: #0f172a;
           letter-spacing: -0.3px;
@@ -418,19 +422,19 @@ export function generateStorePresentationPDF({
         }
         @media screen and (max-width: 768px) {
           .brand-title {
-            font-size: 17px;
+            font-size: 18px;
           }
         }
         .brand-badge {
           display: inline-flex;
           align-items: center;
-          gap: 3.5px;
-          font-size: 9.5px;
+          gap: 4px;
+          font-size: 10px;
           font-weight: 800;
           text-transform: uppercase;
           color: #4338ca;
           background: rgba(224, 231, 255, 0.95);
-          padding: 2.5px 8px;
+          padding: 3px 9px;
           border-radius: 9999px;
           letter-spacing: 0.35px;
           margin-top: 3px;
@@ -438,20 +442,20 @@ export function generateStorePresentationPDF({
         }
         @media screen and (max-width: 768px) {
           .brand-badge {
-            font-size: 7.8px;
+            font-size: 8px;
             padding: 1.5px 6px;
           }
         }
         .meta-box {
           text-align: right;
-          font-size: 11px;
+          font-size: 11.8px;
           color: #64748b;
-          line-height: 1.45;
+          line-height: 1.5;
         }
         @media screen and (max-width: 768px) {
           .meta-box {
-            font-size: 9px;
-            line-height: 1.35;
+            font-size: 9.5px;
+            line-height: 1.38;
           }
         }
         .meta-box strong {
@@ -460,7 +464,7 @@ export function generateStorePresentationPDF({
         .currency-tag {
           color: #047857;
           background: #d1fae5;
-          padding: 1.5px 6px;
+          padding: 1.5px 7px;
           border-radius: 4px;
           font-weight: 800;
           display: inline-block;
@@ -470,8 +474,8 @@ export function generateStorePresentationPDF({
         /* Banner de Título */
         .title-banner {
           background: linear-gradient(to right, #f8fafc, #ffffff);
-          border-left: 4px solid #4f46e5;
-          padding: 8px 14px;
+          border-left: 4.5px solid #4f46e5;
+          padding: 9px 15px;
           border-radius: 0 10px 10px 0;
           border-top: 1px solid #f1f5f9;
           border-bottom: 1px solid #f1f5f9;
@@ -479,29 +483,29 @@ export function generateStorePresentationPDF({
         }
         @media screen and (max-width: 768px) {
           .title-banner {
-            padding: 6px 9px;
-            border-left-width: 3px;
+            padding: 6px 10px;
+            border-left-width: 3.5px;
           }
         }
         .title-banner h1 {
-          font-size: 15px;
+          font-size: 15.5px;
           font-weight: 900;
           color: #0f172a;
           letter-spacing: -0.2px;
         }
         @media screen and (max-width: 768px) {
           .title-banner h1 {
-            font-size: 12.5px;
+            font-size: 13px;
           }
         }
         .title-banner p {
-          font-size: 11.2px;
+          font-size: 11.8px;
           color: #64748b;
-          margin-top: 1px;
+          margin-top: 1.5px;
         }
         @media screen and (max-width: 768px) {
           .title-banner p {
-            font-size: 9.8px;
+            font-size: 10px;
           }
         }
 
@@ -511,19 +515,19 @@ export function generateStorePresentationPDF({
           page-break-inside: avoid;
         }
         .section-heading {
-          font-size: 11px;
+          font-size: 11.5px;
           font-weight: 900;
           text-transform: uppercase;
           color: #334155;
-          letter-spacing: 0.45px;
-          margin-bottom: 4px;
+          letter-spacing: 0.5px;
+          margin-bottom: 4.5px;
           display: flex;
           align-items: center;
           gap: 5px;
         }
         @media screen and (max-width: 768px) {
           .section-heading {
-            font-size: 9.5px;
+            font-size: 10px;
             margin-bottom: 3px;
           }
         }
@@ -537,20 +541,20 @@ export function generateStorePresentationPDF({
           background: #ffffff;
           border: 1px solid #e2e8f0;
           border-radius: 12px;
-          padding: 10px 14px;
+          padding: 11px 16px;
           color: #334155;
-          line-height: 1.45;
-          font-size: 12.5px;
+          line-height: 1.48;
+          font-size: 13px;
         }
         @media screen and (max-width: 768px) {
           .about-text {
             padding: 7px 10px;
-            font-size: 10.8px;
+            font-size: 11px;
             line-height: 1.35;
           }
         }
         .about-text p {
-          margin-bottom: 2px;
+          margin-bottom: 2.5px;
         }
         .about-text p:last-child {
           margin-bottom: 0;
@@ -560,16 +564,16 @@ export function generateStorePresentationPDF({
         .pillars-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
-          gap: 8px;
+          gap: 8.5px;
         }
         @media screen and (max-width: 768px) {
           .pillars-grid {
-            gap: 5px;
+            gap: 5.5px;
           }
         }
         .pillar-card {
-          border-radius: 10px;
-          padding: 8px 11px;
+          border-radius: 11px;
+          padding: 9px 12px;
           border: 1px solid transparent;
         }
         @media screen and (max-width: 768px) {
@@ -595,7 +599,7 @@ export function generateStorePresentationPDF({
         }
 
         .pillar-head {
-          font-size: 11px;
+          font-size: 11.5px;
           font-weight: 900;
           color: #0f172a;
           text-transform: uppercase;
@@ -606,15 +610,15 @@ export function generateStorePresentationPDF({
         }
         @media screen and (max-width: 768px) {
           .pillar-head {
-            font-size: 9.8px;
+            font-size: 10px;
           }
         }
         .pillar-icon-box {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 18px;
-          height: 18px;
+          width: 19px;
+          height: 19px;
           border-radius: 5px;
           background: #ffffff;
           box-shadow: 0 1px 2px rgba(0,0,0,0.04);
@@ -632,10 +636,10 @@ export function generateStorePresentationPDF({
         .icon-amber { color: #d97706; }
 
         .pillar-desc {
-          font-size: 11px;
+          font-size: 11.5px;
           color: #475569;
-          line-height: 1.32;
-          padding-left: 23px;
+          line-height: 1.34;
+          padding-left: 24px;
         }
         @media screen and (max-width: 768px) {
           .pillar-desc {
@@ -645,20 +649,20 @@ export function generateStorePresentationPDF({
           }
         }
 
-        /* Contactos com Link Canônico Direto */
+        /* Contactos */
         .contacts-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 8px;
+          gap: 8.5px;
         }
         @media screen and (max-width: 768px) {
           .contacts-grid {
-            gap: 5px;
+            gap: 5.5px;
           }
         }
         .contact-box {
-          border-radius: 10px;
-          padding: 8px 11px;
+          border-radius: 11px;
+          padding: 9px 12px;
           border: 1px solid #e2e8f0;
           background: #f8fafc;
           text-decoration: none !important;
@@ -671,14 +675,14 @@ export function generateStorePresentationPDF({
         }
         @media screen and (max-width: 768px) {
           .contact-box {
-            padding: 6px 8px;
+            padding: 6.5px 8px;
           }
         }
         .contact-label-row {
           display: flex;
           align-items: center;
           gap: 4px;
-          font-size: 8.8px;
+          font-size: 9px;
           font-weight: 800;
           text-transform: uppercase;
           color: #64748b;
@@ -686,19 +690,16 @@ export function generateStorePresentationPDF({
         }
         @media screen and (max-width: 768px) {
           .contact-label-row {
-            font-size: 7.6px;
+            font-size: 7.8px;
           }
         }
-        .contact-val {
-          font-size: 11.5px;
+        .contact-val-link {
+          font-size: 12.2px;
           font-weight: 800;
-          color: #0f172a;
+          color: #1d4ed8 !important;
           word-break: break-all;
-        }
-        @media screen and (max-width: 768px) {
-          .contact-val {
-            font-size: 9.8px;
-          }
+          text-decoration: underline;
+          text-underline-offset: 2px;
         }
 
         /* Painel Horizontal do QR Code */
@@ -706,21 +707,21 @@ export function generateStorePresentationPDF({
           background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 50%, #f0fdf4 100%);
           border: 1.5px solid #a5b4fc;
           border-radius: 14px;
-          padding: 12px 16px;
+          padding: 14px 20px;
           display: flex;
           flex-direction: row;
           align-items: center;
           justify-content: space-between;
-          gap: 14px;
+          gap: 16px;
           box-shadow: 0 4px 14px rgba(79, 70, 229, 0.06);
           break-inside: avoid;
           page-break-inside: avoid;
         }
         @media screen and (max-width: 768px) {
           .hero-qr-section {
-            padding: 8px 10px;
-            gap: 8px;
-            border-radius: 11px;
+            padding: 9px 11px;
+            gap: 9px;
+            border-radius: 12px;
           }
         }
         .hero-qr-left {
@@ -729,7 +730,7 @@ export function generateStorePresentationPDF({
           flex-direction: column;
           align-items: flex-start;
           text-align: left;
-          gap: 5px;
+          gap: 6px;
         }
         @media screen and (max-width: 768px) {
           .hero-qr-left {
@@ -743,7 +744,7 @@ export function generateStorePresentationPDF({
           flex-wrap: wrap;
         }
         .hero-qr-title {
-          font-size: 13px;
+          font-size: 13.8px;
           font-weight: 900;
           color: #312e81;
           text-transform: uppercase;
@@ -751,13 +752,13 @@ export function generateStorePresentationPDF({
         }
         @media screen and (max-width: 768px) {
           .hero-qr-title {
-            font-size: 10.8px;
+            font-size: 11.2px;
           }
         }
         .hero-qr-badge {
           background: #4338ca;
           color: #ffffff;
-          font-size: 8.8px;
+          font-size: 9px;
           font-weight: 800;
           text-transform: uppercase;
           padding: 2px 7.5px;
@@ -766,29 +767,29 @@ export function generateStorePresentationPDF({
         }
         @media screen and (max-width: 768px) {
           .hero-qr-badge {
-            font-size: 7.2px;
+            font-size: 7.5px;
             padding: 1.5px 5.5px;
           }
         }
         .hero-qr-desc {
-          font-size: 11.5px;
+          font-size: 12px;
           color: #3730a3;
-          line-height: 1.35;
+          line-height: 1.36;
         }
         @media screen and (max-width: 768px) {
           .hero-qr-desc {
-            font-size: 9.8px;
+            font-size: 10.2px;
             line-height: 1.25;
           }
         }
 
-        /* Moldura Clicável do QR Code */
+        /* Moldura do QR Code (Aumentada e com Link Azul Integrado) */
         .hero-qr-card {
-          width: 148px;
+          width: 168px;
           background: #ffffff;
           border: 1.5px solid #a5b4fc;
-          border-radius: 13px;
-          padding: 6px;
+          border-radius: 14px;
+          padding: 7px;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -799,16 +800,16 @@ export function generateStorePresentationPDF({
         }
         @media screen and (max-width: 768px) {
           .hero-qr-card {
-            width: 116px;
+            width: 124px;
             border-radius: 10px;
-            padding: 4px;
+            padding: 4.5px;
           }
         }
         .hero-qr-image-wrapper {
           position: relative;
-          width: 136px;
-          height: 136px;
-          border-radius: 9px;
+          width: 154px;
+          height: 154px;
+          border-radius: 10px;
           overflow: hidden;
           background: #ffffff;
           display: flex;
@@ -817,8 +818,8 @@ export function generateStorePresentationPDF({
         }
         @media screen and (max-width: 768px) {
           .hero-qr-image-wrapper {
-            width: 106px;
-            height: 106px;
+            width: 114px;
+            height: 114px;
           }
         }
         .hero-qr-img {
@@ -829,8 +830,8 @@ export function generateStorePresentationPDF({
         }
         .hero-qr-watermark {
           position: absolute;
-          width: 28px;
-          height: 28px;
+          width: 30px;
+          height: 30px;
           background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%);
           border-radius: 7px;
           border: 2px solid #ffffff;
@@ -841,44 +842,47 @@ export function generateStorePresentationPDF({
         }
         @media screen and (max-width: 768px) {
           .hero-qr-watermark {
-            width: 22px;
-            height: 22px;
+            width: 23px;
+            height: 23px;
             border-radius: 5px;
           }
         }
         .hero-qr-watermark span {
           color: #ffffff;
-          font-size: 14px;
+          font-size: 15px;
           font-weight: 900;
           line-height: 1;
         }
         @media screen and (max-width: 768px) {
           .hero-qr-watermark span {
-            font-size: 11.5px;
+            font-size: 12px;
           }
         }
+        /* Botão / Link Azul do QR Code */
         .hero-qr-hint {
-          font-size: 8px;
+          font-size: 9px;
           font-weight: 800;
           text-transform: uppercase;
-          color: #4338ca;
+          color: #1d4ed8 !important;
+          text-decoration: underline;
+          text-underline-offset: 2px;
           text-align: center;
-          margin-top: 3px;
+          margin-top: 4px;
           letter-spacing: 0.25px;
         }
         @media screen and (max-width: 768px) {
           .hero-qr-hint {
-            font-size: 6.8px;
-            margin-top: 1.5px;
+            font-size: 7.5px;
+            margin-top: 2px;
           }
         }
 
-        /* Ligação Direta Clicável */
+        /* Ligação Direta */
         .hero-url-badge {
           background: #ffffff;
           border: 1.5px solid #a5b4fc;
-          border-radius: 9px;
-          padding: 5px 10px;
+          border-radius: 10px;
+          padding: 6px 12px;
           display: inline-flex;
           flex-direction: column;
           align-items: flex-start;
@@ -889,11 +893,11 @@ export function generateStorePresentationPDF({
         }
         @media screen and (max-width: 768px) {
           .hero-url-badge {
-            padding: 3px 6px;
+            padding: 3.5px 7px;
           }
         }
         .hero-url-label {
-          font-size: 8.5px;
+          font-size: 8.8px;
           font-weight: 800;
           text-transform: uppercase;
           color: #4f46e5;
@@ -903,35 +907,37 @@ export function generateStorePresentationPDF({
         }
         .hero-url-text {
           font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
-          font-size: 10.8px;
+          font-size: 11.5px;
           font-weight: 800;
-          color: #1e1b4b;
+          color: #1d4ed8 !important;
           word-break: break-all;
+          text-decoration: underline;
+          text-underline-offset: 2px;
         }
         @media screen and (max-width: 768px) {
           .hero-url-text {
-            font-size: 9px;
+            font-size: 9.5px;
           }
         }
 
         /* Fechamento e Rodapé */
         .footer-block {
-          margin-top: 2px;
+          margin-top: 3px;
           break-inside: avoid;
           page-break-inside: avoid;
         }
         .formal-note {
-          font-size: 9.5px;
+          font-size: 9.8px;
           color: #64748b;
           font-style: italic;
-          line-height: 1.32;
+          line-height: 1.34;
           text-align: center;
           margin-bottom: 4px;
           padding: 0 8px;
         }
         @media screen and (max-width: 768px) {
           .formal-note {
-            font-size: 8px;
+            font-size: 8.4px;
             margin-bottom: 2px;
           }
         }
@@ -941,17 +947,17 @@ export function generateStorePresentationPDF({
           display: flex;
           justify-content: space-between;
           align-items: center;
-          font-size: 9px;
+          font-size: 9.5px;
           color: #94a3b8;
         }
         @media screen and (max-width: 768px) {
           .footer {
-            font-size: 7.6px;
+            font-size: 8px;
             padding-top: 2.5px;
           }
         }
 
-        /* CALIBRAÇÃO EXATA PARA 1 PÁGINA A4 COM PREENCHIMENTO DE ~95% */
+        /* CALIBRAÇÃO EXATA: 90% NO DESKTOP E 85% NO CELULAR (SEM SEGUNDA PÁGINA) */
         @media print {
           html, body {
             background: #ffffff !important;
@@ -961,7 +967,9 @@ export function generateStorePresentationPDF({
             margin: 0 !important;
             padding: 0 !important;
             overflow: hidden !important;
-            display: block !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
           }
           .preview-topbar {
             display: none !important;
@@ -971,16 +979,16 @@ export function generateStorePresentationPDF({
             border: 1.2px solid #cbd5e1 !important;
             border-radius: 8px !important;
             box-shadow: none !important;
-            margin: 0 !important;
-            width: 210mm !important;
-            max-width: 210mm !important;
-            height: 297mm !important;
-            min-height: 297mm !important;
-            max-height: 297mm !important;
-            padding: 12mm 14mm 10mm 14mm !important;
+            margin: auto !important;
+            width: 202mm !important;
+            max-width: 202mm !important;
+            height: auto !important;
+            max-height: ${isMobile ? '252mm' : '268mm'} !important;
+            padding: ${isMobile ? '8mm 11mm 7mm 11mm' : '10mm 13mm 8mm 13mm'} !important;
             display: flex !important;
             flex-direction: column !important;
             justify-content: space-between !important;
+            gap: ${isMobile ? '7px' : '9px'} !important;
             page-break-inside: avoid !important;
             page-break-after: avoid !important;
             break-inside: avoid !important;
@@ -989,140 +997,140 @@ export function generateStorePresentationPDF({
             display: flex !important;
             flex-direction: column !important;
             justify-content: space-between !important;
-            flex: 1 !important;
-            gap: 10px !important;
+            gap: ${isMobile ? '7px' : '9px'} !important;
           }
           .header {
-            padding: 12px 16px !important;
-            border-radius: 12px !important;
+            padding: ${isMobile ? '8px 12px' : '10px 15px'} !important;
+            border-radius: 11px !important;
           }
           .brand-logo, .brand-placeholder {
-            width: 90px !important;
-            height: 90px !important;
-            font-size: 38px !important;
+            width: ${isMobile ? '72px' : '88px'} !important;
+            height: ${isMobile ? '72px' : '88px'} !important;
+            font-size: ${isMobile ? '32px' : '38px'} !important;
             border-radius: 12px !important;
           }
           .brand-title {
-            font-size: 23px !important;
+            font-size: ${isMobile ? '19.5px' : '22.5px'} !important;
           }
           .brand-badge {
-            font-size: 9.5px !important;
-            padding: 3px 9px !important;
+            font-size: ${isMobile ? '8.2px' : '9px'} !important;
+            padding: 2px 7px !important;
           }
           .meta-box {
-            font-size: 11px !important;
-            line-height: 1.5 !important;
+            font-size: ${isMobile ? '9.5px' : '10.8px'} !important;
+            line-height: 1.4 !important;
           }
           .currency-tag {
-            font-size: 10.5px !important;
-            padding: 1.5px 6.5px !important;
+            font-size: ${isMobile ? '9.2px' : '10px'} !important;
+            padding: 1px 5.5px !important;
           }
           .title-banner {
-            padding: 8px 14px !important;
+            padding: ${isMobile ? '5.5px 10px' : '7px 12px'} !important;
             border-left-width: 4px !important;
           }
           .title-banner h1 {
-            font-size: 15.5px !important;
+            font-size: ${isMobile ? '13.2px' : '14.8px'} !important;
           }
           .title-banner p {
-            font-size: 11.5px !important;
+            font-size: ${isMobile ? '10px' : '11px'} !important;
           }
           .section-heading {
-            font-size: 11.5px !important;
-            margin-bottom: 4px !important;
+            font-size: ${isMobile ? '10px' : '11px'} !important;
+            margin-bottom: 3px !important;
           }
           .about-text {
-            font-size: 12.5px !important;
-            padding: 10px 14px !important;
-            line-height: 1.45 !important;
+            font-size: ${isMobile ? '11px' : '12.2px'} !important;
+            padding: ${isMobile ? '7px 11px' : '9px 13px'} !important;
+            line-height: 1.4 !important;
             border-radius: 10px !important;
           }
           .pillars-grid {
-            gap: 8px !important;
+            gap: ${isMobile ? '5.5px' : '7px'} !important;
           }
           .pillar-card {
-            padding: 9px 12px !important;
-            border-radius: 9px !important;
+            padding: ${isMobile ? '6.5px 9px' : '8px 11px'} !important;
+            border-radius: 8px !important;
           }
           .pillar-head {
-            font-size: 11px !important;
+            font-size: ${isMobile ? '10px' : '11px'} !important;
           }
           .pillar-icon-box {
-            width: 19px !important;
-            height: 19px !important;
+            width: ${isMobile ? '16px' : '18px'} !important;
+            height: ${isMobile ? '16px' : '18px'} !important;
           }
           .pillar-desc {
-            font-size: 11px !important;
-            padding-left: 24px !important;
-            line-height: 1.32 !important;
+            font-size: ${isMobile ? '10px' : '11px'} !important;
+            padding-left: ${isMobile ? '20px' : '23px'} !important;
+            line-height: 1.28 !important;
           }
           .contacts-grid {
-            gap: 8px !important;
+            gap: ${isMobile ? '5.5px' : '7px'} !important;
           }
           .contact-box {
-            padding: 9px 12px !important;
-            border-radius: 9px !important;
-            text-decoration: none !important;
-            color: #0f172a !important;
+            padding: ${isMobile ? '6.5px 9px' : '8px 11px'} !important;
+            border-radius: 8px !important;
           }
           .contact-label-row {
-            font-size: 8.8px !important;
+            font-size: ${isMobile ? '7.6px' : '8.5px'} !important;
           }
-          .contact-val {
-            font-size: 11.8px !important;
+          .contact-val-link {
+            font-size: ${isMobile ? '10.5px' : '11.5px'} !important;
+            color: #1d4ed8 !important;
           }
           .hero-qr-section {
-            padding: 12px 16px !important;
-            border-radius: 13px !important;
+            padding: ${isMobile ? '9px 13px' : '11px 16px'} !important;
+            border-radius: 12px !important;
           }
           .hero-qr-title {
-            font-size: 13.5px !important;
+            font-size: ${isMobile ? '12px' : '13.2px'} !important;
           }
           .hero-qr-desc {
-            font-size: 11.8px !important;
-            line-height: 1.35 !important;
+            font-size: ${isMobile ? '10.5px' : '11.5px'} !important;
+            line-height: 1.3 !important;
           }
           .hero-qr-card {
-            width: 148px !important;
-            padding: 6px !important;
-            border-radius: 12px !important;
-            text-decoration: none !important;
+            width: ${isMobile ? '128px' : '146px'} !important;
+            padding: 5px !important;
+            border-radius: 11px !important;
           }
           .hero-qr-image-wrapper {
-            width: 134px !important;
-            height: 134px !important;
+            width: ${isMobile ? '116px' : '134px'} !important;
+            height: ${isMobile ? '116px' : '134px'} !important;
           }
           .hero-qr-watermark {
-            width: 27px !important;
-            height: 27px !important;
+            width: ${isMobile ? '22px' : '26px'} !important;
+            height: ${isMobile ? '22px' : '26px'} !important;
           }
           .hero-qr-watermark span {
-            font-size: 14px !important;
+            font-size: ${isMobile ? '12px' : '14px'} !important;
+          }
+          .hero-qr-hint {
+            font-size: ${isMobile ? '7.8px' : '8.8px'} !important;
+            color: #1d4ed8 !important;
           }
           .hero-url-badge {
-            padding: 4.5px 10px !important;
-            border-width: 1.2px !important;
-            text-decoration: none !important;
+            padding: ${isMobile ? '3.5px 7px' : '4.5px 9px'} !important;
+            border-width: 1px !important;
           }
           .hero-url-text {
-            font-size: 10.5px !important;
+            font-size: ${isMobile ? '9.5px' : '10.5px'} !important;
+            color: #1d4ed8 !important;
           }
           .footer-block {
-            margin-top: 5px !important;
+            margin-top: 4px !important;
             padding-top: 0 !important;
           }
           .formal-note {
-            font-size: 9.5px !important;
-            margin-bottom: 3px !important;
-            line-height: 1.3 !important;
+            font-size: ${isMobile ? '8.5px' : '9.2px'} !important;
+            margin-bottom: 2.5px !important;
+            line-height: 1.26 !important;
           }
           .footer {
-            font-size: 9px !important;
-            padding-top: 3px !important;
+            font-size: ${isMobile ? '8px' : '8.8px'} !important;
+            padding-top: 2.5px !important;
           }
           a {
-            color: inherit !important;
-            text-decoration: none !important;
+            text-decoration: underline !important;
           }
         }
       </style>
@@ -1222,37 +1230,37 @@ export function generateStorePresentationPDF({
             </div>
           </section>
 
-          <!-- Contactos com Links Canônicos para PDF -->
+          <!-- Contactos com Links Canônicos para Chamada & Navegação no PDF -->
           <section class="section-block">
             <h2 class="section-heading">${t.contactsTitle}</h2>
             <div class="contacts-grid">
-              <a href="${whatsappLink}" target="_blank" rel="noopener noreferrer" class="contact-box" title="${phone || 'WhatsApp'}">
+              <a href="${callLink}" class="contact-box" title="Efetuar chamada para ${phone}">
                 <div class="contact-label-row">
                   <span class="icon-green">${SVG_ICONS.phone}</span>
                   <span>${t.whatsapp}</span>
                 </div>
-                <div class="contact-val">${phone || t.unavailable}</div>
+                <div class="contact-val-link">${phone || t.unavailable}</div>
               </a>
 
-              <a href="${emailLink}" target="_blank" rel="noopener noreferrer" class="contact-box" title="${email || 'Email'}">
+              <a href="${emailLink}" class="contact-box" title="Enviar e-mail para ${email}">
                 <div class="contact-label-row">
                   <span class="icon-blue">${SVG_ICONS.mail}</span>
                   <span>${t.email}</span>
                 </div>
-                <div class="contact-val">${email || t.unavailable}</div>
+                <div class="contact-val-link">${email || t.unavailable}</div>
               </a>
 
-              <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="contact-box" title="${storeUrl}">
+              <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="contact-box" title="Aceder ao endereço ${storeUrl}">
                 <div class="contact-label-row">
                   <span class="icon-purple">${SVG_ICONS.globe}</span>
                   <span>${t.website}</span>
                 </div>
-                <div class="contact-val">${storeUrl.replace(/^https?:\/\//, '')}</div>
+                <div class="contact-val-link">${storeUrl}</div>
               </a>
             </div>
           </section>
 
-          <!-- Bloco do QR Code Horizontal com Links Diretos -->
+          <!-- Bloco do QR Code Horizontal com URL Oficial Clicável -->
           <section class="hero-qr-section">
             <div class="hero-qr-left">
               <div class="hero-qr-header">
@@ -1263,15 +1271,13 @@ export function generateStorePresentationPDF({
               <p class="hero-qr-desc">${t.accessSubtitle}</p>
 
               <a href="${productsUrl}" target="_blank" rel="noopener noreferrer" class="hero-url-badge" title="${productsUrl}">
-                <span class="hero-url-label">
-                  ${t.directUrlLabel}
-                  ${SVG_ICONS.externalLink}
-                </span>
+                <span class="hero-url-label">${t.directUrlLabel}</span>
                 <span class="hero-url-text">${productsUrl}</span>
               </a>
             </div>
 
-            <a href="${productsUrl}" target="_blank" rel="noopener noreferrer" class="hero-qr-card" title="${productsUrl}">
+            <!-- Card do QR Code com Botão/Link Azul Integrado -->
+            <a href="${productsUrl}" target="_blank" rel="noopener noreferrer" class="hero-qr-card" title="Aceder ao catálogo oficial">
               <div class="hero-qr-image-wrapper">
                 <img src="${qrCodeApiUrl}" alt="QR Code - ${storeName}" class="hero-qr-img" crossorigin="anonymous" />
                 <div class="hero-qr-watermark">
@@ -1312,7 +1318,7 @@ export function generateStorePresentationPDF({
               try {
                 window.print();
               } catch(e) {
-                console.warn('Erro ao disparar impressão automática:', e);
+                console.warn('Impressão automática:', e);
               }
             }, 300);
           });

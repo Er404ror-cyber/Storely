@@ -24,7 +24,7 @@ export default function VersionChecker() {
   const [isUpdating, setIsUpdating] = useState(false);
   const isUpdatingRef = useRef(false);
 
-  // Navega para a raiz de forma limpa e compatível
+  // Redireciona para a raiz '/' de forma segura
   const navigateToRoot = () => {
     if (window.location.pathname !== '/') {
       window.history.replaceState({}, '', '/');
@@ -32,10 +32,10 @@ export default function VersionChecker() {
     }
   };
 
-  // Executado SEMPRE e APENAS pelo bundle da versão recente
+  // Rotina de limpeza executada EXCLUSIVAMENTE pela versão recente
   const performDeepBrowserCleanup = async (newVersionNumber: number) => {
     try {
-      // 1. Preserva dados essenciais
+      // 1. Preserva tokens e configurações críticas
       const preservedData: Record<string, string> = {};
       KEYS_TO_PRESERVE.forEach((key) => {
         const val = localStorage.getItem(key);
@@ -93,7 +93,7 @@ export default function VersionChecker() {
         }
       }
 
-      // 6. Desregistra Service Workers
+      // 6. Desregistra Service Workers antigos
       if ('serviceWorker' in navigator) {
         try {
           const registrations = await navigator.serviceWorker.getRegistrations();
@@ -103,7 +103,7 @@ export default function VersionChecker() {
         }
       }
 
-      // 7. Restaura as chaves salvas e grava os metadados da nova versão
+      // 7. Restaura chaves preservadas e salva a nova versão instalada
       Object.entries(preservedData).forEach(([key, val]) => {
         localStorage.setItem(key, val);
       });
@@ -129,14 +129,14 @@ export default function VersionChecker() {
       const localVersionStr = localStorage.getItem(INSTALLED_VERSION_KEY);
 
       if (isInitialLoad) {
-        // DETETA QUE ACABOU DE SUBIR NA VERSÃO NOVA COM AS NOVAS INSTRUÇÕES
+        // DETETA QUE ACABOU DE CARREGAR A NOVA VERSÃO
         if (localVersionStr && localVersionStr !== serverVersionStr) {
           isUpdatingRef.current = true;
           
-          // Executa todo o processo novo de limpeza
+          // Executa a limpeza com o código e regras da nova versão
           await performDeepBrowserCleanup(serverData.version);
           
-          // Conduz o utilizador até à rota inicial '/'
+          // Redireciona para a raiz '/' na nova versão
           navigateToRoot();
           setShowWelcomeModal(true);
         } else if (!localVersionStr) {
@@ -149,7 +149,7 @@ export default function VersionChecker() {
 
         setCurrentVersionData(serverData);
       } else {
-        // NA VERSÃO ANTIGA: Apenas avisa sobre o update
+        // NA VERSÃO ANTIGA: Mostra o aviso e aguarda o utilizador agir
         const currentVersionNumber = currentVersionData?.version || (localVersionStr ? Number(localVersionStr) : null);
         
         if (currentVersionNumber && serverData.version !== currentVersionNumber) {
@@ -219,11 +219,12 @@ export default function VersionChecker() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showWelcomeModal]);
 
-  // Recarrega ignorando cache para buscar os novos ficheiros imediatamente
+  // Na versão antiga: apenas recarrega para buscar os novos arquivos HTML/JS
   const handleUpdateClick = () => {
     if (!isUpdatingRef.current) {
       isUpdatingRef.current = true;
       setIsUpdating(true);
+      
       const url = new URL(window.location.href);
       url.searchParams.set('v_sync', Date.now().toString());
       window.location.replace(url.toString());
@@ -251,7 +252,7 @@ export default function VersionChecker() {
       }).format(new Date(newVersionData.version))
     : '';
 
-  // 1. Modal de Boas-Vindas
+  // 1. Modal de Boas-Vindas (Renderizado após limpeza e redirecionamento para '/')
   if (showWelcomeModal) {
     return (
       <div 
@@ -322,7 +323,7 @@ export default function VersionChecker() {
     );
   }
 
-  // 2. Modal de Nova Versão Detectada
+  // 2. Modal Bloqueante de Nova Versão (Apenas exibe o alerta na versão antiga)
   if (!isOutdated) return null;
 
   return (
@@ -379,7 +380,7 @@ export default function VersionChecker() {
         >
           <span>
             {isUpdating 
-              ? (t('version_updating_loading', { defaultValue: 'A carregar...' }))
+              ? (t('version_updating_loading', { defaultValue: 'A carregar nova versão...' }))
               : (t('version_update_button', { defaultValue: 'Atualizar Agora' }))}
           </span>
           {isUpdating ? (
