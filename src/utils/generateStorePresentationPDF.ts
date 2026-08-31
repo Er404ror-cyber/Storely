@@ -41,7 +41,7 @@ const DICTIONARY = {
     accessSubtitle: 'Aponte a câmara do telemóvel ao Código QR ao lado para aceder ao catálogo oficial:',
     officialBadge: 'Canal Oficial Verificado',
     directUrlLabel: 'Endereço Web Oficial:',
-    qrScanHint: 'Aceder ao Catálogo Oficial',
+    qrScanHint: 'ACEDER AO CATÁLOGO ➔',
     contactsTitle: 'Canais Oficiais de Contacto',
     whatsapp: 'Telefone / WhatsApp',
     email: 'E-mail Institucional',
@@ -75,7 +75,7 @@ const DICTIONARY = {
     accessSubtitle: 'Point your mobile camera at the QR Code to open the official catalog:',
     officialBadge: 'Verified Official Channel',
     directUrlLabel: 'Official Web Address:',
-    qrScanHint: 'Open Official Catalog',
+    qrScanHint: 'OPEN CATALOG ➔',
     contactsTitle: 'Official Contact Channels',
     whatsapp: 'Phone / WhatsApp',
     email: 'Official Email',
@@ -90,12 +90,12 @@ const DICTIONARY = {
 
 const COMMERCIAL_INTROS = {
   pt: [
-    'É com grande satisfação que apresentamos a nossa estrutura comercial e o portfólio oficial de artigos. Estruturamos os nossos canais digitais para proporcionar uma consulta transparente, dinâmica e segura a cada cliente e parceiro institucional.',
-    'Apresentamos formalmente o perfil institucional e o inventário de artigos da nossa empresa. Aliamos a conveniência dos meios digitais ao compromisso rigoroso com a integridade das peças fornecidas e pontualidade no atendimento.',
+    'É com grande satisfação que apresentamos a nossa estrutura comercial e o portfólio oficial de artigos. Estruturamos os nossos canais digitais para proporcionar uma consulta transparente, dinâmica e segura.',
+    'Apresentamos formalmente o perfil institucional e o inventário de artigos da nossa empresa. Aliamos a conveniência dos meios digitais ao compromisso rigoroso com a integridade das peças fornecidas.',
     'Com foco em modernidade, rigor e transparência comercial, disponibilizamos este dossiê com os nossos canais oficiais de contacto e ligação direta à nossa montra de novidades e encomendas.'
   ],
   en: [
-    'We are pleased to formally present our business profile and product catalog. Our digital channels are structured to provide clients and institutional partners with a transparent, swift, and reliable procurement experience.',
+    'We are pleased to formally present our business profile and product catalog. Our digital channels are structured to provide clients and partners with a transparent, swift, and reliable experience.',
     'We present our corporate overview and official inventory. We combine modern digital accessibility with strict quality inspection standards and prompt, dedicated customer support.',
     'Focused on commercial reliability and service excellence, this dossier provides direct access to our verified contact channels and live inventory for immediate inquiries.'
   ]
@@ -103,13 +103,13 @@ const COMMERCIAL_INTROS = {
 
 const COMMERCIAL_CLOSINGS = {
   pt: [
-    'Este documento constitui uma apresentação formal dos canais de distribuição verificados da marca. Todas as encomendas efetuadas através dos endereços listados contam com o nosso suporte operacional.',
-    'Documento emitido para efeitos de verificação comercial e acesso ao inventário. Para encomendas corporativas ou esclarecimentos adicionais, contacte diretamente a nossa equipa através dos canais acima.',
+    'Este documento constitui uma apresentação formal dos canais de distribuição verificados da marca. Todas as encomendas contam com o nosso suporte operacional.',
+    'Documento emitido para efeitos de verificação comercial e acesso ao inventário. Para esclarecimentos adicionais, contacte diretamente a nossa equipa.',
     'Agradecemos a preferência e reiteramos o nosso compromisso em oferecer uma experiência de compra pautada pela confiança, clareza e atendimento de excelência.'
   ],
   en: [
-    'This dossier serves as a formal verification of the brand\'s official distribution channels. All orders placed through the links above are fully backed by our customer care.',
-    'Document issued for commercial verification and direct catalog access. For wholesale requests or personalized support, please reach out via our direct contact channels.',
+    'This dossier serves as a formal verification of the brand\'s official channels. All orders placed through the links above are backed by our customer care.',
+    'Document issued for commercial verification and direct catalog access. For personalized support, please reach out via our direct contact channels.',
     'We appreciate your interest and reaffirm our commitment to delivering verified quality, transparent pricing, and seamless customer service.'
   ]
 };
@@ -122,7 +122,7 @@ const SVG_ICONS = {
   phone: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
   mail: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
   checkBadge: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`,
-  qrScanIcon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="2"/></svg>`,
+  qrScanIcon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="2"/></svg>`,
   arrowLeft: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`,
   printer: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>`
 };
@@ -137,7 +137,6 @@ export function generateStorePresentationPDF({
 
   const introList = COMMERCIAL_INTROS[langKey];
   const introSelected = introList[Math.floor(Math.random() * introList.length)];
-
   const closingList = COMMERCIAL_CLOSINGS[langKey];
   const closingSelected = closingList[Math.floor(Math.random() * closingList.length)];
 
@@ -147,15 +146,13 @@ export function generateStorePresentationPDF({
   const storeUrl = rawBase.startsWith('http') ? `${rawBase}/${storeSlug}` : `https://${rawBase || 'storelyy.vercel.app'}/${storeSlug}`;
   const productsUrl = `${storeUrl}/products`;
 
-  const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=450x450&data=${encodeURIComponent(productsUrl)}&color=0f172a&bgcolor=ffffff&margin=0`;
+  // QR Code escuro para melhor contraste na impressão (Cor: #1e1b4b)
+  const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(productsUrl)}&color=1e1b4b&bgcolor=ffffff&margin=0`;
   const fileName = langKey === 'pt' ? `Apresentacao - ${storeName}` : `Profile - ${storeName}`;
 
   const issueDate = new Date().toLocaleDateString(langKey === 'pt' ? 'pt-PT' : 'en-US', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
+    day: '2-digit', month: 'short', year: 'numeric'
   });
-
   const activeSince = store.created_at
     ? new Date(store.created_at).toLocaleDateString(langKey === 'pt' ? 'pt-PT' : 'en-US', { month: 'short', year: 'numeric' })
     : null;
@@ -182,32 +179,35 @@ export function generateStorePresentationPDF({
       <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
       <title>${fileName}</title>
       <style>
+        /* === REGRA DE OURO PARA REMOVER CABEÇALHO/RODAPÉ DO NAVEGADOR === */
         @page {
           size: A4 portrait;
-          margin: 0mm !important;
+          margin: 0 !important; /* Isto oculta a URL, Horas, etc. gerados pelo navegador */
         }
+        
         * {
           box-sizing: border-box;
           margin: 0;
           padding: 0;
           -webkit-font-smoothing: antialiased;
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
         }
+
         html, body {
           width: 100%;
           min-height: 100%;
           background: #0b1120;
-        }
-        body {
           color: #0f172a;
-          line-height: 1.48;
+          line-height: 1.45;
           font-size: 14.5px;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+
+        body {
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: flex-start;
           padding: 0 0 35px 0;
         }
 
@@ -227,67 +227,28 @@ export function generateStorePresentationPDF({
           padding: 12px 24px;
           margin-bottom: 18px;
         }
-        .topbar-left {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
+        .topbar-left { display: flex; align-items: center; gap: 12px; }
         .btn-back {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: rgba(255, 255, 255, 0.14);
-          color: #ffffff;
-          border: 1px solid rgba(255, 255, 255, 0.28);
-          padding: 7.5px 16px;
-          border-radius: 9999px;
-          font-size: 13.5px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          text-decoration: none;
-          touch-action: manipulation;
-        }
-        .btn-back:hover, .btn-back:active {
-          background: rgba(255, 255, 255, 0.28);
+          display: inline-flex; align-items: center; gap: 6px;
+          background: rgba(255, 255, 255, 0.14); color: #ffffff;
+          border: 1px solid rgba(255, 255, 255, 0.28); padding: 7.5px 16px;
+          border-radius: 9999px; font-size: 13.5px; font-weight: 700;
+          cursor: pointer; transition: all 0.2s ease;
         }
         .preview-badge {
-          font-size: 13px;
-          color: #94a3b8;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: 6px;
+          font-size: 13px; color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 6px;
         }
         .preview-badge::before {
-          content: "";
-          display: inline-block;
-          width: 7.5px;
-          height: 7.5px;
-          border-radius: 50%;
-          background: #10b981;
+          content: ""; display: inline-block; width: 7.5px; height: 7.5px; border-radius: 50%; background: #10b981;
         }
         .btn-print {
-          display: inline-flex;
-          align-items: center;
-          gap: 7px;
-          background: #4f46e5;
-          color: #ffffff;
-          border: none;
-          padding: 8.5px 20px;
-          border-radius: 9999px;
-          font-size: 14px;
-          font-weight: 800;
-          cursor: pointer;
+          display: inline-flex; align-items: center; gap: 7px;
+          background: #4f46e5; color: #ffffff; border: none; padding: 8.5px 20px;
+          border-radius: 9999px; font-size: 14px; font-weight: 800; cursor: pointer;
           box-shadow: 0 4px 16px rgba(79, 70, 229, 0.45);
-          transition: all 0.2s ease;
-          touch-action: manipulation;
-        }
-        .btn-print:hover, .btn-print:active {
-          background: #4338ca;
         }
 
-        /* Container Centralizado da Folha no Preview Desktop */
+        /* Container Centralizado - Visualização Digital */
         .page-container {
           position: relative;
           width: 95%;
@@ -295,868 +256,239 @@ export function generateStorePresentationPDF({
           margin: 0 auto;
           background: #ffffff;
           border-radius: 18px;
-          padding: 26px 34px 22px 34px;
-          border: 1px solid #e2e8f0;
+          padding: 28px 36px 24px 36px;
           box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
-          overflow: hidden;
           display: flex;
           flex-direction: column;
-          gap: 13px;
-        }
-
-        /* Mobile Preview: Ampliado e Confortável */
-        @media screen and (max-width: 768px) {
-          body {
-            font-size: 13.8px;
-            padding: 0;
-            background: #ffffff;
-          }
-          .preview-topbar {
-            padding: 10px 14px;
-            margin-bottom: 0;
-          }
-          .preview-badge {
-            display: none;
-          }
-          .btn-back {
-            padding: 7px 13px;
-            font-size: 12.5px;
-          }
-          .btn-print {
-            padding: 8px 16px;
-            font-size: 13px;
-          }
-          .page-container {
-            width: 100% !important;
-            max-width: 100% !important;
-            border-radius: 0 !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 14px 14px 22px 14px !important;
-            gap: 10px !important;
-          }
+          gap: 15px;
         }
 
         .content-main {
           display: flex;
           flex-direction: column;
-          gap: 12px;
-        }
-        @media screen and (max-width: 768px) {
-          .content-main {
-            gap: 9px;
-          }
+          gap: 14px;
+          flex: 1;
         }
 
         /* Topo */
         .header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 14px 18px;
-          background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.95) 50%, rgba(238, 242, 255, 0.95) 100%);
-          border: 1px solid #e2e8f0;
-          border-radius: 14px;
+          display: flex; justify-content: space-between; align-items: center;
+          padding: 16px 20px;
+          background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.95) 100%);
+          border: 1px solid #e2e8f0; border-radius: 14px;
         }
-        @media screen and (max-width: 768px) {
-          .header {
-            padding: 11px 13px;
-            border-radius: 12px;
-          }
-        }
-        .brand-box {
-          display: flex;
-          align-items: center;
-          gap: 15px;
-          text-decoration: none;
-          color: inherit;
-        }
-        @media screen and (max-width: 768px) {
-          .brand-box {
-            gap: 12px;
-          }
-        }
+        .brand-box { display: flex; align-items: center; gap: 15px; text-decoration: none; color: inherit; }
         .brand-logo {
-          width: 98px;
-          height: 98px;
-          border-radius: 16px;
-          object-fit: cover;
-          border: 2px solid #ffffff;
-          background: #ffffff;
-          box-shadow: 0 4px 16px rgba(79, 70, 229, 0.14);
-          flex-shrink: 0;
+          width: 90px; height: 90px; border-radius: 14px; object-fit: cover;
+          border: 2px solid #ffffff; background: #ffffff; box-shadow: 0 4px 16px rgba(79, 70, 229, 0.14); flex-shrink: 0;
         }
         .brand-placeholder {
-          width: 98px;
-          height: 98px;
-          border-radius: 16px;
-          background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
-          color: #ffffff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 42px;
-          font-weight: 900;
-          box-shadow: 0 4px 16px rgba(79, 70, 229, 0.18);
-          flex-shrink: 0;
+          width: 90px; height: 90px; border-radius: 14px; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+          color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 900;
+          box-shadow: 0 4px 16px rgba(79, 70, 229, 0.18); flex-shrink: 0;
         }
-        @media screen and (max-width: 768px) {
-          .brand-logo, .brand-placeholder {
-            width: 78px;
-            height: 78px;
-            font-size: 34px;
-            border-radius: 13px;
-          }
-        }
-        .brand-title {
-          font-size: 24px;
-          font-weight: 900;
-          color: #0f172a;
-          letter-spacing: -0.3px;
-          line-height: 1.15;
-        }
-        @media screen and (max-width: 768px) {
-          .brand-title {
-            font-size: 19px;
-          }
-        }
+        .brand-title { font-size: 24px; font-weight: 900; color: #0f172a; letter-spacing: -0.3px; line-height: 1.1; }
         .brand-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          font-size: 10px;
-          font-weight: 800;
-          text-transform: uppercase;
-          color: #4338ca;
-          background: rgba(224, 231, 255, 0.95);
-          padding: 3px 9px;
-          border-radius: 9999px;
-          letter-spacing: 0.35px;
-          margin-top: 3px;
-          border: 1px solid #c7d2fe;
+          display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase;
+          color: #4338ca; background: #e0e7ff; padding: 4px 10px; border-radius: 9999px; margin-top: 5px; border: 1px solid #c7d2fe;
         }
-        @media screen and (max-width: 768px) {
-          .brand-badge {
-            font-size: 8.5px;
-            padding: 2px 7px;
-          }
-        }
-        .meta-box {
-          text-align: right;
-          font-size: 11.8px;
-          color: #64748b;
-          line-height: 1.5;
-        }
-        @media screen and (max-width: 768px) {
-          .meta-box {
-            font-size: 10px;
-            line-height: 1.4;
-          }
-        }
-        .meta-box strong {
-          color: #0f172a;
-        }
-        .currency-tag {
-          color: #047857;
-          background: #d1fae5;
-          padding: 1.5px 7px;
-          border-radius: 4px;
-          font-weight: 800;
-          display: inline-block;
-          border: 1px solid #a7f3d0;
-        }
+        .meta-box { text-align: right; font-size: 12px; color: #64748b; line-height: 1.5; }
+        .meta-box strong { color: #0f172a; }
+        .currency-tag { color: #047857; background: #d1fae5; padding: 2px 8px; border-radius: 4px; font-weight: 800; border: 1px solid #a7f3d0; }
 
         /* Banner de Título */
         .title-banner {
-          background: linear-gradient(to right, #f8fafc, #ffffff);
-          border-left: 4.5px solid #4f46e5;
-          padding: 9px 15px;
-          border-radius: 0 10px 10px 0;
-          border-top: 1px solid #f1f5f9;
-          border-bottom: 1px solid #f1f5f9;
-          border-right: 1px solid #f1f5f9;
+          background: #f8fafc; border-left: 5px solid #4f46e5; padding: 10px 16px;
+          border-radius: 0 10px 10px 0; border: 1px solid #f1f5f9; border-left-width: 5px;
         }
-        @media screen and (max-width: 768px) {
-          .title-banner {
-            padding: 7px 11px;
-            border-left-width: 3.5px;
-          }
-        }
-        .title-banner h1 {
-          font-size: 15.5px;
-          font-weight: 900;
-          color: #0f172a;
-          letter-spacing: -0.2px;
-        }
-        @media screen and (max-width: 768px) {
-          .title-banner h1 {
-            font-size: 13.8px;
-          }
-        }
-        .title-banner p {
-          font-size: 11.8px;
-          color: #64748b;
-          margin-top: 1.5px;
-        }
-        @media screen and (max-width: 768px) {
-          .title-banner p {
-            font-size: 10.5px;
-          }
-        }
+        .title-banner h1 { font-size: 16px; font-weight: 900; color: #0f172a; }
+        .title-banner p { font-size: 12px; color: #64748b; margin-top: 2px; }
 
         /* Seções */
-        .section-block {
-          break-inside: avoid;
-          page-break-inside: avoid;
-        }
+        .section-block { break-inside: avoid; page-break-inside: avoid; }
         .section-heading {
-          font-size: 11.5px;
-          font-weight: 900;
-          text-transform: uppercase;
-          color: #334155;
-          letter-spacing: 0.5px;
-          margin-bottom: 4.5px;
-          display: flex;
-          align-items: center;
-          gap: 5px;
+          font-size: 12px; font-weight: 900; text-transform: uppercase; color: #334155;
+          letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
         }
-        @media screen and (max-width: 768px) {
-          .section-heading {
-            font-size: 10.5px;
-            margin-bottom: 3.5px;
-          }
-        }
-        .section-heading::after {
-          content: "";
-          flex: 1;
-          height: 1px;
-          background: linear-gradient(to right, #e2e8f0, rgba(226, 232, 240, 0));
-        }
+        .section-heading::after { content: ""; flex: 1; height: 1px; background: linear-gradient(to right, #e2e8f0, transparent); }
+        
         .about-text {
-          background: #ffffff;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          padding: 11px 16px;
-          color: #334155;
-          line-height: 1.48;
-          font-size: 13px;
+          background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px;
+          padding: 12px 18px; color: #334155; line-height: 1.5; font-size: 13.5px;
         }
-        @media screen and (max-width: 768px) {
-          .about-text {
-            padding: 8px 12px;
-            font-size: 11.8px;
-            line-height: 1.4;
-          }
-        }
-        .about-text p {
-          margin-bottom: 2.5px;
-        }
-        .about-text p:last-child {
-          margin-bottom: 0;
-        }
+        .about-text p { margin-bottom: 4px; }
+        .about-text p:last-child { margin-bottom: 0; }
 
         /* 4 Pilares */
-        .pillars-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 8.5px;
-        }
-        @media screen and (max-width: 768px) {
-          .pillars-grid {
-            gap: 6px;
-          }
-        }
-        .pillar-card {
-          border-radius: 11px;
-          padding: 9px 12px;
-          border: 1px solid transparent;
-        }
-        @media screen and (max-width: 768px) {
-          .pillar-card {
-            padding: 7px 10px;
-          }
-        }
-        .pillar-blue {
-          background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-          border-color: #bae6fd;
-        }
-        .pillar-green {
-          background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-          border-color: #bbf7d0;
-        }
-        .pillar-purple {
-          background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
-          border-color: #e9d5ff;
-        }
-        .pillar-amber {
-          background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-          border-color: #fde68a;
-        }
-
-        .pillar-head {
-          font-size: 11.5px;
-          font-weight: 900;
-          color: #0f172a;
-          text-transform: uppercase;
-          margin-bottom: 1.5px;
-          display: flex;
-          align-items: center;
-          gap: 5px;
-        }
-        @media screen and (max-width: 768px) {
-          .pillar-head {
-            font-size: 10.5px;
-          }
-        }
-        .pillar-icon-box {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 19px;
-          height: 19px;
-          border-radius: 5px;
-          background: #ffffff;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-          flex-shrink: 0;
-        }
-        @media screen and (max-width: 768px) {
-          .pillar-icon-box {
-            width: 17px;
-            height: 17px;
-          }
-        }
-        .icon-blue { color: #0284c7; }
-        .icon-green { color: #16a34a; }
-        .icon-purple { color: #9333ea; }
-        .icon-amber { color: #d97706; }
-
-        .pillar-desc {
-          font-size: 11.5px;
-          color: #475569;
-          line-height: 1.34;
-          padding-left: 24px;
-        }
-        @media screen and (max-width: 768px) {
-          .pillar-desc {
-            font-size: 10.5px;
-            padding-left: 21px;
-            line-height: 1.28;
-          }
-        }
+        .pillars-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .pillar-card { border-radius: 11px; padding: 10px 14px; border: 1px solid transparent; }
+        .pillar-blue { background: #f0f9ff; border-color: #bae6fd; }
+        .pillar-green { background: #f0fdf4; border-color: #bbf7d0; }
+        .pillar-purple { background: #faf5ff; border-color: #e9d5ff; }
+        .pillar-amber { background: #fffbeb; border-color: #fde68a; }
+        
+        .pillar-head { font-size: 12px; font-weight: 900; color: #0f172a; text-transform: uppercase; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
+        .pillar-icon-box { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .icon-blue { color: #0284c7; } .icon-green { color: #16a34a; } .icon-purple { color: #9333ea; } .icon-amber { color: #d97706; }
+        .pillar-desc { font-size: 12px; color: #475569; line-height: 1.4; padding-left: 28px; }
 
         /* Contactos */
-        .contacts-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 8.5px;
-        }
-        @media screen and (max-width: 768px) {
-          .contacts-grid {
-            gap: 6px;
-          }
-        }
+        .contacts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .contact-box {
-          border-radius: 11px;
-          padding: 9px 12px;
-          border: 1px solid #e2e8f0;
-          background: #f8fafc;
-          text-decoration: none !important;
-          color: #0f172a !important;
-          display: block;
+          border-radius: 11px; padding: 10px 14px; border: 1px solid #e2e8f0; background: #f8fafc;
+          text-decoration: none !important; color: #0f172a !important; display: block;
         }
-        .contact-box:hover {
-          border-color: #a5b4fc;
-          background: #f1f5f9;
-        }
-        @media screen and (max-width: 768px) {
-          .contact-box {
-            padding: 7px 9px;
-          }
-        }
-        .contact-label-row {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          font-size: 9px;
-          font-weight: 800;
-          text-transform: uppercase;
-          color: #64748b;
-          margin-bottom: 1.5px;
-        }
-        @media screen and (max-width: 768px) {
-          .contact-label-row {
-            font-size: 8px;
-          }
-        }
-        .contact-val-link {
-          font-size: 12.2px;
-          font-weight: 800;
-          color: #1d4ed8 !important;
-          word-break: break-all;
-          text-decoration: underline;
-          text-underline-offset: 2px;
-        }
-        @media screen and (max-width: 768px) {
-          .contact-val-link {
-            font-size: 11px;
-          }
-        }
+        .contact-label-row { display: flex; align-items: center; gap: 5px; font-size: 9.5px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 2px; }
+        .contact-val-link { font-size: 12.5px; font-weight: 800; color: #1d4ed8 !important; word-break: break-all; }
 
-        /* Painel Horizontal do QR Code */
+        /* ================= QR CODE SUPER CHAMATIVO ================= */
         .hero-qr-section {
-          background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 50%, #f0fdf4 100%);
-          border: 1.5px solid #a5b4fc;
-          border-radius: 14px;
-          padding: 13px 18px;
-          display: flex;
-          flex-direction: row;
-          align-items: center;
-          justify-content: space-between;
-          gap: 15px;
-          box-shadow: 0 4px 14px rgba(79, 70, 229, 0.06);
-          break-inside: avoid;
-          page-break-inside: avoid;
+          background: linear-gradient(135deg, #eef2ff 0%, #ffffff 50%, #f0fdf4 100%);
+          border: 2px solid #a5b4fc; border-radius: 16px; padding: 16px 22px;
+          display: flex; align-items: center; justify-content: space-between; gap: 20px;
+          box-shadow: 0 10px 25px rgba(79, 70, 229, 0.08);
+          break-inside: avoid; page-break-inside: avoid;
         }
-        @media screen and (max-width: 768px) {
-          .hero-qr-section {
-            padding: 10px 12px;
-            gap: 10px;
-            border-radius: 12px;
-          }
-        }
-        .hero-qr-left {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          text-align: left;
-          gap: 6px;
-        }
-        @media screen and (max-width: 768px) {
-          .hero-qr-left {
-            gap: 3px;
-          }
-        }
-        .hero-qr-header {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          flex-wrap: wrap;
-        }
-        .hero-qr-title {
-          font-size: 13.8px;
-          font-weight: 900;
-          color: #312e81;
-          text-transform: uppercase;
-          letter-spacing: 0.3px;
-        }
-        @media screen and (max-width: 768px) {
-          .hero-qr-title {
-            font-size: 11.8px;
-          }
-        }
-        .hero-qr-badge {
-          background: #4338ca;
-          color: #ffffff;
-          font-size: 9px;
-          font-weight: 800;
-          text-transform: uppercase;
-          padding: 2px 7.5px;
-          border-radius: 9999px;
-          letter-spacing: 0.35px;
-        }
-        @media screen and (max-width: 768px) {
-          .hero-qr-badge {
-            font-size: 7.8px;
-            padding: 1.5px 6px;
-          }
-        }
-        .hero-qr-desc {
-          font-size: 12px;
-          color: #3730a3;
-          line-height: 1.36;
-        }
-        @media screen and (max-width: 768px) {
-          .hero-qr-desc {
-            font-size: 10.8px;
-            line-height: 1.3;
-          }
-        }
-
-        /* Estrutura do QR Code com Emblema "S" */
-        .hero-qr-card {
-          width: 160px;
-          background: #ffffff;
-          border: 1.5px solid #a5b4fc;
-          border-radius: 13px;
-          padding: 8px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 6px;
-          box-shadow: 0 4px 14px rgba(79, 70, 229, 0.1);
-          flex-shrink: 0;
-        }
-        @media screen and (max-width: 768px) {
-          .hero-qr-card {
-            width: 128px;
-            border-radius: 11px;
-            padding: 6px;
-            gap: 4px;
-          }
-        }
-        .hero-qr-link {
-          position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 144px;
-          height: 144px;
-          border-radius: 8px;
-          overflow: hidden;
-          background: #ffffff;
-          text-decoration: none;
-        }
-        @media screen and (max-width: 768px) {
-          .hero-qr-link {
-            width: 114px;
-            height: 114px;
-          }
-        }
-        .hero-qr-img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-          display: block;
-        }
-        .hero-qr-watermark {
-          position: absolute;
-          width: 30px;
-          height: 30px;
-          background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%);
-          border-radius: 7px;
-          border: 2px solid #ffffff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-          pointer-events: none;
-        }
-        @media screen and (max-width: 768px) {
-          .hero-qr-watermark {
-            width: 24px;
-            height: 24px;
-            border-radius: 5px;
-          }
-        }
-        .hero-qr-watermark span {
-          color: #ffffff;
-          font-size: 15px;
-          font-weight: 900;
-          line-height: 1;
-        }
-        @media screen and (max-width: 768px) {
-          .hero-qr-watermark span {
-            font-size: 12px;
-          }
-        }
-        .hero-qr-btn-link {
-          display: inline-block;
-          font-size: 9.5px;
-          font-weight: 800;
-          text-transform: uppercase;
-          color: #1d4ed8 !important;
-          text-decoration: underline !important;
-          text-underline-offset: 2px;
-          text-align: center;
-          letter-spacing: 0.25px;
-        }
-        @media screen and (max-width: 768px) {
-          .hero-qr-btn-link {
-            font-size: 8px;
-          }
-        }
-
+        .hero-qr-left { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        .hero-qr-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .hero-qr-title { font-size: 14.5px; font-weight: 900; color: #1e1b4b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .hero-qr-badge { background: #4f46e5; color: #ffffff; font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 3px 9px; border-radius: 9999px; }
+        .hero-qr-desc { font-size: 12.5px; color: #3730a3; line-height: 1.4; font-weight: 500; }
+        
         .hero-url-badge {
-          background: #ffffff;
-          border: 1.5px solid #a5b4fc;
-          border-radius: 10px;
-          padding: 5px 11px;
-          display: inline-flex;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 1.5px;
-          max-width: 100%;
-          text-decoration: none !important;
-          color: #1e1b4b !important;
+          background: #ffffff; border: 1.5px solid #a5b4fc; border-radius: 10px; padding: 6px 12px;
+          display: inline-flex; flex-direction: column; align-items: flex-start; margin-top: 4px;
+          text-decoration: none !important; color: #1e1b4b !important;
         }
-        @media screen and (max-width: 768px) {
-          .hero-url-badge {
-            padding: 4px 8px;
-          }
+        .hero-url-label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #4f46e5; }
+        .hero-url-text { font-family: monospace; font-size: 11.5px; font-weight: 800; color: #1d4ed8 !important; text-decoration: underline; }
+
+        /* O Card do QR Code em si */
+        .hero-qr-card-wrapper {
+          display: flex; flex-direction: column; align-items: center; gap: 8px;
         }
-        .hero-url-label {
-          font-size: 8.8px;
-          font-weight: 800;
-          text-transform: uppercase;
-          color: #4f46e5;
+        .hero-qr-card {
+          width: 155px; height: 155px; background: #ffffff; 
+          border: 4px solid #4f46e5; /* Borda bem grossa e chamativa */
+          border-radius: 16px; padding: 8px;
+          display: flex; align-items: center; justify-content: center;
+          box-shadow: 0 8px 20px rgba(79, 70, 229, 0.25);
+          position: relative;
         }
-        .hero-url-text {
-          font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
-          font-size: 11.2px;
-          font-weight: 800;
-          color: #1d4ed8 !important;
-          word-break: break-all;
-          text-decoration: underline;
-          text-underline-offset: 2px;
+        .hero-qr-img { width: 100%; height: 100%; object-fit: contain; }
+        
+        .hero-qr-watermark {
+          position: absolute; width: 34px; height: 34px;
+          background: #4f46e5; border-radius: 8px; border: 3px solid #ffffff;
+          display: flex; align-items: center; justify-content: center;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.2); pointer-events: none;
         }
-        @media screen and (max-width: 768px) {
-          .hero-url-text {
-            font-size: 10px;
-          }
+        .hero-qr-watermark span { color: #ffffff; font-size: 18px; font-weight: 900; line-height: 1; }
+        
+        /* Botão simulado abaixo do QR Code */
+        .hero-qr-action-btn {
+          background: #4f46e5; color: #ffffff !important;
+          font-size: 11px; font-weight: 900; text-transform: uppercase;
+          padding: 6px 14px; border-radius: 9999px; text-decoration: none !important;
+          letter-spacing: 0.5px; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+          border: 1.5px solid #3730a3;
         }
 
-        .footer-block {
-          margin-top: 2px;
-          break-inside: avoid;
-          page-break-inside: avoid;
-        }
-        .formal-note {
-          font-size: 9.8px;
-          color: #64748b;
-          font-style: italic;
-          line-height: 1.34;
-          text-align: center;
-          margin-bottom: 4px;
-          padding: 0 8px;
-        }
-        @media screen and (max-width: 768px) {
-          .formal-note {
-            font-size: 8.8px;
-            margin-bottom: 3px;
-          }
-        }
-        .footer {
-          border-top: 1px solid #e2e8f0;
-          padding-top: 4px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          font-size: 9.5px;
-          color: #94a3b8;
-          text-align: center;
-        }
-        @media screen and (max-width: 768px) {
-          .footer {
-            font-size: 8.5px;
-            padding-top: 3px;
-          }
-        }
+        /* Rodapé */
+        .footer-block { margin-top: auto; padding-top: 10px; break-inside: avoid; page-break-inside: avoid; }
+        .formal-note { font-size: 10.5px; color: #64748b; font-style: italic; line-height: 1.4; text-align: center; margin-bottom: 8px; }
+        .footer { border-top: 1px solid #e2e8f0; padding-top: 8px; display: flex; justify-content: center; font-size: 10px; color: #94a3b8; font-weight: 600; }
 
-        /* CALIBRAÇÃO EXATA: 1 PÁGINA RIGOROSA (SEM HEADER/FOOTER DE BROWSER E SEM 2ª PÁGINA) */
+        /* ================== CALIBRAÇÃO EXATA PARA IMPRESSÃO MOBILE/PC ================== */
         @media print {
+          /* Zera tudo fora do container para não gerar 2ª página */
           html, body {
-            background: #ffffff !important;
             width: 210mm !important;
             height: 297mm !important;
             max-height: 297mm !important;
             margin: 0 !important;
             padding: 0 !important;
+            background: #ffffff !important;
             overflow: hidden !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
+            display: block !important;
           }
-          .preview-topbar {
-            display: none !important;
-          }
+          
+          .preview-topbar { display: none !important; }
+
+          /* O Container força o tamanho A4 com as margens de proteção embutidas no Padding */
           .page-container {
-            box-sizing: border-box !important;
-            border: 1.2px solid #cbd5e1 !important;
-            border-radius: 8px !important;
+            width: 210mm !important;
+            height: 297mm !important;
+            max-width: none !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            border: none !important;
             box-shadow: none !important;
-            margin: auto !important;
-            width: 202mm !important;
-            max-width: 202mm !important;
-            height: 268mm !important;
-            max-height: 268mm !important;
-            padding: 10mm 14mm 8mm 14mm !important;
+            /* Padding é a nossa margem de segurança contra o corte da impressora */
+            padding: 14mm 16mm 12mm 16mm !important;
+            box-sizing: border-box !important;
             display: flex !important;
             flex-direction: column !important;
             justify-content: space-between !important;
-            gap: 0 !important;
-            page-break-inside: avoid !important;
-            page-break-after: avoid !important;
-            break-inside: avoid !important;
-            overflow: hidden !important;
           }
-          .content-main {
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: space-between !important;
-            gap: 8px !important;
+          
+          .content-main { gap: 11px !important; }
+          .header { padding: 12px 16px !important; }
+          .brand-logo, .brand-placeholder { width: 75px !important; height: 75px !important; }
+          .brand-title { font-size: 21px !important; }
+          .about-text { padding: 10px 14px !important; font-size: 12.5px !important; }
+          .pillars-grid { gap: 8px !important; }
+          .pillar-card { padding: 8px 12px !important; }
+          .contacts-grid { gap: 8px !important; }
+          
+          /* QR Code ajustado para caber perfeito no impresso */
+          .hero-qr-section { padding: 12px 16px !important; gap: 10px !important; border-width: 1.5px !important; }
+          .hero-qr-card { width: 135px !important; height: 135px !important; border-width: 3px !important; padding: 6px !important; }
+          .hero-qr-watermark { width: 28px !important; height: 28px !important; }
+          .hero-qr-watermark span { font-size: 15px !important; }
+          .hero-qr-action-btn { padding: 5px 12px !important; font-size: 9.5px !important; }
+          
+          /* Esconder links normais que o browser tenta injetar no texto */
+          a[href]:after { content: none !important; }
+        }
+
+        /* Responsividade Visual apenas para o Preview no Telemóvel */
+        @media screen and (max-width: 768px) {
+          body { padding: 0; background: #ffffff; }
+          .preview-topbar { padding: 10px 14px; margin-bottom: 0; }
+          .preview-badge { display: none; }
+          .page-container {
+            width: 100% !important; border-radius: 0 !important; border: none !important; box-shadow: none !important; padding: 16px 14px 24px 14px !important;
           }
-          .header {
-            padding: 10px 15px !important;
-            border-radius: 12px !important;
-          }
-          .brand-logo, .brand-placeholder {
-            width: 84px !important;
-            height: 84px !important;
-            font-size: 36px !important;
-            border-radius: 12px !important;
-          }
-          .brand-title {
-            font-size: 22px !important;
-          }
-          .brand-badge {
-            font-size: 9px !important;
-            padding: 2px 7px !important;
-          }
-          .meta-box {
-            font-size: 10.5px !important;
-            line-height: 1.4 !important;
-          }
-          .currency-tag {
-            font-size: 10px !important;
-            padding: 1px 5.5px !important;
-          }
-          .title-banner {
-            padding: 7px 12px !important;
-            border-left-width: 4px !important;
-          }
-          .title-banner h1 {
-            font-size: 14.8px !important;
-          }
-          .title-banner p {
-            font-size: 11px !important;
-          }
-          .section-heading {
-            font-size: 11px !important;
-            margin-bottom: 3px !important;
-          }
-          .about-text {
-            font-size: 12.2px !important;
-            padding: 9px 13px !important;
-            line-height: 1.4 !important;
-            border-radius: 10px !important;
-          }
-          .pillars-grid {
-            gap: 7px !important;
-          }
-          .pillar-card {
-            padding: 8px 11px !important;
-            border-radius: 8px !important;
-          }
-          .pillar-head {
-            font-size: 11px !important;
-          }
-          .pillar-icon-box {
-            width: 18px !important;
-            height: 18px !important;
-          }
-          .pillar-desc {
-            font-size: 11px !important;
-            padding-left: 23px !important;
-            line-height: 1.3 !important;
-          }
-          .contacts-grid {
-            gap: 7px !important;
-          }
-          .contact-box {
-            padding: 8px 11px !important;
-            border-radius: 8px !important;
-          }
-          .contact-label-row {
-            font-size: 8.5px !important;
-          }
-          .contact-val-link {
-            font-size: 11.5px !important;
-            color: #1d4ed8 !important;
-          }
-          .hero-qr-section {
-            padding: 11px 16px !important;
-            border-radius: 12px !important;
-          }
-          .hero-qr-title {
-            font-size: 13.2px !important;
-          }
-          .hero-qr-desc {
-            font-size: 11.5px !important;
-            line-height: 1.3 !important;
-          }
-          .hero-qr-card {
-            width: 140px !important;
-            padding: 6px !important;
-            border-radius: 11px !important;
-            gap: 4px !important;
-          }
-          .hero-qr-link {
-            width: 126px !important;
-            height: 126px !important;
-          }
-          .hero-qr-watermark {
-            width: 26px !important;
-            height: 26px !important;
-          }
-          .hero-qr-watermark span {
-            font-size: 13.5px !important;
-          }
-          .hero-qr-btn-link {
-            font-size: 8.8px !important;
-            color: #1d4ed8 !important;
-          }
-          .hero-url-badge {
-            padding: 4px 9px !important;
-            border-width: 1px !important;
-          }
-          .hero-url-text {
-            font-size: 10.5px !important;
-            color: #1d4ed8 !important;
-          }
-          .footer-block {
-            margin-top: 2px !important;
-            padding-top: 0 !important;
-          }
-          .formal-note {
-            font-size: 9px !important;
-            margin-bottom: 2px !important;
-            line-height: 1.25 !important;
-          }
-          .footer {
-            font-size: 8.5px !important;
-            padding-top: 2px !important;
-          }
-          a {
-            text-decoration: underline !important;
-          }
+          .header { flex-direction: column; align-items: flex-start; gap: 12px; }
+          .meta-box { text-align: left; }
+          .contacts-grid, .pillars-grid { grid-template-columns: 1fr; }
+          .hero-qr-section { flex-direction: column; text-align: center; }
+          .hero-qr-left { align-items: center; }
+          .hero-qr-header { justify-content: center; }
+          .hero-url-badge { align-items: center; }
         }
       </style>
     </head>
     <body>
       <nav class="preview-topbar">
         <div class="topbar-left">
-          <button 
-            class="btn-back" 
-            onclick="if (window.opener) { window.close(); } else if (window.history.length > 1) { window.history.back(); } else { window.location.href = '${storeUrl}'; }"
-          >
-            ${SVG_ICONS.arrowLeft}
-            <span>${t.backBtn}</span>
+          <button class="btn-back" onclick="if(window.opener){window.close();}else if(window.history.length>1){window.history.back();}else{window.location.href='${storeUrl}';}">
+            ${SVG_ICONS.arrowLeft} <span>${t.backBtn}</span>
           </button>
           <span class="preview-badge">${t.previewBadge}</span>
         </div>
-
         <button class="btn-print" onclick="window.print()">
-          ${SVG_ICONS.printer}
-          <span>${t.printBtn}</span>
+          ${SVG_ICONS.printer} <span>${t.printBtn}</span>
         </button>
       </nav>
 
       <div class="page-container">
         <div class="content-main">
-          <!-- Header Clicável -->
+          
+          <!-- Header -->
           <header class="header">
-            <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="brand-box" title="${storeName}">
+            <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="brand-box">
               ${store.logo_url 
                 ? `<img src="${store.logo_url}" class="brand-logo" alt="${storeName}" crossorigin="anonymous" />`
                 : `<div class="brand-placeholder">${storeName.charAt(0)}</div>`
@@ -1166,7 +498,6 @@ export function generateStorePresentationPDF({
                 <div class="brand-badge">${SVG_ICONS.checkBadge} ${t.docBadge}</div>
               </div>
             </a>
-
             <div class="meta-box">
               <div><strong>${t.ref}:</strong> #${refCode}</div>
               <div><strong>${t.date}:</strong> ${issueDate}</div>
@@ -1175,13 +506,13 @@ export function generateStorePresentationPDF({
             </div>
           </header>
 
-          <!-- Banner de Título -->
+          <!-- Banner Título -->
           <section class="title-banner">
             <h1>${t.docTitle}</h1>
             <p>${t.docSubtitle}</p>
           </section>
 
-          <!-- Seção Sobre a Empresa -->
+          <!-- Sobre Empresa -->
           <section class="section-block">
             <h2 class="section-heading">${t.aboutTitle}</h2>
             <div class="about-text">
@@ -1195,70 +526,44 @@ export function generateStorePresentationPDF({
             <h2 class="section-heading">${t.pillarsTitle}</h2>
             <div class="pillars-grid">
               <div class="pillar-card pillar-blue">
-                <div class="pillar-head">
-                  <span class="pillar-icon-box icon-blue">${SVG_ICONS.globe}</span>
-                  <span>${t.p1Title}</span>
-                </div>
+                <div class="pillar-head"><span class="pillar-icon-box icon-blue">${SVG_ICONS.globe}</span><span>${t.p1Title}</span></div>
                 <div class="pillar-desc">${t.p1Desc}</div>
               </div>
-
               <div class="pillar-card pillar-green">
-                <div class="pillar-head">
-                  <span class="pillar-icon-box icon-green">${SVG_ICONS.message}</span>
-                  <span>${t.p2Title}</span>
-                </div>
+                <div class="pillar-head"><span class="pillar-icon-box icon-green">${SVG_ICONS.message}</span><span>${t.p2Title}</span></div>
                 <div class="pillar-desc">${t.p2Desc}</div>
               </div>
-
               <div class="pillar-card pillar-purple">
-                <div class="pillar-head">
-                  <span class="pillar-icon-box icon-purple">${SVG_ICONS.shield}</span>
-                  <span>${t.p3Title}</span>
-                </div>
+                <div class="pillar-head"><span class="pillar-icon-box icon-purple">${SVG_ICONS.shield}</span><span>${t.p3Title}</span></div>
                 <div class="pillar-desc">${t.p3Desc}</div>
               </div>
-
               <div class="pillar-card pillar-amber">
-                <div class="pillar-head">
-                  <span class="pillar-icon-box icon-amber">${SVG_ICONS.star}</span>
-                  <span>${t.p4Title}</span>
-                </div>
+                <div class="pillar-head"><span class="pillar-icon-box icon-amber">${SVG_ICONS.star}</span><span>${t.p4Title}</span></div>
                 <div class="pillar-desc">${t.p4Desc}</div>
               </div>
             </div>
           </section>
 
-          <!-- Contactos com Links Canônicos para Chamada & Navegação no PDF -->
+          <!-- Contactos -->
           <section class="section-block">
             <h2 class="section-heading">${t.contactsTitle}</h2>
             <div class="contacts-grid">
-              <a href="${callLink}" class="contact-box" title="Efetuar chamada para ${phone}">
-                <div class="contact-label-row">
-                  <span class="icon-green">${SVG_ICONS.phone}</span>
-                  <span>${t.whatsapp}</span>
-                </div>
-                <div class="contact-val-link">${phone || t.unavailable}</div>
+              <a href="${callLink}" class="contact-box">
+                <div class="contact-label-row"><span class="icon-green">${SVG_ICONS.phone}</span><span>${t.whatsapp}</span></div>
+                <div class="contact-val-link" style="text-decoration:none">${phone || t.unavailable}</div>
               </a>
-
-              <a href="${emailLink}" class="contact-box" title="Enviar e-mail para ${email}">
-                <div class="contact-label-row">
-                  <span class="icon-blue">${SVG_ICONS.mail}</span>
-                  <span>${t.email}</span>
-                </div>
-                <div class="contact-val-link">${email || t.unavailable}</div>
+              <a href="${emailLink}" class="contact-box">
+                <div class="contact-label-row"><span class="icon-blue">${SVG_ICONS.mail}</span><span>${t.email}</span></div>
+                <div class="contact-val-link" style="text-decoration:none">${email || t.unavailable}</div>
               </a>
-
-              <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="contact-box" title="Aceder ao endereço ${storeUrl}">
-                <div class="contact-label-row">
-                  <span class="icon-purple">${SVG_ICONS.globe}</span>
-                  <span>${t.website}</span>
-                </div>
-                <div class="contact-val-link">${storeUrl}</div>
+              <a href="${storeUrl}" target="_blank" class="contact-box">
+                <div class="contact-label-row"><span class="icon-purple">${SVG_ICONS.globe}</span><span>${t.website}</span></div>
+                <div class="contact-val-link" style="text-decoration:none">${storeUrl}</div>
               </a>
             </div>
           </section>
 
-          <!-- Bloco do QR Code Horizontal com URL Oficial Clicável e Marca "S" -->
+          <!-- QR Code Super Chamativo -->
           <section class="hero-qr-section">
             <div class="hero-qr-left">
               <div class="hero-qr-header">
@@ -1267,34 +572,29 @@ export function generateStorePresentationPDF({
                 <span class="hero-qr-badge">${t.officialBadge}</span>
               </div>
               <p class="hero-qr-desc">${t.accessSubtitle}</p>
-
-              <a href="${productsUrl}" target="_blank" rel="noopener noreferrer" class="hero-url-badge" title="${productsUrl}">
+              <a href="${productsUrl}" target="_blank" class="hero-url-badge">
                 <span class="hero-url-label">${t.directUrlLabel}</span>
                 <span class="hero-url-text">${productsUrl}</span>
               </a>
             </div>
 
-            <!-- Card do QR Code com Emblema "S" e Botão de Acesso Direto -->
-            <div class="hero-qr-card">
-              <a href="${productsUrl}" target="_blank" rel="noopener noreferrer" class="hero-qr-link" title="${productsUrl}">
-                <img src="${qrCodeApiUrl}" alt="QR Code - ${storeName}" class="hero-qr-img" crossorigin="anonymous" />
-                <div class="hero-qr-watermark">
-                  <span>S</span>
-                </div>
-              </a>
-              <a href="${productsUrl}" target="_blank" rel="noopener noreferrer" class="hero-qr-btn-link" title="${productsUrl}">
+            <!-- Card QR com Botão Call-To-Action -->
+            <div class="hero-qr-card-wrapper">
+              <div class="hero-qr-card">
+                <img src="${qrCodeApiUrl}" alt="QR Code" class="hero-qr-img" crossorigin="anonymous" />
+                <div class="hero-qr-watermark"><span>S</span></div>
+              </div>
+              <a href="${productsUrl}" target="_blank" class="hero-qr-action-btn">
                 ${t.qrScanHint}
               </a>
             </div>
           </section>
+          
         </div>
 
-        <!-- Rodapé Formal Corporativo Limpo -->
+        <!-- Rodapé Formal -->
         <div class="footer-block">
-          <div class="formal-note">
-            ${closingSelected}
-          </div>
-
+          <div class="formal-note">${closingSelected}</div>
           <footer class="footer">
             <div>${storeName} &copy; ${new Date().getFullYear()} · ${t.rights}</div>
           </footer>
@@ -1307,18 +607,12 @@ export function generateStorePresentationPDF({
           var promises = images.map(function(img) {
             if (img.complete) return Promise.resolve();
             return new Promise(function(resolve) {
-              img.onload = resolve;
-              img.onerror = resolve;
+              img.onload = resolve; img.onerror = resolve;
             });
           });
-
           Promise.all(promises).then(function() {
             setTimeout(function() {
-              try {
-                window.print();
-              } catch(e) {
-                console.warn('Impressão automática:', e);
-              }
+              try { window.print(); } catch(e) {}
             }, 300);
           });
         });
@@ -1331,10 +625,7 @@ export function generateStorePresentationPDF({
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     const blobUrl = URL.createObjectURL(blob);
     const newTab = window.open(blobUrl, '_blank');
-
-    if (!newTab) {
-      window.location.href = blobUrl;
-    }
+    if (!newTab) { window.location.href = blobUrl; }
   } catch (err) {
     console.error('Falha ao abrir pré-visualização comercial:', err);
   }
