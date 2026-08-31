@@ -146,7 +146,6 @@ export function generateStorePresentationPDF({
   const storeUrl = rawBase.startsWith('http') ? `${rawBase}/${storeSlug}` : `https://${rawBase || 'storelyy.vercel.app'}/${storeSlug}`;
   const productsUrl = `${storeUrl}/products`;
 
-  // Aumentado de 500x500 para 800x800: máxima nitidez de impressão.
   const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=800x800&data=${encodeURIComponent(productsUrl)}&color=1e1b4b&bgcolor=ffffff&margin=0`;
   const fileName = langKey === 'pt' ? `Apresentacao - ${storeName}` : `Profile - ${storeName}`;
 
@@ -178,7 +177,6 @@ export function generateStorePresentationPDF({
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>${fileName}</title>
   <style>
-    /* REGRA ABSOLUTA DE MARGENS: Elimina o Link, Page 1 of 2 e Data */
     @page {
       size: A4 portrait;
       margin: 0mm !important;
@@ -190,7 +188,7 @@ export function generateStorePresentationPDF({
       padding: 0;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      text-rendering: optimizeLegibility; /* Aumenta a qualidade visual/tipográfica do PDF */
+      text-rendering: optimizeLegibility;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     }
 
@@ -221,21 +219,12 @@ export function generateStorePresentationPDF({
       padding: 12px 24px; margin-bottom: 18px;
     }
     .topbar-left { display: flex; align-items: center; gap: 12px; }
-    .btn-back {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(255, 255, 255, 0.14); color: #ffffff;
-      border: 1px solid rgba(255, 255, 255, 0.28); padding: 7.5px 16px;
-      border-radius: 9999px; font-size: 14px; font-weight: 700; cursor: pointer;
-    }
+    .btn-back { display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.14); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.28); padding: 7.5px 16px; border-radius: 9999px; font-size: 14px; font-weight: 700; cursor: pointer; }
     .preview-badge { font-size: 14px; color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 6px; }
     .preview-badge::before { content: ""; display: inline-block; width: 7.5px; height: 7.5px; border-radius: 50%; background: #10b981; }
-    .btn-print {
-      display: inline-flex; align-items: center; gap: 7px;
-      background: #4f46e5; color: #ffffff; border: none; padding: 8.5px 20px;
-      border-radius: 9999px; font-size: 15px; font-weight: 800; cursor: pointer;
-    }
+    .btn-print { display: inline-flex; align-items: center; gap: 7px; background: #4f46e5; color: #ffffff; border: none; padding: 8.5px 20px; border-radius: 9999px; font-size: 15px; font-weight: 800; cursor: pointer; }
 
-    /* Container Central (Reduzidas as margens laterais também na web para usar mais espaço) */
+    /* Container Central */
     .page-container {
       position: relative; width: 98%; max-width: 1024px; margin: 0 auto;
       background: #ffffff; border-radius: 18px; padding: 24px 20px 20px 20px;
@@ -271,7 +260,7 @@ export function generateStorePresentationPDF({
     .about-text p { margin-bottom: 4px; }
     .about-text p:last-child { margin-bottom: 0; }
 
-    /* 4 Pilares */
+    /* Pilares */
     .pillars-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .pillar-card { border-radius: 11px; padding: 10px 14px; border: 1px solid transparent; }
     .pillar-blue { background: #f0f9ff; border-color: #bae6fd; }
@@ -289,8 +278,8 @@ export function generateStorePresentationPDF({
     .contact-label-row { display: flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 2px; }
     .contact-val-link { font-size: 14px; font-weight: 800; color: #1d4ed8 !important; word-break: break-all; }
 
-    /* QR Code */
-    .hero-qr-section { background: linear-gradient(135deg, #eef2ff 0%, #ffffff 50%, #f0fdf4 100%); border: 2px solid #a5b4fc; border-radius: 16px; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 15px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.08); break-inside: avoid; page-break-inside: avoid; }
+    /* QR Code Section */
+    .hero-qr-section { background: linear-gradient(135deg, #eef2ff 0%, #ffffff 50%, #f0fdf4 100%); border: 2px solid #a5b4fc; border-radius: 16px; padding: 14px 20px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 15px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.08); break-inside: avoid; page-break-inside: avoid; }
     .hero-qr-left { flex: 1; display: flex; flex-direction: column; gap: 6px; }
     .hero-qr-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .hero-qr-title { font-size: 16px; font-weight: 900; color: #1e1b4b; text-transform: uppercase; }
@@ -311,34 +300,31 @@ export function generateStorePresentationPDF({
     .formal-note { font-size: 11.5px; color: #64748b; font-style: italic; line-height: 1.35; text-align: center; margin-bottom: 6px; }
     .footer { border-top: 1px solid #e2e8f0; padding-top: 6px; display: flex; justify-content: center; font-size: 11px; color: #94a3b8; font-weight: 600; }
 
-    /* ================== CSS NUCLEAR DE IMPRESSÃO ================== */
+    /* ================== CSS IMPRESSÃO BLINDADA PARA iOS/ANDROID ================== */
     @media print {
+      /* Altura estrita, NUNCA usar vh, pois o iOS lê a altura do ecrã e não do papel */
       html, body {
-        width: 100% !important;
-        height: 100vh !important; 
-        max-height: 100vh !important;
+        width: 210mm !important;
+        height: 296mm !important; 
+        max-height: 296mm !important;
         margin: 0 !important;
         padding: 0 !important;
         background: #ffffff !important;
-        overflow: hidden !important; /* MATA A SEGUNDA PÁGINA */
+        overflow: hidden !important; 
         display: block !important;
       }
       
       .preview-topbar { display: none !important; }
 
       .page-container {
-        width: 100% !important;
+        width: 210mm !important;
         height: 100% !important; 
-        max-height: 290mm !important; 
-        margin: 0 auto !important;
+        max-height: 100% !important; 
+        margin: 0 !important;
         border-radius: 0 !important;
         border: none !important;
         box-shadow: none !important;
-        
-        /* === REDUÇÃO BRUTAL DAS MARGENS LATERAIS AQUI === */
-        /* padding: Topo (8mm), Direita (6mm), Baixo (10mm), Esquerda (6mm) */
-        padding: 8mm 6mm 10mm 6mm !important; 
-        
+        padding: 8mm 6mm 8mm 6mm !important; /* Margens finas, mas folga em baixo (8mm) */
         box-sizing: border-box !important;
         display: flex !important;
         flex-direction: column !important;
@@ -350,20 +336,41 @@ export function generateStorePresentationPDF({
       }
       
       .content-main { gap: 8px !important; }
-      .header { padding: 8px 14px !important; }
+      
+      /* FORÇAR O LAYOUT DE DESKTOP MESMO QUANDO IMPRESSO DE UM TELEMÓVEL */
+      .header { flex-direction: row !important; align-items: center !important; padding: 8px 14px !important; }
+      .pillars-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 6px !important; }
+      .contacts-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 6px !important; }
+      
+      /* Forçar a secção do QR Code a ser "Lado a Lado", impedindo o telemóvel de as empilhar */
+      .hero-qr-section { 
+        flex-direction: row !important; 
+        align-items: center !important;
+        text-align: left !important;
+        padding: 10px 14px !important; 
+        gap: 10px !important; 
+      }
+      .hero-qr-left { align-items: flex-start !important; }
+      .hero-qr-header { justify-content: flex-start !important; }
+      .hero-url-badge { align-items: flex-start !important; }
+
+      /* Encolher cirurgicamente o QR apenas na impressão para sobrar espaço e não cortar */
+      .hero-qr-card-wrapper { gap: 6px !important; }
+      .hero-qr-card { width: 120px !important; height: 120px !important; padding: 4px !important; border-width: 3px !important; }
+      .hero-qr-watermark { width: 26px !important; height: 26px !important; }
+      .hero-qr-watermark span { font-size: 15px !important; }
+      .hero-qr-action-btn { font-size: 10px !important; padding: 4px 10px !important; }
+
       .title-banner { padding: 6px 12px !important; }
       .about-text { padding: 8px 14px !important; }
-      .pillars-grid { gap: 6px !important; }
       .pillar-card { padding: 6px 10px !important; }
-      .contacts-grid { gap: 6px !important; }
-      .hero-qr-section { padding: 10px 16px !important; gap: 10px !important; }
-      .footer-block { padding-top: 4px !important; }
+      .footer-block { padding-top: 2px !important; }
       
       a[href]:after { content: none !important; } 
       * { break-inside: avoid !important; page-break-inside: avoid !important; }
     }
 
-    /* Responsividade Mobile Web */
+    /* Responsividade Mobile Web (O que o utilizador vê ANTES de imprimir) */
     @media screen and (max-width: 768px) {
       body { padding: 0; background: #ffffff; }
       .preview-topbar { padding: 10px 14px; margin-bottom: 0; }
@@ -372,6 +379,8 @@ export function generateStorePresentationPDF({
       .header { flex-direction: column; align-items: flex-start; gap: 12px; }
       .meta-box { text-align: left; }
       .contacts-grid, .pillars-grid { grid-template-columns: 1fr; }
+      
+      /* Aqui empilha na pré-visualização web (mas a impressão acima irá forçar lado-a-lado) */
       .hero-qr-section { flex-direction: column; text-align: center; }
       .hero-qr-left { align-items: center; }
       .hero-qr-header { justify-content: center; }
