@@ -174,7 +174,8 @@ export function generateStorePresentationPDF({
 <html lang="${langKey}">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- Permite fazer zoom livremente no telemóvel (removido user-scalable=no) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${fileName}</title>
   <style>
     @page {
@@ -197,8 +198,8 @@ export function generateStorePresentationPDF({
       min-height: 100%;
       background: #0b1120;
       color: #0f172a;
-      line-height: 1.4;
-      font-size: 16px; 
+      line-height: 1.45;
+      font-size: 17px; /* Aumentado para leitura no ecrã web */
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
     }
@@ -207,7 +208,7 @@ export function generateStorePresentationPDF({
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 0 0 35px 0;
+      padding: 0 0 40px 0;
     }
 
     /* Topbar Visualização Web */
@@ -216,7 +217,7 @@ export function generateStorePresentationPDF({
       background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid rgba(255, 255, 255, 0.14);
       display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 24px; margin-bottom: 18px;
+      padding: 12px 24px; margin-bottom: 12px;
     }
     .topbar-left { display: flex; align-items: center; gap: 12px; }
     .btn-back { display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.14); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.28); padding: 7.5px 16px; border-radius: 9999px; font-size: 14px; font-weight: 700; cursor: pointer; }
@@ -224,163 +225,181 @@ export function generateStorePresentationPDF({
     .preview-badge::before { content: ""; display: inline-block; width: 7.5px; height: 7.5px; border-radius: 50%; background: #10b981; }
     .btn-print { display: inline-flex; align-items: center; gap: 7px; background: #4f46e5; color: #ffffff; border: none; padding: 8.5px 20px; border-radius: 9999px; font-size: 15px; font-weight: 800; cursor: pointer; }
 
-    /* Container Central */
+    /* Container Central Desktop */
     .page-container {
-      position: relative; width: 98%; max-width: 1024px; margin: 0 auto;
-      background: #ffffff; border-radius: 18px; padding: 24px 20px 20px 20px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45); display: flex; flex-direction: column; gap: 12px;
+      position: relative; width: 96%; max-width: 980px; margin: 0 auto;
+      background: #ffffff; border-radius: 20px; padding: 30px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45); display: flex; flex-direction: column; gap: 16px;
     }
 
-    .content-main { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+    .content-main { display: flex; flex-direction: column; gap: 14px; flex: 1; }
 
     /* Header */
     .header {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 14px 18px; background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.95) 100%);
+      padding: 16px 20px; background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.95) 100%);
       border: 1px solid #e2e8f0; border-radius: 14px;
     }
     .brand-box { display: flex; align-items: center; gap: 15px; text-decoration: none; color: inherit; }
-    .brand-logo { width: 85px; height: 85px; border-radius: 14px; object-fit: cover; border: 2px solid #ffffff; box-shadow: 0 4px 16px rgba(79, 70, 229, 0.14); }
-    .brand-placeholder { width: 85px; height: 85px; border-radius: 14px; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 900; }
+    .brand-logo { width: 90px; height: 90px; border-radius: 14px; object-fit: cover; border: 2px solid #ffffff; box-shadow: 0 4px 16px rgba(79, 70, 229, 0.14); }
+    .brand-placeholder { width: 90px; height: 90px; border-radius: 14px; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 900; }
     .brand-title { font-size: 26px; font-weight: 900; color: #0f172a; letter-spacing: -0.3px; line-height: 1.1; }
-    .brand-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #4338ca; background: #e0e7ff; padding: 4px 10px; border-radius: 9999px; margin-top: 5px; border: 1px solid #c7d2fe; }
-    .meta-box { text-align: right; font-size: 13px; color: #64748b; line-height: 1.5; }
+    .brand-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 800; text-transform: uppercase; color: #4338ca; background: #e0e7ff; padding: 4px 10px; border-radius: 9999px; margin-top: 5px; border: 1px solid #c7d2fe; }
+    .meta-box { text-align: right; font-size: 14px; color: #64748b; line-height: 1.5; }
     .meta-box strong { color: #0f172a; }
     .currency-tag { color: #047857; background: #d1fae5; padding: 2px 8px; border-radius: 4px; font-weight: 800; border: 1px solid #a7f3d0; }
 
     /* Seções */
-    .title-banner { background: #f8fafc; border-left: 5px solid #4f46e5; padding: 10px 16px; border-radius: 0 10px 10px 0; border: 1px solid #f1f5f9; border-left-width: 5px; }
-    .title-banner h1 { font-size: 18px; font-weight: 900; color: #0f172a; }
-    .title-banner p { font-size: 13.5px; color: #64748b; margin-top: 2px; }
+    .title-banner { background: #f8fafc; border-left: 5px solid #4f46e5; padding: 12px 18px; border-radius: 0 10px 10px 0; border: 1px solid #f1f5f9; border-left-width: 5px; }
+    .title-banner h1 { font-size: 19px; font-weight: 900; color: #0f172a; }
+    .title-banner p { font-size: 14px; color: #64748b; margin-top: 2px; }
 
     .section-block { break-inside: avoid; page-break-inside: avoid; }
-    .section-heading { font-size: 13px; font-weight: 900; text-transform: uppercase; color: #334155; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+    .section-heading { font-size: 14px; font-weight: 900; text-transform: uppercase; color: #334155; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
     .section-heading::after { content: ""; flex: 1; height: 1px; background: linear-gradient(to right, #e2e8f0, transparent); }
-    .about-text { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 18px; color: #334155; line-height: 1.45; font-size: 15px; }
-    .about-text p { margin-bottom: 4px; }
+    .about-text { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 20px; color: #334155; font-size: 16px; }
+    .about-text p { margin-bottom: 6px; }
     .about-text p:last-child { margin-bottom: 0; }
 
     /* Pilares */
-    .pillars-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .pillar-card { border-radius: 11px; padding: 10px 14px; border: 1px solid transparent; }
+    .pillars-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .pillar-card { border-radius: 11px; padding: 12px 16px; border: 1px solid transparent; }
     .pillar-blue { background: #f0f9ff; border-color: #bae6fd; }
     .pillar-green { background: #f0fdf4; border-color: #bbf7d0; }
     .pillar-purple { background: #faf5ff; border-color: #e9d5ff; }
     .pillar-amber { background: #fffbeb; border-color: #fde68a; }
-    .pillar-head { font-size: 13.5px; font-weight: 900; color: #0f172a; text-transform: uppercase; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
+    .pillar-head { font-size: 14px; font-weight: 900; color: #0f172a; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
     .pillar-icon-box { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
     .icon-blue { color: #0284c7; } .icon-green { color: #16a34a; } .icon-purple { color: #9333ea; } .icon-amber { color: #d97706; }
-    .pillar-desc { font-size: 13px; color: #475569; line-height: 1.35; padding-left: 30px; }
+    .pillar-desc { font-size: 14px; color: #475569; padding-left: 30px; }
 
     /* Contactos */
-    .contacts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .contact-box { border-radius: 11px; padding: 10px 14px; border: 1px solid #e2e8f0; background: #f8fafc; text-decoration: none !important; color: #0f172a !important; display: block; }
-    .contact-label-row { display: flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 2px; }
-    .contact-val-link { font-size: 14px; font-weight: 800; color: #1d4ed8 !important; word-break: break-all; }
+    .contacts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .contact-box { border-radius: 11px; padding: 12px 16px; border: 1px solid #e2e8f0; background: #f8fafc; text-decoration: none !important; color: #0f172a !important; display: block; }
+    .contact-label-row { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 4px; }
+    .contact-val-link { font-size: 15px; font-weight: 800; color: #1d4ed8 !important; word-break: break-all; }
 
     /* QR Code Section */
-    .hero-qr-section { background: linear-gradient(135deg, #eef2ff 0%, #ffffff 50%, #f0fdf4 100%); border: 2px solid #a5b4fc; border-radius: 16px; padding: 14px 20px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 15px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.08); break-inside: avoid; page-break-inside: avoid; }
-    .hero-qr-left { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .hero-qr-section { background: linear-gradient(135deg, #eef2ff 0%, #ffffff 50%, #f0fdf4 100%); border: 2px solid #a5b4fc; border-radius: 16px; padding: 16px 24px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 20px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.08); break-inside: avoid; page-break-inside: avoid; }
+    .hero-qr-left { flex: 1; display: flex; flex-direction: column; gap: 8px; }
     .hero-qr-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .hero-qr-title { font-size: 16px; font-weight: 900; color: #1e1b4b; text-transform: uppercase; }
-    .hero-qr-badge { background: #4f46e5; color: #ffffff; font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 3px 9px; border-radius: 9999px; }
-    .hero-qr-desc { font-size: 13.5px; color: #3730a3; line-height: 1.4; font-weight: 500; }
-    .hero-url-badge { background: #ffffff; border: 1.5px solid #a5b4fc; border-radius: 10px; padding: 6px 12px; display: inline-flex; flex-direction: column; align-items: flex-start; margin-top: 4px; text-decoration: none !important; }
-    .hero-url-label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #4f46e5; }
-    .hero-url-text { font-family: monospace; font-size: 12.5px; font-weight: 800; color: #1d4ed8 !important; text-decoration: underline; }
-    .hero-qr-card-wrapper { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-    .hero-qr-card { width: 145px; height: 145px; background: #ffffff; border: 4px solid #4f46e5; border-radius: 16px; padding: 6px; display: flex; align-items: center; justify-content: center; position: relative; }
+    .hero-qr-title { font-size: 17px; font-weight: 900; color: #1e1b4b; text-transform: uppercase; }
+    .hero-qr-badge { background: #4f46e5; color: #ffffff; font-size: 11px; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 9999px; }
+    .hero-qr-desc { font-size: 15px; color: #3730a3; font-weight: 500; }
+    .hero-url-badge { background: #ffffff; border: 1.5px solid #a5b4fc; border-radius: 10px; padding: 8px 14px; display: inline-flex; flex-direction: column; align-items: flex-start; margin-top: 4px; text-decoration: none !important; }
+    .hero-url-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #4f46e5; }
+    .hero-url-text { font-family: monospace; font-size: 14px; font-weight: 800; color: #1d4ed8 !important; text-decoration: underline; }
+    .hero-qr-card-wrapper { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .hero-qr-card { width: 160px; height: 160px; background: #ffffff; border: 4px solid #4f46e5; border-radius: 16px; padding: 6px; display: flex; align-items: center; justify-content: center; position: relative; }
     .hero-qr-img { width: 100%; height: 100%; object-fit: contain; }
-    .hero-qr-watermark { position: absolute; width: 32px; height: 32px; background: #4f46e5; border-radius: 8px; border: 3px solid #ffffff; display: flex; align-items: center; justify-content: center; }
+    .hero-qr-watermark { position: absolute; width: 34px; height: 34px; background: #4f46e5; border-radius: 8px; border: 3px solid #ffffff; display: flex; align-items: center; justify-content: center; }
     .hero-qr-watermark span { color: #ffffff; font-size: 18px; font-weight: 900; line-height: 1; }
-    .hero-qr-action-btn { background: #4f46e5; color: #ffffff !important; font-size: 11.5px; font-weight: 900; text-transform: uppercase; padding: 6px 16px; border-radius: 9999px; text-decoration: none !important; border: 1.5px solid #3730a3; }
+    .hero-qr-action-btn { background: #4f46e5; color: #ffffff !important; font-size: 12px; font-weight: 900; text-transform: uppercase; padding: 8px 18px; border-radius: 9999px; text-decoration: none !important; border: 1.5px solid #3730a3; }
 
     /* Rodapé */
-    .footer-block { margin-top: auto; padding-top: 6px; break-inside: avoid; page-break-inside: avoid; }
-    .formal-note { font-size: 11.5px; color: #64748b; font-style: italic; line-height: 1.35; text-align: center; margin-bottom: 6px; }
-    .footer { border-top: 1px solid #e2e8f0; padding-top: 6px; display: flex; justify-content: center; font-size: 11px; color: #94a3b8; font-weight: 600; }
+    .footer-block { margin-top: auto; padding-top: 10px; break-inside: avoid; page-break-inside: avoid; }
+    .formal-note { font-size: 13px; color: #64748b; font-style: italic; text-align: center; margin-bottom: 8px; }
+    .footer { border-top: 1px solid #e2e8f0; padding-top: 10px; display: flex; justify-content: center; font-size: 12px; color: #94a3b8; font-weight: 600; }
 
-    /* ================== CSS IMPRESSÃO BLINDADA PARA iOS/ANDROID ================== */
+    /* ================== CSS IMPRESSÃO BLINDADA (FIM DA 2ª PÁGINA) ================== */
     @media print {
-      /* Altura estrita, NUNCA usar vh, pois o iOS lê a altura do ecrã e não do papel */
       html, body {
         width: 210mm !important;
-        height: 296mm !important; 
-        max-height: 296mm !important;
+        height: 295mm !important; /* Ligeiramente menor que A4 para bloquear a 2ª página */
+        max-height: 295mm !important;
         margin: 0 !important;
         padding: 0 !important;
         background: #ffffff !important;
         overflow: hidden !important; 
         display: block !important;
+        font-size: 12px !important; /* Encolhe a fonte geral APENAS na impressão para garantir que o rodapé cabe */
       }
       
       .preview-topbar { display: none !important; }
 
       .page-container {
         width: 210mm !important;
-        height: 100% !important; 
-        max-height: 100% !important; 
+        height: 295mm !important; 
+        max-height: 295mm !important; 
         margin: 0 !important;
         border-radius: 0 !important;
         border: none !important;
         box-shadow: none !important;
-        padding: 8mm 6mm 8mm 6mm !important; /* Margens finas, mas folga em baixo (8mm) */
+        padding: 10mm 10mm 10mm 10mm !important; /* Margens limpas e seguras na folha impressa */
         box-sizing: border-box !important;
         display: flex !important;
         flex-direction: column !important;
         justify-content: space-between !important;
-        gap: 6px !important; 
+        gap: 8px !important; 
         overflow: hidden !important; 
         page-break-after: avoid !important;
         page-break-inside: avoid !important;
       }
       
+      /* Redução estrita dos blocos para o rodapé NUNCA saltar para a página 2 */
       .content-main { gap: 8px !important; }
-      
-      /* FORÇAR O LAYOUT DE DESKTOP MESMO QUANDO IMPRESSO DE UM TELEMÓVEL */
       .header { flex-direction: row !important; align-items: center !important; padding: 8px 14px !important; }
-      .pillars-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 6px !important; }
-      .contacts-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 6px !important; }
+      .brand-title { font-size: 20px !important; }
+      .meta-box { font-size: 11px !important; }
+      .title-banner { padding: 6px 12px !important; }
+      .title-banner h1 { font-size: 15px !important; }
+      .title-banner p { font-size: 11px !important; }
       
-      /* Forçar a secção do QR Code a ser "Lado a Lado", impedindo o telemóvel de as empilhar */
-      .hero-qr-section { 
-        flex-direction: row !important; 
-        align-items: center !important;
-        text-align: left !important;
-        padding: 10px 14px !important; 
-        gap: 10px !important; 
-      }
+      .about-text { font-size: 12px !important; padding: 8px 14px !important; }
+      
+      .pillars-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 6px !important; }
+      .pillar-card { padding: 6px 10px !important; }
+      .pillar-head { font-size: 11px !important; }
+      .pillar-desc { font-size: 10.5px !important; padding-left: 26px !important; }
+      
+      .contacts-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 6px !important; }
+      .contact-box { padding: 6px 10px !important; }
+      .contact-val-link { font-size: 11.5px !important; }
+      
+      /* Mantém o layout horizontal para o QR Code no PDF */
+      .hero-qr-section { flex-direction: row !important; align-items: center !important; text-align: left !important; padding: 10px 14px !important; gap: 10px !important; }
       .hero-qr-left { align-items: flex-start !important; }
       .hero-qr-header { justify-content: flex-start !important; }
-      .hero-url-badge { align-items: flex-start !important; }
+      .hero-url-badge { align-items: flex-start !important; padding: 4px 10px !important; }
+      .hero-url-text { font-size: 11px !important; }
+      
+      .hero-qr-card-wrapper { gap: 4px !important; }
+      .hero-qr-card { width: 110px !important; height: 110px !important; padding: 4px !important; border-width: 2px !important; }
+      .hero-qr-watermark { width: 24px !important; height: 24px !important; }
+      .hero-qr-watermark span { font-size: 14px !important; }
+      .hero-qr-action-btn { font-size: 9px !important; padding: 4px 10px !important; border-width: 1px !important; }
 
-      /* Encolher cirurgicamente o QR apenas na impressão para sobrar espaço e não cortar */
-      .hero-qr-card-wrapper { gap: 6px !important; }
-      .hero-qr-card { width: 120px !important; height: 120px !important; padding: 4px !important; border-width: 3px !important; }
-      .hero-qr-watermark { width: 26px !important; height: 26px !important; }
-      .hero-qr-watermark span { font-size: 15px !important; }
-      .hero-qr-action-btn { font-size: 10px !important; padding: 4px 10px !important; }
-
-      .title-banner { padding: 6px 12px !important; }
-      .about-text { padding: 8px 14px !important; }
-      .pillar-card { padding: 6px 10px !important; }
-      .footer-block { padding-top: 2px !important; }
+      /* O Rodapé agora cabe sempre na mesma página */
+      .footer-block { padding-top: 4px !important; margin-top: 0 !important; }
+      .formal-note { font-size: 10px !important; margin-bottom: 4px !important; }
+      .footer { padding-top: 4px !important; font-size: 9px !important; }
       
       a[href]:after { content: none !important; } 
       * { break-inside: avoid !important; page-break-inside: avoid !important; }
     }
 
-    /* Responsividade Mobile Web (O que o utilizador vê ANTES de imprimir) */
+    /* ================== RESPONSIVIDADE MOBILE WEB (Ecrã) ================== */
     @media screen and (max-width: 768px) {
-      body { padding: 0; background: #ffffff; }
+      body { 
+        padding: 0; 
+        background: #0b1120; /* Fundo escuro à volta do cartão */
+      }
       .preview-topbar { padding: 10px 14px; margin-bottom: 0; }
       .preview-badge { display: none; }
-      .page-container { width: 100% !important; border-radius: 0 !important; border: none !important; box-shadow: none !important; padding: 16px 14px 24px 14px !important; }
-      .header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      
+      /* O Cartão Flutuante e as margens escuras */
+      .page-container { 
+        width: 92% !important; /* Deixa margens laterais visíveis */
+        margin: 15px auto 30px auto !important; /* Descola das bordas em cima/baixo */
+        border-radius: 16px !important; /* Cantos redondos de volta */
+        padding: 24px 20px !important; /* Muito mais espaço e conforto interno */
+        box-shadow: 0 10px 40px rgba(0,0,0,0.6) !important;
+      }
+      
+      .header { flex-direction: column; align-items: flex-start; gap: 14px; }
       .meta-box { text-align: left; }
       .contacts-grid, .pillars-grid { grid-template-columns: 1fr; }
       
-      /* Aqui empilha na pré-visualização web (mas a impressão acima irá forçar lado-a-lado) */
       .hero-qr-section { flex-direction: column; text-align: center; }
       .hero-qr-left { align-items: center; }
       .hero-qr-header { justify-content: center; }
