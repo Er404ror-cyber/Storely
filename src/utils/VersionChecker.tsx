@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslate } from '../context/LanguageContext';
 
 interface VersionData {
@@ -16,6 +17,9 @@ const INSTALLED_VERSION_KEY = 'APP_INSTALLED_VERSION';
 
 export default function VersionChecker() {
   const { t } = useTranslate();
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [isOutdated, setIsOutdated] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [currentVersionData, setCurrentVersionData] = useState<VersionData | null>(null);
@@ -93,7 +97,7 @@ export default function VersionChecker() {
         }
       }
 
-      // 7. Restaura chaves preservadas e marca flags
+      // 7. Restaura chaves preservadas e atualiza flag de versão
       Object.entries(preservedData).forEach(([key, val]) => {
         localStorage.setItem(key, val);
       });
@@ -102,12 +106,6 @@ export default function VersionChecker() {
     } catch (error) {
       console.error('Erro na limpeza:', error);
     }
-  };
-
-  const executeHardReload = () => {
-    const url = new URL(window.location.href);
-    url.searchParams.set('v_sync', Date.now().toString());
-    window.location.replace(url.toString());
   };
 
   const checkVersion = useCallback(async (isInitialLoad = false) => {
@@ -125,8 +123,18 @@ export default function VersionChecker() {
       const localVersionStr = localStorage.getItem(INSTALLED_VERSION_KEY);
 
       if (isInitialLoad) {
+        // DETETA QUE JÁ ENTROU NA NOVA VERSÃO
         if (localVersionStr && localVersionStr !== serverVersionStr) {
+          isUpdatingRef.current = true;
+          
+          // Executa a limpeza profunda agora que os novos assets carregaram
           await performDeepBrowserCleanup(serverData.version);
+
+          // Navega via React Router DOM para '/' caso esteja noutra rota
+          if (location.pathname !== '/') {
+            navigate('/', { replace: true });
+          }
+          
           setShowWelcomeModal(true);
         } else if (!localVersionStr) {
           localStorage.setItem(INSTALLED_VERSION_KEY, serverVersionStr);
@@ -138,7 +146,10 @@ export default function VersionChecker() {
 
         setCurrentVersionData(serverData);
       } else {
-        if (currentVersionData && serverData.version !== currentVersionData.version) {
+        // NA VERSÃO ANTIGA: Mostra apenas o aviso
+        const currentVersionNumber = currentVersionData?.version || (localVersionStr ? Number(localVersionStr) : null);
+        
+        if (currentVersionNumber && serverData.version !== currentVersionNumber) {
           setNewVersionData(serverData);
           setIsOutdated(true);
         }
@@ -146,7 +157,7 @@ export default function VersionChecker() {
     } catch (error) {
       console.error('Falha ao verificar versão:', error);
     }
-  }, [currentVersionData]);
+  }, [currentVersionData, location.pathname, navigate]);
 
   useEffect(() => {
     checkVersion(true);
@@ -194,7 +205,6 @@ export default function VersionChecker() {
     };
   }, [checkVersion]);
 
-  // Fecha com a tecla Esc apenas para o modal de boas-vindas
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && showWelcomeModal) {
@@ -206,12 +216,12 @@ export default function VersionChecker() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showWelcomeModal]);
 
-  const handleUpdateClick = async () => {
-    if (newVersionData && !isUpdatingRef.current) {
+  // Apenas dá reload simples na página para carregar o bundle da nova versão
+  const handleUpdateClick = () => {
+    if (!isUpdatingRef.current) {
       isUpdatingRef.current = true;
       setIsUpdating(true);
-      await performDeepBrowserCleanup(newVersionData.version);
-      executeHardReload();
+      window.location.reload();
     }
   };
 
@@ -236,21 +246,19 @@ export default function VersionChecker() {
       }).format(new Date(newVersionData.version))
     : '';
 
-  // 1. Modal de Boas-Vindas (Permite clicar fora ou fechar)
+  // 1. Modal de Boas-Vindas (Renderiza após a limpeza e navegação)
   if (showWelcomeModal) {
     return (
       <div 
-        className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-4 sm:p-6 bg-slate-950/60  animate-in fade-in duration-200"
+        className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-4 sm:p-6 bg-slate-950/60 animate-in fade-in duration-200"
         onClick={handleDismissWelcome}
       >
         <div 
           className="relative w-full sm:max-w-md bg-white rounded-3xl p-6 sm:p-7 border border-slate-100 text-left shadow-2xl shadow-slate-900/20 overflow-hidden animate-in zoom-in-95 duration-200"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Efeito luminoso no topo */}
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-emerald-500/10 rounded-full  pointer-events-none" />
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-emerald-500/10 rounded-full pointer-events-none" />
 
-          {/* Header & Badges */}
           <div className="flex items-center justify-between mb-5 relative z-10">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/60">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -280,7 +288,6 @@ export default function VersionChecker() {
             })}
           </p>
 
-          {/* Detalhes da versão */}
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 mb-6 space-y-2 relative z-10">
             <div className="flex justify-between items-center text-xs font-mono text-slate-600">
               <span>{t('current_version_label', { defaultValue: 'Versão em execução:' })}</span>
@@ -296,7 +303,6 @@ export default function VersionChecker() {
             )}
           </div>
 
-          {/* Botão de Ação */}
           <button
             onClick={handleDismissWelcome}
             className="w-full bg-slate-900 hover:bg-slate-800 active:scale-[0.99] text-white text-sm font-semibold py-3.5 px-5 rounded-2xl shadow-lg shadow-slate-900/15 flex items-center justify-between transition-all cursor-pointer relative z-10"
@@ -311,18 +317,13 @@ export default function VersionChecker() {
     );
   }
 
-  // 2. Modal de Nova Versão Detectada (Bloqueante, sem fechar ao clicar fora)
+  // 2. Modal Bloqueante de Atualização (Versão antiga)
   if (!isOutdated) return null;
 
   return (
-    <div 
-      className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-4 sm:p-6 bg-slate-950/70  animate-in fade-in duration-200"
-    >
-      <div 
-        className="relative w-full sm:max-w-md bg-white rounded-3xl p-6 sm:p-7 border border-amber-100 text-left shadow-2xl shadow-slate-950/40 overflow-hidden animate-in zoom-in-95 duration-200"
-      >
-        {/* Glow de destaque no topo */}
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-44 h-44 bg-amber-500/15 rounded-full  pointer-events-none" />
+    <div className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-4 sm:p-6 bg-slate-950/70 animate-in fade-in duration-200">
+      <div className="relative w-full sm:max-w-md bg-white rounded-3xl p-6 sm:p-7 border border-amber-100 text-left shadow-2xl shadow-slate-950/40 overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-44 h-44 bg-amber-500/15 rounded-full pointer-events-none" />
 
         <div className="flex items-center justify-between mb-5 relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200">
@@ -347,7 +348,6 @@ export default function VersionChecker() {
           })}
         </p>
 
-        {/* Comparativo de versões */}
         <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 mb-6 space-y-2.5 text-xs font-mono relative z-10">
           <div className="flex justify-between items-center text-slate-500">
             <span>{t('current_version_label', { defaultValue: 'Versão em execução:' })}</span>
@@ -367,7 +367,6 @@ export default function VersionChecker() {
           )}
         </div>
 
-        {/* Botão de Atualização Manual */}
         <button
           onClick={handleUpdateClick}
           disabled={isUpdating}
@@ -375,7 +374,7 @@ export default function VersionChecker() {
         >
           <span>
             {isUpdating 
-              ? (t('version_updating_loading', { defaultValue: 'A sincronizar nova versão...' }))
+              ? (t('version_updating_loading', { defaultValue: 'A carregar...' }))
               : (t('version_update_button', { defaultValue: 'Atualizar Agora' }))}
           </span>
           {isUpdating ? (
