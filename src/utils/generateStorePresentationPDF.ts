@@ -115,14 +115,14 @@ const COMMERCIAL_CLOSINGS = {
 };
 
 const SVG_ICONS = {
-  globe: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
-  message: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,
-  shield: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>`,
-  star: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
-  phone: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
-  mail: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
-  checkBadge: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`,
-  qrScanIcon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="2"/></svg>`
+  globe: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
+  message: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,
+  shield: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>`,
+  star: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+  phone: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
+  mail: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+  checkBadge: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`,
+  qrScanIcon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="2"/></svg>`
 };
 
 export function generateStorePresentationPDF({
@@ -144,7 +144,7 @@ export function generateStorePresentationPDF({
   const storeUrl = `${baseUrl}/${storeSlug}`;
   const productsUrl = `${baseUrl}/${storeSlug}/products`;
 
-  const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(productsUrl)}&color=0f172a&bgcolor=ffffff&margin=0`;
+  const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(productsUrl)}&color=0f172a&bgcolor=ffffff&margin=0`;
   const fileName = langKey === 'pt' ? `Apresentacao - ${storeName}` : `Profile - ${storeName}`;
 
   const issueDate = new Date().toLocaleDateString(langKey === 'pt' ? 'pt-PT' : 'en-US', {
@@ -176,7 +176,7 @@ export function generateStorePresentationPDF({
     <html lang="${langKey}">
     <head>
       <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
       <title>${fileName}</title>
       <style>
         @page {
@@ -193,18 +193,19 @@ export function generateStorePresentationPDF({
         html, body {
           width: 100%;
           min-height: 100%;
-          background: #e2e8f0;
+          background: #f8fafc;
         }
         body {
           color: #0f172a;
-          line-height: 1.34;
-          font-size: 11px;
+          line-height: 1.46;
+          font-size: 12.2px;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding: 10px;
+          justify-content: center;
+          padding: 6mm 8mm;
         }
 
         /* Botão Flutuante exclusivo para Mobile (invisível na impressão) */
@@ -217,8 +218,8 @@ export function generateStorePresentationPDF({
           background: #4f46e5;
           color: #ffffff;
           font-weight: 800;
-          font-size: 14px;
-          padding: 10px 20px;
+          font-size: 13.5px;
+          padding: 10px 22px;
           border-radius: 30px;
           box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
           cursor: pointer;
@@ -227,120 +228,93 @@ export function generateStorePresentationPDF({
           border: none;
         }
 
-        /* Trava A4 Milimétrica */
         .page-container {
           position: relative;
-          width: 210mm;
-          height: 296mm;
-          max-height: 296mm;
-          margin: 0 auto;
+          width: 100%;
+          max-width: 196mm;
           background: #ffffff;
-          padding: 8mm 12mm 6mm 12mm;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
+          border-radius: 18px;
+          padding: 16px 20px 12px 20px;
+          border: 1px solid #e2e8f0;
+          box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
           overflow: hidden;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.08);
           page-break-after: avoid !important;
           page-break-inside: avoid !important;
           break-inside: avoid !important;
         }
 
-        .ambient-glow-top {
-          position: absolute;
-          top: -60px;
-          right: -60px;
-          width: 260px;
-          height: 260px;
-          background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, rgba(255, 255, 255, 0) 70%);
-          border-radius: 50%;
-          pointer-events: none;
-        }
-        .ambient-glow-bottom {
-          position: absolute;
-          bottom: -60px;
-          left: -60px;
-          width: 260px;
-          height: 260px;
-          background: radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, rgba(255, 255, 255, 0) 70%);
-          border-radius: 50%;
-          pointer-events: none;
-        }
-
         .content-main {
           display: flex;
           flex-direction: column;
-          gap: 7.5px;
+          gap: 10px;
         }
 
         /* Topo */
         .header {
-          position: relative;
-          z-index: 10;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 9px 14px;
+          padding: 12px 16px;
           background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.95) 50%, rgba(238, 242, 255, 0.95) 100%);
           border: 1px solid #e2e8f0;
-          border-radius: 12px;
+          border-radius: 14px;
         }
         .brand-box {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 14px;
         }
         .brand-logo {
-          width: 68px;
-          height: 68px;
-          border-radius: 12px;
+          width: 82px;
+          height: 82px;
+          border-radius: 14px;
           object-fit: cover;
           border: 2px solid #ffffff;
           background: #ffffff;
-          box-shadow: 0 3px 10px rgba(79, 70, 229, 0.12);
+          box-shadow: 0 4px 14px rgba(79, 70, 229, 0.12);
           flex-shrink: 0;
         }
         .brand-placeholder {
-          width: 68px;
-          height: 68px;
-          border-radius: 12px;
+          width: 82px;
+          height: 82px;
+          border-radius: 14px;
           background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
           color: #ffffff;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 30px;
+          font-size: 36px;
           font-weight: 900;
-          box-shadow: 0 3px 10px rgba(79, 70, 229, 0.16);
+          box-shadow: 0 4px 14px rgba(79, 70, 229, 0.18);
           flex-shrink: 0;
         }
         .brand-title {
-          font-size: 19px;
+          font-size: 22px;
           font-weight: 900;
           color: #0f172a;
-          letter-spacing: -0.3px;
+          letter-spacing: -0.4px;
           line-height: 1.15;
         }
         .brand-badge {
           display: inline-flex;
           align-items: center;
-          gap: 4px;
-          font-size: 8.5px;
+          gap: 4.5px;
+          font-size: 9px;
           font-weight: 800;
           text-transform: uppercase;
           color: #4338ca;
           background: rgba(224, 231, 255, 0.9);
-          padding: 2.5px 7px;
+          padding: 3px 9px;
           border-radius: 9999px;
-          letter-spacing: 0.35px;
-          margin-top: 2.5px;
+          letter-spacing: 0.4px;
+          margin-top: 3.5px;
           border: 1px solid #c7d2fe;
         }
         .meta-box {
           text-align: right;
-          font-size: 9.5px;
+          font-size: 10.2px;
           color: #64748b;
-          line-height: 1.4;
+          line-height: 1.48;
         }
         .meta-box strong {
           color: #0f172a;
@@ -348,8 +322,8 @@ export function generateStorePresentationPDF({
         .currency-tag {
           color: #047857;
           background: #d1fae5;
-          padding: 1px 5.5px;
-          border-radius: 4px;
+          padding: 1.5px 7px;
+          border-radius: 5px;
           font-weight: 800;
           display: inline-block;
           border: 1px solid #a7f3d0;
@@ -357,43 +331,41 @@ export function generateStorePresentationPDF({
 
         /* Banner de Título */
         .title-banner {
-          position: relative;
-          z-index: 10;
           background: linear-gradient(to right, #f8fafc, #ffffff);
-          border-left: 3.5px solid #4f46e5;
-          padding: 6px 11px;
-          border-radius: 0 8px 8px 0;
+          border-left: 4px solid #4f46e5;
+          padding: 8px 14px;
+          border-radius: 0 10px 10px 0;
           border-top: 1px solid #f1f5f9;
           border-bottom: 1px solid #f1f5f9;
           border-right: 1px solid #f1f5f9;
         }
         .title-banner h1 {
-          font-size: 12.5px;
+          font-size: 14px;
           font-weight: 900;
           color: #0f172a;
           letter-spacing: -0.2px;
         }
         .title-banner p {
-          font-size: 9.8px;
+          font-size: 10.8px;
           color: #64748b;
           margin-top: 1px;
         }
 
         /* Seções */
         .section-block {
-          position: relative;
-          z-index: 10;
+          break-inside: avoid;
+          page-break-inside: avoid;
         }
         .section-heading {
-          font-size: 9.8px;
+          font-size: 10.8px;
           font-weight: 900;
           text-transform: uppercase;
           color: #334155;
-          letter-spacing: 0.45px;
-          margin-bottom: 3.5px;
+          letter-spacing: 0.5px;
+          margin-bottom: 4px;
           display: flex;
           align-items: center;
-          gap: 5px;
+          gap: 5.5px;
         }
         .section-heading::after {
           content: "";
@@ -404,14 +376,14 @@ export function generateStorePresentationPDF({
         .about-text {
           background: #ffffff;
           border: 1px solid #e2e8f0;
-          border-radius: 10px;
-          padding: 7.5px 11px;
+          border-radius: 12px;
+          padding: 9px 14px;
           color: #334155;
-          line-height: 1.4;
-          font-size: 10.5px;
+          line-height: 1.48;
+          font-size: 11.6px;
         }
         .about-text p {
-          margin-bottom: 2px;
+          margin-bottom: 3px;
         }
         .about-text p:last-child {
           margin-bottom: 0;
@@ -421,11 +393,11 @@ export function generateStorePresentationPDF({
         .pillars-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
-          gap: 5.5px;
+          gap: 7px;
         }
         .pillar-card {
-          border-radius: 9px;
-          padding: 6px 9px;
+          border-radius: 11px;
+          padding: 7.5px 11px;
           border: 1px solid transparent;
         }
         .pillar-blue {
@@ -446,22 +418,22 @@ export function generateStorePresentationPDF({
         }
 
         .pillar-head {
-          font-size: 9.8px;
+          font-size: 10.8px;
           font-weight: 900;
           color: #0f172a;
           text-transform: uppercase;
           margin-bottom: 1.5px;
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 5px;
         }
         .pillar-icon-box {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 17px;
-          height: 17px;
-          border-radius: 4px;
+          width: 19px;
+          height: 19px;
+          border-radius: 5px;
           background: #ffffff;
           box-shadow: 0 1px 2px rgba(0,0,0,0.04);
           flex-shrink: 0;
@@ -472,54 +444,55 @@ export function generateStorePresentationPDF({
         .icon-amber { color: #d97706; }
 
         .pillar-desc {
-          font-size: 9.8px;
+          font-size: 10.8px;
           color: #475569;
-          line-height: 1.3;
-          padding-left: 21px;
+          line-height: 1.36;
+          padding-left: 24px;
         }
 
         /* Contactos */
         .contacts-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 5.5px;
+          gap: 7px;
         }
         .contact-box {
-          border-radius: 9px;
-          padding: 6px 9px;
+          border-radius: 11px;
+          padding: 7.5px 11px;
           border: 1px solid #e2e8f0;
           background: #f8fafc;
         }
         .contact-label-row {
           display: flex;
           align-items: center;
-          gap: 4px;
-          font-size: 7.8px;
+          gap: 4.5px;
+          font-size: 8.5px;
           font-weight: 800;
           text-transform: uppercase;
           color: #64748b;
-          margin-bottom: 1.5px;
+          margin-bottom: 2px;
         }
         .contact-val {
-          font-size: 10px;
+          font-size: 11.2px;
           font-weight: 800;
           color: #0f172a;
           word-break: break-all;
         }
 
-        /* Bloco do QR Code Horizontal */
+        /* Painel Horizontal do QR Code */
         .hero-qr-section {
-          position: relative;
-          z-index: 10;
           background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 50%, #f0fdf4 100%);
-          border: 1.2px solid #a5b4fc;
-          border-radius: 11px;
-          padding: 7px 12px;
+          border: 1.5px solid #a5b4fc;
+          border-radius: 14px;
+          padding: 9px 15px;
           display: flex;
           flex-direction: row;
           align-items: center;
           justify-content: space-between;
-          gap: 12px;
+          gap: 15px;
+          box-shadow: 0 3px 14px rgba(79, 70, 229, 0.06);
+          break-inside: avoid;
+          page-break-inside: avoid;
         }
         .hero-qr-left {
           flex: 1;
@@ -527,55 +500,55 @@ export function generateStorePresentationPDF({
           flex-direction: column;
           align-items: flex-start;
           text-align: left;
-          gap: 4px;
+          gap: 5px;
         }
         .hero-qr-header {
           display: flex;
           align-items: center;
-          gap: 5px;
+          gap: 6px;
           flex-wrap: wrap;
         }
         .hero-qr-title {
-          font-size: 11px;
+          font-size: 12.2px;
           font-weight: 900;
           color: #312e81;
           text-transform: uppercase;
-          letter-spacing: 0.3px;
+          letter-spacing: 0.35px;
         }
         .hero-qr-badge {
           background: #4338ca;
           color: #ffffff;
-          font-size: 7.5px;
+          font-size: 8.2px;
           font-weight: 800;
           text-transform: uppercase;
-          padding: 1.5px 6px;
+          padding: 2px 7.5px;
           border-radius: 9999px;
-          letter-spacing: 0.3px;
+          letter-spacing: 0.35px;
         }
         .hero-qr-desc {
-          font-size: 9.8px;
+          font-size: 10.8px;
           color: #3730a3;
-          line-height: 1.3;
+          line-height: 1.38;
         }
 
         /* Moldura do QR Code */
         .hero-qr-card {
-          width: 122px;
+          width: 154px;
           background: #ffffff;
-          border: 1.2px solid #a5b4fc;
-          border-radius: 10px;
-          padding: 5px;
+          border: 1.8px solid #a5b4fc;
+          border-radius: 14px;
+          padding: 7px;
           display: flex;
           flex-direction: column;
           align-items: center;
-          box-shadow: 0 3px 10px rgba(79, 70, 229, 0.1);
+          box-shadow: 0 4px 15px rgba(79, 70, 229, 0.1);
           flex-shrink: 0;
         }
         .hero-qr-image-wrapper {
           position: relative;
-          width: 110px;
-          height: 110px;
-          border-radius: 7px;
+          width: 138px;
+          height: 138px;
+          border-radius: 9px;
           overflow: hidden;
           background: #ffffff;
           display: flex;
@@ -590,53 +563,53 @@ export function generateStorePresentationPDF({
         }
         .hero-qr-watermark {
           position: absolute;
-          width: 24px;
-          height: 24px;
+          width: 29px;
+          height: 29px;
           background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%);
-          border-radius: 6px;
-          border: 1.5px solid #ffffff;
+          border-radius: 7px;
+          border: 2px solid #ffffff;
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 2px 5px rgba(0,0,0,0.22);
+          box-shadow: 0 3px 7px rgba(0,0,0,0.25);
         }
         .hero-qr-watermark span {
           color: #ffffff;
-          font-size: 13px;
+          font-size: 15px;
           font-weight: 900;
           line-height: 1;
         }
         .hero-qr-hint {
-          font-size: 7.2px;
+          font-size: 8px;
           font-weight: 800;
           text-transform: uppercase;
           color: #4338ca;
           text-align: center;
-          margin-top: 2.5px;
-          letter-spacing: 0.2px;
+          margin-top: 3px;
+          letter-spacing: 0.25px;
         }
 
         /* Ligação Direta em Texto */
         .hero-url-badge {
           background: #ffffff;
           border: 1px solid #c7d2fe;
-          border-radius: 7px;
-          padding: 3px 8px;
+          border-radius: 8px;
+          padding: 3.5px 9px;
           display: inline-flex;
           flex-direction: column;
           align-items: flex-start;
-          gap: 1px;
+          gap: 1.5px;
           max-width: 100%;
         }
         .hero-url-label {
-          font-size: 7.5px;
+          font-size: 8.2px;
           font-weight: 800;
           text-transform: uppercase;
           color: #6366f1;
         }
         .hero-url-text {
           font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
-          font-size: 9px;
+          font-size: 10.2px;
           font-weight: 800;
           color: #1e1b4b;
           word-break: break-all;
@@ -644,47 +617,48 @@ export function generateStorePresentationPDF({
 
         /* Fechamento e Rodapé */
         .footer-block {
-          margin-top: auto;
-          padding-top: 4px;
+          margin-top: 8px;
+          break-inside: avoid;
+          page-break-inside: avoid;
         }
         .formal-note {
-          font-size: 8.2px;
+          font-size: 9px;
           color: #64748b;
           font-style: italic;
-          line-height: 1.25;
+          line-height: 1.32;
           text-align: center;
-          margin-bottom: 2.5px;
-          padding: 0 6px;
+          margin-bottom: 4px;
+          padding: 0 8px;
         }
         .footer {
           border-top: 1px solid #e2e8f0;
-          padding-top: 2.5px;
+          padding-top: 4px;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          font-size: 7.8px;
+          font-size: 8.5px;
           color: #94a3b8;
         }
 
         @media print {
           html, body {
             background: #ffffff !important;
-            width: 210mm !important;
-            height: 297mm !important;
+            width: 100% !important;
+            height: 100% !important;
             margin: 0 !important;
             padding: 0 !important;
             overflow: hidden !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
           }
           .mobile-print-bar {
             display: none !important;
           }
           .page-container {
-            border: none !important;
+            border: 1px solid #cbd5e1 !important;
             box-shadow: none !important;
-            margin: 0 !important;
-            width: 210mm !important;
-            height: 296mm !important;
-            max-height: 296mm !important;
+            margin: auto !important;
             page-break-after: avoid !important;
             page-break-inside: avoid !important;
           }
@@ -695,10 +669,6 @@ export function generateStorePresentationPDF({
       <button class="mobile-print-bar" onclick="window.print()">${t.printBtn}</button>
 
       <div class="page-container">
-        
-        <div class="ambient-glow-top"></div>
-        <div class="ambient-glow-bottom"></div>
-
         <div class="content-main">
           <!-- Header -->
           <header class="header">
@@ -843,7 +813,6 @@ export function generateStorePresentationPDF({
             <div>${t.generated}</div>
           </footer>
         </div>
-
       </div>
 
       ${isMobile ? `
@@ -861,20 +830,17 @@ export function generateStorePresentationPDF({
     </html>
   `;
 
-  // Em Celulares (Chrome Android / Mobile Safari / WebView)
   if (isMobile) {
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     const blobUrl = URL.createObjectURL(blob);
     const newTab = window.open(blobUrl, '_blank');
 
     if (!newTab) {
-      // Fallback se o navegador bloquear o popup
       window.location.href = blobUrl;
     }
     return;
   }
 
-  // Em Computadores Desktop (Chrome, Safari, Edge, Firefox)
   const existingFrame = document.getElementById('presentation-pdf-iframe');
   if (existingFrame) {
     existingFrame.remove();
