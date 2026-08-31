@@ -146,7 +146,6 @@ export function generateStorePresentationPDF({
   const storeUrl = rawBase.startsWith('http') ? `${rawBase}/${storeSlug}` : `https://${rawBase || 'storelyy.vercel.app'}/${storeSlug}`;
   const productsUrl = `${storeUrl}/products`;
 
-  // QR Code escuro para melhor contraste na impressão (Cor: #1e1b4b)
   const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(productsUrl)}&color=1e1b4b&bgcolor=ffffff&margin=0`;
   const fileName = langKey === 'pt' ? `Apresentacao - ${storeName}` : `Profile - ${storeName}`;
 
@@ -171,458 +170,322 @@ export function generateStorePresentationPDF({
   const emailLink = email ? `mailto:${email}` : productsUrl;
   const refCode = (store.id ? store.id.substring(0, 8) : storeSlug).toUpperCase();
 
-  const html = `
-    <!DOCTYPE html>
-    <html lang="${langKey}">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-      <title>${fileName}</title>
-      <style>
-        /* === REMOVER CABEÇALHOS DO NAVEGADOR E FORÇAR 1 PÁGINA === */
-        @page {
-          size: A4 portrait;
-          margin: 0 !important;
-        }
-        
-        * {
-          box-sizing: border-box;
-          margin: 0;
-          padding: 0;
-          -webkit-font-smoothing: antialiased;
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-        }
+  const html = `<!DOCTYPE html>
+<html lang="${langKey}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>${fileName}</title>
+  <style>
+    /* 1. REGRA ABSOLUTA DE MARGENS: Elimina o Link, Page 1 of 2 e Data na esmagadora maioria dos navegadores */
+    @page {
+      size: A4 portrait;
+      margin: 0mm !important;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
 
-        /* Aumentamos a base da fonte para 16px (mais legível no telemóvel) */
-        html, body {
-          width: 100%;
-          min-height: 100%;
-          background: #0b1120;
-          color: #0f172a;
-          line-height: 1.4;
-          font-size: 16px; 
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-        }
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      background: #0b1120;
+      color: #0f172a;
+      line-height: 1.4;
+      font-size: 16px; 
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
 
-        body {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: 0 0 35px 0;
-        }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 0 35px 0;
+    }
 
-        /* Topbar de Ações */
-        .preview-topbar {
-          position: sticky;
-          top: 0;
-          z-index: 1000;
-          width: 100%;
-          background: rgba(15, 23, 42, 0.95);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.14);
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 12px 24px;
-          margin-bottom: 18px;
-        }
-        .topbar-left { display: flex; align-items: center; gap: 12px; }
-        .btn-back {
-          display: inline-flex; align-items: center; gap: 6px;
-          background: rgba(255, 255, 255, 0.14); color: #ffffff;
-          border: 1px solid rgba(255, 255, 255, 0.28); padding: 7.5px 16px;
-          border-radius: 9999px; font-size: 14px; font-weight: 700;
-          cursor: pointer; transition: all 0.2s ease;
-        }
-        .preview-badge {
-          font-size: 14px; color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 6px;
-        }
-        .preview-badge::before {
-          content: ""; display: inline-block; width: 7.5px; height: 7.5px; border-radius: 50%; background: #10b981;
-        }
-        .btn-print {
-          display: inline-flex; align-items: center; gap: 7px;
-          background: #4f46e5; color: #ffffff; border: none; padding: 8.5px 20px;
-          border-radius: 9999px; font-size: 15px; font-weight: 800; cursor: pointer;
-          box-shadow: 0 4px 16px rgba(79, 70, 229, 0.45);
-        }
+    /* Topbar Visualização Web */
+    .preview-topbar {
+      position: sticky; top: 0; z-index: 1000; width: 100%;
+      background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 24px; margin-bottom: 18px;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255, 255, 255, 0.14); color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.28); padding: 7.5px 16px;
+      border-radius: 9999px; font-size: 14px; font-weight: 700; cursor: pointer;
+    }
+    .preview-badge { font-size: 14px; color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .preview-badge::before { content: ""; display: inline-block; width: 7.5px; height: 7.5px; border-radius: 50%; background: #10b981; }
+    .btn-print {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: #4f46e5; color: #ffffff; border: none; padding: 8.5px 20px;
+      border-radius: 9999px; font-size: 15px; font-weight: 800; cursor: pointer;
+    }
 
-        /* Container Centralizado - Visualização Digital */
-        .page-container {
-          position: relative;
-          width: 95%;
-          max-width: 980px;
-          margin: 0 auto;
-          background: #ffffff;
-          border-radius: 18px;
-          padding: 24px 32px 20px 32px;
-          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
-          display: flex;
-          flex-direction: column;
-          gap: 12px; /* Reduzido para caber texto maior */
-        }
+    /* Container Central */
+    .page-container {
+      position: relative; width: 95%; max-width: 980px; margin: 0 auto;
+      background: #ffffff; border-radius: 18px; padding: 24px 32px 20px 32px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45); display: flex; flex-direction: column; gap: 12px;
+    }
 
-        .content-main {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          flex: 1;
-        }
+    .content-main { display: flex; flex-direction: column; gap: 12px; flex: 1; }
 
-        /* Topo */
-        .header {
-          display: flex; justify-content: space-between; align-items: center;
-          padding: 14px 18px;
-          background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.95) 100%);
-          border: 1px solid #e2e8f0; border-radius: 14px;
-        }
-        .brand-box { display: flex; align-items: center; gap: 15px; text-decoration: none; color: inherit; }
-        .brand-logo {
-          width: 85px; height: 85px; border-radius: 14px; object-fit: cover;
-          border: 2px solid #ffffff; background: #ffffff; box-shadow: 0 4px 16px rgba(79, 70, 229, 0.14); flex-shrink: 0;
-        }
-        .brand-placeholder {
-          width: 85px; height: 85px; border-radius: 14px; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
-          color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 900;
-          box-shadow: 0 4px 16px rgba(79, 70, 229, 0.18); flex-shrink: 0;
-        }
-        .brand-title { font-size: 26px; font-weight: 900; color: #0f172a; letter-spacing: -0.3px; line-height: 1.1; }
-        .brand-badge {
-          display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 800; text-transform: uppercase;
-          color: #4338ca; background: #e0e7ff; padding: 4px 10px; border-radius: 9999px; margin-top: 5px; border: 1px solid #c7d2fe;
-        }
-        .meta-box { text-align: right; font-size: 13px; color: #64748b; line-height: 1.5; }
-        .meta-box strong { color: #0f172a; }
-        .currency-tag { color: #047857; background: #d1fae5; padding: 2px 8px; border-radius: 4px; font-weight: 800; border: 1px solid #a7f3d0; }
+    /* Header */
+    .header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 18px; background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.95) 100%);
+      border: 1px solid #e2e8f0; border-radius: 14px;
+    }
+    .brand-box { display: flex; align-items: center; gap: 15px; text-decoration: none; color: inherit; }
+    .brand-logo { width: 85px; height: 85px; border-radius: 14px; object-fit: cover; border: 2px solid #ffffff; box-shadow: 0 4px 16px rgba(79, 70, 229, 0.14); }
+    .brand-placeholder { width: 85px; height: 85px; border-radius: 14px; background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 900; }
+    .brand-title { font-size: 26px; font-weight: 900; color: #0f172a; letter-spacing: -0.3px; line-height: 1.1; }
+    .brand-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #4338ca; background: #e0e7ff; padding: 4px 10px; border-radius: 9999px; margin-top: 5px; border: 1px solid #c7d2fe; }
+    .meta-box { text-align: right; font-size: 13px; color: #64748b; line-height: 1.5; }
+    .meta-box strong { color: #0f172a; }
+    .currency-tag { color: #047857; background: #d1fae5; padding: 2px 8px; border-radius: 4px; font-weight: 800; border: 1px solid #a7f3d0; }
 
-        /* Banner de Título */
-        .title-banner {
-          background: #f8fafc; border-left: 5px solid #4f46e5; padding: 10px 16px;
-          border-radius: 0 10px 10px 0; border: 1px solid #f1f5f9; border-left-width: 5px;
-        }
-        .title-banner h1 { font-size: 18px; font-weight: 900; color: #0f172a; }
-        .title-banner p { font-size: 13.5px; color: #64748b; margin-top: 2px; }
+    /* Seções */
+    .title-banner { background: #f8fafc; border-left: 5px solid #4f46e5; padding: 10px 16px; border-radius: 0 10px 10px 0; border: 1px solid #f1f5f9; border-left-width: 5px; }
+    .title-banner h1 { font-size: 18px; font-weight: 900; color: #0f172a; }
+    .title-banner p { font-size: 13.5px; color: #64748b; margin-top: 2px; }
 
-        /* Seções */
-        .section-block { break-inside: avoid; page-break-inside: avoid; }
-        .section-heading {
-          font-size: 13px; font-weight: 900; text-transform: uppercase; color: #334155;
-          letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
-        }
-        .section-heading::after { content: ""; flex: 1; height: 1px; background: linear-gradient(to right, #e2e8f0, transparent); }
-        
-        .about-text {
-          background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px;
-          padding: 12px 18px; color: #334155; line-height: 1.45; font-size: 15px;
-        }
-        .about-text p { margin-bottom: 4px; }
-        .about-text p:last-child { margin-bottom: 0; }
+    .section-block { break-inside: avoid; page-break-inside: avoid; }
+    .section-heading { font-size: 13px; font-weight: 900; text-transform: uppercase; color: #334155; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+    .section-heading::after { content: ""; flex: 1; height: 1px; background: linear-gradient(to right, #e2e8f0, transparent); }
+    .about-text { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 18px; color: #334155; line-height: 1.45; font-size: 15px; }
+    .about-text p { margin-bottom: 4px; }
+    .about-text p:last-child { margin-bottom: 0; }
 
-        /* 4 Pilares */
-        .pillars-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .pillar-card { border-radius: 11px; padding: 10px 14px; border: 1px solid transparent; }
-        .pillar-blue { background: #f0f9ff; border-color: #bae6fd; }
-        .pillar-green { background: #f0fdf4; border-color: #bbf7d0; }
-        .pillar-purple { background: #faf5ff; border-color: #e9d5ff; }
-        .pillar-amber { background: #fffbeb; border-color: #fde68a; }
-        
-        .pillar-head { font-size: 13.5px; font-weight: 900; color: #0f172a; text-transform: uppercase; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
-        .pillar-icon-box { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .icon-blue { color: #0284c7; } .icon-green { color: #16a34a; } .icon-purple { color: #9333ea; } .icon-amber { color: #d97706; }
-        .pillar-desc { font-size: 13px; color: #475569; line-height: 1.35; padding-left: 30px; }
+    /* 4 Pilares */
+    .pillars-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .pillar-card { border-radius: 11px; padding: 10px 14px; border: 1px solid transparent; }
+    .pillar-blue { background: #f0f9ff; border-color: #bae6fd; }
+    .pillar-green { background: #f0fdf4; border-color: #bbf7d0; }
+    .pillar-purple { background: #faf5ff; border-color: #e9d5ff; }
+    .pillar-amber { background: #fffbeb; border-color: #fde68a; }
+    .pillar-head { font-size: 13.5px; font-weight: 900; color: #0f172a; text-transform: uppercase; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
+    .pillar-icon-box { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .icon-blue { color: #0284c7; } .icon-green { color: #16a34a; } .icon-purple { color: #9333ea; } .icon-amber { color: #d97706; }
+    .pillar-desc { font-size: 13px; color: #475569; line-height: 1.35; padding-left: 30px; }
 
-        /* Contactos */
-        .contacts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .contact-box {
-          border-radius: 11px; padding: 10px 14px; border: 1px solid #e2e8f0; background: #f8fafc;
-          text-decoration: none !important; color: #0f172a !important; display: block;
-        }
-        .contact-label-row { display: flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 2px; }
-        .contact-val-link { font-size: 14px; font-weight: 800; color: #1d4ed8 !important; word-break: break-all; }
+    /* Contactos */
+    .contacts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .contact-box { border-radius: 11px; padding: 10px 14px; border: 1px solid #e2e8f0; background: #f8fafc; text-decoration: none !important; color: #0f172a !important; display: block; }
+    .contact-label-row { display: flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 2px; }
+    .contact-val-link { font-size: 14px; font-weight: 800; color: #1d4ed8 !important; word-break: break-all; }
 
-        /* ================= QR CODE SUPER CHAMATIVO ================= */
-        .hero-qr-section {
-          background: linear-gradient(135deg, #eef2ff 0%, #ffffff 50%, #f0fdf4 100%);
-          border: 2px solid #a5b4fc; border-radius: 16px; padding: 14px 20px;
-          display: flex; align-items: center; justify-content: space-between; gap: 15px;
-          box-shadow: 0 10px 25px rgba(79, 70, 229, 0.08);
-          break-inside: avoid; page-break-inside: avoid;
-        }
-        .hero-qr-left { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-        .hero-qr-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .hero-qr-title { font-size: 16px; font-weight: 900; color: #1e1b4b; text-transform: uppercase; letter-spacing: 0.5px; }
-        .hero-qr-badge { background: #4f46e5; color: #ffffff; font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 3px 9px; border-radius: 9999px; }
-        .hero-qr-desc { font-size: 13.5px; color: #3730a3; line-height: 1.4; font-weight: 500; }
-        
-        .hero-url-badge {
-          background: #ffffff; border: 1.5px solid #a5b4fc; border-radius: 10px; padding: 6px 12px;
-          display: inline-flex; flex-direction: column; align-items: flex-start; margin-top: 4px;
-          text-decoration: none !important; color: #1e1b4b !important;
-        }
-        .hero-url-label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #4f46e5; }
-        .hero-url-text { font-family: monospace; font-size: 12.5px; font-weight: 800; color: #1d4ed8 !important; text-decoration: underline; }
+    /* QR Code */
+    .hero-qr-section { background: linear-gradient(135deg, #eef2ff 0%, #ffffff 50%, #f0fdf4 100%); border: 2px solid #a5b4fc; border-radius: 16px; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 15px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.08); break-inside: avoid; page-break-inside: avoid; }
+    .hero-qr-left { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .hero-qr-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .hero-qr-title { font-size: 16px; font-weight: 900; color: #1e1b4b; text-transform: uppercase; }
+    .hero-qr-badge { background: #4f46e5; color: #ffffff; font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 3px 9px; border-radius: 9999px; }
+    .hero-qr-desc { font-size: 13.5px; color: #3730a3; line-height: 1.4; font-weight: 500; }
+    .hero-url-badge { background: #ffffff; border: 1.5px solid #a5b4fc; border-radius: 10px; padding: 6px 12px; display: inline-flex; flex-direction: column; align-items: flex-start; margin-top: 4px; text-decoration: none !important; }
+    .hero-url-label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #4f46e5; }
+    .hero-url-text { font-family: monospace; font-size: 12.5px; font-weight: 800; color: #1d4ed8 !important; text-decoration: underline; }
+    .hero-qr-card-wrapper { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .hero-qr-card { width: 145px; height: 145px; background: #ffffff; border: 4px solid #4f46e5; border-radius: 16px; padding: 6px; display: flex; align-items: center; justify-content: center; position: relative; }
+    .hero-qr-img { width: 100%; height: 100%; object-fit: contain; }
+    .hero-qr-watermark { position: absolute; width: 32px; height: 32px; background: #4f46e5; border-radius: 8px; border: 3px solid #ffffff; display: flex; align-items: center; justify-content: center; }
+    .hero-qr-watermark span { color: #ffffff; font-size: 18px; font-weight: 900; line-height: 1; }
+    .hero-qr-action-btn { background: #4f46e5; color: #ffffff !important; font-size: 11.5px; font-weight: 900; text-transform: uppercase; padding: 6px 16px; border-radius: 9999px; text-decoration: none !important; border: 1.5px solid #3730a3; }
 
-        /* O Card do QR Code em si */
-        .hero-qr-card-wrapper {
-          display: flex; flex-direction: column; align-items: center; gap: 8px;
-        }
-        .hero-qr-card {
-          width: 145px; height: 145px; background: #ffffff; 
-          border: 4px solid #4f46e5;
-          border-radius: 16px; padding: 6px;
-          display: flex; align-items: center; justify-content: center;
-          box-shadow: 0 8px 20px rgba(79, 70, 229, 0.25);
-          position: relative;
-        }
-        .hero-qr-img { width: 100%; height: 100%; object-fit: contain; }
-        
-        .hero-qr-watermark {
-          position: absolute; width: 32px; height: 32px;
-          background: #4f46e5; border-radius: 8px; border: 3px solid #ffffff;
-          display: flex; align-items: center; justify-content: center;
-          box-shadow: 0 4px 10px rgba(0,0,0,0.2); pointer-events: none;
-        }
-        .hero-qr-watermark span { color: #ffffff; font-size: 18px; font-weight: 900; line-height: 1; }
-        
-        /* Botão simulado abaixo do QR Code */
-        .hero-qr-action-btn {
-          background: #4f46e5; color: #ffffff !important;
-          font-size: 11.5px; font-weight: 900; text-transform: uppercase;
-          padding: 6px 16px; border-radius: 9999px; text-decoration: none !important;
-          letter-spacing: 0.5px; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
-          border: 1.5px solid #3730a3;
-        }
+    /* Rodapé */
+    .footer-block { margin-top: auto; padding-top: 6px; break-inside: avoid; page-break-inside: avoid; }
+    .formal-note { font-size: 11.5px; color: #64748b; font-style: italic; line-height: 1.35; text-align: center; margin-bottom: 6px; }
+    .footer { border-top: 1px solid #e2e8f0; padding-top: 6px; display: flex; justify-content: center; font-size: 11px; color: #94a3b8; font-weight: 600; }
 
-        /* Rodapé */
-        .footer-block { margin-top: auto; padding-top: 6px; break-inside: avoid; page-break-inside: avoid; }
-        .formal-note { font-size: 11.5px; color: #64748b; font-style: italic; line-height: 1.35; text-align: center; margin-bottom: 6px; }
-        .footer { border-top: 1px solid #e2e8f0; padding-top: 6px; display: flex; justify-content: center; font-size: 11px; color: #94a3b8; font-weight: 600; }
+    /* ================== CSS NUCLEAR DE IMPRESSÃO ================== */
+    @media print {
+      /* Trava o tamanho ao máximo no browser, escondendo qualquer excesso que criaria a 2ª página */
+      html, body {
+        width: 100% !important;
+        height: 100vh !important; 
+        max-height: 100vh !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        overflow: hidden !important; /* ISTO MATA A SEGUNDA PÁGINA */
+        display: block !important;
+      }
+      
+      .preview-topbar { display: none !important; }
 
-        /* ================== CALIBRAÇÃO EXATA PARA IMPRESSÃO MOBILE/PC ================== */
-        @media print {
-          /* Garante dimensões rigorosas, impedindo página extra */
-          html, body {
-            width: 210mm !important;
-            height: 296mm !important; /* 1mm menor que A4 para segurança */
-            max-height: 296mm !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            background: #ffffff !important;
-            overflow: hidden !important;
-            display: block !important;
-          }
-          
-          .preview-topbar { display: none !important; }
+      .page-container {
+        width: 100% !important;
+        height: 100% !important; /* Ocupa exatamente a folha */
+        max-height: 290mm !important; /* Proteção final (A4 tem 297mm) */
+        margin: 0 auto !important;
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 8mm 12mm 10mm 12mm !important; /* Espaço embutido contra corte de impressora */
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        gap: 6px !important; /* Apenas na impressão, aproxima as caixas para o texto maior caber! */
+        overflow: hidden !important; /* Bloqueia o vazamento */
+        page-break-after: avoid !important;
+        page-break-inside: avoid !important;
+      }
+      
+      /* Reduzimos os respiros apenas durante a impressão */
+      .content-main { gap: 8px !important; }
+      .header { padding: 8px 14px !important; }
+      .title-banner { padding: 6px 12px !important; }
+      .about-text { padding: 8px 14px !important; }
+      .pillars-grid { gap: 6px !important; }
+      .pillar-card { padding: 6px 10px !important; }
+      .contacts-grid { gap: 6px !important; }
+      .hero-qr-section { padding: 10px 16px !important; gap: 10px !important; }
+      .footer-block { padding-top: 4px !important; }
+      
+      a[href]:after { content: none !important; } /* Esconde URLs nativas do texto */
+      * { break-inside: avoid !important; page-break-inside: avoid !important; }
+    }
 
-          /* Mantemos o flexbox para distribuir o espaço inteligentemente */
-          .page-container {
-            width: 210mm !important;
-            height: 296mm !important;
-            max-width: none !important;
-            margin: 0 !important;
-            border-radius: 0 !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 10mm 15mm !important; /* Margem interna para evitar cortes da impressora */
-            box-sizing: border-box !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: space-between !important;
-            gap: 10px !important;
-          }
-          
-          .content-main { gap: 10px !important; }
-          .header { padding: 12px 16px !important; }
-          
-          /* Esconder links normais que o browser tenta injetar no texto */
-          a[href]:after { content: none !important; }
-        }
+    /* Responsividade Mobile Web */
+    @media screen and (max-width: 768px) {
+      body { padding: 0; background: #ffffff; }
+      .preview-topbar { padding: 10px 14px; margin-bottom: 0; }
+      .preview-badge { display: none; }
+      .page-container { width: 100% !important; border-radius: 0 !important; border: none !important; box-shadow: none !important; padding: 16px 14px 24px 14px !important; }
+      .header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .meta-box { text-align: left; }
+      .contacts-grid, .pillars-grid { grid-template-columns: 1fr; }
+      .hero-qr-section { flex-direction: column; text-align: center; }
+      .hero-qr-left { align-items: center; }
+      .hero-qr-header { justify-content: center; }
+      .hero-url-badge { align-items: center; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="preview-topbar">
+    <div class="topbar-left">
+      <button class="btn-back" onclick="if(window.opener){window.close();}else if(window.history.length>1){window.history.back();}else{window.location.href='${storeUrl}';}">
+        ${SVG_ICONS.arrowLeft} <span>${t.backBtn}</span>
+      </button>
+      <span class="preview-badge">${t.previewBadge}</span>
+    </div>
+    <button class="btn-print" onclick="window.print()">
+      ${SVG_ICONS.printer} <span>${t.printBtn}</span>
+    </button>
+  </nav>
 
-        /* Responsividade Visual para Ecrãs Menores */
-        @media screen and (max-width: 768px) {
-          body { padding: 0; background: #ffffff; }
-          .preview-topbar { padding: 10px 14px; margin-bottom: 0; }
-          .preview-badge { display: none; }
-          .page-container {
-            width: 100% !important; border-radius: 0 !important; border: none !important; box-shadow: none !important; padding: 16px 14px 24px 14px !important;
-          }
-          .header { flex-direction: column; align-items: flex-start; gap: 12px; }
-          .meta-box { text-align: left; }
-          .contacts-grid, .pillars-grid { grid-template-columns: 1fr; }
-          .hero-qr-section { flex-direction: column; text-align: center; }
-          .hero-qr-left { align-items: center; }
-          .hero-qr-header { justify-content: center; }
-          .hero-url-badge { align-items: center; }
-        }
-      </style>
-    </head>
-    <body>
-      <nav class="preview-topbar">
-        <div class="topbar-left">
-          <button class="btn-back" onclick="if(window.opener){window.close();}else if(window.history.length>1){window.history.back();}else{window.location.href='${storeUrl}';}">
-            ${SVG_ICONS.arrowLeft} <span>${t.backBtn}</span>
-          </button>
-          <span class="preview-badge">${t.previewBadge}</span>
+  <div class="page-container">
+    <div class="content-main">
+      <header class="header">
+        <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="brand-box">
+          ${store.logo_url ? `<img src="${store.logo_url}" class="brand-logo" alt="${storeName}" crossorigin="anonymous" />` : `<div class="brand-placeholder">${storeName.charAt(0)}</div>`}
+          <div><div class="brand-title">${storeName}</div><div class="brand-badge">${SVG_ICONS.checkBadge} ${t.docBadge}</div></div>
+        </a>
+        <div class="meta-box">
+          <div><strong>${t.ref}:</strong> #${refCode}</div>
+          <div><strong>${t.date}:</strong> ${issueDate}</div>
+          ${activeSince ? `<div><strong>${t.since}:</strong> ${activeSince}</div>` : ''}
+          <div><strong>${t.currency}:</strong> <span class="currency-tag">${currencyFormatted}</span></div>
         </div>
-        <button class="btn-print" onclick="window.print()">
-          ${SVG_ICONS.printer} <span>${t.printBtn}</span>
-        </button>
-      </nav>
+      </header>
 
-      <div class="page-container">
-        <div class="content-main">
-          
-          <!-- Header -->
-          <header class="header">
-            <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="brand-box">
-              ${store.logo_url 
-                ? `<img src="${store.logo_url}" class="brand-logo" alt="${storeName}" crossorigin="anonymous" />`
-                : `<div class="brand-placeholder">${storeName.charAt(0)}</div>`
-              }
-              <div>
-                <div class="brand-title">${storeName}</div>
-                <div class="brand-badge">${SVG_ICONS.checkBadge} ${t.docBadge}</div>
-              </div>
-            </a>
-            <div class="meta-box">
-              <div><strong>${t.ref}:</strong> #${refCode}</div>
-              <div><strong>${t.date}:</strong> ${issueDate}</div>
-              ${activeSince ? `<div><strong>${t.since}:</strong> ${activeSince}</div>` : ''}
-              <div><strong>${t.currency}:</strong> <span class="currency-tag">${currencyFormatted}</span></div>
-            </div>
-          </header>
+      <section class="title-banner">
+        <h1>${t.docTitle}</h1>
+        <p>${t.docSubtitle}</p>
+      </section>
 
-          <!-- Banner Título -->
-          <section class="title-banner">
-            <h1>${t.docTitle}</h1>
-            <p>${t.docSubtitle}</p>
-          </section>
-
-          <!-- Sobre Empresa -->
-          <section class="section-block">
-            <h2 class="section-heading">${t.aboutTitle}</h2>
-            <div class="about-text">
-              <p>${introSelected}</p>
-              <p>${store.description || t.defaultDesc}</p>
-            </div>
-          </section>
-
-          <!-- 4 Pilares -->
-          <section class="section-block">
-            <h2 class="section-heading">${t.pillarsTitle}</h2>
-            <div class="pillars-grid">
-              <div class="pillar-card pillar-blue">
-                <div class="pillar-head"><span class="pillar-icon-box icon-blue">${SVG_ICONS.globe}</span><span>${t.p1Title}</span></div>
-                <div class="pillar-desc">${t.p1Desc}</div>
-              </div>
-              <div class="pillar-card pillar-green">
-                <div class="pillar-head"><span class="pillar-icon-box icon-green">${SVG_ICONS.message}</span><span>${t.p2Title}</span></div>
-                <div class="pillar-desc">${t.p2Desc}</div>
-              </div>
-              <div class="pillar-card pillar-purple">
-                <div class="pillar-head"><span class="pillar-icon-box icon-purple">${SVG_ICONS.shield}</span><span>${t.p3Title}</span></div>
-                <div class="pillar-desc">${t.p3Desc}</div>
-              </div>
-              <div class="pillar-card pillar-amber">
-                <div class="pillar-head"><span class="pillar-icon-box icon-amber">${SVG_ICONS.star}</span><span>${t.p4Title}</span></div>
-                <div class="pillar-desc">${t.p4Desc}</div>
-              </div>
-            </div>
-          </section>
-
-          <!-- Contactos -->
-          <section class="section-block">
-            <h2 class="section-heading">${t.contactsTitle}</h2>
-            <div class="contacts-grid">
-              <a href="${callLink}" class="contact-box">
-                <div class="contact-label-row"><span class="icon-green">${SVG_ICONS.phone}</span><span>${t.whatsapp}</span></div>
-                <div class="contact-val-link" style="text-decoration:none">${phone || t.unavailable}</div>
-              </a>
-              <a href="${emailLink}" class="contact-box">
-                <div class="contact-label-row"><span class="icon-blue">${SVG_ICONS.mail}</span><span>${t.email}</span></div>
-                <div class="contact-val-link" style="text-decoration:none">${email || t.unavailable}</div>
-              </a>
-              <a href="${storeUrl}" target="_blank" class="contact-box">
-                <div class="contact-label-row"><span class="icon-purple">${SVG_ICONS.globe}</span><span>${t.website}</span></div>
-                <div class="contact-val-link" style="text-decoration:none">${storeUrl}</div>
-              </a>
-            </div>
-          </section>
-
-          <!-- QR Code Super Chamativo -->
-          <section class="hero-qr-section">
-            <div class="hero-qr-left">
-              <div class="hero-qr-header">
-                ${SVG_ICONS.qrScanIcon}
-                <div class="hero-qr-title">${t.accessTitle}</div>
-                <span class="hero-qr-badge">${t.officialBadge}</span>
-              </div>
-              <p class="hero-qr-desc">${t.accessSubtitle}</p>
-              <a href="${productsUrl}" target="_blank" class="hero-url-badge">
-                <span class="hero-url-label">${t.directUrlLabel}</span>
-                <span class="hero-url-text">${productsUrl}</span>
-              </a>
-            </div>
-
-            <!-- Card QR com Botão Call-To-Action -->
-            <div class="hero-qr-card-wrapper">
-              <div class="hero-qr-card">
-                <img src="${qrCodeApiUrl}" alt="QR Code" class="hero-qr-img" crossorigin="anonymous" />
-                <div class="hero-qr-watermark"><span>S</span></div>
-              </div>
-              <a href="${productsUrl}" target="_blank" class="hero-qr-action-btn">
-                ${t.qrScanHint}
-              </a>
-            </div>
-          </section>
-          
+      <section class="section-block">
+        <h2 class="section-heading">${t.aboutTitle}</h2>
+        <div class="about-text">
+          <p>${introSelected}</p>
+          <p>${store.description || t.defaultDesc}</p>
         </div>
+      </section>
 
-        <!-- Rodapé Formal -->
-        <div class="footer-block">
-          <div class="formal-note">${closingSelected}</div>
-          <footer class="footer">
-            <div>${storeName} &copy; ${new Date().getFullYear()} · ${t.rights}</div>
-          </footer>
+      <section class="section-block">
+        <h2 class="section-heading">${t.pillarsTitle}</h2>
+        <div class="pillars-grid">
+          <div class="pillar-card pillar-blue"><div class="pillar-head"><span class="pillar-icon-box icon-blue">${SVG_ICONS.globe}</span><span>${t.p1Title}</span></div><div class="pillar-desc">${t.p1Desc}</div></div>
+          <div class="pillar-card pillar-green"><div class="pillar-head"><span class="pillar-icon-box icon-green">${SVG_ICONS.message}</span><span>${t.p2Title}</span></div><div class="pillar-desc">${t.p2Desc}</div></div>
+          <div class="pillar-card pillar-purple"><div class="pillar-head"><span class="pillar-icon-box icon-purple">${SVG_ICONS.shield}</span><span>${t.p3Title}</span></div><div class="pillar-desc">${t.p3Desc}</div></div>
+          <div class="pillar-card pillar-amber"><div class="pillar-head"><span class="pillar-icon-box icon-amber">${SVG_ICONS.star}</span><span>${t.p4Title}</span></div><div class="pillar-desc">${t.p4Desc}</div></div>
         </div>
-      </div>
+      </section>
 
-      <script>
-        window.addEventListener('load', function() {
-          var images = Array.from(document.images || []);
-          var promises = images.map(function(img) {
-            if (img.complete) return Promise.resolve();
-            return new Promise(function(resolve) {
-              img.onload = resolve; img.onerror = resolve;
-            });
-          });
-          Promise.all(promises).then(function() {
-            setTimeout(function() {
-              try { window.print(); } catch(e) {}
-            }, 300);
-          });
-        });
-      </script>
-    </body>
-    </html>
-  `;
+      <section class="section-block">
+        <h2 class="section-heading">${t.contactsTitle}</h2>
+        <div class="contacts-grid">
+          <a href="${callLink}" class="contact-box"><div class="contact-label-row"><span class="icon-green">${SVG_ICONS.phone}</span><span>${t.whatsapp}</span></div><div class="contact-val-link">${phone || t.unavailable}</div></a>
+          <a href="${emailLink}" class="contact-box"><div class="contact-label-row"><span class="icon-blue">${SVG_ICONS.mail}</span><span>${t.email}</span></div><div class="contact-val-link">${email || t.unavailable}</div></a>
+          <a href="${storeUrl}" target="_blank" class="contact-box"><div class="contact-label-row"><span class="icon-purple">${SVG_ICONS.globe}</span><span>${t.website}</span></div><div class="contact-val-link">${storeUrl}</div></a>
+        </div>
+      </section>
+
+      <section class="hero-qr-section">
+        <div class="hero-qr-left">
+          <div class="hero-qr-header">
+            ${SVG_ICONS.qrScanIcon}
+            <div class="hero-qr-title">${t.accessTitle}</div>
+            <span class="hero-qr-badge">${t.officialBadge}</span>
+          </div>
+          <p class="hero-qr-desc">${t.accessSubtitle}</p>
+          <a href="${productsUrl}" target="_blank" class="hero-url-badge"><span class="hero-url-label">${t.directUrlLabel}</span><span class="hero-url-text">${productsUrl}</span></a>
+        </div>
+        <div class="hero-qr-card-wrapper">
+          <div class="hero-qr-card">
+            <img src="${qrCodeApiUrl}" alt="QR Code" class="hero-qr-img" crossorigin="anonymous" />
+            <div class="hero-qr-watermark"><span>S</span></div>
+          </div>
+          <a href="${productsUrl}" target="_blank" class="hero-qr-action-btn">${t.qrScanHint}</a>
+        </div>
+      </section>
+    </div>
+
+    <div class="footer-block">
+      <div class="formal-note">${closingSelected}</div>
+      <footer class="footer"><div>${storeName} &copy; ${new Date().getFullYear()} · ${t.rights}</div></footer>
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener('load', function() {
+      var images = Array.from(document.images || []);
+      var promises = images.map(function(img) {
+        if (img.complete) return Promise.resolve();
+        return new Promise(function(resolve) { img.onload = resolve; img.onerror = resolve; });
+      });
+      Promise.all(promises).then(function() {
+        setTimeout(function() { try { window.print(); } catch(e) {} }, 300);
+      });
+    });
+  </script>
+</body>
+</html>`;
 
   try {
-    // NOVA ESTRATÉGIA: Evitar o 'blob:' no telemóvel usando document.write() se possível.
-    // Isso remove o link feio do cabeçalho da impressão na maioria dos dispositivos.
     const newTab = window.open('', '_blank');
     if (newTab) {
       newTab.document.open();
       newTab.document.write(html);
       newTab.document.close();
     } else {
-      // Fallback seguro caso o navegador bloqueie a abertura direta
       const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
       window.location.href = URL.createObjectURL(blob);
     }
   } catch (err) {
-    console.error('Falha ao abrir pré-visualização comercial:', err);
+    console.error('Falha ao abrir pré-visualização:', err);
   }
 }
