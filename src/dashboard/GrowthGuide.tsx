@@ -265,7 +265,8 @@ export const GrowthGuide = memo(function GrowthGuide() {
       name: t('guide_platform_ig_name') || 'Instagram',
       icon: <Instagram size={18} className="text-pink-600 shrink-0" />,
       color: 'bg-pink-50 border-pink-200 text-pink-700',
-      deepLink: 'instagram://edit_profile',
+      // Universal Link que abre diretamente o app na tela de edição ou o navegador autenticado
+      deepLink: 'https://www.instagram.com/accounts/edit/',
       webUrl: 'https://www.instagram.com/accounts/edit/',
       mockupType: 'instagram' as const,
       steps: [
@@ -291,8 +292,9 @@ export const GrowthGuide = memo(function GrowthGuide() {
       name: t('guide_platform_tt_name') || 'TikTok',
       icon: <Video size={18} className="text-sky-600 shrink-0" />,
       color: 'bg-sky-50 border-sky-200 text-sky-700',
-      deepLink: 'snssdk1233://user/profile',
-      webUrl: 'https://www.tiktok.com/profile',
+      // 'tiktok://' ou 'snssdk1180://' com fallback para a web do TikTok
+      deepLink: 'tiktok://user/profile',
+      webUrl: 'https://www.tiktok.com',
       mockupType: 'tiktok' as const,
       steps: [
         t('guide_platform_tt_step1') || 'No seu perfil, toque no menu do topo > "Configurações e Privacidade" > "Conta" > "Trocar para Conta Corporativa".',

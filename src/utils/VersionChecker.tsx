@@ -20,11 +20,12 @@ export default function VersionChecker() {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [currentVersionData, setCurrentVersionData] = useState<VersionData | null>(null);
   const [newVersionData, setNewVersionData] = useState<VersionData | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
   const isUpdatingRef = useRef(false);
 
   const performDeepBrowserCleanup = async (newVersionNumber: number) => {
     try {
-      // 1. Preserva apenas os dados essenciais
+      // 1. Preserva dados essenciais
       const preservedData: Record<string, string> = {};
       KEYS_TO_PRESERVE.forEach((key) => {
         const val = localStorage.getItem(key);
@@ -124,7 +125,6 @@ export default function VersionChecker() {
       const localVersionStr = localStorage.getItem(INSTALLED_VERSION_KEY);
 
       if (isInitialLoad) {
-        // Se a página já foi recarregada diretamente com nova versão (ex: F5)
         if (localVersionStr && localVersionStr !== serverVersionStr) {
           await performDeepBrowserCleanup(serverData.version);
           setShowWelcomeModal(true);
@@ -132,14 +132,12 @@ export default function VersionChecker() {
           localStorage.setItem(INSTALLED_VERSION_KEY, serverVersionStr);
         }
 
-        // Se veio de um reload pós-update ou nova versão detectada
         if (localStorage.getItem(BETA_WELCOME_KEY) === 'true') {
           setShowWelcomeModal(true);
         }
 
         setCurrentVersionData(serverData);
       } else {
-        // Verificação periódica ou ao focar na janela: apenas avisa, sem reload automático
         if (currentVersionData && serverData.version !== currentVersionData.version) {
           setNewVersionData(serverData);
           setIsOutdated(true);
@@ -196,9 +194,22 @@ export default function VersionChecker() {
     };
   }, [checkVersion]);
 
+  // Fecha com a tecla Esc apenas para o modal de boas-vindas
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showWelcomeModal) {
+        handleDismissWelcome();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showWelcomeModal]);
+
   const handleUpdateClick = async () => {
     if (newVersionData && !isUpdatingRef.current) {
       isUpdatingRef.current = true;
+      setIsUpdating(true);
       await performDeepBrowserCleanup(newVersionData.version);
       executeHardReload();
     }
@@ -212,7 +223,7 @@ export default function VersionChecker() {
   const currentFormattedDate = currentVersionData?.version
     ? new Intl.DateTimeFormat(undefined, { 
         day: '2-digit', 
-        month: '2-digit', 
+        month: 'short', 
         year: 'numeric' 
       }).format(new Date(currentVersionData.version))
     : '';
@@ -220,68 +231,78 @@ export default function VersionChecker() {
   const newFormattedDate = newVersionData?.version
     ? new Intl.DateTimeFormat(undefined, { 
         day: '2-digit', 
-        month: '2-digit', 
+        month: 'short', 
         year: 'numeric' 
       }).format(new Date(newVersionData.version))
     : '';
 
-  // 1. Modal de Boas-Vindas ao Beta (Soft UI)
+  // 1. Modal de Boas-Vindas (Permite clicar fora ou fechar)
   if (showWelcomeModal) {
     return (
       <div 
-        className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-4 sm:p-6 bg-black/55"
-        style={{ contain: 'strict' }}
+        className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-4 sm:p-6 bg-slate-950/60  animate-in fade-in duration-200"
+        onClick={handleDismissWelcome}
       >
         <div 
-          className="w-full sm:max-w-md bg-[#f4f5f9] rounded-[24px] p-6 sm:p-7 border border-white/80 text-left shadow-[8px_8px_20px_#d1d5db,-8px_-8px_20px_#ffffff]"
-          style={{ contain: 'layout paint' }}
+          className="relative w-full sm:max-w-md bg-white rounded-3xl p-6 sm:p-7 border border-slate-100 text-left shadow-2xl shadow-slate-900/20 overflow-hidden animate-in zoom-in-95 duration-200"
+          onClick={(e) => e.stopPropagation()}
         >
+          {/* Efeito luminoso no topo */}
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-emerald-500/10 rounded-full  pointer-events-none" />
+
           {/* Header & Badges */}
-          <div className="flex items-center justify-between mb-5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f4f5f9] shadow-[inset_2px_2px_4px_#d1d5db,inset_-2px_-2px_4px_#ffffff]">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span className="text-[11px] font-mono font-bold tracking-wider text-slate-700 uppercase">
+          <div className="flex items-center justify-between mb-5 relative z-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/60">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[11px] font-mono font-bold tracking-wider text-emerald-800 uppercase">
                 {t('beta_badge', { defaultValue: 'Storely Beta' })}
               </span>
             </div>
 
-            {/* Versão atual em execução */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#f4f5f9] shadow-[inset_1px_1px_3px_#d1d5db,inset_-1px_-1px_3px_#ffffff] text-[11px] font-mono font-medium text-slate-500">
-              <span>v{currentVersionData?.packageVersion || '0.2.4'}</span>
-            </div>
+            <button
+              onClick={handleDismissWelcome}
+              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors cursor-pointer"
+              title="Fechar"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
 
-          <h3 className="text-xl font-bold text-slate-800 tracking-tight mb-2">
+          <h3 className="text-xl font-bold text-slate-900 tracking-tight mb-2 relative z-10">
             {t('welcome_beta_title', { defaultValue: 'Bem-vindo ao Beta da Storely' })}
           </h3>
           
-          <p className="text-sm text-slate-600 leading-relaxed mb-5">
+          <p className="text-sm text-slate-600 leading-relaxed mb-5 relative z-10">
             {t('welcome_beta_desc', { 
-              defaultValue: 'Seu ambiente foi atualizado e totalmente otimizado com a versão mais recente. Aproveite as novas ferramentas!' 
+              defaultValue: 'Seu ambiente foi atualizado e totalmente otimizado com a versão mais recente. Aproveite as novidades!' 
             })}
           </p>
 
-          {/* Card com detalhes da versão atual */}
-          <div className="p-3.5 rounded-xl bg-[#f4f5f9] shadow-[inset_2px_2px_5px_#d1d5db,inset_-2px_-2px_5px_#ffffff] mb-6 space-y-1.5">
-            <div className="flex justify-between text-xs font-mono text-slate-500">
+          {/* Detalhes da versão */}
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 mb-6 space-y-2 relative z-10">
+            <div className="flex justify-between items-center text-xs font-mono text-slate-600">
               <span>{t('current_version_label', { defaultValue: 'Versão em execução:' })}</span>
-              <span className="font-semibold text-slate-700">v{currentVersionData?.packageVersion || '0.2.4'}</span>
+              <span className="font-bold text-slate-800 px-2 py-0.5 rounded-md bg-white border border-slate-200/60 shadow-xs">
+                v{currentVersionData?.packageVersion || '0.2.4'}
+              </span>
             </div>
             {currentFormattedDate && (
-              <div className="flex justify-between text-[11px] font-mono text-slate-400">
+              <div className="flex justify-between items-center text-[11px] font-mono text-slate-400 pt-1.5 border-t border-slate-200/50">
                 <span>{t('build_date_label', { defaultValue: 'Compilação:' })}</span>
-                <span>{currentFormattedDate}</span>
+                <span className="font-medium text-slate-500">{currentFormattedDate}</span>
               </div>
             )}
           </div>
 
-          {/* Botão Ação */}
+          {/* Botão de Ação */}
           <button
             onClick={handleDismissWelcome}
-            className="w-full bg-[#f4f5f9] hover:bg-slate-100 active:shadow-[inset_3px_3px_6px_#d1d5db,inset_-3px_-3px_6px_#ffffff] shadow-[4px_4px_10px_#d1d5db,-4px_-4px_10px_#ffffff] text-slate-800 text-sm font-semibold py-3.5 px-5 rounded-xl border border-white/60 flex items-center justify-between cursor-pointer"
+            className="w-full bg-slate-900 hover:bg-slate-800 active:scale-[0.99] text-white text-sm font-semibold py-3.5 px-5 rounded-2xl shadow-lg shadow-slate-900/15 flex items-center justify-between transition-all cursor-pointer relative z-10"
           >
             <span>{t('welcome_beta_button', { defaultValue: 'Começar a Explorar' })}</span>
-            <svg className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <svg className="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
           </button>
@@ -290,68 +311,83 @@ export default function VersionChecker() {
     );
   }
 
-  // 2. Modal de Nova Versão Detectada
+  // 2. Modal de Nova Versão Detectada (Bloqueante, sem fechar ao clicar fora)
   if (!isOutdated) return null;
 
   return (
     <div 
-      className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-4 sm:p-6 bg-black/55"
-      style={{ contain: 'strict' }}
+      className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-4 sm:p-6 bg-slate-950/70  animate-in fade-in duration-200"
     >
       <div 
-        className="w-full sm:max-w-md bg-[#f4f5f9] rounded-[24px] p-6 sm:p-7 border border-white/80 text-left shadow-[8px_8px_20px_#d1d5db,-8px_-8px_20px_#ffffff]"
-        style={{ contain: 'layout paint' }}
+        className="relative w-full sm:max-w-md bg-white rounded-3xl p-6 sm:p-7 border border-amber-100 text-left shadow-2xl shadow-slate-950/40 overflow-hidden animate-in zoom-in-95 duration-200"
       >
-        <div className="flex items-center justify-between mb-5">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f4f5f9] shadow-[inset_2px_2px_4px_#d1d5db,inset_-2px_-2px_4px_#ffffff]">
-            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-            <span className="text-[11px] font-mono font-bold tracking-wider text-slate-700 uppercase">
+        {/* Glow de destaque no topo */}
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-44 h-44 bg-amber-500/15 rounded-full  pointer-events-none" />
+
+        <div className="flex items-center justify-between mb-5 relative z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200">
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+            <span className="text-[11px] font-mono font-bold tracking-wider text-amber-800 uppercase">
               {t('version_update_badge', { defaultValue: 'Nova Versão Disponível' })}
             </span>
           </div>
 
-          <span className="text-xs font-mono font-medium text-slate-500 px-2.5 py-1 rounded-lg bg-[#f4f5f9] shadow-[inset_1px_1px_3px_#d1d5db,inset_-1px_-1px_3px_#ffffff]">
+          <span className="text-xs font-mono font-bold text-amber-700 px-2.5 py-1 rounded-lg bg-amber-50/80 border border-amber-200/60">
             v{newVersionData?.packageVersion}
           </span>
         </div>
 
-        <h3 className="text-xl font-bold text-slate-800 tracking-tight mb-2">
+        <h3 className="text-xl font-bold text-slate-900 tracking-tight mb-2 relative z-10">
           {t('version_update_title', { defaultValue: 'Atualização Pronta' })}
         </h3>
         
-        <p className="text-sm text-slate-600 leading-relaxed mb-5">
+        <p className="text-sm text-slate-600 leading-relaxed mb-5 relative z-10">
           {t('version_update_desc', { 
-            defaultValue: 'Novas melhorias e correções foram aplicadas. Atualize para continuar.' 
+            defaultValue: 'Uma versão mais recente do aplicativo está pronta com melhorias e correções importantes. Atualize agora para continuar.' 
           })}
         </p>
 
         {/* Comparativo de versões */}
-        <div className="p-3.5 rounded-xl bg-[#f4f5f9] shadow-[inset_2px_2px_5px_#d1d5db,inset_-2px_-2px_5px_#ffffff] mb-6 space-y-1.5 text-xs font-mono">
-          <div className="flex justify-between text-slate-500">
+        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 mb-6 space-y-2.5 text-xs font-mono relative z-10">
+          <div className="flex justify-between items-center text-slate-500">
             <span>{t('current_version_label', { defaultValue: 'Versão em execução:' })}</span>
-            <span className="text-slate-600">v{currentVersionData?.packageVersion || '0.2.4'}</span>
+            <span className="text-slate-700 font-semibold">v{currentVersionData?.packageVersion || '0.2.4'}</span>
           </div>
-          <div className="flex justify-between text-slate-700 font-semibold">
-            <span>{t('new_version_label', { defaultValue: 'Nova versão:' })}</span>
-            <span className="text-emerald-600">v{newVersionData?.packageVersion}</span>
+          <div className="flex justify-between items-center text-slate-700">
+            <span className="font-semibold">{t('new_version_label', { defaultValue: 'Nova versão:' })}</span>
+            <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+              v{newVersionData?.packageVersion}
+            </span>
           </div>
           {newFormattedDate && (
-            <div className="flex justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-200/60">
+            <div className="flex justify-between items-center text-[11px] text-slate-400 pt-2 border-t border-slate-200/60">
               <span>{t('version_update_released', { defaultValue: 'Lançado em' })}</span>
-              <span>{newFormattedDate}</span>
+              <span className="text-slate-500 font-medium">{newFormattedDate}</span>
             </div>
           )}
         </div>
 
-        {/* Botão de Ação Manual */}
+        {/* Botão de Atualização Manual */}
         <button
           onClick={handleUpdateClick}
-          className="w-full bg-[#1e293b] hover:bg-[#0f172a] active:scale-[0.99] text-white text-sm font-semibold py-3.5 px-5 rounded-xl shadow-[4px_4px_10px_#d1d5db] flex items-center justify-between cursor-pointer"
+          disabled={isUpdating}
+          className="w-full bg-amber-600 hover:bg-amber-500 active:scale-[0.99] disabled:opacity-75 text-white text-sm font-semibold py-3.5 px-5 rounded-2xl shadow-lg shadow-amber-600/25 flex items-center justify-between transition-all cursor-pointer relative z-10"
         >
-          <span>{t('version_update_button', { defaultValue: 'Atualizar Agora' })}</span>
-          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-          </svg>
+          <span>
+            {isUpdating 
+              ? (t('version_updating_loading', { defaultValue: 'A sincronizar nova versão...' }))
+              : (t('version_update_button', { defaultValue: 'Atualizar Agora' }))}
+          </span>
+          {isUpdating ? (
+            <svg className="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4 text-amber-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          )}
         </button>
       </div>
     </div>
