@@ -189,7 +189,7 @@ export function generateStorePresentationPDF({
     img { image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; }
 
     /* =========================================================================
-       VISUALIZAÇÃO DESKTOP (Ecrã do PC)
+       VISUALIZAÇÃO DESKTOP (LARGURA AMPLIADA A 96%)
        ========================================================================= */
     html, body {
       width: 100%; min-height: 100%;
@@ -213,9 +213,10 @@ export function generateStorePresentationPDF({
     .preview-badge::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #10b981; }
     .btn-print { display: inline-flex; align-items: center; gap: 10px; background: #4f46e5; color: #ffffff; border: none; padding: 14px 30px; border-radius: 9999px; font-size: 17px; font-weight: 800; cursor: pointer; }
 
+    /* Container expandido a 96% para aproveitar as laterais do monitor */
     .page-container {
-      position: relative; width: 90%; max-width: 1200px; margin: 0 auto;
-      background: #ffffff; border-radius: 30px; padding: 50px 70px; 
+      position: relative; width: 96%; max-width: 1900px; margin: 0 auto;
+      background: #ffffff; border-radius: 30px; padding: 50px 5%; 
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4); display: flex; flex-direction: column; gap: 30px; 
     }
     .content-main { display: flex; flex-direction: column; gap: 24px; flex: 1; }
@@ -290,7 +291,7 @@ export function generateStorePresentationPDF({
     .footer { border-top: 2px solid #e2e8f0; padding-top: 20px; display: flex; justify-content: center; font-size: 16px; color: #94a3b8; font-weight: 600; }
 
     /* =========================================================================
-       CSS IMPRESSÃO (O MEIO TERMO PERFEITO)
+       CSS IMPRESSÃO (INTOCÁVEL)
        ========================================================================= */
     @media print {
       html, body { width: 100% !important; height: 100% !important; margin: 0 !important; padding: 0 !important; background: #ffffff !important; overflow: hidden !important; }
@@ -360,7 +361,7 @@ export function generateStorePresentationPDF({
     }
 
     /* =========================================================================
-       RESPONSIVIDADE MOBILE WEB (Trancado e Sem Risco de Cortar)
+       RESPONSIVIDADE MOBILE WEB (Protegido e Trancado)
        ========================================================================= */
     @media screen and (max-width: 768px) {
       body { padding: 0 !important; background: #0b1120 !important; font-size: 17px !important; }
@@ -412,7 +413,6 @@ export function generateStorePresentationPDF({
       .hero-url-text { font-size: 14px !important; }
       
       .hero-qr-card-wrapper { gap: 10px !important; }
-      /* QR Code seguro na tela do telemóvel para não sair das bordas */
       .hero-qr-card { width: 170px !important; height: 170px !important; padding: 8px !important; border-width: 4px !important; border-radius: 16px !important; }
       .hero-qr-watermark { width: 38px !important; height: 38px !important; border-radius: 8px !important; border-width: 2px !important; }
       .hero-qr-watermark span { font-size: 18px !important; }
