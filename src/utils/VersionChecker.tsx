@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslate } from '../context/LanguageContext';
 
 interface VersionData {
@@ -17,8 +16,6 @@ const INSTALLED_VERSION_KEY = 'APP_INSTALLED_VERSION';
 
 export default function VersionChecker() {
   const { t } = useTranslate();
-  const navigate = useNavigate();
-  const location = useLocation();
 
   const [isOutdated, setIsOutdated] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
@@ -27,6 +24,15 @@ export default function VersionChecker() {
   const [isUpdating, setIsUpdating] = useState(false);
   const isUpdatingRef = useRef(false);
 
+  // Navega para a raiz de forma limpa e compatível
+  const navigateToRoot = () => {
+    if (window.location.pathname !== '/') {
+      window.history.replaceState({}, '', '/');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }
+  };
+
+  // Executado SEMPRE e APENAS pelo bundle da versão recente
   const performDeepBrowserCleanup = async (newVersionNumber: number) => {
     try {
       // 1. Preserva dados essenciais
@@ -97,14 +103,14 @@ export default function VersionChecker() {
         }
       }
 
-      // 7. Restaura chaves preservadas e atualiza flag de versão
+      // 7. Restaura as chaves salvas e grava os metadados da nova versão
       Object.entries(preservedData).forEach(([key, val]) => {
         localStorage.setItem(key, val);
       });
       localStorage.setItem(INSTALLED_VERSION_KEY, newVersionNumber.toString());
       localStorage.setItem(BETA_WELCOME_KEY, 'true');
     } catch (error) {
-      console.error('Erro na limpeza:', error);
+      console.error('Erro na limpeza da nova versão:', error);
     }
   };
 
@@ -123,18 +129,15 @@ export default function VersionChecker() {
       const localVersionStr = localStorage.getItem(INSTALLED_VERSION_KEY);
 
       if (isInitialLoad) {
-        // DETETA QUE JÁ ENTROU NA NOVA VERSÃO
+        // DETETA QUE ACABOU DE SUBIR NA VERSÃO NOVA COM AS NOVAS INSTRUÇÕES
         if (localVersionStr && localVersionStr !== serverVersionStr) {
           isUpdatingRef.current = true;
           
-          // Executa a limpeza profunda agora que os novos assets carregaram
+          // Executa todo o processo novo de limpeza
           await performDeepBrowserCleanup(serverData.version);
-
-          // Navega via React Router DOM para '/' caso esteja noutra rota
-          if (location.pathname !== '/') {
-            navigate('/', { replace: true });
-          }
           
+          // Conduz o utilizador até à rota inicial '/'
+          navigateToRoot();
           setShowWelcomeModal(true);
         } else if (!localVersionStr) {
           localStorage.setItem(INSTALLED_VERSION_KEY, serverVersionStr);
@@ -146,7 +149,7 @@ export default function VersionChecker() {
 
         setCurrentVersionData(serverData);
       } else {
-        // NA VERSÃO ANTIGA: Mostra apenas o aviso
+        // NA VERSÃO ANTIGA: Apenas avisa sobre o update
         const currentVersionNumber = currentVersionData?.version || (localVersionStr ? Number(localVersionStr) : null);
         
         if (currentVersionNumber && serverData.version !== currentVersionNumber) {
@@ -157,7 +160,7 @@ export default function VersionChecker() {
     } catch (error) {
       console.error('Falha ao verificar versão:', error);
     }
-  }, [currentVersionData, location.pathname, navigate]);
+  }, [currentVersionData]);
 
   useEffect(() => {
     checkVersion(true);
@@ -216,12 +219,14 @@ export default function VersionChecker() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showWelcomeModal]);
 
-  // Apenas dá reload simples na página para carregar o bundle da nova versão
+  // Recarrega ignorando cache para buscar os novos ficheiros imediatamente
   const handleUpdateClick = () => {
     if (!isUpdatingRef.current) {
       isUpdatingRef.current = true;
       setIsUpdating(true);
-      window.location.reload();
+      const url = new URL(window.location.href);
+      url.searchParams.set('v_sync', Date.now().toString());
+      window.location.replace(url.toString());
     }
   };
 
@@ -246,7 +251,7 @@ export default function VersionChecker() {
       }).format(new Date(newVersionData.version))
     : '';
 
-  // 1. Modal de Boas-Vindas (Renderiza após a limpeza e navegação)
+  // 1. Modal de Boas-Vindas
   if (showWelcomeModal) {
     return (
       <div 
@@ -317,7 +322,7 @@ export default function VersionChecker() {
     );
   }
 
-  // 2. Modal Bloqueante de Atualização (Versão antiga)
+  // 2. Modal de Nova Versão Detectada
   if (!isOutdated) return null;
 
   return (
