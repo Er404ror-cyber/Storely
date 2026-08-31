@@ -292,8 +292,8 @@ export const GrowthGuide = memo(function GrowthGuide() {
       name: t('guide_platform_tt_name') || 'TikTok',
       icon: <Video size={18} className="text-sky-600 shrink-0" />,
       color: 'bg-sky-50 border-sky-200 text-sky-700',
-      // 'tiktok://' ou 'snssdk1180://' com fallback para a web do TikTok
-      deepLink: 'tiktok://user/profile',
+      // Universal Link oficial: abre o app direto no perfil sem alerta de erro no Safari
+      deepLink: 'https://www.tiktok.com/@me',
       webUrl: 'https://www.tiktok.com',
       mockupType: 'tiktok' as const,
       steps: [
