@@ -146,7 +146,8 @@ export function generateStorePresentationPDF({
   const storeUrl = rawBase.startsWith('http') ? `${rawBase}/${storeSlug}` : `https://${rawBase || 'storelyy.vercel.app'}/${storeSlug}`;
   const productsUrl = `${storeUrl}/products`;
 
-  const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(productsUrl)}&color=1e1b4b&bgcolor=ffffff&margin=0`;
+  // Aumentado de 500x500 para 800x800: máxima nitidez de impressão.
+  const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=800x800&data=${encodeURIComponent(productsUrl)}&color=1e1b4b&bgcolor=ffffff&margin=0`;
   const fileName = langKey === 'pt' ? `Apresentacao - ${storeName}` : `Profile - ${storeName}`;
 
   const issueDate = new Date().toLocaleDateString(langKey === 'pt' ? 'pt-PT' : 'en-US', {
@@ -177,7 +178,7 @@ export function generateStorePresentationPDF({
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>${fileName}</title>
   <style>
-    /* 1. REGRA ABSOLUTA DE MARGENS: Elimina o Link, Page 1 of 2 e Data na esmagadora maioria dos navegadores */
+    /* REGRA ABSOLUTA DE MARGENS: Elimina o Link, Page 1 of 2 e Data */
     @page {
       size: A4 portrait;
       margin: 0mm !important;
@@ -188,6 +189,8 @@ export function generateStorePresentationPDF({
       margin: 0;
       padding: 0;
       -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility; /* Aumenta a qualidade visual/tipográfica do PDF */
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     }
 
@@ -232,10 +235,10 @@ export function generateStorePresentationPDF({
       border-radius: 9999px; font-size: 15px; font-weight: 800; cursor: pointer;
     }
 
-    /* Container Central */
+    /* Container Central (Reduzidas as margens laterais também na web para usar mais espaço) */
     .page-container {
-      position: relative; width: 95%; max-width: 980px; margin: 0 auto;
-      background: #ffffff; border-radius: 18px; padding: 24px 32px 20px 32px;
+      position: relative; width: 98%; max-width: 1024px; margin: 0 auto;
+      background: #ffffff; border-radius: 18px; padding: 24px 20px 20px 20px;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45); display: flex; flex-direction: column; gap: 12px;
     }
 
@@ -310,7 +313,6 @@ export function generateStorePresentationPDF({
 
     /* ================== CSS NUCLEAR DE IMPRESSÃO ================== */
     @media print {
-      /* Trava o tamanho ao máximo no browser, escondendo qualquer excesso que criaria a 2ª página */
       html, body {
         width: 100% !important;
         height: 100vh !important; 
@@ -318,7 +320,7 @@ export function generateStorePresentationPDF({
         margin: 0 !important;
         padding: 0 !important;
         background: #ffffff !important;
-        overflow: hidden !important; /* ISTO MATA A SEGUNDA PÁGINA */
+        overflow: hidden !important; /* MATA A SEGUNDA PÁGINA */
         display: block !important;
       }
       
@@ -326,24 +328,27 @@ export function generateStorePresentationPDF({
 
       .page-container {
         width: 100% !important;
-        height: 100% !important; /* Ocupa exatamente a folha */
-        max-height: 290mm !important; /* Proteção final (A4 tem 297mm) */
+        height: 100% !important; 
+        max-height: 290mm !important; 
         margin: 0 auto !important;
         border-radius: 0 !important;
         border: none !important;
         box-shadow: none !important;
-        padding: 8mm 12mm 10mm 12mm !important; /* Espaço embutido contra corte de impressora */
+        
+        /* === REDUÇÃO BRUTAL DAS MARGENS LATERAIS AQUI === */
+        /* padding: Topo (8mm), Direita (6mm), Baixo (10mm), Esquerda (6mm) */
+        padding: 8mm 6mm 10mm 6mm !important; 
+        
         box-sizing: border-box !important;
         display: flex !important;
         flex-direction: column !important;
         justify-content: space-between !important;
-        gap: 6px !important; /* Apenas na impressão, aproxima as caixas para o texto maior caber! */
-        overflow: hidden !important; /* Bloqueia o vazamento */
+        gap: 6px !important; 
+        overflow: hidden !important; 
         page-break-after: avoid !important;
         page-break-inside: avoid !important;
       }
       
-      /* Reduzimos os respiros apenas durante a impressão */
       .content-main { gap: 8px !important; }
       .header { padding: 8px 14px !important; }
       .title-banner { padding: 6px 12px !important; }
@@ -354,7 +359,7 @@ export function generateStorePresentationPDF({
       .hero-qr-section { padding: 10px 16px !important; gap: 10px !important; }
       .footer-block { padding-top: 4px !important; }
       
-      a[href]:after { content: none !important; } /* Esconde URLs nativas do texto */
+      a[href]:after { content: none !important; } 
       * { break-inside: avoid !important; page-break-inside: avoid !important; }
     }
 
