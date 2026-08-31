@@ -50,7 +50,8 @@ const DICTIONARY = {
     rights: 'Todos os direitos reservados.',
     generated: 'Gerado via infraestrutura Storely',
     printBtn: 'Imprimir / Guardar PDF',
-    popupBlocked: 'Por favor, permita pop-ups para gerar o documento PDF.'
+    backBtn: 'Voltar',
+    previewBadge: 'Pré-visualização do Documento A4'
   },
   en: {
     docBadge: 'Official Business Dossier',
@@ -84,7 +85,8 @@ const DICTIONARY = {
     rights: 'All rights reserved.',
     generated: 'Generated via Storely platform',
     printBtn: 'Print / Save as PDF',
-    popupBlocked: 'Please allow pop-ups to generate the PDF document.'
+    backBtn: 'Back',
+    previewBadge: 'A4 Document Preview'
   }
 };
 
@@ -122,7 +124,9 @@ const SVG_ICONS = {
   phone: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
   mail: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
   checkBadge: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`,
-  qrScanIcon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="2"/></svg>`
+  qrScanIcon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="2"/></svg>`,
+  arrowLeft: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`,
+  printer: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>`
 };
 
 export function generateStorePresentationPDF({
@@ -169,8 +173,6 @@ export function generateStorePresentationPDF({
   const email = store.owner_email || store.settings?.email || '';
   const refCode = (store.id ? store.id.substring(0, 8) : storeSlug).toUpperCase();
 
-  const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
   const html = `
     <!DOCTYPE html>
     <html lang="${langKey}">
@@ -193,60 +195,138 @@ export function generateStorePresentationPDF({
         html, body {
           width: 100%;
           min-height: 100%;
-          background: #f8fafc;
+          background: #0f172a;
         }
         body {
           color: #0f172a;
-          line-height: 1.46;
+          line-height: 1.44;
           font-size: 12.2px;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: center;
-          padding: 6mm 8mm;
+          padding-bottom: 40px;
         }
 
-        /* Botão Flutuante exclusivo para Mobile (invisível na impressão) */
-        .mobile-print-bar {
-          display: ${isMobile ? 'flex' : 'none'};
+        /* Barra de Ações Superior (Preview / Desktop & Mobile) */
+        .preview-topbar {
           position: sticky;
-          top: 10px;
-          z-index: 999;
-          margin-bottom: 12px;
-          background: #4f46e5;
-          color: #ffffff;
-          font-weight: 800;
-          font-size: 13.5px;
-          padding: 10px 22px;
-          border-radius: 30px;
-          box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+          top: 0;
+          z-index: 1000;
+          width: 100%;
+          background: rgba(15, 23, 42, 0.88);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 10px 20px;
+          margin-bottom: 24px;
+        }
+        .topbar-left {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .btn-back {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: rgba(255, 255, 255, 0.1);
+          color: #f8fafc;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          padding: 7px 14px;
+          border-radius: 9999px;
+          font-size: 12.5px;
+          font-weight: 700;
           cursor: pointer;
+          transition: all 0.2s;
+        }
+        .btn-back:hover {
+          background: rgba(255, 255, 255, 0.2);
+          color: #ffffff;
+        }
+        .preview-indicator {
+          font-size: 12px;
+          color: #94a3b8;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .preview-indicator::before {
+          content: "";
+          display: inline-block;
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: #10b981;
+        }
+        .btn-print {
+          display: inline-flex;
           align-items: center;
           gap: 8px;
+          background: #4f46e5;
+          color: #ffffff;
           border: none;
+          padding: 8px 18px;
+          border-radius: 9999px;
+          font-size: 13px;
+          font-weight: 800;
+          cursor: pointer;
+          box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+          transition: all 0.2s;
+        }
+        .btn-print:hover {
+          background: #4338ca;
+          transform: translateY(-1px);
         }
 
+        /* Contêiner da Folha A4 no Desktop & Mobile */
         .page-container {
           position: relative;
-          width: 100%;
-          max-width: 196mm;
+          width: 210mm;
+          min-height: 297mm;
+          height: 297mm;
           background: #ffffff;
-          border-radius: 18px;
-          padding: 16px 20px 12px 20px;
+          border-radius: 4px;
+          padding: 14mm 16mm 12mm 16mm;
           border: 1px solid #e2e8f0;
-          box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
           overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
           page-break-after: avoid !important;
           page-break-inside: avoid !important;
           break-inside: avoid !important;
         }
 
+        /* Responsividade para Telas Pequenas no Preview */
+        @media screen and (max-width: 820px) {
+          body {
+            padding: 0 0 24px 0;
+            background: #0f172a;
+          }
+          .preview-indicator {
+            display: none;
+          }
+          .page-container {
+            width: 95%;
+            height: auto;
+            min-height: auto;
+            padding: 16px 14px;
+            border-radius: 16px;
+            box-shadow: none;
+          }
+        }
+
         .content-main {
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 10.5px;
         }
 
         /* Topo */
@@ -652,13 +732,17 @@ export function generateStorePresentationPDF({
             align-items: center !important;
             justify-content: center !important;
           }
-          .mobile-print-bar {
+          .preview-topbar {
             display: none !important;
           }
           .page-container {
-            border: 1px solid #cbd5e1 !important;
+            border: none !important;
             box-shadow: none !important;
             margin: auto !important;
+            width: 210mm !important;
+            height: 297mm !important;
+            min-height: 297mm !important;
+            padding: 14mm 16mm 12mm 16mm !important;
             page-break-after: avoid !important;
             page-break-inside: avoid !important;
           }
@@ -666,8 +750,23 @@ export function generateStorePresentationPDF({
       </style>
     </head>
     <body>
-      <button class="mobile-print-bar" onclick="window.print()">${t.printBtn}</button>
+      <!-- Barra Superior de Controles -->
+      <nav class="preview-topbar">
+        <div class="topbar-left">
+          <button class="btn-back" onclick="window.history.length > 1 ? window.history.back() : window.close()">
+            ${SVG_ICONS.arrowLeft}
+            <span>${t.backBtn}</span>
+          </button>
+          <span class="preview-indicator">${t.previewBadge}</span>
+        </div>
 
+        <button class="btn-print" onclick="window.print()">
+          ${SVG_ICONS.printer}
+          <span>${t.printBtn}</span>
+        </button>
+      </nav>
+
+      <!-- Folha A4 -->
       <div class="page-container">
         <div class="content-main">
           <!-- Header -->
@@ -814,74 +913,16 @@ export function generateStorePresentationPDF({
           </footer>
         </div>
       </div>
-
-      ${isMobile ? `
-        <script>
-          window.addEventListener('load', () => {
-            setTimeout(() => {
-              try {
-                window.print();
-              } catch(e) {}
-            }, 350);
-          });
-        </script>
-      ` : ''}
     </body>
     </html>
   `;
 
-  if (isMobile) {
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-    const blobUrl = URL.createObjectURL(blob);
-    const newTab = window.open(blobUrl, '_blank');
+  // Em todas as plataformas abre a visualização em nova aba
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const blobUrl = URL.createObjectURL(blob);
+  const newTab = window.open(blobUrl, '_blank');
 
-    if (!newTab) {
-      window.location.href = blobUrl;
-    }
-    return;
-  }
-
-  const existingFrame = document.getElementById('presentation-pdf-iframe');
-  if (existingFrame) {
-    existingFrame.remove();
-  }
-
-  const printFrame = document.createElement('iframe');
-  printFrame.id = 'presentation-pdf-iframe';
-  printFrame.setAttribute('style', 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;');
-  document.body.appendChild(printFrame);
-
-  const frameWindow = printFrame.contentWindow;
-  const frameDoc = frameWindow?.document;
-  if (!frameDoc || !frameWindow) return;
-
-  frameDoc.open();
-  frameDoc.write(html);
-  frameDoc.close();
-
-  const performPrint = () => {
-    try {
-      frameWindow.focus();
-      frameWindow.print();
-    } catch (e) {
-      console.error('Erro na impressão Desktop:', e);
-    }
-  };
-
-  const images = Array.from(frameDoc.images || []);
-  if (images.length > 0) {
-    const imagePromises = images.map((img) => {
-      if (img.complete) return Promise.resolve();
-      return new Promise<void>((resolve) => {
-        img.onload = () => resolve();
-        img.onerror = () => resolve();
-      });
-    });
-
-    Promise.all(imagePromises).then(() => {
-      setTimeout(performPrint, 100);
-    });
-  } else {
-    setTimeout(performPrint, 150);
+  if (!newTab) {
+    window.location.href = blobUrl;
   }
 }
