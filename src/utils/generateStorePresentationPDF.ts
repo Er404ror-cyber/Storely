@@ -174,8 +174,6 @@ export function generateStorePresentationPDF({
   const emailLink = email ? `mailto:${email}` : productsUrl;
   const refCode = (store.id ? store.id.substring(0, 8) : storeSlug).toUpperCase();
 
-  const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
   const html = `
     <!DOCTYPE html>
     <html lang="${langKey}">
@@ -306,7 +304,7 @@ export function generateStorePresentationPDF({
           gap: 13px;
         }
 
-        /* Mobile Preview */
+        /* Mobile Preview: Ampliado e Confortável */
         @media screen and (max-width: 768px) {
           body {
             font-size: 13.8px;
@@ -468,6 +466,7 @@ export function generateStorePresentationPDF({
           border: 1px solid #a7f3d0;
         }
 
+        /* Banner de Título */
         .title-banner {
           background: linear-gradient(to right, #f8fafc, #ffffff);
           border-left: 4.5px solid #4f46e5;
@@ -505,6 +504,7 @@ export function generateStorePresentationPDF({
           }
         }
 
+        /* Seções */
         .section-block {
           break-inside: avoid;
           page-break-inside: avoid;
@@ -555,6 +555,7 @@ export function generateStorePresentationPDF({
           margin-bottom: 0;
         }
 
+        /* 4 Pilares */
         .pillars-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
@@ -643,6 +644,7 @@ export function generateStorePresentationPDF({
           }
         }
 
+        /* Contactos */
         .contacts-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
@@ -951,6 +953,7 @@ export function generateStorePresentationPDF({
           }
         }
 
+        /* CALIBRAÇÃO EXATA: 1 PÁGINA RIGOROSA (SEM HEADER/FOOTER DE BROWSER E SEM 2ª PÁGINA) */
         @media print {
           html, body {
             background: #ffffff !important;
@@ -975,9 +978,9 @@ export function generateStorePresentationPDF({
             margin: auto !important;
             width: 202mm !important;
             max-width: 202mm !important;
-            height: ${isMobile ? '252mm' : '266mm'} !important;
-            max-height: ${isMobile ? '252mm' : '266mm'} !important;
-            padding: ${isMobile ? '8mm 11mm 6mm 11mm' : '9mm 13mm 7mm 13mm'} !important;
+            height: 268mm !important;
+            max-height: 268mm !important;
+            padding: 10mm 14mm 8mm 14mm !important;
             display: flex !important;
             flex-direction: column !important;
             justify-content: space-between !important;
@@ -991,124 +994,124 @@ export function generateStorePresentationPDF({
             display: flex !important;
             flex-direction: column !important;
             justify-content: space-between !important;
-            gap: ${isMobile ? '6px' : '8px'} !important;
+            gap: 8px !important;
           }
           .header {
-            padding: ${isMobile ? '8px 12px' : '9px 14px'} !important;
-            border-radius: 11px !important;
+            padding: 10px 15px !important;
+            border-radius: 12px !important;
           }
           .brand-logo, .brand-placeholder {
-            width: ${isMobile ? '70px' : '84px'} !important;
-            height: ${isMobile ? '70px' : '84px'} !important;
-            font-size: ${isMobile ? '32px' : '36px'} !important;
+            width: 84px !important;
+            height: 84px !important;
+            font-size: 36px !important;
             border-radius: 12px !important;
           }
           .brand-title {
-            font-size: ${isMobile ? '19px' : '22px'} !important;
+            font-size: 22px !important;
           }
           .brand-badge {
-            font-size: ${isMobile ? '8.2px' : '9px'} !important;
+            font-size: 9px !important;
             padding: 2px 7px !important;
           }
           .meta-box {
-            font-size: ${isMobile ? '9.5px' : '10.5px'} !important;
+            font-size: 10.5px !important;
             line-height: 1.4 !important;
           }
           .currency-tag {
-            font-size: ${isMobile ? '9.2px' : '10px'} !important;
+            font-size: 10px !important;
             padding: 1px 5.5px !important;
           }
           .title-banner {
-            padding: ${isMobile ? '5px 10px' : '6.5px 12px'} !important;
+            padding: 7px 12px !important;
             border-left-width: 4px !important;
           }
           .title-banner h1 {
-            font-size: ${isMobile ? '13px' : '14.5px'} !important;
+            font-size: 14.8px !important;
           }
           .title-banner p {
-            font-size: ${isMobile ? '9.8px' : '10.8px'} !important;
+            font-size: 11px !important;
           }
           .section-heading {
-            font-size: ${isMobile ? '10px' : '11px'} !important;
-            margin-bottom: 2.5px !important;
+            font-size: 11px !important;
+            margin-bottom: 3px !important;
           }
           .about-text {
-            font-size: ${isMobile ? '10.8px' : '12px'} !important;
-            padding: ${isMobile ? '6.5px 10px' : '8.5px 12px'} !important;
-            line-height: 1.38 !important;
-            border-radius: 9px !important;
+            font-size: 12.2px !important;
+            padding: 9px 13px !important;
+            line-height: 1.4 !important;
+            border-radius: 10px !important;
           }
           .pillars-grid {
-            gap: ${isMobile ? '5px' : '6.5px'} !important;
+            gap: 7px !important;
           }
           .pillar-card {
-            padding: ${isMobile ? '6px 8.5px' : '7.5px 10px'} !important;
+            padding: 8px 11px !important;
             border-radius: 8px !important;
           }
           .pillar-head {
-            font-size: ${isMobile ? '10px' : '10.8px'} !important;
+            font-size: 11px !important;
           }
           .pillar-icon-box {
-            width: ${isMobile ? '15px' : '17px'} !important;
-            height: ${isMobile ? '15px' : '17px'} !important;
+            width: 18px !important;
+            height: 18px !important;
           }
           .pillar-desc {
-            font-size: ${isMobile ? '9.8px' : '10.8px'} !important;
-            padding-left: ${isMobile ? '19px' : '22px'} !important;
-            line-height: 1.25 !important;
+            font-size: 11px !important;
+            padding-left: 23px !important;
+            line-height: 1.3 !important;
           }
           .contacts-grid {
-            gap: ${isMobile ? '5px' : '6.5px'} !important;
+            gap: 7px !important;
           }
           .contact-box {
-            padding: ${isMobile ? '6px 8.5px' : '7.5px 10px'} !important;
+            padding: 8px 11px !important;
             border-radius: 8px !important;
           }
           .contact-label-row {
-            font-size: ${isMobile ? '7.6px' : '8.5px'} !important;
+            font-size: 8.5px !important;
           }
           .contact-val-link {
-            font-size: ${isMobile ? '10.2px' : '11.2px'} !important;
+            font-size: 11.5px !important;
             color: #1d4ed8 !important;
           }
           .hero-qr-section {
-            padding: ${isMobile ? '8.5px 12px' : '10.5px 15px'} !important;
-            border-radius: 11px !important;
+            padding: 11px 16px !important;
+            border-radius: 12px !important;
           }
           .hero-qr-title {
-            font-size: ${isMobile ? '11.8px' : '13px'} !important;
+            font-size: 13.2px !important;
           }
           .hero-qr-desc {
-            font-size: ${isMobile ? '10.2px' : '11.2px'} !important;
-            line-height: 1.28 !important;
+            font-size: 11.5px !important;
+            line-height: 1.3 !important;
           }
           .hero-qr-card {
-            width: ${isMobile ? '122px' : '136px'} !important;
-            padding: 5px !important;
-            border-radius: 10px !important;
+            width: 140px !important;
+            padding: 6px !important;
+            border-radius: 11px !important;
             gap: 4px !important;
           }
           .hero-qr-link {
-            width: ${isMobile ? '110px' : '124px'} !important;
-            height: ${isMobile ? '110px' : '124px'} !important;
+            width: 126px !important;
+            height: 126px !important;
           }
           .hero-qr-watermark {
-            width: ${isMobile ? '21px' : '25px'} !important;
-            height: ${isMobile ? '21px' : '25px'} !important;
+            width: 26px !important;
+            height: 26px !important;
           }
           .hero-qr-watermark span {
-            font-size: ${isMobile ? '11.5px' : '13.5px'} !important;
+            font-size: 13.5px !important;
           }
           .hero-qr-btn-link {
-            font-size: ${isMobile ? '7.8px' : '8.8px'} !important;
+            font-size: 8.8px !important;
             color: #1d4ed8 !important;
           }
           .hero-url-badge {
-            padding: ${isMobile ? '3px 6.5px' : '4px 8px'} !important;
+            padding: 4px 9px !important;
             border-width: 1px !important;
           }
           .hero-url-text {
-            font-size: ${isMobile ? '9.2px' : '10.2px'} !important;
+            font-size: 10.5px !important;
             color: #1d4ed8 !important;
           }
           .footer-block {
@@ -1116,12 +1119,12 @@ export function generateStorePresentationPDF({
             padding-top: 0 !important;
           }
           .formal-note {
-            font-size: ${isMobile ? '8.2px' : '9px'} !important;
+            font-size: 9px !important;
             margin-bottom: 2px !important;
-            line-height: 1.24 !important;
+            line-height: 1.25 !important;
           }
           .footer {
-            font-size: ${isMobile ? '7.8px' : '8.5px'} !important;
+            font-size: 8.5px !important;
             padding-top: 2px !important;
           }
           a {
@@ -1255,7 +1258,7 @@ export function generateStorePresentationPDF({
             </div>
           </section>
 
-          <!-- Bloco do QR Code Horizontal com URL Oficial Clicável e Emblema "S" -->
+          <!-- Bloco do QR Code Horizontal com URL Oficial Clicável e Marca "S" -->
           <section class="hero-qr-section">
             <div class="hero-qr-left">
               <div class="hero-qr-header">
@@ -1271,7 +1274,7 @@ export function generateStorePresentationPDF({
               </a>
             </div>
 
-            <!-- Card com QR Code, Emblema "S" e Botão de Acesso Direto -->
+            <!-- Card do QR Code com Emblema "S" e Botão de Acesso Direto -->
             <div class="hero-qr-card">
               <a href="${productsUrl}" target="_blank" rel="noopener noreferrer" class="hero-qr-link" title="${productsUrl}">
                 <img src="${qrCodeApiUrl}" alt="QR Code - ${storeName}" class="hero-qr-img" crossorigin="anonymous" />
@@ -1286,7 +1289,7 @@ export function generateStorePresentationPDF({
           </section>
         </div>
 
-        <!-- Rodapé Formal Corporativo -->
+        <!-- Rodapé Formal Corporativo Limpo -->
         <div class="footer-block">
           <div class="formal-note">
             ${closingSelected}
