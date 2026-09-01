@@ -16,7 +16,7 @@ import {
   Lock, 
   Loader2 
 } from 'lucide-react';
-import { generateStorePresentationPDF, type StoreDBData } from '../../utils/generateStorePresentationPDF';
+import { generateStorePresentationPDF, type StoreDBData } from '../../utils/PDF/generateStorePresentationPDF';
 import { useTranslate } from '../../context/LanguageContext';
 
 interface Props {
