@@ -1,56 +1,40 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export const ProtectedRoute = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [showLoader, setShowLoader] = useState(false);
   const location = useLocation();
   const queryClient = useQueryClient();
 
   useEffect(() => {
     let isMounted = true;
-    const timer = setTimeout(() => {
-      if (isMounted) setShowLoader(true);
-    }, 150);
 
-    const validateUser = async () => {
-      try {
-        // getUser valida o token diretamente com os servidores do Supabase
-        const { data: { user }, error } = await supabase.auth.getUser();
-
-        if (error || !user) {
-          if (isMounted) {
-            setIsAuthenticated(false);
-            queryClient.clear(); // Limpa queries para evitar refetchs em loop
-          }
-          return;
-        }
-
-        if (isMounted) {
-          setIsAuthenticated(true);
-        }
-      } catch {
-        if (isMounted) {
-          setIsAuthenticated(false);
-          queryClient.clear();
-        }
+    // 1. Lê a sessão direta do cliente Supabase (usa o storage local oficial, não gasta requisições à API)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return;
+      if (session?.user) {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+        queryClient.clear();
       }
-    };
+    });
 
-    validateUser();
-
-    // Escuta mudanças de estado em tempo real (logout, token expirado, etc.)
+    // 2. Ouve alterações de autenticação em tempo real
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (!isMounted) return;
 
-        if (event === 'SIGNED_OUT' || !session) {
+        if (event === 'SIGNED_OUT' || !session?.user) {
           setIsAuthenticated(false);
           queryClient.clear();
-        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        } else if (
+          event === 'SIGNED_IN' ||
+          event === 'TOKEN_REFRESHED' ||
+          event === 'INITIAL_SESSION'
+        ) {
           setIsAuthenticated(true);
         }
       }
@@ -58,23 +42,21 @@ export const ProtectedRoute = () => {
 
     return () => {
       isMounted = false;
-      clearTimeout(timer);
       subscription.unsubscribe();
     };
   }, [queryClient]);
 
+  // Enquanto o Supabase lê a sessão local (dura menos de 10ms), segura a tela sem piscar e sem expulsar
   if (isAuthenticated === null) {
-    return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-[#09131b]">
-        {showLoader ? <Loader2 className="animate-spin text-cyan-400" size={32} /> : null}
-      </div>
-    );
+    return <div className="min-h-screen w-full bg-[#09131b]" />;
   }
 
-  if (!isAuthenticated) {
-    // Redireciona para /auth preservando a rota que o usuário tentou acessar
+  // Apenas redireciona se tiver a certeza absoluta de que NÃO há sessão
+  if (isAuthenticated === false) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   return <Outlet />;
 };
+
+export default ProtectedRoute;
