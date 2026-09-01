@@ -2772,6 +2772,37 @@ beta_badge: "Storely Beta",
   fast_response: "Fast response",
   limit_reached: "Limit reached",
   version_updating_loading: "Syncing new version...",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  auth_status_badge_verified: "Verified",
+auth_status_badge_unavailable: "Unavailable",
+auth_status_badge_verify_needed: "⚠️ required",
+auth_btn_verify: "Verify",
+auth_btn_checking: "Checking...",
+auth_btn_available: "Verified",
+auth_btn_retry: "Verify",
+auth_verify_hint: "Click 'Verify' to secure your official store handle.",
+auth_slug_must_verify: "Please click the 'Verify' button next to the store name before proceeding.",
+auth_network_error: "Internet connection error. Check your network and try again.",
+
   },
 
 
@@ -5566,6 +5597,33 @@ guide_letter_open_btn: "Gerar",
   fast_response: "Resposta rápida",
   limit_reached: "Limite atingido",
   version_updating_loading: "A sincronizar nova versão...",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  auth_status_badge_verified: "Verificado",
+auth_status_badge_unavailable: "Indisponível",
+auth_status_badge_verify_needed: "⚠️ necessária",
+auth_btn_verify: "Verificar",
+auth_btn_checking: "A verificar...",
+auth_btn_available: "Verificado",
+auth_btn_retry: "Verificar",
+auth_verify_hint: "Clique em 'Verificar' para reservar o seu link oficial.",
+auth_slug_must_verify: "Por favor, clique no botão 'Verificar' ao lado do nome da loja antes de continuar.",
+auth_network_error: "Falha de ligação à internet. Verifique a rede e tente novamente.",
+
 }
 
 

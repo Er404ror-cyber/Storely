@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ChevronRight, Eye, EyeOff, Loader2, Lock, Mail, Store } from "lucide-react";
+import { ChevronRight, Eye, EyeOff, Loader2, Lock, Mail, Store, CheckCircle2, AlertCircle, RefreshCw, Sparkles } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { supabase } from "../lib/supabase";
 import { useTranslate } from "../context/LanguageContext";
@@ -36,13 +36,9 @@ export function AuthPage() {
   const [showLoginSuggestion, setShowLoginSuggestion] = useState(false);
   const [loginSuggestionText, setLoginSuggestionText] = useState("");
   
-  // ANTI-SPAM GENÉRICO: Guarda a última combinação exata de dados que falhou
   const [lastFailedAttempt, setLastFailedAttempt] = useState<string | null>(null);
-  
-  // PROTEÇÃO DE API SUPABASE: Guarda o email que sabemos que já tem conta
   const [knownTakenEmail, setKnownTakenEmail] = useState<string | null>(null);
 
-  const debounceRef = useRef<number | null>(null);
   const requestIdRef = useRef(0);
   const slug = useMemo(() => slugifyStoreName(storeName), [storeName]);
 
@@ -55,9 +51,35 @@ export function AuthPage() {
   const storeNameLength = storeNameTrimmed.length;
   const storeNameValidLength = storeNameLength >= 2 && storeNameLength <= STORE_NAME_MAX_LENGTH;
 
-  // COOLDOWN APENAS PARA RECUPERAÇÃO DE SENHA
   const { cooldown: forgotCooldown, triggerCooldown: triggerForgotCooldown } = useAuthCooldown("forgot", 600);
   const activeCooldown = isForgot ? forgotCooldown : 0;
+
+  // Redireciona se já houver sessão ativa
+  useEffect(() => {
+    let isMounted = true;
+
+    const checkActiveSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (isMounted && session?.user) {
+        const from = (location.state as any)?.from?.pathname || "/admin";
+        navigate(from, { replace: true });
+      }
+    };
+
+    checkActiveSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (isMounted && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.user) {
+        const from = (location.state as any)?.from?.pathname || "/admin";
+        navigate(from, { replace: true });
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [navigate, location]);
 
   const clearFeedback = useCallback(() => {
     setLastError(null);
@@ -74,8 +96,12 @@ export function AuthPage() {
     }
   }, [mode, isSignUp, clearFeedback]);
 
-  // Limpa os erros de UI quando o utilizador digita.
-  // SE o email for o que já sabemos que está em uso, mantemos a sugestão amarela visível!
+  const handleStoreNameChange = (val: string) => {
+    setStoreName(val);
+    setSlugStatus("idle");
+    setSlugMessage("");
+  };
+
   useEffect(() => {
     setLastError(null);
     if (email.trim() !== knownTakenEmail) {
@@ -84,63 +110,56 @@ export function AuthPage() {
     }
   }, [email, password, storeName, knownTakenEmail]);
 
-  const verifySlug = useCallback(async (nextSlug: string) => {
-    if (!isSignUp) return;
-    if (!nextSlug) {
-      setSlugStatus("idle");
-      setSlugMessage("");
+  // Verificação Manual do Slug
+  const handleManualVerifySlug = async () => {
+    if (!storeNameTrimmed) {
+      toast.error(t("auth_store_required", { defaultValue: "Insira o nome da loja primeiro." }));
       return;
     }
     if (!storeNameValidLength) {
+      const msg = t("auth_store_name_length_invalid", { defaultValue: "O nome deve ter entre 2 e 50 caracteres." });
       setSlugStatus("invalid");
-      setSlugMessage(t("auth_store_name_length_invalid"));
+      setSlugMessage(msg);
       return;
     }
-    if (nextSlug.length < SLUG_MIN_LENGTH) {
+    if (slug.length < SLUG_MIN_LENGTH) {
+      const msg = t("auth_slug_min_chars", { defaultValue: "Mínimo de caracteres não atingido." });
       setSlugStatus("invalid");
-      setSlugMessage(t("auth_slug_min_chars"));
+      setSlugMessage(msg);
       return;
     }
-    if (!isValidSlug(nextSlug)) {
+    if (!isValidSlug(slug)) {
+      const msg = t("auth_slug_invalid_chars", { defaultValue: "Caracteres inválidos no link." });
       setSlugStatus("invalid");
-      setSlugMessage(t("auth_slug_invalid_chars"));
+      setSlugMessage(msg);
       return;
     }
 
     const requestId = ++requestIdRef.current;
     setSlugStatus("checking");
-    setSlugMessage(t("auth_slug_checking"));
+    setSlugMessage(t("auth_slug_checking", { defaultValue: "A verificar disponibilidade..." }));
 
     try {
-      const exists = await fetchSlugExists(nextSlug);
+      const exists = await fetchSlugExists(slug);
       if (requestId !== requestIdRef.current) return;
       if (exists) {
+        const msg = t("auth_slug_taken", { defaultValue: "Este link já está em uso por outra loja." });
         setSlugStatus("taken");
-        setSlugMessage(t("auth_slug_taken"));
+        setSlugMessage(msg);
+        toast.error(msg);
       } else {
+        const msg = t("auth_slug_available", { defaultValue: "Nome verificado e disponível!" });
         setSlugStatus("available");
-        setSlugMessage(t("auth_slug_available"));
+        setSlugMessage(msg);
+        toast.success(msg);
       }
     } catch {
       if (requestId !== requestIdRef.current) return;
       setSlugStatus("idle");
       setSlugMessage("");
+      toast.error(t("auth_network_error", { defaultValue: "Erro de conexão ao verificar nome. Tente novamente." }));
     }
-  }, [isSignUp, storeNameValidLength, t]);
-
-  useEffect(() => {
-    if (!isSignUp) return;
-    if (debounceRef.current) window.clearTimeout(debounceRef.current);
-    if (!storeNameTrimmed) {
-      setSlugStatus("idle");
-      setSlugMessage("");
-      return;
-    }
-    debounceRef.current = window.setTimeout(() => void verifySlug(slug), 650);
-    return () => {
-      if (debounceRef.current) window.clearTimeout(debounceRef.current);
-    };
-  }, [isSignUp, slug, storeNameTrimmed, verifySlug]);
+  };
 
   const handleContactSupport = () => {
     const phoneNumber = "917696553844";
@@ -157,21 +176,33 @@ export function AuthPage() {
     return m > 0 ? `${m}m ${s}s` : `${s}s`;
   };
 
+  const isNetworkFailure = (errMessage: string) => {
+    const lower = errMessage.toLowerCase();
+    return (
+      lower.includes("failed to fetch") ||
+      lower.includes("network error") ||
+      lower.includes("timeout") ||
+      lower.includes("fetch failed") ||
+      lower.includes("connection") ||
+      !navigator.onLine
+    );
+  };
+
   async function handleForgotPassword(e: React.FormEvent) {
     e.preventDefault();
     if (loading) return;
     
     const trimmedEmail = email.trim();
-    if (!trimmedEmail) return toast.error(t("auth_enter_email_first"));
-    if (!isValidEmailFormat(trimmedEmail)) return toast.error(t("auth_email_invalid_format"));
+    if (!trimmedEmail) return toast.error(t("auth_enter_email_first", { defaultValue: "Por favor, insira o seu e-mail." }));
+    if (!isValidEmailFormat(trimmedEmail)) return toast.error(t("auth_email_invalid_format", { defaultValue: "Formato de e-mail inválido." }));
     
     const currentAttempt = `forgot:${trimmedEmail}`;
     if (lastFailedAttempt === currentAttempt) {
-      toast.error(t("auth_change_data_try_again") || "Por favor, altere os dados antes de tentar novamente.");
+      toast.error(t("auth_change_data_try_again", { defaultValue: "Por favor, altere os dados antes de tentar novamente." }));
       return;
     }
 
-    if (forgotCooldown > 0) return toast.error(t("auth_cooldown_wait"));
+    if (forgotCooldown > 0) return toast.error(t("auth_cooldown_wait", { defaultValue: "Aguarde antes de solicitar novamente." }));
 
     clearFeedback();
     setLoading(true);
@@ -182,14 +213,19 @@ export function AuthPage() {
         redirectTo: `${window.location.origin}/auth/reset-password`,
       });
       if (error) throw error;
-      toast.success(t("auth_reset_email_sent"));
+      toast.success(t("auth_reset_email_sent", { defaultValue: "Link de recuperação enviado com sucesso!" }));
       setMode("login");
       setLastFailedAttempt(null);
     } catch (error: any) {
-      const message = error?.message || t("auth_reset_email_error");
+      const message = error?.message || t("auth_reset_email_error", { defaultValue: "Erro ao enviar e-mail de recuperação." });
+      const isNetwork = isNetworkFailure(message);
+      
+      if (!isNetwork) {
+        setLastFailedAttempt(currentAttempt);
+      }
+      
       setLastError(message);
-      setLastFailedAttempt(currentAttempt);
-      toast.error(message);
+      toast.error(isNetwork ? t("auth_network_error", { defaultValue: "Falha de ligação à internet. Verifique a rede e tente novamente." }) : message);
     } finally {
       setLoading(false);
     }
@@ -201,45 +237,39 @@ export function AuthPage() {
 
     const trimmedEmail = email.trim();
     
-    // INTERCEÇÃO DE API 1: Se já sabemos que o email existe, não faz sentido chamar o Supabase
     if (isSignUp && trimmedEmail === knownTakenEmail) {
-      const msg = t("auth_existing_email_go_login") || "Este endereço de email já está registado no Storely.";
+      const msg = t("auth_existing_email_go_login", { defaultValue: "Este endereço de email já está registado no Storely." });
       setShowLoginSuggestion(true);
       setLoginSuggestionText(msg);
-      toast.error(msg); // AGORA DÁ FEEDBACK VISUAL PELO TOAST
+      toast.error(msg);
       return;
     }
     
-    // INTERCEÇÃO DE API 2: Assinatura genérica (mesmos dados exatos que falharam antes)
     const currentAttempt = isSignUp 
       ? `signup:${trimmedEmail}:${password}:${storeNameTrimmed}`
       : `login:${trimmedEmail}:${password}`;
 
     if (lastFailedAttempt === currentAttempt) {
-      toast.error(t("auth_change_data_try_again") || "Por favor, altere os dados antes de tentar novamente.");
+      toast.error(t("auth_change_data_try_again", { defaultValue: "Por favor, altere os dados antes de tentar novamente." }));
       return;
     }
 
-    if (!isValidEmailFormat(trimmedEmail)) return toast.error(t("auth_email_invalid_format"));
+    if (!isValidEmailFormat(trimmedEmail)) return toast.error(t("auth_email_invalid_format", { defaultValue: "Formato de e-mail inválido." }));
 
     clearFeedback();
     setLoading(true);
 
     try {
       if (isSignUp) {
-        if (!storeNameTrimmed) throw new Error(t("auth_store_required"));
-        if (!storeNameValidLength) throw new Error(t("auth_store_name_length_invalid"));
-        if (!slug || !isValidSlug(slug)) throw new Error(t("auth_store_invalid"));
-        if (!passwordMeetsMin) throw new Error(t("auth_password_min_length"));
-        if (slugStatus === "checking") throw new Error(t("auth_slug_wait"));
+        if (!storeNameTrimmed) throw new Error(t("auth_store_required", { defaultValue: "Insira o nome da loja." }));
+        if (!storeNameValidLength) throw new Error(t("auth_store_name_length_invalid", { defaultValue: "O nome deve ter entre 2 e 50 caracteres." }));
+        if (!slug || !isValidSlug(slug)) throw new Error(t("auth_store_invalid", { defaultValue: "Nome de loja inválido." }));
+        if (!passwordMeetsMin) throw new Error(t("auth_password_min_length", { defaultValue: "A palavra-passe deve ter pelo menos 6 caracteres." }));
         
         if (slugStatus !== "available") {
-          const exists = await fetchSlugExists(slug);
-          if (exists) {
-            setSlugStatus("taken");
-            setSlugMessage(t("auth_slug_taken"));
-            throw new Error(t("auth_slug_taken"));
-          }
+          toast.error(t("auth_slug_must_verify", { defaultValue: "Por favor, clique no botão 'Verificar' ao lado do nome da loja antes de continuar." }));
+          setLoading(false);
+          return;
         }
 
         const { data, error } = await supabase.auth.signUp({
@@ -251,16 +281,16 @@ export function AuthPage() {
         if (error) {
           const errorMessage = String(error.message || "").toLowerCase();
           if (errorMessage.includes("already registered") || errorMessage.includes("already exists") || errorMessage.includes("user already exists")) {
-            setKnownTakenEmail(trimmedEmail); // Memoriza o email para poupar a API nas próximas tentativas
+            setKnownTakenEmail(trimmedEmail);
             setShowLoginSuggestion(true);
-            setLoginSuggestionText(t("auth_existing_email_go_login") || "Este endereço de email já está registado no Storely.");
+            setLoginSuggestionText(t("auth_existing_email_go_login", { defaultValue: "Este endereço de email já está registado no Storely." }));
             throw new Error("ALREADY_EXISTS");
           }
           throw error;
         }
 
         const userId = data.user?.id;
-        if (!userId) throw new Error(t("auth_user_missing"));
+        if (!userId) throw new Error(t("auth_user_missing", { defaultValue: "Erro ao criar utilizador." }));
 
         const { error: storeError } = await supabase.from("stores").insert([
           { owner_id: userId, name: storeNameTrimmed, slug },
@@ -270,43 +300,54 @@ export function AuthPage() {
           if (String(storeError.message).toLowerCase().includes("duplicate")) {
             writeSlugCache(slug, true);
             setSlugStatus("taken");
-            setSlugMessage(t("auth_slug_taken"));
-            throw new Error(t("auth_slug_taken"));
+            setSlugMessage(t("auth_slug_taken", { defaultValue: "Este link já está em uso." }));
+            throw new Error(t("auth_slug_taken", { defaultValue: "Este link já está em uso." }));
           }
           throw storeError;
         }
 
         writeSlugCache(slug, true);
-        toast.success(t("auth_signup_success"));
-        navigate("/admin", { replace: true });
+        toast.success(t("auth_signup_success", { defaultValue: "Conta criada com sucesso!" }));
+        
+        const destination = (location.state as any)?.from?.pathname || "/admin";
+        navigate(destination, { replace: true });
         return;
       }
 
       if (isLogin) {
-        if (!passwordMeetsMin) throw new Error(t("auth_password_min_length"));
+        if (!passwordMeetsMin) throw new Error(t("auth_password_min_length", { defaultValue: "A palavra-passe deve ter pelo menos 6 caracteres." }));
         const { error } = await supabase.auth.signInWithPassword({ email: trimmedEmail, password });
         if (error) throw error;
         
-        toast.success(t("auth_login_success"));
+        toast.success(t("auth_login_success", { defaultValue: "Sessão iniciada com sucesso!" }));
         setLastFailedAttempt(null);
-        navigate("/admin", { replace: true });
+        
+        const destination = (location.state as any)?.from?.pathname || "/admin";
+        navigate(destination, { replace: true });
       }
     } catch (error: any) {
       if (error.message === "ALREADY_EXISTS") {
         setLoading(false);
-        const msg = t("auth_existing_email_go_login") || "Este endereço de email já está registado no Storely.";
-        toast.error(msg); // AGORA DÁ O TOAST NA PRIMEIRA VEZ QUE A API REJEITA!
+        const msg = t("auth_existing_email_go_login", { defaultValue: "Este endereço de email já está registado no Storely." });
+        toast.error(msg);
         return; 
       }
 
-      let message = error?.message || t("auth_generic_error");
-      
+      let message = error?.message || t("auth_generic_error", { defaultValue: "Ocorreu um erro inesperado." });
+      const isNetwork = isNetworkFailure(message);
+
       if (message.toLowerCase().includes("invalid login credentials")) {
-        message = t("auth_invalid_credentials") || "Email ou palavra-passe incorretos.";
+        message = t("auth_invalid_credentials", { defaultValue: "Email ou palavra-passe incorretos." });
+      } else if (isNetwork) {
+        message = t("auth_network_error", { defaultValue: "Falha de ligação à internet. Verifique a rede e tente novamente." });
       }
       
       setLastError(message);
-      setLastFailedAttempt(currentAttempt); // Guarda a tentativa genérica para evitar clique duplo
+
+      if (!isNetwork) {
+        setLastFailedAttempt(currentAttempt);
+      }
+
       toast.error(message);
     } finally {
       setLoading(false);
@@ -381,22 +422,120 @@ export function AuthPage() {
                     </div>
                   </div>
 
+                  {/* SEÇÃO NOME DA LOJA COM INDICADORES VISUAIS CLAROS */}
                   {isSignUp && (
                     <div className="space-y-2">
                       <div className="flex items-center justify-between gap-3 px-1">
-                        <label className="text-[11px] font-black uppercase tracking-[0.22em] text-white/70">{t("auth_store_name_label")}</label>
+                        <label className="text-[11px] font-black uppercase tracking-[0.22em] text-white/70 flex items-center gap-1.5">
+                          <span>{t("auth_store_name_label")}</span>
+                          {/* Badge de status no rótulo */}
+                          {storeNameTrimmed && (
+                            slugStatus === "available" ? (
+                              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
+                                <CheckCircle2 size={10} /> {t("auth_status_badge_verified", { defaultValue: "Verificado" })}
+                              </span>
+                            ) : slugStatus === "taken" ? (
+                              <span className="text-[10px] bg-red-500/20 text-red-300 font-bold px-2 py-0.5 rounded-full border border-red-500/30 flex items-center gap-1">
+                                <AlertCircle size={10} /> {t("auth_status_badge_unavailable", { defaultValue: "Indisponível" })}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] bg-amber-500/20 text-amber-300 font-bold px-2 py-0.5 rounded-full border border-amber-500/30 animate-pulse">
+                                {t("auth_status_badge_verify_needed", { defaultValue: "⚠️ Verificação necessária" })}
+                              </span>
+                            )
+                          )}
+                        </label>
                         <span className="text-xs text-white/45">{storeNameLength}/{STORE_NAME_MAX_LENGTH}</span>
                       </div>
-                      <div className={`rounded-2xl border px-4 ${slugStatus === "taken" ? "border-red-400/30 bg-red-500/10" : slugStatus === "available" ? "border-emerald-400/30 bg-emerald-500/10" : "border-white/10 bg-black/22"}`}>
-                        <div className="flex items-center gap-3">
-                          <Store size={18} className="text-white/40" />
-                          <input type="text" required maxLength={STORE_NAME_MAX_LENGTH} value={storeName} onChange={(e) => setStoreName(e.target.value)} onBlur={() => { if (slug && isValidSlug(slug) && storeNameValidLength) void verifySlug(slug); }} placeholder={t("auth_store_name_placeholder")} className="h-14 w-full bg-transparent text-base text-white outline-none placeholder:text-white/25" />
+                      
+                      <div className={`rounded-2xl border pl-4 pr-2 flex items-center justify-between gap-2 transition-all ${
+                        slugStatus === "taken" 
+                          ? "border-red-400/40 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.15)]" 
+                          : slugStatus === "available" 
+                          ? "border-emerald-400/40 bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.15)]" 
+                          : storeNameTrimmed 
+                          ? "border-cyan-400/40 bg-black/30" 
+                          : "border-white/10 bg-black/22"
+                      }`}>
+                        <div className="flex items-center gap-3 flex-1">
+                          <Store size={18} className="text-white/40 shrink-0" />
+                          <input 
+                            type="text" 
+                            required 
+                            maxLength={STORE_NAME_MAX_LENGTH} 
+                            value={storeName} 
+                            onChange={(e) => handleStoreNameChange(e.target.value)} 
+                            placeholder={t("auth_store_name_placeholder")} 
+                            className="h-14 w-full bg-transparent text-base text-white outline-none placeholder:text-white/25" 
+                          />
                         </div>
+
+                        {/* Botão de Verificação com Destaque Visual */}
+                        <button
+                          type="button"
+                          onClick={handleManualVerifySlug}
+                          disabled={!storeNameTrimmed || slugStatus === "checking" || slugStatus === "available"}
+                          className={`shrink-0 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 ${
+                            slugStatus === "available"
+                              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 cursor-default"
+                              : slugStatus === "taken"
+                              ? "bg-red-500/20 text-red-300 border border-red-500/40 hover:bg-red-500/30 cursor-pointer"
+                              : storeNameTrimmed
+                              ? "bg-cyan-400 text-slate-950 hover:bg-cyan-300 border border-cyan-300 shadow-md shadow-cyan-500/25 animate-pulse cursor-pointer"
+                              : "bg-white/10 text-white/40 border border-white/10 cursor-not-allowed"
+                          } disabled:opacity-50`}
+                        >
+                          {slugStatus === "checking" ? (
+                            <>
+                              <Loader2 size={13} className="animate-spin" />
+                              <span>{t("auth_btn_checking", { defaultValue: "A verificar" })}</span>
+                            </>
+                          ) : slugStatus === "available" ? (
+                            <>
+                              <CheckCircle2 size={13} />
+                              <span>{t("auth_btn_available", { defaultValue: "Verificado" })}</span>
+                            </>
+                          ) : slugStatus === "taken" ? (
+                            <>
+                              <RefreshCw size={13} />
+                              <span>{t("auth_btn_retry", { defaultValue: "Verificar" })}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles size={13} />
+                              <span>{t("auth_btn_verify", { defaultValue: "Verificar" })}</span>
+                            </>
+                          )}
+                        </button>
                       </div>
+
+                      {/* Mensagem e Instruções de Verificação */}
                       {storeNameTrimmed && (
-                        <div className="flex items-start justify-between gap-3 px-1">
-                          <p className="text-xs text-white/45">{t("auth_store_url_preview")}: <span className="font-medium text-white/78">/{slug || "your-store"}</span></p>
-                          <p className={`text-right text-xs font-semibold ${slugStatus === "taken" ? "text-red-300" : slugStatus === "available" ? "text-emerald-300" : slugStatus === "invalid" ? "text-amber-300" : "text-white/55"}`}>{slugMessage}</p>
+                        <div className="space-y-1 px-1">
+                          <div className="flex items-start justify-between gap-3 text-xs">
+                            <p className="text-white/45">
+                              {t("auth_store_url_preview")}: <span className="font-semibold text-cyan-300">/{slug || "your-store"}</span>
+                            </p>
+                            <p className={`text-right font-bold ${
+                              slugStatus === "taken" 
+                                ? "text-red-400" 
+                                : slugStatus === "available" 
+                                ? "text-emerald-400" 
+                                : slugStatus === "invalid" 
+                                ? "text-amber-400" 
+                                : "text-cyan-300"
+                            }`}>
+                              {slugMessage}
+                            </p>
+                          </div>
+
+                          {/* Aviso instrutivo caso ainda não tenha verificado */}
+                          {slugStatus === "idle" && (
+                            <p className="text-[11px] font-medium text-cyan-200/80 bg-cyan-950/40 border border-cyan-500/20 rounded-lg px-2.5 py-1.5 mt-1 flex items-center gap-1.5">
+                              <span>👉</span>
+                              <span>{t("auth_verify_hint", { defaultValue: "Clique em 'Verificar' para reservar o seu link oficial." })}</span>
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>

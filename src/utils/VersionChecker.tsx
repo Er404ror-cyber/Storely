@@ -1,31 +1,38 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslate } from '../context/LanguageContext';
 
 interface VersionData {
-  version: number;
-  packageVersion: string;
+  version: number;          // Timestamp do build
+  packageVersion: string;   // Ex: "0.2.5"
 }
 
-// Chaves essenciais que NUNCA devem ser apagadas numa atualização rotineira
+// Chaves essenciais que NUNCA são apagadas
 const KEYS_TO_PRESERVE = [
   'storely_auth_token', 
   'country_code'
 ];
 
-const INSTALLED_VERSION_KEY = 'APP_INSTALLED_VERSION';
-const BETA_WELCOME_KEY = 'storely_beta_welcome_pending';
+const STORAGE_KEYS = {
+  INSTALLED_BUILD: 'STORELY_APP_INSTALLED_BUILD',
+  PACKAGE_VERSION: 'STORELY_APP_PACKAGE_VERSION',
+  REVISION_COUNTER: 'STORELY_APP_REVISION_COUNT',
+  PENDING_WELCOME: 'STORELY_WELCOME_AFTER_UPDATE',
+};
 
 export default function VersionChecker() {
   const { t } = useTranslate();
 
   const [isOutdated, setIsOutdated] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-  const [currentVersionData, setCurrentVersionData] = useState<VersionData | null>(null);
+  const [currentDisplayVersion, setCurrentDisplayVersion] = useState<string>('');
+  const [newDisplayVersion, setNewDisplayVersion] = useState<string>('');
   const [newVersionData, setNewVersionData] = useState<VersionData | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Executa uma limpeza segura mantendo os dados críticos do usuário
-  const performSafeCleanup = async (newVersionNumber: number) => {
+  const isCheckingRef = useRef(false);
+
+  // Limpeza segura executada apenas no momento do clique de atualização
+  const prepareSafeStorageForUpdate = async (targetBuild: number, targetPkg: string, targetRev: number) => {
     try {
       const preservedData: Record<string, string> = {};
       KEYS_TO_PRESERVE.forEach((key) => {
@@ -33,102 +40,154 @@ export default function VersionChecker() {
         if (val !== null) preservedData[key] = val;
       });
 
-      // Limpeza controlada do armazenamento local
       localStorage.clear();
       sessionStorage.clear();
 
-      // Restaura dados preservados
+      // Restaura dados vitais
       Object.entries(preservedData).forEach(([key, val]) => {
         localStorage.setItem(key, val);
       });
 
-      localStorage.setItem(INSTALLED_VERSION_KEY, newVersionNumber.toString());
-      localStorage.setItem(BETA_WELCOME_KEY, 'true');
+      // Prepara os marcadores para validação após o reload
+      localStorage.setItem(STORAGE_KEYS.INSTALLED_BUILD, targetBuild.toString());
+      localStorage.setItem(STORAGE_KEYS.PACKAGE_VERSION, targetPkg);
+      localStorage.setItem(STORAGE_KEYS.REVISION_COUNTER, targetRev.toString());
+      localStorage.setItem(STORAGE_KEYS.PENDING_WELCOME, 'true');
 
-      // Limpeza segura de cache se disponível
+      // Limpa todas as caches do navegador
       if ('caches' in window) {
         const cacheKeys = await caches.keys();
-        await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+        await Promise.all(cacheKeys.map((k) => caches.delete(k)));
       }
-    } catch (error) {
-      console.error('Erro durante a limpeza segura de versão:', error);
+
+      // Desregista Service Workers antigos que possam estar a reter bundles antigos do Vercel
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map((reg) => reg.unregister()));
+      }
+    } catch (err) {
+      console.error('Falha ao preparar limpeza de armazenamento:', err);
     }
   };
 
   const checkVersion = useCallback(async () => {
-    if (import.meta.env.DEV) return;
+    if (import.meta.env.DEV || isCheckingRef.current) return;
+    isCheckingRef.current = true;
 
     try {
-      const res = await fetch(`/version.json?t=${Date.now()}`, {
+      // Faz fetch com timestamp e cabeçalhos estritos contra cache do Vercel/CDN
+      const res = await fetch(`/version.json?_t=${Date.now()}`, {
         cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+        },
       });
-      
-      if (!res.ok) return;
-      
-      const serverData: VersionData = await res.json();
-      const serverVersionStr = serverData.version.toString();
-      const localVersionStr = localStorage.getItem(INSTALLED_VERSION_KEY);
 
-      // Primeira execução ou app recém-instalado no navegador
-      if (!localVersionStr) {
-        localStorage.setItem(INSTALLED_VERSION_KEY, serverVersionStr);
-        setCurrentVersionData(serverData);
+      if (!res.ok) {
+        isCheckingRef.current = false;
         return;
       }
 
-      // Se a versão do servidor for diferente da armazenada localmente
-      if (localVersionStr !== serverVersionStr) {
-        // Verifica se já passou pelo fluxo de boas-vindas pendente
-        if (localStorage.getItem(BETA_WELCOME_KEY) === 'true') {
+      const serverData: VersionData = await res.json();
+      const serverBuild = Number(serverData.version);
+      const serverPkg = serverData.packageVersion || '0.2.5';
+
+      const localBuildStr = localStorage.getItem(STORAGE_KEYS.INSTALLED_BUILD);
+      const localPkgStr = localStorage.getItem(STORAGE_KEYS.PACKAGE_VERSION);
+      const localRevStr = localStorage.getItem(STORAGE_KEYS.REVISION_COUNTER);
+
+      // CASO 1: Primeira visita ao aplicativo
+      if (!localBuildStr || !localPkgStr) {
+        localStorage.setItem(STORAGE_KEYS.INSTALLED_BUILD, serverBuild.toString());
+        localStorage.setItem(STORAGE_KEYS.PACKAGE_VERSION, serverPkg);
+        localStorage.setItem(STORAGE_KEYS.REVISION_COUNTER, '0');
+        setCurrentDisplayVersion(`${serverPkg}.0`);
+        isCheckingRef.current = false;
+        return;
+      }
+
+      const localBuild = Number(localBuildStr);
+      let localRev = parseInt(localRevStr || '0', 10);
+
+      // CASO 2: Utilizador abriu/recarregou e há um aviso pendente de boas-vindas
+      if (localStorage.getItem(STORAGE_KEYS.PENDING_WELCOME) === 'true') {
+        // Confirma se o build no servidor é compatível com o build instalado
+        if (serverBuild >= localBuild) {
+          setCurrentDisplayVersion(`${serverPkg}.${localRev}`);
           setShowWelcomeModal(true);
-        } else {
-          // Dispara atualização controlada
-          await performSafeCleanup(serverData.version);
-          setNewVersionData(serverData);
-          setIsOutdated(true);
+          setIsOutdated(false);
+          isCheckingRef.current = false;
+          return;
         }
+        // Se ainda veio uma versão mais antiga da CDN, remove o aviso pendente e continua a verificação
+        localStorage.removeItem(STORAGE_KEYS.PENDING_WELCOME);
+      }
+
+      // CASO 3: Nova versão detetada no servidor (Build mais recente ou versão do package diferente)
+      if (serverBuild > localBuild || serverPkg !== localPkgStr) {
+        // Se a versão base mudou (ex: 0.2.5 -> 0.2.6), a revisão recomeça em 0
+        const nextRev = serverPkg === localPkgStr ? localRev + 1 : 0;
+
+        setCurrentDisplayVersion(`${localPkgStr}.${localRev}`);
+        setNewDisplayVersion(`${serverPkg}.${nextRev}`);
+        setNewVersionData(serverData);
+        setIsOutdated(true);
+        setShowWelcomeModal(false);
       } else {
-        setCurrentVersionData(serverData);
-        if (localStorage.getItem(BETA_WELCOME_KEY) === 'true') {
-          setShowWelcomeModal(true);
-        }
+        // CASO 4: Totalmente atualizado
+        setCurrentDisplayVersion(`${localPkgStr}.${localRev}`);
+        setIsOutdated(false);
       }
     } catch (error) {
-      console.warn('Não foi possível verificar a versão atual:', error);
+      console.warn('Verificação de versão em segundo plano:', error);
+    } finally {
+      isCheckingRef.current = false;
     }
   }, []);
 
   useEffect(() => {
     checkVersion();
 
-    // Intervalo de verificação em segundo plano (a cada 10 minutos)
-    const CHECK_INTERVAL = 10 * 60 * 1000;
-    const intervalId = setInterval(checkVersion, CHECK_INTERVAL);
+    // Verificação passiva a cada 5 minutos
+    const intervalId = setInterval(checkVersion, 5 * 60 * 1000);
 
-    const handleVisibilityChange = () => {
+    const onVisibility = () => {
       if (document.visibilityState === 'visible') {
         checkVersion();
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('visibilitychange', onVisibility);
 
     return () => {
       clearInterval(intervalId);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, [checkVersion]);
 
-  // Recarga limpa da página com suporte a cache busting
-  const handleUpdateClick = () => {
+  // Ação manual do utilizador: Limpa caches e força recarregamento limpo
+  const handleUpdateClick = async () => {
+    if (!newVersionData || isUpdating) return;
     setIsUpdating(true);
+
+    const localPkgStr = localStorage.getItem(STORAGE_KEYS.PACKAGE_VERSION);
+    const localRev = parseInt(localStorage.getItem(STORAGE_KEYS.REVISION_COUNTER) || '0', 10);
+    const targetRev = newVersionData.packageVersion === localPkgStr ? localRev + 1 : 0;
+
+    await prepareSafeStorageForUpdate(newVersionData.version, newVersionData.packageVersion, targetRev);
+
+    // Adiciona query param único para obrigar o browser a furar o cache do HTML
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('v_sync', Date.now().toString());
+
     setTimeout(() => {
-      window.location.reload();
-    }, 300);
+      window.location.replace(currentUrl.toString());
+    }, 200);
   };
 
   const handleDismissWelcome = () => {
-    localStorage.removeItem(BETA_WELCOME_KEY);
+    localStorage.removeItem(STORAGE_KEYS.PENDING_WELCOME);
     setShowWelcomeModal(false);
   };
 
@@ -145,7 +204,7 @@ export default function VersionChecker() {
     }
   };
 
-  // 1. Modal de Boas-Vindas Pós-Atualização
+  // 1. Modal de Boas-Vindas Pós-Atualização (Apenas após validação real)
   if (showWelcomeModal) {
     return (
       <div 
@@ -190,16 +249,10 @@ export default function VersionChecker() {
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 mb-6 space-y-2 relative z-10">
             <div className="flex justify-between items-center text-xs font-mono text-slate-600">
               <span>{t('current_version_label', { defaultValue: 'Versão em execução:' })}</span>
-              <span className="font-bold text-slate-800 px-2 py-0.5 rounded-md bg-white border border-slate-200/60 shadow-xs">
-                v{currentVersionData?.packageVersion || '0.2.4'}
+              <span className="font-bold text-slate-800 px-2.5 py-1 rounded-md bg-white border border-slate-200/60 shadow-xs">
+                v{currentDisplayVersion}
               </span>
             </div>
-            {currentVersionData?.version && (
-              <div className="flex justify-between items-center text-[11px] font-mono text-slate-400 pt-1.5 border-t border-slate-200/50">
-                <span>{t('build_date_label', { defaultValue: 'Compilação:' })}</span>
-                <span className="font-medium text-slate-500">{formattedDate(currentVersionData.version)}</span>
-              </div>
-            )}
           </div>
 
           <button
@@ -216,7 +269,7 @@ export default function VersionChecker() {
     );
   }
 
-  // 2. Modal Bloqueante de Nova Versão Detectada
+  // 2. Modal Bloqueante de Nova Versão Detectada (Apenas avisa, não força reload sozinho)
   if (!isOutdated) return null;
 
   return (
@@ -233,7 +286,7 @@ export default function VersionChecker() {
           </div>
 
           <span className="text-xs font-mono font-bold text-amber-700 px-2.5 py-1 rounded-lg bg-amber-50/80 border border-amber-200/60">
-            v{newVersionData?.packageVersion}
+            v{newDisplayVersion}
           </span>
         </div>
 
@@ -250,12 +303,12 @@ export default function VersionChecker() {
         <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 mb-6 space-y-2.5 text-xs font-mono relative z-10">
           <div className="flex justify-between items-center text-slate-500">
             <span>{t('current_version_label', { defaultValue: 'Versão em execução:' })}</span>
-            <span className="text-slate-700 font-semibold">v{currentVersionData?.packageVersion || '0.2.4'}</span>
+            <span className="text-slate-700 font-semibold">v{currentDisplayVersion}</span>
           </div>
           <div className="flex justify-between items-center text-slate-700">
             <span className="font-semibold">{t('new_version_label', { defaultValue: 'Nova versão:' })}</span>
             <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-              v{newVersionData?.packageVersion}
+              v{newDisplayVersion}
             </span>
           </div>
           {newVersionData?.version && (

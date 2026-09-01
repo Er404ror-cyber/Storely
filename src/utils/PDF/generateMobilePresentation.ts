@@ -494,17 +494,26 @@ export interface StoreDBData {
   </body>
   </html>`;
   
-    try {
-      const newTab = window.open('', '_blank');
-      if (newTab) {
-        newTab.document.open();
-        newTab.document.write(html);
-        newTab.document.close();
-      } else {
-        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-        window.location.href = URL.createObjectURL(blob);
-      }
-    } catch (err) {
-      console.error('Falha ao abrir pré-visualização:', err);
+  // Subsitua o try/catch final por esta versão limpa e isolada:
+try {
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const blobUrl = URL.createObjectURL(blob);
+  
+    // Abre a nova aba completamente desacoplada do DOM da app React
+    const newTab = window.open(blobUrl, '_blank', 'noopener,noreferrer');
+  
+    if (!newTab) {
+      // Se o popup for bloqueado pelo Chrome, abre em nova aba via elemento temporário
+      const tempLink = document.createElement('a');
+      tempLink.href = blobUrl;
+      tempLink.target = '_blank';
+      tempLink.rel = 'noopener noreferrer';
+      tempLink.click();
     }
+  
+    // Liberta a memória do blob após 60 segundos
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+  } catch (err) {
+    console.error('Falha ao abrir pré-visualização:', err);
+  }
   }

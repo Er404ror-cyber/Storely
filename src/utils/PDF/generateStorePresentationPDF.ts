@@ -34,17 +34,19 @@ function checkIsMobile(): boolean {
 export function generateStorePresentationPDF(config: PresentationConfig) {
   const isMobile = checkIsMobile();
 
-  // Log limpo e direto apenas com o resultado final
   console.log(
     `%c[PDF Generator] Dispositivo detetado: ${isMobile ? '📱 Mobile' : '💻 Desktop'}`,
     `font-weight: bold; color: ${isMobile ? '#16a34a' : '#2563eb'}; font-size: 13px;`
   );
 
-  if (isMobile) {
-    generateMobilePresentation(config);
-  } else {
-    generateDesktopPresentation(config);
-  }
+  // Executa no próximo ciclo de eventos para evitar bloquear transições e reconciliação do React
+  setTimeout(() => {
+    if (isMobile) {
+      generateMobilePresentation(config);
+    } else {
+      generateDesktopPresentation(config);
+    }
+  }, 0);
 }
 
 export default generateStorePresentationPDF;

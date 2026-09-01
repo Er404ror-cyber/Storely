@@ -26,6 +26,7 @@ import { Blog } from './pages/home/blog';
 import { Duvidas } from './pages/home/duvidas';
 import { Faq } from './pages/faq';
 import { GrowthGuide } from './dashboard/GrowthGuide';
+import { ProtectedRoute } from './layout/ProtectedRoute';
 
 export const route = createBrowserRouter([
   {
@@ -60,17 +61,23 @@ export const route = createBrowserRouter([
         path: 'auth/reset-password',
         element: <ResetPasswordPage />,
       },
+      // Rotas Protegidas do Admin
       {
-        path: 'admin',
-        element: <AdminLayout />,
+        element: <ProtectedRoute />,
         children: [
-          { index: true, element: <Dashboard /> },
-          { path: 'paginas', element: <PagesList /> },
-          { path: 'editor/:pageId', element: <Editor /> },
-          { path: 'produtos', element: <ProductsList /> },
-          { path: 'produtos/:productId', element: <ProductDetails /> },
-          { path: 'configuracoes', element: <AdminSettings /> },
-          { path: 'guide', element: <GrowthGuide /> },
+          {
+            path: 'admin',
+            element: <AdminLayout />,
+            children: [
+              { index: true, element: <Dashboard /> },
+              { path: 'paginas', element: <PagesList /> },
+              { path: 'editor/:pageId', element: <Editor /> },
+              { path: 'produtos', element: <ProductsList /> },
+              { path: 'produtos/:productId', element: <ProductDetails /> },
+              { path: 'configuracoes', element: <AdminSettings /> },
+              { path: 'guide', element: <GrowthGuide /> },
+            ],
+          },
         ],
       },
       {

@@ -156,7 +156,7 @@ const Rosas: FC = () => {
             CRIAR AGORA
           </div>
 
-          <div className="absolute top-0 right-0 w-96 h-96 bg-rose-500 rounded-full blur-[100px] opacity-50 -mr-20 -mt-20 group-hover:opacity-70 transition-opacity"></div>
+          <div className="absolute top-0 right-0 w-96 h-96 bg-rose-500 rounded-full  opacity-50 -mr-20 -mt-20 group-hover:opacity-70 transition-opacity"></div>
         </section>
       </main>
     </div>
