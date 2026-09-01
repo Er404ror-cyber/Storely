@@ -2803,6 +2803,16 @@ auth_verify_hint: "Click 'Verify' to secure your official store handle.",
 auth_slug_must_verify: "Please click the 'Verify' button next to the store name before proceeding.",
 auth_network_error: "Internet connection error. Check your network and try again.",
 
+  guide_hero_status: 'Ready to share',
+  guide_hero_subtitle: 'Share your full catalog and online store with a ready-to-send message for WhatsApp, Instagram, and other networks.',
+  guide_universal_share_btn: 'Share on Socials',
+  
+  guide_copied_btn: 'Copied',
+
+  share_msg_greeting: 'Hello! Discover the latest products from',
+  share_msg_catalog_label: '🛍️ Product Catalog:',
+  share_msg_store_label: '🌐 Home Page:',
+  share_msg_closing: 'Visit the links to check prices and order online!'
   },
 
 
@@ -5623,6 +5633,20 @@ auth_btn_retry: "Verificar",
 auth_verify_hint: "Clique em 'Verificar' para reservar o seu link oficial.",
 auth_slug_must_verify: "Por favor, clique no botão 'Verificar' ao lado do nome da loja antes de continuar.",
 auth_network_error: "Falha de ligação à internet. Verifique a rede e tente novamente.",
+
+
+
+
+
+  guide_hero_status: 'Pronto para divulgar',
+  guide_hero_subtitle: 'Partilhe o catálogo completo e a sua loja com uma mensagem formatada para WhatsApp, Instagram e outras redes.',
+  guide_universal_share_btn: 'Partilhar nas Redes',
+  guide_copied_btn: 'Copiado',
+  
+  share_msg_greeting: 'Olá! Conheça as novidades e produtos oficiais da',
+  share_msg_catalog_label: '🛍️ Catálogo de Produtos:',
+  share_msg_store_label: '🌐 Página Inicial:',
+  share_msg_closing: 'Acesse para conferir e fazer seu pedido online!'
 
 }
 

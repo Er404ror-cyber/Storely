@@ -2,24 +2,21 @@ import { memo, useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { 
   Sparkles, 
   ExternalLink, 
-  ShoppingBag, 
-  Store, 
-  Share2, 
+  Globe2, 
   Check, 
   Loader2,
   MessageCircle, 
-  FileText, 
+  Copy,
   ChevronRight,
-  QrCode,
-  Printer
+  QrCode
 } from 'lucide-react';
 
 interface Props {
-  storeName: string;
+  storeName?: string;
   logoUrl?: string;
-  activeUrl: string;
-  selectedLinkType: 'products' | 'store';
-  onSelectLinkType: (type: 'products' | 'store') => void;
+  activeUrl?: string;
+  storeUrl?: string;
+  catalogUrl?: string;
   copiedLink: boolean;
   onCopyLink: () => void;
   onOpenLetterModal: () => void;
@@ -29,9 +26,9 @@ interface Props {
 export const GrowthHero = memo(function GrowthHero({
   storeName,
   logoUrl,
-  activeUrl,
-  selectedLinkType = 'products',
-  onSelectLinkType,
+  activeUrl = '',
+  storeUrl,
+  catalogUrl,
   copiedLink,
   onCopyLink,
   onOpenLetterModal,
@@ -40,7 +37,7 @@ export const GrowthHero = memo(function GrowthHero({
   const [isSharing, setIsSharing] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const logoFileCacheRef = useRef<{ url: string; file: File } | null>(null);
+  const logoBlobCacheRef = useRef<{ url: string; blob: Blob; file: File } | null>(null);
 
   useEffect(() => {
     return () => {
@@ -52,15 +49,43 @@ export const GrowthHero = memo(function GrowthHero({
     return storeName || t('store_default_name') || 'Storely';
   }, [storeName, t]);
 
-  const naturalShareMessage = useMemo(() => {
-    const intro = selectedLinkType === 'products'
-      ? (t('guide_share_text_intro') || 'Olá! Veja o nosso catálogo oficial da')
-      : (t('share_msg_store_intro') || 'Olá! Conheça a página oficial da');
+  // 1. URL da Página Inicial: Apenas a raiz/slug sem /produtos
+  const finalStoreUrl = useMemo(() => {
+    if (storeUrl) {
+      return storeUrl.replace(/\/produtos\/?$|\/products\/?$/i, '').replace(/\/+$/, '');
+    }
 
-    const body = t('guide_share_text_body') || 'Temos novidades com fotos e preços atualizados. Acesse:';
-    
-    return `🛍️ *${displayName}*\n\n${intro} *${displayName}*! ✨\n${body}\n👉 ${activeUrl}`;
-  }, [selectedLinkType, displayName, activeUrl, t]);
+    const base = activeUrl ? activeUrl.split('?')[0].split('#')[0] : '';
+    if (base) {
+      return base.replace(/\/produtos\/?$|\/products\/?$/i, '').replace(/\/+$/, '');
+    }
+
+    if (typeof window !== 'undefined') {
+      const currentPath = window.location.pathname.replace(/\/produtos\/?$|\/products\/?$/i, '').replace(/\/+$/, '');
+      return `${window.location.origin}${currentPath}`;
+    }
+
+    return '';
+  }, [storeUrl, activeUrl]);
+
+  // 2. URL do Catálogo: Garante a terminação /produtos
+  const finalCatalogUrl = useMemo(() => {
+    if (catalogUrl) return catalogUrl;
+    if (activeUrl && (activeUrl.includes('/produtos') || activeUrl.includes('/products'))) {
+      return activeUrl;
+    }
+    return `${finalStoreUrl}/produtos`;
+  }, [catalogUrl, activeUrl, finalStoreUrl]);
+
+  // Mensagem unificada com ambos os links
+  const naturalShareMessage = useMemo(() => {
+    const greeting = t('share_msg_greeting') || 'Olá! Conheça os produtos e a página oficial da';
+    const catalogLabel = t('share_msg_catalog_label') || '🛍️ Catálogo de Produtos:';
+    const storeLabel = t('share_msg_store_label') || '🌐 Página Inicial:';
+    const closing = t('share_msg_closing') || 'Acesse para conferir preços e fazer o seu pedido online!';
+
+    return `✨ *${displayName}*\n\n${greeting} *${displayName}*!\n\n${catalogLabel}\n👉 ${finalCatalogUrl}\n\n${storeLabel}\n👉 ${finalStoreUrl}\n\n${closing}`;
+  }, [displayName, finalCatalogUrl, finalStoreUrl, t]);
 
   const throttleAction = useCallback((action: () => void) => {
     if (isBusy) return;
@@ -70,105 +95,168 @@ export const GrowthHero = memo(function GrowthHero({
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     debounceTimerRef.current = setTimeout(() => {
       setIsBusy(false);
-    }, 600);
+    }, 450);
   }, [isBusy]);
 
-  const fetchLogoFile = useCallback(async (url: string): Promise<File | null> => {
+  // Carrega a imagem e devolve tanto o Blob como o File (com Fallback via Canvas)
+  const fetchLogoData = useCallback(async (url: string): Promise<{ blob: Blob; file: File } | null> => {
     if (!url) return null;
-    if (logoFileCacheRef.current?.url === url) {
-      return logoFileCacheRef.current.file;
+    if (logoBlobCacheRef.current?.url === url) {
+      return { blob: logoBlobCacheRef.current.blob, file: logoBlobCacheRef.current.file };
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2500);
-
+    // 1. Tentativa por Fetch direto
     try {
-      const response = await fetch(url, { 
-        mode: 'cors', 
-        cache: 'force-cache',
-        signal: controller.signal 
-      });
-      clearTimeout(timeoutId);
-
-      if (!response.ok) return null;
-
-      const blob = await response.blob();
-      if (!blob || blob.size === 0) return null;
-
-      const ext = blob.type.split('/')[1] || 'png';
-      const file = new File([blob], `logo.${ext}`, { type: blob.type || 'image/png' });
-      
-      logoFileCacheRef.current = { url, file };
-      return file;
+      const response = await fetch(url, { cache: 'force-cache' });
+      if (response.ok) {
+        const blob = await response.blob();
+        if (blob && blob.size > 0) {
+          const type = blob.type || 'image/png';
+          const ext = type.split('/')[1]?.replace('+xml', '') || 'png';
+          const file = new File([blob], `logo.${ext}`, { type });
+          logoBlobCacheRef.current = { url, blob, file };
+          return { blob, file };
+        }
+      }
     } catch {
-      clearTimeout(timeoutId);
-      return null;
+      // Avança para o Canvas
     }
+
+    // 2. Fallback via Canvas (ignora bloqueios de CORS e converte para PNG)
+    try {
+      const result = await new Promise<{ blob: Blob; file: File } | null>((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth || img.width || 300;
+            canvas.height = img.naturalHeight || img.height || 300;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return resolve(null);
+            ctx.drawImage(img, 0, 0);
+            canvas.toBlob((blob) => {
+              if (!blob) return resolve(null);
+              const file = new File([blob], 'logo.png', { type: 'image/png' });
+              resolve({ blob, file });
+            }, 'image/png');
+          } catch {
+            resolve(null);
+          }
+        };
+        img.onerror = () => resolve(null);
+        img.src = url;
+      });
+
+      if (result) {
+        logoBlobCacheRef.current = { url, blob: result.blob, file: result.file };
+        return result;
+      }
+    } catch {
+      // Falha total
+    }
+
+    return null;
   }, []);
 
+  // Copia o texto e também tenta copiar a imagem para a área de transferência
   const handleCopyMessage = useCallback(async () => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-      try {
-        await navigator.clipboard.writeText(naturalShareMessage);
-      } catch {
-        // Fallback silencioso
-      }
-    }
-    onCopyLink();
-  }, [naturalShareMessage, onCopyLink]);
-
-  const executeShare = useCallback(async () => {
     if (typeof navigator === 'undefined') return;
 
-    if (!navigator.share) {
-      await handleCopyMessage();
-      return;
-    }
-
-    setIsSharing(true);
     try {
-      let filesToSend: File[] = [];
+      if (logoUrl && navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
+        const logoData = await fetchLogoData(logoUrl);
+        if (logoData?.blob) {
+          const textBlob = new Blob([naturalShareMessage], { type: 'text/plain' });
+          const pngBlob = logoData.blob.type === 'image/png' 
+            ? logoData.blob 
+            : new Blob([logoData.blob], { type: 'image/png' });
 
-      if (logoUrl && navigator.canShare) {
-        const logoFile = await fetchLogoFile(logoUrl);
-        if (logoFile && navigator.canShare({ files: [logoFile] })) {
-          filesToSend = [logoFile];
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              'text/plain': textBlob,
+              'image/png': pngBlob,
+            })
+          ]);
+          onCopyLink();
+          return;
         }
       }
 
-      const shareData: ShareData = {
-        title: displayName,
-        text: naturalShareMessage,
-        url: activeUrl,
-        ...(filesToSend.length > 0 ? { files: filesToSend } : {})
-      };
-
-      await navigator.share(shareData);
-    } catch (err: any) {
-      if (err?.name !== 'AbortError') {
-        await handleCopyMessage();
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(naturalShareMessage);
       }
-    } finally {
-      setIsSharing(false);
+    } catch {
+      // Fallback para texto puro
+      if (navigator.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(naturalShareMessage);
+        } catch {
+          // Silencioso
+        }
+      }
     }
-  }, [displayName, naturalShareMessage, activeUrl, logoUrl, fetchLogoFile, handleCopyMessage]);
+    onCopyLink();
+  }, [naturalShareMessage, logoUrl, fetchLogoData, onCopyLink]);
 
-  const handleNativeShare = useCallback(() => {
-    throttleAction(executeShare);
-  }, [executeShare, throttleAction]);
+  // Partilha Universal: Sempre anexa a imagem do logo se disponível
+  const executeUniversalShare = useCallback(async () => {
+    if (typeof navigator === 'undefined') return;
 
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    if (isMobile && navigator.share) {
+      setIsSharing(true);
+      try {
+        let filesToSend: File[] = [];
+
+        if (logoUrl) {
+          const logoData = await fetchLogoData(logoUrl);
+          if (logoData?.file && navigator.canShare && navigator.canShare({ files: [logoData.file] })) {
+            filesToSend = [logoData.file];
+          }
+        }
+
+        const shareData: ShareData = filesToSend.length > 0
+          ? {
+              title: displayName,
+              text: naturalShareMessage,
+              files: filesToSend,
+            }
+          : {
+              title: displayName,
+              text: naturalShareMessage,
+              url: finalCatalogUrl,
+            };
+
+        await navigator.share(shareData);
+      } catch (err: any) {
+        if (err?.name !== 'AbortError') {
+          await handleCopyMessage();
+        }
+      } finally {
+        setIsSharing(false);
+      }
+      return;
+    }
+
+    // Fallback Desktop
+    await handleCopyMessage();
+    const encoded = encodeURIComponent(naturalShareMessage);
+    window.open(`https://web.whatsapp.com/send?text=${encoded}`, '_blank', 'noopener,noreferrer');
+  }, [displayName, naturalShareMessage, finalCatalogUrl, logoUrl, fetchLogoData, handleCopyMessage]);
+
+  // Botão WhatsApp: Garante o anexo da imagem no telemóvel ou copia a imagem no desktop
   const handleShareWhatsApp = useCallback(() => {
     throttleAction(async () => {
-      // 1. Tenta partilha nativa enviando o ficheiro do logótipo anexo
       if (typeof navigator !== 'undefined' && navigator.share && logoUrl) {
         try {
-          const logoFile = await fetchLogoFile(logoUrl);
-          if (logoFile && navigator.canShare && navigator.canShare({ files: [logoFile] })) {
+          const logoData = await fetchLogoData(logoUrl);
+          if (logoData?.file && navigator.canShare && navigator.canShare({ files: [logoData.file] })) {
             await navigator.share({
               title: displayName,
               text: naturalShareMessage,
-              url: activeUrl,
-              files: [logoFile]
+              files: [logoData.file]
             });
             return;
           }
@@ -177,189 +265,184 @@ export const GrowthHero = memo(function GrowthHero({
         }
       }
 
-      // 2. Fallback direto caso o dispositivo não suporte envio de ficheiros
+      await handleCopyMessage();
       const encoded = encodeURIComponent(naturalShareMessage);
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       const url = isMobile 
         ? `whatsapp://send?text=${encoded}` 
-        : `https://api.whatsapp.com/send?text=${encoded}`;
+        : `https://web.whatsapp.com/send?text=${encoded}`;
       
       window.open(url, '_blank', 'noopener,noreferrer');
     });
-  }, [displayName, naturalShareMessage, activeUrl, logoUrl, fetchLogoFile, throttleAction]);
-
-  const handleShareInstagram = useCallback(() => {
-    throttleAction(async () => {
-      if (typeof navigator !== 'undefined' && 'share' in navigator) {
-        await executeShare();
-        return;
-      }
-
-      await handleCopyMessage();
-      window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
-    });
-  }, [executeShare, handleCopyMessage, throttleAction]);
+  }, [displayName, naturalShareMessage, logoUrl, fetchLogoData, handleCopyMessage, throttleAction]);
 
   return (
     <section 
-      className="w-full rounded-3xl p-4 sm:p-6 bg-white border border-zinc-200 space-y-4"
+      aria-label={displayName}
+      className="w-full rounded-3xl p-4 sm:p-5.5 bg-white border border-zinc-200/80 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.03)] space-y-3.5 text-zinc-900"
       style={{ contain: 'content' }}
     >
-      {/* 1. TOPO: Perfil & Ver Loja */}
-      <div className="flex items-center justify-between gap-3">
+      {/* 1. PERFIL & VER LOJA */}
+      <header className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          {logoUrl ? (
-            <img 
-              src={logoUrl} 
-              alt="" 
-              loading="lazy"
-              decoding="async"
-              className="w-12 h-12 rounded-2xl object-cover border border-zinc-200 shrink-0 bg-zinc-50" 
+          <div className="relative shrink-0">
+            {logoUrl ? (
+              <img 
+                src={logoUrl} 
+                alt={`${displayName} logo`}
+                loading="lazy"
+                decoding="async"
+                className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl object-cover border border-zinc-200/70 bg-zinc-50 shadow-2xs" 
+              />
+            ) : (
+              <div 
+                aria-hidden="true"
+                className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-zinc-900 text-white flex items-center justify-center font-bold text-base shadow-2xs select-none"
+              >
+                {displayName.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <span 
+              className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white" 
+              title="Online" 
+              aria-hidden="true" 
             />
-          ) : (
-            <div className="w-12 h-12 rounded-2xl bg-zinc-900 text-white flex items-center justify-center font-black text-lg shrink-0">
-              {displayName.charAt(0).toUpperCase()}
-            </div>
-          )}
-          <div className="min-w-0">
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-[10px] font-bold uppercase tracking-wider text-emerald-800 border border-emerald-100">
-              <Sparkles size={11} className="shrink-0 text-emerald-600" />
-              <span>{t('guide_badge') || 'Divulgação'}</span>
-            </div>
-            <h1 className="text-base sm:text-lg font-bold text-zinc-900 truncate mt-0.5">
+          </div>
+
+          <div className="min-w-0 space-y-0.5">
+            <h1 className="text-sm sm:text-base font-bold text-zinc-950 tracking-tight truncate">
               {displayName}
             </h1>
+            <p className="text-[11px] text-zinc-500 font-medium truncate flex items-center gap-1">
+              <Sparkles size={11} className="text-emerald-600 shrink-0" aria-hidden="true" />
+              <span>{t('guide_hero_status') || 'Pronto para divulgar'}</span>
+            </p>
           </div>
         </div>
 
         <a
-          href={activeUrl}
+          href={finalStoreUrl || finalCatalogUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold shrink-0 transition-colors"
+          aria-label={`${t('guide_preview_btn') || 'Ver Loja'} - ${displayName}`}
+          className="inline-flex items-center gap-1.5 min-h-[38px] px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200/80 text-zinc-800 text-xs font-semibold shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900"
         >
           <span>{t('guide_preview_btn') || 'Ver Loja'}</span>
-          <ExternalLink size={12} className="text-zinc-500" />
+          <ExternalLink size={12} className="text-zinc-500" aria-hidden="true" />
         </a>
+      </header>
+
+      {/* 2. CARD EXPLICATIVO */}
+      <div className="px-3.5 py-2.5 rounded-2xl bg-zinc-50/80 border border-zinc-100 flex items-center justify-between gap-2">
+        <p className="text-xs text-zinc-600 leading-relaxed truncate">
+          {t('guide_hero_subtitle') || 'Partilhe a foto da loja com o catálogo e link numa única mensagem.'}
+        </p>
       </div>
 
-      {/* 2. ESCOLHA DE DESTINO */}
-      <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-zinc-100">
+      {/* 3. AÇÕES DIRETAS (Todos enviam com Imagem) */}
+      <div className="space-y-2">
         <button
           type="button"
-          onClick={() => onSelectLinkType('products')}
-          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold truncate cursor-pointer transition-all ${
-            selectedLinkType === 'products'
-              ? 'bg-white text-emerald-800 border border-emerald-200/50 shadow-xs'
-              : 'text-zinc-500 hover:text-zinc-900'
-          }`}
+          disabled={isBusy || isSharing}
+          onClick={() => throttleAction(executeUniversalShare)}
+          aria-label={t('guide_universal_share_btn') || 'Divulgar com Foto e Links'}
+          className="w-full min-h-[46px] flex items-center justify-center gap-2.5 py-3 px-4 rounded-2xl bg-zinc-900 hover:bg-zinc-850 text-white text-xs sm:text-sm font-semibold disabled:opacity-50 cursor-pointer shadow-2xs active:opacity-85 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2"
         >
-          <ShoppingBag size={15} className={selectedLinkType === 'products' ? 'text-emerald-600' : 'text-zinc-400'} />
-          <span className="truncate">{t('guide_tab_products') || 'Catálogo de Produtos'}</span>
+          {isSharing ? (
+            <Loader2 size={16} className="animate-spin shrink-0" aria-hidden="true" />
+          ) : (
+            <Globe2 size={16} className="shrink-0 text-emerald-400" aria-hidden="true" />
+          )}
+          <span className="truncate">
+            {t('guide_universal_share_btn') || 'Divulgar com Foto e Links'}
+          </span>
         </button>
 
-        <button
-          type="button"
-          onClick={() => onSelectLinkType('store')}
-          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold truncate cursor-pointer transition-all ${
-            selectedLinkType === 'store'
-              ? 'bg-white text-zinc-900 border border-zinc-200/80 shadow-xs'
-              : 'text-zinc-500 hover:text-zinc-900'
-          }`}
-        >
-          <Store size={15} className={selectedLinkType === 'store' ? 'text-zinc-900' : 'text-zinc-400'} />
-          <span className="truncate">{t('guide_tab_store') || 'Página Inicial'}</span>
-        </button>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            disabled={isBusy}
+            onClick={handleShareWhatsApp}
+            aria-label="Enviar Foto e Links no WhatsApp"
+            className="min-h-[42px] flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 text-[#128C7E] text-xs font-bold cursor-pointer active:opacity-85 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]"
+          >
+            <MessageCircle size={15} className="shrink-0 text-[#25D366]" aria-hidden="true" />
+            <span className="truncate">WhatsApp</span>
+          </button>
+
+          <button
+            type="button"
+            disabled={isBusy}
+            onClick={() => throttleAction(handleCopyMessage)}
+            aria-label={copiedLink ? (t('guide_copied_btn') || 'Copiado!') : (t('guide_copy_btn') || 'Copiar Foto e Texto')}
+            className={`min-h-[42px] flex items-center justify-center gap-1.5 p-2.5 rounded-xl border text-xs font-bold cursor-pointer active:opacity-85 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 ${
+              copiedLink 
+                ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
+                : 'bg-zinc-50 hover:bg-zinc-100 border-zinc-200 text-zinc-800'
+            }`}
+          >
+            {copiedLink ? (
+              <>
+                <Check size={14} className="text-emerald-700 shrink-0" aria-hidden="true" />
+                <span className="truncate">{t('guide_copied_btn') || 'Copiado!'}</span>
+              </>
+            ) : (
+              <>
+                <Copy size={14} className="text-zinc-600 shrink-0" aria-hidden="true" />
+                <span className="truncate">{t('guide_copy_btn') || 'Copiar Tudo'}</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* 3. BOTÃO PRINCIPAL (Web Share com Imagem e Texto) */}
+      {/* 4. CARTAZ/FOLHA IMPRESSA COM QR CODE */}
       <button
         type="button"
-        disabled={isBusy || isSharing}
-        onClick={handleNativeShare}
-        className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs sm:text-sm font-bold disabled:opacity-60 cursor-pointer transition-all active:scale-[0.99]"
+        onClick={onOpenLetterModal}
+        aria-label={`${t('guide_letter_modal_title') || 'Carta de Apresentação Comercial'} - ${t('guide_letter_open_btn') || 'Gerar'}`}
+        className="w-full min-h-[54px] p-3 rounded-2xl bg-blue-50/50 hover:bg-blue-50/90 border border-blue-200/80 flex items-center justify-between gap-3 text-left cursor-pointer active:opacity-85 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-1"
       >
-        {isSharing ? (
-          <Loader2 size={16} className="animate-spin" />
-        ) : copiedLink ? (
-          <Check size={16} className="text-emerald-400" />
-        ) : (
-          <Share2 size={16} />
-        )}
-        <span>
-          {copiedLink 
-            ? (t('guide_copied_msg') || 'Mensagem e link copiados!') 
-            : (t('guide_native_share_btn') || 'Partilhar Catálogo Completo')}
-        </span>
+        <div className="flex items-center gap-3 min-w-0">
+          <div 
+            aria-hidden="true" 
+            className="w-9 h-12 rounded-lg bg-white border border-blue-200 shadow-xs flex flex-col items-center justify-between p-1 shrink-0 select-none"
+          >
+            <div className="w-full space-y-0.5">
+              <div className="w-2/3 h-0.5 rounded-full bg-blue-200" />
+              <div className="w-full h-0.5 rounded-full bg-blue-100" />
+            </div>
+
+            <div className="p-0.5 rounded bg-blue-600 text-white shadow-2xs">
+              <QrCode size={12} className="stroke-[2.5]" />
+            </div>
+
+            <div className="w-3/4 h-0.5 rounded-full bg-blue-100" />
+          </div>
+
+          <div className="min-w-0 space-y-0.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <p className="text-xs sm:text-sm font-bold text-blue-950 truncate">
+                {t('guide_letter_modal_title') || 'Carta de Apresentação Comercial'}
+              </p>
+              <span className="px-1.5 py-0.2 rounded bg-blue-200/80 text-blue-900 text-[8px] sm:text-[9px] font-black uppercase tracking-wider shrink-0">
+                PDF A4
+              </span>
+            </div>
+
+            <p className="text-[10px] sm:text-[11px] text-blue-900/80 font-medium truncate flex items-center gap-1.5">
+              <span>{t('guide_letter_tag_qr') || 'Com QR Code'}</span>
+              <span aria-hidden="true" className="text-blue-300">•</span>
+              <span>{t('guide_letter_tag_print') || 'Pronto a Imprimir'}</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1 text-blue-700 font-bold text-xs shrink-0 pr-1" aria-hidden="true">
+          <span className="hidden sm:inline">{t('guide_letter_open_btn') || 'Gerar'}</span>
+          <ChevronRight size={16} className="text-blue-600" />
+        </div>
       </button>
-
-      {/* 4. DISPARO RÁPIDO: WHATSAPP & INSTAGRAM */}
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          disabled={isBusy}
-          onClick={handleShareWhatsApp}
-          className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-[#25D366] text-white text-xs font-bold hover:opacity-95 disabled:opacity-50 cursor-pointer shadow-xs active:scale-[0.99] transition-all"
-        >
-          <MessageCircle size={16} className="shrink-0" />
-          <span>WhatsApp</span>
-        </button>
-
-        <button
-          type="button"
-          disabled={isBusy}
-          onClick={handleShareInstagram}
-          className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white text-xs font-bold hover:opacity-95 disabled:opacity-50 cursor-pointer shadow-xs active:scale-[0.99] transition-all"
-        >
-          <svg className="w-4 h-4 shrink-0 fill-current" viewBox="0 0 24 24">
-            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-          </svg>
-          <span>Instagram</span>
-        </button>
-      </div>
-
-      {/* 5. CARTA DE APRESENTAÇÃO & QR CODE */}
-      <div className="pt-2 border-t border-zinc-100">
-        <button
-          type="button"
-          onClick={onOpenLetterModal}
-          className="w-full p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-indigo-50/90 via-purple-50/60 to-indigo-50/40 hover:from-indigo-100/90 hover:to-purple-100/60 border-2 border-indigo-200/90 flex items-start sm:items-center justify-between gap-3 text-left cursor-pointer transition-all active:scale-[0.99] group"
-        >
-          <div className="flex items-start sm:items-center gap-3 min-w-0">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-indigo-500/20 group-hover:bg-indigo-700 transition-colors mt-0.5 sm:mt-0">
-              <FileText size={18} className="sm:w-5 sm:h-5" />
-            </div>
-
-            <div className="min-w-0 space-y-1">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <p className="text-xs sm:text-sm font-black text-indigo-950 tracking-tight leading-snug">
-                  {t('guide_letter_modal_title') || 'Carta de Apresentação Comercial'}
-                </p>
-                <span className="px-1.5 py-0.5 rounded-full bg-indigo-600 text-white text-[8px] sm:text-[9px] font-black uppercase tracking-wider shrink-0">
-                  PDF A4
-                </span>
-              </div>
-              
-              <div className="flex items-center gap-2 text-[10px] sm:text-[11px] text-indigo-900/80 font-medium flex-wrap">
-                <span className="inline-flex items-center gap-1 shrink-0">
-                  <QrCode size={12} className="text-indigo-600 shrink-0" />
-                  <span>{t('guide_letter_tag_qr') || 'Com QR Code'}</span>
-                </span>
-                <span className="text-indigo-300 hidden xs:inline">•</span>
-                <span className="inline-flex items-center gap-1 shrink-0">
-                  <Printer size={12} className="text-indigo-600 shrink-0" />
-                  <span>{t('guide_letter_tag_print') || 'Pronto a Imprimir'}</span>
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1 text-indigo-600 font-bold text-xs shrink-0 group-hover:translate-x-0.5 transition-transform self-center">
-            <span className="hidden sm:inline">{t('guide_letter_open_btn') || 'Gerar'}</span>
-            <ChevronRight size={18} className="shrink-0" />
-          </div>
-        </button>
-      </div>
     </section>
   );
 });
