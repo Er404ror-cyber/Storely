@@ -1,6 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom';
 
-import { ScrollToTop } from './components/scrollToTop';
 
 // Layouts
 import { AdminLayout } from './layout/AdminLayout';
@@ -27,11 +26,12 @@ import { Duvidas } from './pages/home/duvidas';
 import { Faq } from './pages/faq';
 import { GrowthGuide } from './dashboard/GrowthGuide';
 import { ProtectedRoute } from './layout/ProtectedRoute';
+import { ScrollManager } from './components/ScrollManager';
 
 export const route = createBrowserRouter([
   {
     path: '/',
-    element: <ScrollToTop />,
+    element: <ScrollManager />,
     children: [
       {
         index: true,

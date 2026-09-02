@@ -59,7 +59,7 @@ export const GrowthNavigation = memo(function GrowthNavigation({
       {/* BARRA INFERIOR COLADA NO CHÃO (MOBILE < LG) */}
       <nav
         aria-label="Navegação rápida mobile"
-        className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-zinc-900/95 border-t border-zinc-800 px-2 pt-1 pb-[env(safe-area-inset-bottom,0px)]"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-black/95 border-t border-zinc-800 px-2 pt-1 pb-[env(safe-area-inset-bottom,0px)]"
         style={{ contain: 'paint' }}
       >
         <div className="flex items-center justify-between gap-1 py-1">

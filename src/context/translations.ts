@@ -2520,14 +2520,32 @@ swipe_down_to_close: "Swipe down",
   guide_copy_msg: 'Copy Message',
   guide_msg_copied: 'Message Copied!',
   guide_template_status_title: 'Status & Stories',
-  guide_template_status_text: '🔥 We just updated our product catalog with fresh arrivals! 😍\n\nCheck models, sizes and live prices right here:\n{{products_url}}',
+  
   guide_template_greeting_title: 'WhatsApp Greeting Message',
-  guide_template_greeting_text: 'Hi! So glad to have you at {{store}}! ✨\n\nTo make browsing easy, you can explore all our products with photos and pricing directly in our catalog:\n🔗 {{products_url}}\n\nLet me know right here once you pick your favorite items!',
+  
   guide_template_bio_title: 'Bio Description (Instagram & TikTok)',
-  guide_template_bio_text: '🛍️ {{store}} - Official Store\n📦 Fast shipping & premium service\n👇 Explore all products and order now:\n{{store_url}}',
-  guide_platforms_title: 'Where to Place Your Link',
-  guide_platforms_sub: 'Follow the 3 illustrated steps and open the app to paste your link:',
-  guide_platform_open: 'Open Settings in App',
+  
+
+
+
+
+
+
+
+
+  guide_template_greeting_text: "Hi! Great to have you here at *{{store}}*! ✨\n\n🛍️ *Explore our highlights and order here:*\n{{catalog_url}}\n\nℹ️ Learn more about us: {{store_url}}",
+
+  guide_template_status_text: "🔥 *Fresh arrivals just dropped!*\n\n👇 *Check out the catalog before it's gone:*\n{{catalog_url}}\n\nℹ️ More store info: {{store_url}}",
+  
+  guide_template_bio_text: "✨ *{{store}}* | Selected with the greatest care.\n\n🛍️ *Browse the full catalog here:*\n{{catalog_url}}\n\nℹ️ Learn more about us: {{store_url}}",
+
+
+
+
+  guide_platforms_title: "Where to place your link",
+  guide_platforms_sub: "Choose an app and follow the step-by-step instructions:",
+  guide_platform_open: "Set up now",
+  guide_platforms_footer_hint: "Once saved, any customer can access your catalog with 1 click.",
   guide_platform_ig_name: 'Instagram',
   guide_platform_ig_step1: 'Open Instagram, go to your profile, and tap "Edit Profile".',
   guide_platform_ig_step2: 'Tap "Links" > "Add external link" and paste your official link.',
@@ -2544,15 +2562,15 @@ swipe_down_to_close: "Swipe down",
   guide_platform_gmb_step1: 'Open your Google Business listing on Maps.',
   guide_platform_gmb_step2: 'Add your Storely website URL into the "Website" field.',
   guide_platform_gmb_step3: 'Shoppers searching on Google Maps will see a direct website button.',
-  guide_troubleshoot_title: 'Sales Tips',
-  guide_troubleshoot_p1_title: 'Traffic without orders?',
-  guide_troubleshoot_p1_desc: 'Send the direct /products link so customers can view prices and specs without waiting.',
-  guide_troubleshoot_p2_title: 'Low catalog traffic?',
-  guide_troubleshoot_p2_desc: 'Add the link to your bio and post Stories at least 3 times a week using the link sticker.',
-  guide_troubleshoot_p3_title: 'Inquiries go cold on WhatsApp?',
-  guide_troubleshoot_p3_desc: 'Reply in the first 5 minutes with the catalog link to keep buyer intent high.',
+  
 
-
+  guide_troubleshoot_title: "Practical daily tips",
+  guide_troubleshoot_p1_title: "When buyers ask for prices",
+  guide_troubleshoot_p1_desc: "Don't type items one by one. Send the catalog link so they can view photos and prices immediately.",
+  guide_troubleshoot_p2_title: "To get more inquiries",
+  guide_troubleshoot_p2_desc: "Place your catalog link in your Instagram bio and post in Stories: \"link in bio to check products\".",
+  guide_troubleshoot_p3_title: "Never miss sales after hours",
+  guide_troubleshoot_p3_desc: "Turn on WhatsApp automatic greetings so anyone reaching out receives your catalog instantly.",
 
 
 
@@ -2666,7 +2684,8 @@ modal_generating: 'Preparing document...',
 
 
 
-
+  guide_share_catalog_cta: "🛍️ Explore our favorites directly in the catalog:",
+  guide_share_store_cta: "🌐 Learn more about our story and store details:",
   guide_share_x: 'Twitter',
 
   guide_badge: "Promote",
@@ -2812,7 +2831,17 @@ auth_network_error: "Internet connection error. Check your network and try again
   share_msg_greeting: 'Hello! Discover the latest products from',
   share_msg_catalog_label: '🛍️ Product Catalog:',
   share_msg_store_label: '🌐 Home Page:',
-  share_msg_closing: 'Visit the links to check prices and order online!'
+  share_msg_closing: 'Visit the links to check prices and order online!',
+
+
+
+
+
+  scroll_restored: 'Position restored',
+loading_content: 'Loading content...',
+
+
+
   },
 
 
@@ -5387,14 +5416,13 @@ swipe_down_to_close: "Deslize para baixo",
   guide_copy_msg: 'Copiar Texto',
   guide_msg_copied: 'Texto Copiado!',
   guide_template_status_title: 'Status & Stories',
-  guide_template_status_text: '🔥 Acabamos de atualizar o nosso catálogo com novidades incríveis! 😍\n\nConfira as peças, tamanhos e preços atualizados aqui:\n{{products_url}}',
+ 
   guide_template_greeting_title: 'Saudação no WhatsApp',
-  guide_template_greeting_text: 'Olá! Que bom ter você por aqui. Seja muito bem-vindo(a) à {{store}}! ✨\n\nPara facilitar a sua escolha, você pode ver todas as peças com fotos e preços em tempo real no nosso catálogo:\n🔗 {{products_url}}\n\nAssim que escolher o que deseja, me mande uma mensagem aqui para confirmarmos o seu pedido!',
+  
   guide_template_bio_title: 'Texto para Bio (Instagram & TikTok)',
-  guide_template_bio_text: '🛍️ {{store}} - Loja Oficial\n📦 Entregas rápidas e garantidas\n👇 Veja nosso catálogo completo e faça seu pedido:\n{{store_url}}',
+ 
   guide_platforms_title: 'Onde configurar o seu link',
-  guide_platforms_sub: 'Siga os passos abaixo para colocar o seu link no lugar certo de cada aplicativo:',
-  guide_platform_open: 'Abrir Configuração no App',
+
   guide_platform_ig_name: 'Instagram',
   guide_platform_ig_step1: 'Abra o Instagram, vá ao seu perfil e clique em "Editar Perfil".',
   guide_platform_ig_step2: 'Toque em "Links" > "Adicionar link externo" e cole o seu link.',
@@ -5411,14 +5439,14 @@ swipe_down_to_close: "Deslize para baixo",
   guide_platform_gmb_step1: 'Aceda à ficha da sua empresa no Google Meu Negócio ou Maps.',
   guide_platform_gmb_step2: 'No campo "Website", adicione a ligação da sua loja.',
   guide_platform_gmb_step3: 'Quem pesquisar pela sua loja no Google terá um botão direto para fazer pedidos.',
-  guide_troubleshoot_title: 'Dicas Rápidas de Conversão',
-  guide_troubleshoot_p1_title: 'Muitas visitas e poucos pedidos?',
-  guide_troubleshoot_p1_desc: 'Envie sempre o link /products direto para o cliente não precisar esperar para ver preços.',
-  guide_troubleshoot_p2_title: 'Poucas visitas?',
-  guide_troubleshoot_p2_desc: 'Fixe o link na bio e partilhe nos Stories pelo menos 3 vezes por semana com sticker de link.',
-  guide_troubleshoot_p3_title: 'Clientes desistem no WhatsApp?',
-  guide_troubleshoot_p3_desc: 'Responda nos primeiros minutos com a saudação automática para fechar o pedido enquanto o cliente tem interesse.',
-
+  
+  guide_troubleshoot_title: "O que fazer no dia a dia",
+  guide_troubleshoot_p1_title: "Quando o cliente pedir preços",
+  guide_troubleshoot_p1_desc: "Não perca tempo a escrever item por item. Envie o link do catálogo para ele escolher com fotos e valores.",
+  guide_troubleshoot_p2_title: "Para receber mais mensagens",
+  guide_troubleshoot_p2_desc: "Coloque o link no seu perfil do Instagram e poste nos Stories dizendo: \"link na bio para ver os produtos\".",
+  guide_troubleshoot_p3_title: "Para não perder vendas à noite",
+  guide_troubleshoot_p3_desc: "Use a mensagem automática de saudação do WhatsApp. Assim, quem mandar mensagem já recebe a vitrine na hora.",
 
   pdf_doc_badge: 'Carta de Apresentação Comercial',
   pdf_doc_subtitle: 'Dossiê profissional A4 para clientes, parceiros e propostas',
@@ -5532,11 +5560,11 @@ modal_generating: 'A preparar documento...',
 
 
 
+  guide_template_greeting_text: "Olá! É um prazer ter você por aqui na *{{store}}*! ✨\n\n🛍️ *Confira os destaques e faça seu pedido:*\n{{catalog_url}}\n\nℹ️ Para conhecer melhor nosso espaço: {{store_url}}",
 
-
-
-
-
+  guide_template_status_text: "🔥 *Tem novidade no ar!*\n\n👇 *Dê uma olhada no catálogo antes que acabe:*\n{{catalog_url}}\n\nℹ️ Mais informações da loja: {{store_url}}",
+  
+  guide_template_bio_text: "✨ *{{store}}* | Tudo escolhido com o maior cuidado.\n\n🛍️ *Acesse o catálogo completo aqui:*\n{{catalog_url}}\n\nℹ️ Saiba mais sobre nós: {{store_url}}",
 
 
 guide_template_send_wa: "Enviar no WhatsApp",
@@ -5646,8 +5674,18 @@ auth_network_error: "Falha de ligação à internet. Verifique a rede e tente no
   share_msg_greeting: 'Olá! Conheça as novidades e produtos oficiais da',
   share_msg_catalog_label: '🛍️ Catálogo de Produtos:',
   share_msg_store_label: '🌐 Página Inicial:',
-  share_msg_closing: 'Acesse para conferir e fazer seu pedido online!'
+  share_msg_closing: 'Acesse para conferir e fazer seu pedido online!',
 
+
+  scroll_restored: 'Posição restaurada',
+loading_content: 'Carregando conteúdo...',
+guide_share_catalog_cta: "🛍️ Escolha os seus favoritos diretamente no catálogo:",
+guide_share_store_cta: "🌐 Conheça a nossa história e detalhes da loja:",
+
+
+guide_platforms_sub: "Escolha a rede e siga o passo a passo:",
+guide_platform_open: "Configurar agora",
+guide_platforms_footer_hint: "Depois de salvar, qualquer cliente poderá acessar o catálogo com 1 clique."
 }
 
 

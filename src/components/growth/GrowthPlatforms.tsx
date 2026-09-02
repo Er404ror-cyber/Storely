@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { TrendingUp, ArrowUpRight } from 'lucide-react';
+import { TrendingUp, ArrowUpRight, CheckCircle2 } from 'lucide-react';
 import { GrowthMockupPhone } from './GrowthMockupPhone';
 
 interface PlatformItem {
@@ -37,26 +37,24 @@ export const GrowthPlatforms = memo(function GrowthPlatforms({
 
   return (
     <section 
-      className="p-4 sm:p-6 rounded-3xl bg-white border border-zinc-200 space-y-5"
+      className="p-4 sm:p-6 rounded-3xl bg-white border border-zinc-200/90 shadow-xs space-y-4"
       style={{ contain: 'content' }}
     >
-      <div>
-        <h2 className="text-base sm:text-lg font-black text-zinc-900 tracking-tight flex items-center gap-2">
-          <TrendingUp size={18} className="text-indigo-600 shrink-0" />
-          <span>{t('guide_platforms_title') || 'Onde configurar o seu link'}</span>
+      {/* Título simples e direto */}
+      <div className="space-y-0.5">
+        <h2 className="text-base sm:text-lg font-extrabold text-zinc-900 flex items-center gap-2">
+          <TrendingUp size={18} className="text-emerald-600 shrink-0" />
+          <span>{t('guide_platforms_title') || 'Onde colocar o seu link'}</span>
         </h2>
-        <p className="text-xs text-zinc-500 mt-0.5">
-          {t('guide_platforms_sub') || 'Siga os passos abaixo para colocar o seu link no lugar certo de cada aplicativo:'}
+        <p className="text-xs text-zinc-500 font-normal">
+          {t('guide_platforms_sub') || 'Escolha a rede e siga o passo a passo:'}
         </p>
       </div>
 
-      {/* Seletor de Redes Sociais */}
+      {/* Seletor rápido de apps */}
       <div 
-        className="flex items-center gap-1.5 overflow-x-auto pb-1"
-        style={{
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none'
-        }}
+        className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar touch-pan-x"
+        style={{ scrollbarWidth: 'none' }}
       >
         {platforms.map((platform, idx) => {
           const isActive = activeIdx === idx;
@@ -65,52 +63,65 @@ export const GrowthPlatforms = memo(function GrowthPlatforms({
               key={platform.name || idx}
               type="button"
               onClick={() => onSelect(idx)}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold shrink-0 cursor-pointer active:opacity-80 ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold shrink-0 cursor-pointer transition-all active:scale-95 ${
                 isActive 
-                  ? 'bg-zinc-900 text-white' 
-                  : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-600 border border-zinc-200/80'
+                  ? 'bg-zinc-900 text-white shadow-xs' 
+                  : 'bg-zinc-100 hover:bg-zinc-200/70 text-zinc-600'
               }`}
             >
-              {platform.icon}
+              <span className="shrink-0">{platform.icon}</span>
               <span>{platform.name}</span>
             </button>
           );
         })}
       </div>
 
-      {/* Conteúdo: Instruções + Mockup */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
-        <div className="md:col-span-7 space-y-3.5">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-black text-zinc-900">{current.name}</span>
+      {/* Instruções + Visualizador do telemóvel */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 items-center pt-1">
+        <div className="md:col-span-7 space-y-3">
+          
+          {/* Cabeçalho do App Ativo com Botão Direto */}
+          <div className="flex items-center justify-between gap-2 p-3 rounded-2xl bg-zinc-50 border border-zinc-100">
+            <div className="flex items-center gap-2">
+              <span className="shrink-0">{current.icon}</span>
+              <span className="text-xs sm:text-sm font-bold text-zinc-900">{current.name}</span>
+            </div>
+
             <button
               type="button"
               onClick={() => onOpenApp(current.deepLink, current.webUrl)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold cursor-pointer active:opacity-80"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-[11px] sm:text-xs font-bold cursor-pointer active:scale-95 transition-transform shrink-0 shadow-xs"
             >
-              <span>{t('guide_platform_open') || 'Abrir Configuração no App'}</span>
+              <span>{t('guide_platform_open') || 'Configurar agora'}</span>
               <ArrowUpRight size={13} className="shrink-0" />
             </button>
           </div>
 
+          {/* Passos claros e numerados */}
           <div className="space-y-2">
             {current.steps.map((step, sIdx) => (
               <div 
                 key={sIdx} 
-                className="flex items-start gap-3 text-xs text-zinc-700 bg-zinc-50 p-3 rounded-2xl border border-zinc-100"
-                style={{ contain: 'paint' }}
+                className="flex items-start gap-2.5 p-3 rounded-2xl bg-white border border-zinc-100 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03)]"
               >
-                <div className="w-5 h-5 rounded-full bg-indigo-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                <div className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                   {sIdx + 1}
                 </div>
-                <span className="leading-relaxed font-medium break-words">{step}</span>
+                <p className="text-xs text-zinc-700 leading-relaxed font-normal">
+                  {step}
+                </p>
               </div>
             ))}
           </div>
+
+          <div className="flex items-center gap-1.5 text-[11px] text-zinc-400 px-1">
+            <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+            <span>{t('guide_platforms_footer_hint') || 'Depois de salvar, qualquer cliente poderá acessar o catálogo com 1 clique.'}</span>
+          </div>
         </div>
 
-        {/* Mockup Preview */}
-        <div className="md:col-span-5 flex justify-center w-full min-w-0">
+        {/* Mockup simplificado */}
+        <div className="md:col-span-5 flex justify-center w-full min-w-0 pt-2 md:pt-0">
           <GrowthMockupPhone
             mockupType={current.mockupType}
             storeName={storeName}

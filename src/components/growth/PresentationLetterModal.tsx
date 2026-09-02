@@ -256,16 +256,6 @@ export const PresentationLetterModal = memo(function PresentationLetterModal({
               <div className="flex items-center gap-1 p-0.5 rounded-xl bg-zinc-200/70 shrink-0">
                 <button
                   type="button"
-                  onClick={() => handleManualLanguageChange('pt')}
-                  disabled={isGenerating}
-                  className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer active:scale-95 ${
-                    selectedLanguage === 'pt' ? 'bg-white text-zinc-900 shadow-xs' : 'text-zinc-500 hover:text-zinc-900'
-                  }`}
-                >
-                  Português
-                </button>
-                <button
-                  type="button"
                   onClick={() => handleManualLanguageChange('en')}
                   disabled={isGenerating}
                   className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer active:scale-95 ${
@@ -273,6 +263,16 @@ export const PresentationLetterModal = memo(function PresentationLetterModal({
                   }`}
                 >
                   English
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleManualLanguageChange('pt')}
+                  disabled={isGenerating}
+                  className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer active:scale-95 ${
+                    selectedLanguage === 'pt' ? 'bg-white text-zinc-900 shadow-xs' : 'text-zinc-500 hover:text-zinc-900'
+                  }`}
+                >
+                  Português
                 </button>
               </div>
             </div>

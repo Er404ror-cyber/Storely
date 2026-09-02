@@ -1,11 +1,11 @@
-import { memo, useRef, useCallback } from 'react';
-import { Flame, MessageCircle, Check, Copy } from 'lucide-react';
+import { useState, memo, useRef, useCallback, useEffect } from 'react';
+import { MessageCircle, Check, Copy, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface TemplateItem {
   titleKey: string;
   badge: string;
-  targetRoute: string;
-  badgeStyle: string;
+  targetRoute?: string;
+  badgeStyle?: string;
   text: string;
 }
 
@@ -24,79 +24,211 @@ export const GrowthTemplates = memo(function GrowthTemplates({
   onShareWhatsApp,
   t
 }: Props) {
-  const lastActionRef = useRef<number>(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  
+  // Bloqueio de spam por timestamps sem disparar re-render
+  const lastActionTimeRef = useRef<number>(0);
+  const isScrollingToRef = useRef<boolean>(false);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Impede ações repetidas em rajada (spam)
+  const [activeIdx, setActiveIdx] = useState<number>(0);
+
+  // Monitoramento ultra-leve de visibilidade dos cards (baixo impacto de CPU)
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (isScrollingToRef.current) return;
+
+        for (let i = 0; i < entries.length; i++) {
+          const entry = entries[i];
+          if (entry.isIntersecting) {
+            const targetIndex = Number(entry.target.getAttribute('data-index'));
+            if (!Number.isNaN(targetIndex)) {
+              setActiveIdx(targetIndex);
+            }
+            break;
+          }
+        }
+      },
+      {
+        root: container,
+        threshold: 0.6
+      }
+    );
+
+    const cards = cardRefs.current;
+    cards.forEach((el) => {
+      if (el) observer.observe(el);
+    });
+
+    return () => {
+      observer.disconnect();
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    };
+  }, [templates.length]);
+
+  // Navegação suave com trava de frame
+  const scrollToIndex = useCallback((idx: number) => {
+    const targetIdx = Math.max(0, Math.min(idx, templates.length - 1));
+    const targetEl = cardRefs.current[targetIdx];
+    if (!targetEl) return;
+
+    isScrollingToRef.current = true;
+    setActiveIdx(targetIdx);
+
+    targetEl.scrollIntoView({
+      behavior: 'smooth',
+      inline: 'center',
+      block: 'nearest'
+    });
+
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    scrollTimeoutRef.current = setTimeout(() => {
+      isScrollingToRef.current = false;
+    }, 450);
+  }, [templates.length]);
+
+  // Anti-Spam com throttle de 400ms
   const handleSafeAction = useCallback((callback: () => void) => {
     const now = Date.now();
-    if (now - lastActionRef.current < 400) return;
-    lastActionRef.current = now;
+    if (now - lastActionTimeRef.current < 400) return;
+    lastActionTimeRef.current = now;
     callback();
   }, []);
 
   return (
     <section className="space-y-3" style={{ contain: 'content' }}>
-      <div>
-        <h2 className="text-base sm:text-lg font-black text-zinc-900 tracking-tight flex items-center gap-2">
-          <Flame size={18} className="text-amber-500 shrink-0" />
-          <span>{t('guide_templates_title') || 'Mensagens Prontas para Enviar'}</span>
-        </h2>
-        <p className="text-xs text-zinc-500">
-          {t('guide_templates_sub') || 'Copie textos já testados que convencem clientes a clicar e comprar:'}
-        </p>
+      {/* Topo Desktop */}
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-1.5">
+          <Sparkles size={14} className="text-amber-500 shrink-0" />
+          <span className="text-xs font-bold text-zinc-800 uppercase tracking-wider">
+            {t('guide_templates_title') || 'Mensagens Prontas'}
+          </span>
+        </div>
+
+        <div className="hidden sm:flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => scrollToIndex(activeIdx - 1)}
+            disabled={activeIdx === 0}
+            aria-label="Anterior"
+            className="w-7 h-7 rounded-full bg-white border border-zinc-200 flex items-center justify-center text-zinc-600 hover:text-zinc-900 active:scale-95 transition-transform disabled:opacity-25 disabled:pointer-events-none cursor-pointer shadow-xs"
+          >
+            <ChevronLeft size={14} />
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollToIndex(activeIdx + 1)}
+            disabled={activeIdx === templates.length - 1}
+            aria-label="Seguinte"
+            className="w-7 h-7 rounded-full bg-white border border-zinc-200 flex items-center justify-center text-zinc-600 hover:text-zinc-900 active:scale-95 transition-transform disabled:opacity-25 disabled:pointer-events-none cursor-pointer shadow-xs"
+          >
+            <ChevronRight size={14} />
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* Carrossel Otimizado */}
+      <div
+        ref={containerRef}
+        className="flex gap-3.5 overflow-x-auto snap-x snap-mandatory scroll-smooth px-1 py-1 no-scrollbar touch-pan-x"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
         {templates.map((item, idx) => {
           const isCopied = copiedIdx === idx;
 
           return (
-            <div 
-              key={item.titleKey || idx} 
-              className="p-4 rounded-3xl bg-white border border-zinc-200 flex flex-col justify-between space-y-3.5"
+            <div
+              key={item.titleKey || idx}
+              data-index={idx}
+              ref={(el) => {
+                cardRefs.current[idx] = el;
+              }}
+              className="snap-center shrink-0 w-[84vw] sm:w-[320px] max-w-[340px] flex flex-col justify-between p-4 sm:p-5 rounded-3xl bg-white border border-zinc-100 shadow-[0_8px_20px_-4px_rgba(0,0,0,0.04),0_2px_6px_rgba(0,0,0,0.02)] transform-gpu"
+              style={{ contain: 'paint layout' }}
             >
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between gap-2">
-                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border truncate ${item.badgeStyle}`}>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
                     {item.badge}
                   </span>
-                  <span className="text-[10px] font-mono font-bold text-zinc-500 shrink-0">
-                    {item.targetRoute}
-                  </span>
+                  {idx === 0 && (
+                    <span className="text-[9px] font-bold tracking-wide uppercase px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                      Recomendado
+                    </span>
+                  )}
                 </div>
-                <p className="text-xs text-zinc-700 leading-relaxed whitespace-pre-line font-medium break-words">
-                  {item.text}
-                </p>
+
+                <div className="p-3.5 rounded-2xl bg-zinc-50/80 border border-zinc-100 text-zinc-700 select-text">
+                  <p className="text-xs sm:text-[13px] leading-relaxed whitespace-pre-line font-normal break-words">
+                    {item.text}
+                  </p>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2 pt-1 border-t border-zinc-100">
+              {/* Botões com proteção anti-spam e gpu transform */}
+              <div className="flex items-center gap-2 pt-3 mt-1">
                 <button
                   type="button"
                   onClick={() => handleSafeAction(() => onShareWhatsApp(item.text))}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 active:scale-[0.98] transition-transform text-emerald-800 text-xs font-bold border border-emerald-200 cursor-pointer"
+                  className="flex-1 h-9 sm:h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 transition-transform text-white text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transform-gpu"
                 >
-                  <MessageCircle size={13} className="text-emerald-600 shrink-0" />
-                  <span className="truncate">{t('guide_template_send_wa') || 'Enviar no WhatsApp'}</span>
+                  <MessageCircle size={14} className="shrink-0" />
+                  <span>Enviar</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleSafeAction(() => onCopy(item.text, idx))}
-                  className={`p-2 rounded-xl border cursor-pointer active:scale-[0.98] transition-transform ${
-                    isCopied 
-                      ? 'bg-emerald-50 border-emerald-300 text-emerald-700' 
+                  className={`h-9 sm:h-10 px-3.5 rounded-xl border text-xs font-medium flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform shrink-0 transform-gpu ${
+                    isCopied
+                      ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
                       : 'bg-zinc-50 hover:bg-zinc-100 border-zinc-200 text-zinc-700'
                   }`}
-                  title={isCopied ? (t('guide_copied') || 'Copiado!') : (t('guide_copy_msg') || 'Copiar Texto')}
                 >
                   {isCopied ? (
-                    <Check size={14} className="text-emerald-600" strokeWidth={2.5} />
+                    <>
+                      <Check size={13} className="text-emerald-600" strokeWidth={2.5} />
+                      <span>Copiado</span>
+                    </>
                   ) : (
-                    <Copy size={14} className="text-zinc-500" />
+                    <>
+                      <Copy size={13} className="text-zinc-500" />
+                      <span>Copiar</span>
+                    </>
                   )}
                 </button>
               </div>
             </div>
+          );
+        })}
+      </div>
+
+      {/* Indicadores de Posição */}
+      <div className="flex items-center justify-center gap-1 pt-1">
+        {templates.map((item, idx) => {
+          const isActive = activeIdx === idx;
+          return (
+            <button
+              key={item.titleKey || idx}
+              type="button"
+              onClick={() => scrollToIndex(idx)}
+              aria-label={`Ir para mensagem ${idx + 1}`}
+              className="p-2 cursor-pointer group touch-manipulation"
+            >
+              <span
+                className={`block h-2 rounded-full transition-all duration-200 ${
+                  isActive
+                    ? 'w-6 bg-zinc-900'
+                    : 'w-2 bg-zinc-300 group-hover:bg-zinc-400'
+                }`}
+              />
+            </button>
           );
         })}
       </div>

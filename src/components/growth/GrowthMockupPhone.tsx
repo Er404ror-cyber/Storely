@@ -12,7 +12,8 @@ import {
   ChevronRight, 
   CheckCheck,
   MoreVertical,
-  MapPin
+  MapPin,
+  ExternalLink
 } from 'lucide-react';
 
 interface Props {
@@ -38,19 +39,19 @@ export const GrowthMockupPhone = memo(function GrowthMockupPhone({
 
   return (
     <div 
-  onClick={onOpenApp}
-  onKeyDown={(e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onOpenApp();
-    }
-  }}
-  role="button"
-  tabIndex={0}
-  className="w-full max-w-[290px] rounded-[2.2rem] bg-white p-2.5 border-[3px] border-zinc-900 text-zinc-800 font-sans text-xs space-y-2 cursor-pointer select-none active:scale-[0.98] transition-transform"
-  style={{ contain: 'content' }}
-  title={t('guide_mockup_tap_to_open') || 'Tocar para abrir no aplicativo'}
->
+      onClick={onOpenApp}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpenApp();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      className="group w-full max-w-[290px] rounded-[2.2rem] bg-white p-2.5 border-[3px] border-zinc-900 text-zinc-800 font-sans text-xs space-y-2 cursor-pointer select-none active:scale-[0.98] transition-all duration-200 hover:shadow-lg focus:outline-hidden"
+      style={{ contain: 'content' }}
+      title={t('guide_mockup_tap_to_open') || 'Tocar para abrir no aplicativo'}
+    >
       {/* Barra de Status do Telemóvel */}
       <div className="flex justify-between items-center px-2 text-[9px] text-zinc-400 font-bold">
         <span>9:41</span>
@@ -174,7 +175,6 @@ export const GrowthMockupPhone = memo(function GrowthMockupPhone({
         <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden" style={{ contain: 'paint' }}>
           {/* Ilustração Realista do Mapa no Topo */}
           <div className="h-16 bg-[#E8EAED] relative overflow-hidden flex items-end justify-between p-2 border-b border-zinc-200">
-            {/* Linhas e rotas ilustrativas do mapa */}
             <svg className="absolute inset-0 w-full h-full opacity-35" preserveAspectRatio="none" viewBox="0 0 200 80">
               <path d="M-10,30 Q60,10 110,40 T210,20" fill="none" stroke="#FFFFFF" strokeWidth="8" />
               <path d="M40,-10 L80,90" fill="none" stroke="#FFFFFF" strokeWidth="6" />
@@ -182,12 +182,10 @@ export const GrowthMockupPhone = memo(function GrowthMockupPhone({
               <circle cx="100" cy="35" r="16" fill="#4285F4" opacity="0.15" />
             </svg>
 
-            {/* Pin do Mapa */}
             <div className="absolute top-2 left-1/2 -translate-x-1/2 flex flex-col items-center">
               <MapPin size={18} className="text-red-500 fill-red-500 drop-shadow-xs" />
             </div>
 
-            {/* Avatar do Negócio */}
             <div className="w-8 h-8 rounded-xl bg-white border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0 z-10">
               {logoUrl ? (
                 <img src={logoUrl} alt="" className="w-full h-full object-cover" />
@@ -219,7 +217,6 @@ export const GrowthMockupPhone = memo(function GrowthMockupPhone({
               </div>
             </div>
 
-            {/* Botões de Ação do Google */}
             <div className="grid grid-cols-4 gap-1 py-1 border-y border-zinc-100 text-center">
               <div className="flex flex-col items-center gap-1">
                 <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center">
@@ -267,7 +264,6 @@ export const GrowthMockupPhone = memo(function GrowthMockupPhone({
       {mockupType === 'instagram' && (
         <div className="bg-zinc-50 p-2.5 rounded-2xl space-y-2 border border-zinc-200/80" style={{ contain: 'paint' }}>
           <div className="flex items-center justify-between gap-2">
-            {/* Foto de Perfil com Anel de Stories */}
             <div className="w-10 h-10 rounded-full bg-linear-to-tr from-amber-400 via-rose-500 to-purple-600 p-0.5 shrink-0">
               {logoUrl ? (
                 <img 
@@ -311,10 +307,13 @@ export const GrowthMockupPhone = memo(function GrowthMockupPhone({
         </div>
       )}
 
-      {/* Rodapé interativo */}
-      <div className="text-center text-[9px] text-indigo-600 font-bold flex items-center justify-center gap-0.5 pt-0.5 truncate">
-        <span className="truncate">{t('guide_mockup_tap_to_open') || 'Tocar para abrir no aplicativo'}</span>
-        <ChevronRight size={10} className="shrink-0" />
+      {/* Botão de Rodapé com Destaque Real */}
+      <div className="w-full py-2 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white flex items-center justify-between text-[10px] font-bold shadow-xs transition-colors group-hover:bg-indigo-600">
+        <span className="flex items-center gap-1.5 truncate">
+          <ExternalLink size={11} className="shrink-0 text-white/80" />
+          <span className="truncate">{t('guide_mockup_tap_to_open') || 'Tocar para abrir no aplicativo'}</span>
+        </span>
+        <ChevronRight size={12} className="shrink-0 text-white/70 transition-transform group-hover:translate-x-0.5" />
       </div>
     </div>
   );

@@ -99,7 +99,7 @@ const HeroComercialComponent: React.FC<HeroProps> = ({ content, style, onUpdate 
   const LayoutComponent = layout === '2' ? LayoutBackground : layout === '4' ? LayoutStorely : LayoutYoutube;
 
   return (
-    <section className={`relative min-h-[380px] flex items-center overflow-hidden ${getTheme(typedStyle.theme)}`}>
+    <section className={`relative min-h-[380px] flex items-center overflow-hidden pb-8 md:pb-0 ${getTheme(typedStyle.theme)}`}>
       <LayoutComponent isDark={isDark} isCenter={isCenter} isEditable={isEditable} content={resolvedContent}>
         <HeroTextFields content={resolvedContent} isEditable={isEditable} isDark={isDark} isDarkBg={layout === '2'} style={typedStyle} t={t} onUpdate={onUpdate} isCenter={isCenter} />
         <WhatsAppButton isEditable={isEditable} isLoadingNumber={isLoadingNumber} content={resolvedContent} t={t} onUpdate={onUpdate} isCenter={isCenter} />

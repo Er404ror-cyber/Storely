@@ -1,5 +1,5 @@
-import { Outlet, useParams, useNavigate, useLocation } from "react-router-dom";
-import { useCallback, useEffect, useState } from "react";
+import { Outlet, useParams, useNavigate, useLocation, useNavigationType } from "react-router-dom";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { StoreHeader } from "../components/public/header/header";
@@ -15,11 +15,13 @@ import { FloatingSearch } from "../components/produtos/componentsPublic/Floating
 // 🛠️ MODO DE TESTE DO BOTÃO (Muda para false em produção)
 // ==========================================
 const DEBUG_SHOW_BACK = false;
+const SCROLL_STORAGE_KEY = "storely_scroll_positions";
 
 export function PublicLayout() {
   const { storeSlug } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const navType = useNavigationType();
   const queryClient = useQueryClient();
   
   const { data: store, isLoading, isError, isFetching, source, forceRefresh } = useStorePublic(storeSlug);
@@ -28,6 +30,112 @@ export function PublicLayout() {
   const isPt = lang.startsWith("pt");
 
   const [showExternalBackButton, setShowExternalBackButton] = useState(false);
+
+  // ----------------------------------------------------
+  // 🧭 RESTAURAÇÃO DE SCROLL DINÂMICA DO OUTLET
+  // ----------------------------------------------------
+  const outletContainerRef = useRef<HTMLDivElement>(null);
+  const isRestoringRef = useRef(false);
+
+  // 1. Salva a posição do scroll da rota atual antes de sair dela
+  useEffect(() => {
+    return () => {
+      try {
+        const positions = JSON.parse(sessionStorage.getItem(SCROLL_STORAGE_KEY) || "{}");
+        positions[location.key] = window.scrollY;
+        sessionStorage.setItem(SCROLL_STORAGE_KEY, JSON.stringify(positions));
+      } catch {
+        // Ignora caso storage esteja indisponível
+      }
+    };
+  }, [location.key]);
+
+  // 2. Controla a restauração após a montagem do conteúdo no Outlet
+  useEffect(() => {
+    // CASO A: Navegação para uma nova página (PUSH / REPLACE) -> Scroll to top garantido
+    if (navType !== "POP") {
+      window.scrollTo({ top: 0, behavior: "instant" });
+      const frameId = requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: "instant" });
+      });
+      return () => cancelAnimationFrame(frameId);
+    }
+
+    // CASO B: O usuário clicou em Voltar/Avançar (POP) -> Restaura onde estava
+    let targetY = 0;
+    try {
+      const positions = JSON.parse(sessionStorage.getItem(SCROLL_STORAGE_KEY) || "{}");
+      targetY = positions[location.key] ?? 0;
+    } catch {
+      targetY = 0;
+    }
+
+    if (targetY === 0) {
+      window.scrollTo({ top: 0, behavior: "instant" });
+      return;
+    }
+
+    isRestoringRef.current = true;
+    let timerId: NodeJS.Timeout | null = null;
+
+    const attemptScroll = () => {
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      
+      // Se a página já cresceu o suficiente para atingir a posição salva
+      if (maxScroll >= targetY - 10) {
+        window.scrollTo({ top: targetY, behavior: "instant" });
+        isRestoringRef.current = false;
+        cleanupObservers();
+        return true;
+      }
+      return false;
+    };
+
+    // Monitora mutações e redimensionamentos no container do Outlet
+    let mutationObs: MutationObserver | null = null;
+    let resizeObs: ResizeObserver | null = null;
+
+    const cleanupObservers = () => {
+      if (mutationObs) mutationObs.disconnect();
+      if (resizeObs) resizeObs.disconnect();
+      if (timerId) clearTimeout(timerId);
+    };
+
+    if (outletContainerRef.current) {
+      mutationObs = new MutationObserver(() => {
+        if (isRestoringRef.current) attemptScroll();
+      });
+
+      resizeObs = new ResizeObserver(() => {
+        if (isRestoringRef.current) attemptScroll();
+      });
+
+      mutationObs.observe(outletContainerRef.current, {
+        childList: true,
+        subtree: true,
+      });
+
+      resizeObs.observe(outletContainerRef.current);
+    }
+
+    // Tenta de imediato (caso a rota já estivesse em cache/memória)
+    if (!attemptScroll()) {
+      // Fallback final com delay caso o conteúdo demore ou o observador não atinja 100%
+      timerId = setTimeout(() => {
+        if (isRestoringRef.current) {
+          window.scrollTo({ top: targetY, behavior: "instant" });
+          isRestoringRef.current = false;
+          cleanupObservers();
+        }
+      }, 350);
+    }
+
+    return () => {
+      cleanupObservers();
+    };
+  }, [location.key, navType]);
+
+  // ----------------------------------------------------
 
   useEffect(() => {
     const currentHost = window.location.hostname;
@@ -185,13 +293,11 @@ export function PublicLayout() {
 
       <main className="flex-1 w-full bg-white dark:bg-black flex flex-col select-text">
         
-        {/* CORREÇÃO AQUI: Removido 'flex-1'. Agora a altura é definida pelo conteúdo real do Outlet. */}
-        <div className="w-full flex flex-col">
+        {/* Container do Outlet com a ref anexada para monitorar a montagem */}
+        <div ref={outletContainerRef} className="w-full flex flex-col">
           <Outlet context={{ storeId: store.id, store }} />
         </div>
 
-        {/* CORREÇÃO AQUI: mt-auto empurra o rodapé para baixo se a página for curta,
-            mas deixa-o fluir naturalmente depois do conteúdo se a página for longa. */}
         <div className="mt-auto w-full flex flex-col">
           <StorePageLinksSection storeId={store.id} />
 

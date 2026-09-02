@@ -27,7 +27,6 @@ export const GrowthGuide = memo(function GrowthGuide() {
   const { t } = useTranslate();
   const { data: store } = useAdminStore();
   
-  const [selectedLinkType, setSelectedLinkType] = useState<'products' | 'store'>('products');
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [copiedTemplateIdx, setCopiedTemplateIdx] = useState<number | null>(null);
   const [activePlatform, setActivePlatform] = useState<number>(0);
@@ -45,10 +44,10 @@ export const GrowthGuide = memo(function GrowthGuide() {
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const templateCopyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
-  // Cache de arquivo do logo em memória para poupar dados e bateria
+  // Cache de arquivo do logo em memória
   const logoFileCacheRef = useRef<{ url: string; file: File } | null>(null);
 
-  // Rastreio leve de visibilidade sem sobrecarregar a thread principal
+  // Rastreio leve de visibilidade sem layout thrashing
   useEffect(() => {
     if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
 
@@ -94,59 +93,119 @@ export const GrowthGuide = memo(function GrowthGuide() {
     return store?.slug ? `${baseUrl}/${store.slug}/products` : `${baseUrl}/store/products`;
   }, [store?.slug, baseUrl]);
 
-  const activeUrl = selectedLinkType === 'products' ? productsCatalogUrl : mainStoreUrl;
+  const combinedShareMessage = useMemo(() => {
+    const storeName = store?.name || 'Storely';
+    const ctaCatalog = t('guide_share_catalog_cta') || '🛍️ Escolha os seus favoritos diretamente no catálogo:';
+    const ctaStore = t('guide_share_store_cta') || '🌐 Conheça a nossa história e detalhes da loja:';
 
-  const copyUrl = useClipboard(activeUrl, t('guide_copied') || 'Copiado!', '');
+    return [
+      `✨ *${storeName}*`,
+      'Preparamos novidades incríveis e selecionamos o que há de melhor para si.',
+      '',
+      ctaCatalog,
+      productsCatalogUrl,
+      '',
+      ctaStore,
+      mainStoreUrl
+    ].join('\n');
+  }, [store?.name, productsCatalogUrl, mainStoreUrl, t]);
+
+  const copyCombinedLinks = useClipboard(combinedShareMessage, t('guide_copied') || 'Copiado!', '');
 
   const handleCopyActiveLink = useCallback(() => {
-    copyUrl();
+    copyCombinedLinks();
     setCopiedLink(true);
     if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
     copyTimeoutRef.current = setTimeout(() => setCopiedLink(false), 2000);
-  }, [copyUrl]);
+  }, [copyCombinedLinks]);
 
-  // Carrega e armazena a imagem com segurança (com timeout para não travar conexões lentas)
+  // Conversão ultra-robusta de URL para File (Fetch com fallback em Canvas)
   const fetchLogoFile = useCallback(async (url: string): Promise<File | null> => {
     if (!url) return null;
     if (logoFileCacheRef.current?.url === url) {
       return logoFileCacheRef.current.file;
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2500);
-
+    // 1ª Tentativa: Fetch direto
     try {
-      const response = await fetch(url, { 
-        mode: 'cors', 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+      const response = await fetch(url, {
         cache: 'force-cache',
-        signal: controller.signal 
+        signal: controller.signal
       });
-      
+
       clearTimeout(timeoutId);
-      if (!response.ok) return null;
 
-      const blob = await response.blob();
-      if (!blob || blob.size === 0) return null;
-
-      const ext = blob.type.split('/')[1] || 'png';
-      const file = new File([blob], `logo.${ext}`, { type: blob.type || 'image/png' });
-      
-      logoFileCacheRef.current = { url, file };
-      return file;
+      if (response.ok) {
+        const blob = await response.blob();
+        if (blob && blob.size > 0) {
+          const type = blob.type.includes('png') ? 'image/png' : 'image/jpeg';
+          const ext = type === 'image/png' ? 'png' : 'jpg';
+          const file = new File([blob], `store-logo.${ext}`, { type });
+          logoFileCacheRef.current = { url, file };
+          return file;
+        }
+      }
     } catch {
-      clearTimeout(timeoutId);
-      return null;
+      // Ignora e avança para a alternativa em Canvas
     }
+
+    // 2ª Tentativa: Fallback com Image + Canvas (ultrapassa bloqueios de CORS simples)
+    return new Promise<File | null>((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      const timer = setTimeout(() => {
+        img.src = '';
+        resolve(null);
+      }, 3000);
+
+      img.onload = () => {
+        clearTimeout(timer);
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || img.width || 400;
+          canvas.height = img.naturalHeight || img.height || 400;
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(null);
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              resolve(null);
+              return;
+            }
+            const file = new File([blob], 'store-logo.png', { type: 'image/png' });
+            logoFileCacheRef.current = { url, file };
+            resolve(file);
+          }, 'image/png');
+        } catch {
+          resolve(null);
+        }
+      };
+
+      img.onerror = () => {
+        clearTimeout(timer);
+        resolve(null);
+      };
+
+      img.src = url;
+    });
   }, []);
 
-  // Redirecionamento blindado contra múltiplos cliques rápidos
+  // Redirecionamento blindado
   const handleAppRedirect = useCallback((deepLink: string, webUrl: string) => {
     if (typeof window === 'undefined' || isRedirectingRef.current) return;
     isRedirectingRef.current = true;
 
-    // Copia o catálogo para a área de transferência silenciosamente
     if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(activeUrl).catch(() => {});
+      navigator.clipboard.writeText(combinedShareMessage).catch(() => {});
       setCopiedLink(true);
       if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
       copyTimeoutRef.current = setTimeout(() => setCopiedLink(false), 2000);
@@ -166,87 +225,110 @@ export const GrowthGuide = memo(function GrowthGuide() {
     setTimeout(() => {
       isRedirectingRef.current = false;
     }, 800);
-  }, [activeUrl]);
+  }, [combinedShareMessage]);
 
-  // Web Share Nativo com Fallback em cascata e bloqueio de concorrência
+  // Web Share Nativo com garantia de envio da foto
   const handleNativeShare = useCallback(async (customText?: string) => {
     if (isSharingRef.current) return;
     isSharingRef.current = true;
 
-    const storeName = store?.name || 'Storely';
-    const textToSend = customText || `🛍️ *${storeName}*\n👉 ${activeUrl}`;
+    const textToSend = customText || combinedShareMessage;
 
     try {
-      if (typeof navigator !== 'undefined' && navigator.share) {
-        let filesToSend: File[] = [];
+      if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+        let logoFile: File | null = null;
 
-        if (store?.logo_url && navigator.canShare) {
-          const logoFile = await fetchLogoFile(store.logo_url);
-          if (logoFile && navigator.canShare({ files: [logoFile] })) {
-            filesToSend = [logoFile];
-          }
+        if (store?.logo_url) {
+          logoFile = await fetchLogoFile(store.logo_url);
         }
 
-        await navigator.share({
-          title: storeName,
-          text: textToSend,
-          url: activeUrl,
-          ...(filesToSend.length > 0 ? { files: filesToSend } : {})
-        });
-        return;
+        // Se o dispositivo suporta partilhar ficheiros
+        if (logoFile && navigator.canShare && navigator.canShare({ files: [logoFile] })) {
+          // CRÍTICO: Não passar url nem title quando há files, pois o iOS e Chrome descartam o ficheiro
+          await navigator.share({
+            files: [logoFile],
+            text: textToSend
+          });
+          return;
+        }
+
+        // Fallback nativo sem arquivo (caso canShare recuse arquivos no dispositivo)
+        if (!logoFile || !navigator.canShare) {
+          await navigator.share({
+            text: textToSend
+          });
+          return;
+        }
       }
     } catch (err: any) {
+      // Utilizador cancelou a partilha nativa
       if (err?.name === 'AbortError') return;
     } finally {
       setTimeout(() => {
         isSharingRef.current = false;
-      }, 500);
+      }, 400);
     }
 
-    // Fallback WhatsApp com suporte a Mobile Deep Link e Desktop Web
+    // Fallback WhatsApp quando o navegador não tem share nativo (ex: Desktop)
     const encoded = encodeURIComponent(textToSend);
     const waMobileLink = `whatsapp://send?text=${encoded}`;
     const waWebLink = `https://wa.me/?text=${encoded}`;
 
     handleAppRedirect(waMobileLink, waWebLink);
-  }, [store?.name, store?.logo_url, activeUrl, fetchLogoFile, handleAppRedirect]);
+  }, [store?.logo_url, combinedShareMessage, fetchLogoFile, handleAppRedirect]);
 
   const handleShareWhatsApp = useCallback((customText?: string) => {
     handleNativeShare(customText);
   }, [handleNativeShare]);
 
+  // Mensagens com foco em conversão e unisexo
   const messageTemplates = useMemo(() => {
     const storeName = store?.name || 'Storely';
-    
+
+    const greetingText = (
+      t('guide_template_greeting_text') ||
+      'Olá! É um prazer ter você por aqui na *{{store}}*! ✨\n\n🛍️ *Confira os destaques e faça seu pedido:*\n{{catalog_url}}\n\nℹ️ Para conhecer melhor nosso espaço: {{store_url}}'
+    )
+      .replace('{{store}}', storeName)
+      .replace('{{catalog_url}}', productsCatalogUrl)
+      .replace('{{store_url}}', mainStoreUrl);
+
+    const statusText = (
+      t('guide_template_status_text') ||
+      '🔥 *Tem novidade no ar!*\n\n👇 *Dê uma olhada no catálogo antes que acabe:*\n{{catalog_url}}\n\nℹ️ Mais informações da loja: {{store_url}}'
+    )
+      .replace('{{catalog_url}}', productsCatalogUrl)
+      .replace('{{store_url}}', mainStoreUrl);
+
+    const bioText = (
+      t('guide_template_bio_text') ||
+      '✨ *{{store}}* | Tudo escolhido com o maior cuidado.\n\n🛍️ *Acesse o catálogo completo aqui:*\n{{catalog_url}}\n\nℹ️ Saiba mais sobre nós: {{store_url}}'
+    )
+      .replace('{{store}}', storeName)
+      .replace('{{catalog_url}}', productsCatalogUrl)
+      .replace('{{store_url}}', mainStoreUrl);
+
     return [
-      {
-        titleKey: 'guide_template_status_title',
-        badge: t('guide_badge_status') || 'WhatsApp Status & Stories',
-        targetRoute: '/products',
-        badgeStyle: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
-        text: (t('guide_template_status_text') || 'Confira nosso catálogo de produtos: {{products_url}}')
-          .replace('{{products_url}}', productsCatalogUrl)
-          .replace('{{store_url}}', mainStoreUrl)
-      },
       {
         titleKey: 'guide_template_greeting_title',
         badge: t('guide_badge_greeting') || 'Saudação no WhatsApp',
         targetRoute: '/products',
         badgeStyle: 'bg-indigo-50 text-indigo-700 border-indigo-200/80',
-        text: (t('guide_template_greeting_text') || 'Olá! Seja bem-vindo à {{store}}: {{products_url}}')
-          .replace('{{store}}', storeName)
-          .replace('{{products_url}}', productsCatalogUrl)
-          .replace('{{store_url}}', mainStoreUrl)
+        text: greetingText
+      },
+      {
+        titleKey: 'guide_template_status_title',
+        badge: t('guide_badge_status') || 'WhatsApp Status & Stories',
+        targetRoute: '/products',
+        badgeStyle: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+        text: statusText
       },
       {
         titleKey: 'guide_template_bio_title',
         badge: t('guide_badge_bio') || 'Bio do Instagram & TikTok',
         targetRoute: 'Link Oficial',
         badgeStyle: 'bg-amber-50 text-amber-800 border-amber-200/80',
-        text: (t('guide_template_bio_text') || '🛍️ {{store}}\n👇 Veja todos os produtos:\n{{store_url}}')
-          .replace('{{store}}', storeName)
-          .replace('{{products_url}}', productsCatalogUrl)
-          .replace('{{store_url}}', mainStoreUrl)
+        text: bioText
       }
     ];
   }, [productsCatalogUrl, mainStoreUrl, store?.name, t]);
@@ -265,14 +347,13 @@ export const GrowthGuide = memo(function GrowthGuide() {
       name: t('guide_platform_ig_name') || 'Instagram',
       icon: <Instagram size={18} className="text-pink-600 shrink-0" />,
       color: 'bg-pink-50 border-pink-200 text-pink-700',
-      // Universal Link que abre diretamente o app na tela de edição ou o navegador autenticado
       deepLink: 'https://www.instagram.com/accounts/edit/',
       webUrl: 'https://www.instagram.com/accounts/edit/',
       mockupType: 'instagram' as const,
       steps: [
-        t('guide_platform_ig_step1') || 'Abra o Instagram, vá ao seu perfil e clique em "Editar Perfil".',
-        t('guide_platform_ig_step2') || 'Toque em "Links" > "Adicionar link externo" e cole o seu link.',
-        t('guide_platform_ig_step3') || 'Nos Stories de produtos, use a figurinha de "Link" direcionando para a vitrine.'
+        t('guide_platform_ig_step1') || 'Abra o seu perfil e toque em "Editar Perfil".',
+        t('guide_platform_ig_step2') || 'Toque em "Links" e cole o link do catálogo /products.',
+        t('guide_platform_ig_step3') || 'Nos Stories, adicione a figurinha de link direcionando para o catálogo.'
       ]
     },
     {
@@ -283,23 +364,22 @@ export const GrowthGuide = memo(function GrowthGuide() {
       webUrl: 'https://web.whatsapp.com',
       mockupType: 'whatsapp' as const,
       steps: [
-        t('guide_platform_wa_step1') || 'Abra o WhatsApp, vá em "Configurações" > "Ferramentas Comerciais" > "Perfil Comercial".',
-        t('guide_platform_wa_step2') || 'No campo "Site / Website", cole o link do seu catálogo /products.',
-        t('guide_platform_wa_step3') || 'Ative a "Mensagem de Saudação" automática com o link para quem lhe chamar.'
+        t('guide_platform_wa_step1') || 'Abra o WhatsApp, vá em "Definições" > "Ferramentas Comerciais" > "Perfil Comercial".',
+        t('guide_platform_wa_step2') || 'No campo "Site", adicione o link do catálogo.',
+        t('guide_platform_wa_step3') || 'Use o catálogo na mensagem de saudação automática.'
       ]
     },
     {
       name: t('guide_platform_tt_name') || 'TikTok',
       icon: <Video size={18} className="text-sky-600 shrink-0" />,
       color: 'bg-sky-50 border-sky-200 text-sky-700',
-      // Universal Link oficial: abre o app direto no perfil sem alerta de erro no Safari
       deepLink: 'https://www.tiktok.com/@me',
       webUrl: 'https://www.tiktok.com',
       mockupType: 'tiktok' as const,
       steps: [
-        t('guide_platform_tt_step1') || 'No seu perfil, toque no menu do topo > "Configurações e Privacidade" > "Conta" > "Trocar para Conta Corporativa".',
-        t('guide_platform_tt_step2') || 'Clique em "Editar Perfil" e adicione o seu link no campo "Site".',
-        t('guide_platform_tt_step3') || 'Grave vídeos rápidos mostrando os produtos e diga: "Link do catálogo no perfil!".'
+        t('guide_platform_tt_step1') || 'Aceda às definições de conta e mude para "Conta Corporativa".',
+        t('guide_platform_tt_step2') || 'Em "Editar Perfil", adicione o catálogo no campo "Site".',
+        t('guide_platform_tt_step3') || 'Nos vídeos, indique o link do catálogo na bio.'
       ]
     },
     {
@@ -310,9 +390,9 @@ export const GrowthGuide = memo(function GrowthGuide() {
       webUrl: 'https://business.google.com',
       mockupType: 'google' as const,
       steps: [
-        t('guide_platform_gmb_step1') || 'Aceda à ficha da sua empresa no Google Meu Negócio ou Maps.',
-        t('guide_platform_gmb_step2') || 'No campo "Website", adicione a ligação da sua loja.',
-        t('guide_platform_gmb_step3') || 'Quem pesquisar pela sua loja no Google terá um botão direto para fazer pedidos.'
+        t('guide_platform_gmb_step1') || 'Aceda à ficha da sua empresa no Google ou Google Maps.',
+        t('guide_platform_gmb_step2') || 'No campo Website, adicione o link do catálogo.',
+        t('guide_platform_gmb_step3') || 'Quem pesquisar no Google poderá fazer pedidos diretamente com 1 toque.'
       ]
     }
   ], [t]);
@@ -360,9 +440,7 @@ export const GrowthGuide = memo(function GrowthGuide() {
           <GrowthHero
             storeName={store?.name || ''}
             logoUrl={store?.logo_url}
-            activeUrl={activeUrl}
-            selectedLinkType={selectedLinkType}
-            onSelectLinkType={setSelectedLinkType}
+            activeUrl={productsCatalogUrl}
             copiedLink={copiedLink}
             onCopyLink={handleCopyActiveLink}
             onOpenLetterModal={() => setIsLetterModalOpen(true)}
@@ -402,7 +480,7 @@ export const GrowthGuide = memo(function GrowthGuide() {
             onOpenApp={handleAppRedirect}
             storeName={store?.name || ''}
             logoUrl={store?.logo_url}
-            activeUrl={activeUrl}
+            activeUrl={productsCatalogUrl}
             t={t as (k: string) => string}
           />
         </section>
@@ -418,7 +496,7 @@ export const GrowthGuide = memo(function GrowthGuide() {
           <GrowthTroubleshoot t={t as (k: string) => string} />
         </section>
 
-        {/* Modal de Carta / PDF */}
+        {/* Modal de Apresentação */}
         <PresentationLetterModal
           isOpen={isLetterModalOpen}
           onClose={() => setIsLetterModalOpen(false)}
