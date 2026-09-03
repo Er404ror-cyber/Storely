@@ -146,7 +146,7 @@ export const translations = {
         hiddenToPublic: "Hidden from public",
     invalidPhoneDesc: "The button won't appear on the site until a valid WhatsApp number is provided. Solve it below in the control panel.",
 
-    inventory_title: "Inventory",
+    inventory_title: "Catalog",
     wpp_section_title: "Sales Channel",
     wpp_section_desc: "Set the official number to receive orders via WhatsApp.",
     whatsapp_placeholder: "84 000 0000",
@@ -2722,7 +2722,7 @@ modal_generating: 'Preparing document...',
 
 
   
-guide_template_send_wa: "Send via WhatsApp",
+guide_template_send_wa: "Send",
 
 
 
@@ -2841,6 +2841,22 @@ auth_network_error: "Internet connection error. Check your network and try again
 loading_content: 'Loading content...',
 
 
+
+  item_singular: "item",
+  item_plural: "items",
+  photos_all_ok: "Photos 100% OK",
+  inventory_subtitle: "Add photos, change prices, and publish items to your online store in real time.",
+
+  broken_products_singular: "product needs an image:",
+  broken_products_plural: "products need images:",
+
+  store_management_title: "Store Management",
+
+  broken_photo_warning: "Corrupted or inaccessible photo",
+  fix_now: "Fix",
+  fix_photo: "Fix Photo",
+  click_to_fix: "Click item to resolve",
+  image_error: "Image Error"
 
   },
 
@@ -3060,7 +3076,7 @@ loading_content: 'Loading content...',
     hiddenToPublic: "Invisível para o público",
     invalidPhoneDesc: "O botão não aparecerá no site até que o número de WhatsApp seja válido. Solucione abaixo no painel de controle.",
 
-    inventory_title: "Inventário",
+    inventory_title: "Catálogo",
     wpp_section_title: "Canal de Vendas",
     wpp_section_desc: "Configure o número oficial para receber pedidos via WhatsApp.",
     whatsapp_placeholder: "84 000 0000",
@@ -5567,7 +5583,7 @@ modal_generating: 'A preparar documento...',
   guide_template_bio_text: "✨ *{{store}}* | Tudo escolhido com o maior cuidado.\n\n🛍️ *Acesse o catálogo completo aqui:*\n{{catalog_url}}\n\nℹ️ Saiba mais sobre nós: {{store_url}}",
 
 
-guide_template_send_wa: "Enviar no WhatsApp",
+guide_template_send_wa: "Enviar",
 
 
 
@@ -5685,7 +5701,30 @@ guide_share_store_cta: "🌐 Conheça a nossa história e detalhes da loja:",
 
 guide_platforms_sub: "Escolha a rede e siga o passo a passo:",
 guide_platform_open: "Configurar agora",
-guide_platforms_footer_hint: "Depois de salvar, qualquer cliente poderá acessar o catálogo com 1 clique."
+guide_platforms_footer_hint: "Depois de salvar, qualquer cliente poderá acessar o catálogo com 1 clique.",
+
+
+
+
+
+
+
+
+  item_singular: "artigo",
+  item_plural: "artigos",
+  photos_all_ok: "Fotos 100% OK",
+  inventory_subtitle: "Adicione fotos, altere preços e ative itens na sua loja online em tempo real.",
+  
+  broken_products_singular: "produto precisa de imagem:",
+  broken_products_plural: "produtos precisam de imagem:",
+  
+  store_management_title: "Gestão da Loja",
+
+  broken_photo_warning: "Foto corrompida ou inacessível",
+  fix_now: "Corrigir",
+  fix_photo: "Corrigir Foto",
+  click_to_fix: "Clique no item para corrigir",
+  image_error: "Erro Imagem"
 }
 
 

@@ -14,7 +14,7 @@ interface Props {
   copiedIdx: number | null;
   onCopy: (text: string, idx: number) => void;
   onShareWhatsApp: (text: string) => void;
-  t: (k: string) => string;
+  t: (k: string, params?: Record<string, any>) => string;
 }
 
 export const GrowthTemplates = memo(function GrowthTemplates({
@@ -27,14 +27,12 @@ export const GrowthTemplates = memo(function GrowthTemplates({
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   
-  // Bloqueio de spam por timestamps sem disparar re-render
   const lastActionTimeRef = useRef<number>(0);
   const isScrollingToRef = useRef<boolean>(false);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [activeIdx, setActiveIdx] = useState<number>(0);
 
-  // Monitoramento ultra-leve de visibilidade dos cards (baixo impacto de CPU)
   useEffect(() => {
     const container = containerRef.current;
     if (!container || typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
@@ -71,7 +69,6 @@ export const GrowthTemplates = memo(function GrowthTemplates({
     };
   }, [templates.length]);
 
-  // Navegação suave com trava de frame
   const scrollToIndex = useCallback((idx: number) => {
     const targetIdx = Math.max(0, Math.min(idx, templates.length - 1));
     const targetEl = cardRefs.current[targetIdx];
@@ -92,7 +89,6 @@ export const GrowthTemplates = memo(function GrowthTemplates({
     }, 450);
   }, [templates.length]);
 
-  // Anti-Spam com throttle de 400ms
   const handleSafeAction = useCallback((callback: () => void) => {
     const now = Date.now();
     if (now - lastActionTimeRef.current < 400) return;
@@ -116,7 +112,7 @@ export const GrowthTemplates = memo(function GrowthTemplates({
             type="button"
             onClick={() => scrollToIndex(activeIdx - 1)}
             disabled={activeIdx === 0}
-            aria-label="Anterior"
+            aria-label={t('common_previous') || 'Anterior'}
             className="w-7 h-7 rounded-full bg-white border border-zinc-200 flex items-center justify-center text-zinc-600 hover:text-zinc-900 active:scale-95 transition-transform disabled:opacity-25 disabled:pointer-events-none cursor-pointer shadow-xs"
           >
             <ChevronLeft size={14} />
@@ -125,7 +121,7 @@ export const GrowthTemplates = memo(function GrowthTemplates({
             type="button"
             onClick={() => scrollToIndex(activeIdx + 1)}
             disabled={activeIdx === templates.length - 1}
-            aria-label="Seguinte"
+            aria-label={t('common_next') || 'Seguinte'}
             className="w-7 h-7 rounded-full bg-white border border-zinc-200 flex items-center justify-center text-zinc-600 hover:text-zinc-900 active:scale-95 transition-transform disabled:opacity-25 disabled:pointer-events-none cursor-pointer shadow-xs"
           >
             <ChevronRight size={14} />
@@ -133,7 +129,7 @@ export const GrowthTemplates = memo(function GrowthTemplates({
         </div>
       </div>
 
-      {/* Carrossel Otimizado */}
+      {/* Carrossel */}
       <div
         ref={containerRef}
         className="flex gap-3.5 overflow-x-auto snap-x snap-mandatory scroll-smooth px-1 py-1 no-scrollbar touch-pan-x"
@@ -155,11 +151,11 @@ export const GrowthTemplates = memo(function GrowthTemplates({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
-                    {item.badge}
+                    {t(item.badge) || item.badge}
                   </span>
                   {idx === 0 && (
                     <span className="text-[9px] font-bold tracking-wide uppercase px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
-                      Recomendado
+                      {t('common_recommended') || 'Recomendado'}
                     </span>
                   )}
                 </div>
@@ -171,7 +167,7 @@ export const GrowthTemplates = memo(function GrowthTemplates({
                 </div>
               </div>
 
-              {/* Botões com proteção anti-spam e gpu transform */}
+              {/* Botões de Ação */}
               <div className="flex items-center gap-2 pt-3 mt-1">
                 <button
                   type="button"
@@ -179,7 +175,7 @@ export const GrowthTemplates = memo(function GrowthTemplates({
                   className="flex-1 h-9 sm:h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 transition-transform text-white text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transform-gpu"
                 >
                   <MessageCircle size={14} className="shrink-0" />
-                  <span>Enviar</span>
+                  <span>{t('guide_template_send_wa') || 'Enviar'}</span>
                 </button>
 
                 <button
@@ -194,12 +190,12 @@ export const GrowthTemplates = memo(function GrowthTemplates({
                   {isCopied ? (
                     <>
                       <Check size={13} className="text-emerald-600" strokeWidth={2.5} />
-                      <span>Copiado</span>
+                      <span>{t('copied_label') || 'Copiado'}</span>
                     </>
                   ) : (
                     <>
                       <Copy size={13} className="text-zinc-500" />
-                      <span>Copiar</span>
+                      <span>{t('guide_copy_msg') || 'Copiar'}</span>
                     </>
                   )}
                 </button>
@@ -218,7 +214,10 @@ export const GrowthTemplates = memo(function GrowthTemplates({
               key={item.titleKey || idx}
               type="button"
               onClick={() => scrollToIndex(idx)}
-              aria-label={`Ir para mensagem ${idx + 1}`}
+              aria-label={
+                t('guide_templates_go_to_index', { index: idx + 1 }) ||
+                `Ir para mensagem ${idx + 1}`
+              }
               className="p-2 cursor-pointer group touch-manipulation"
             >
               <span
