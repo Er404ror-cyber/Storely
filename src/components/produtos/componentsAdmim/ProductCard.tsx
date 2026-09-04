@@ -225,7 +225,7 @@ export const ProductCard = memo(({
           >
             <Trash2 size={12} className="shrink-0" />
             <span className="truncate">
-              {t('btn_delete', { defaultValue: t('delete', { defaultValue: 'Eliminar' }) })}
+              {t('btn_delete', { defaultValue: t('btn_delete', { defaultValue: 'Eliminar' }) })}
             </span>
           </button>
         </div>

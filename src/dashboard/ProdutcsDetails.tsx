@@ -65,21 +65,72 @@ export function ProductDetails({ isCreating = false, onClose }: ProductDetailsPr
   const forceLightUI = isEditorRoute;
   const showVisitStore = !pageState?.fromStore;
 
-const styles = useMemo(() => ({
-    pageBg: forceLightUI ? "bg-zinc-50 text-zinc-900" : "bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100",
-    nav: forceLightUI ? "border-zinc-200/80 bg-white/90 " : "border-zinc-200/80 bg-white/90  dark:border-zinc-800 dark:bg-zinc-950/90",
-    panel: forceLightUI ? "border-zinc-200/70 bg-white shadow-xs" : "border-zinc-200/70 bg-white dark:border-zinc-800 dark:bg-zinc-900 shadow-xs",
-    softPanel: forceLightUI ? "border-zinc-200/60 bg-zinc-100/70" : "border-zinc-200/60 bg-zinc-100/70 dark:border-zinc-800 dark:bg-zinc-900/60",
-    imageWrap: forceLightUI ? "bg-zinc-100" : "bg-zinc-100 dark:bg-zinc-900",
-    mutedText: forceLightUI ? "text-zinc-500" : "text-zinc-500 dark:text-zinc-400",
-    strongText: forceLightUI ? "text-zinc-950" : "text-zinc-950 dark:text-white",
-    softMutedText: forceLightUI ? "text-zinc-400" : "text-zinc-400 dark:text-zinc-500",
-    hoverSoft: forceLightUI ? "hover:bg-zinc-100/80" : "hover:bg-zinc-100/80 dark:hover:bg-zinc-900"
+  const styles = useMemo(() => ({
+    pageBg: forceLightUI 
+      ? "bg-slate-50 text-slate-900" 
+      : "bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100",
+    nav: forceLightUI 
+      ? "border-slate-200/80 bg-white/95 text-slate-900" 
+      : "border-zinc-200/80 bg-white/90 dark:border-zinc-800 dark:bg-zinc-950/90",
+    panel: forceLightUI 
+      ? "border-slate-200/80 bg-white shadow-xs" 
+      : "border-zinc-200/70 bg-white dark:border-zinc-800 dark:bg-zinc-900 shadow-xs",
+    softPanel: forceLightUI 
+      ? "border-slate-200 bg-slate-100/80" 
+      : "border-zinc-200/60 bg-zinc-100/70 dark:border-zinc-800 dark:bg-zinc-900/60",
+    imageWrap: forceLightUI 
+      ? "bg-slate-100" 
+      : "bg-zinc-100 dark:bg-zinc-900",
+    mutedText: forceLightUI 
+      ? "text-slate-500" 
+      : "text-zinc-500 dark:text-zinc-400",
+    strongText: forceLightUI 
+      ? "text-slate-900" 
+      : "text-zinc-950 dark:text-white",
+    softMutedText: forceLightUI 
+      ? "text-slate-400" 
+      : "text-zinc-400 dark:text-zinc-500",
+    hoverSoft: forceLightUI 
+      ? "hover:bg-slate-100" 
+      : "hover:bg-zinc-100/80 dark:hover:bg-zinc-900",
+    cardPriceBox: forceLightUI
+      ? "border-slate-200 bg-slate-100/70"
+      : "border-slate-300/80 dark:border-zinc-800 bg-slate-100/70 dark:bg-zinc-900/40",
+    originalPriceText: forceLightUI
+      ? "text-slate-500"
+      : "text-slate-500 dark:text-zinc-400",
+    finalPriceText: forceLightUI
+      ? "text-emerald-700"
+      : "text-emerald-700 dark:text-emerald-400",
+    badgeCategory: forceLightUI
+      ? "bg-slate-200/80 text-slate-800"
+      : "bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300"
   }), [forceLightUI]);
+
   const [isEditing, setIsEditing] = useState(isCreating);
   const [quantity, setQuantity] = useState(1);
   const [customNote, setCustomNote] = useState("");
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState(false);
+
+  const handleSelectOption = useCallback((groupLabel: string, value: string) => {
+    setSelectedOptions((prev) => {
+      if (prev[groupLabel] === value) {
+        const next = { ...prev };
+        delete next[groupLabel];
+        return next;
+      }
+      return { ...prev, [groupLabel]: value };
+    });
+  }, []);
+
+  const handleClearOption = useCallback((groupLabel: string) => {
+    setSelectedOptions((prev) => {
+      const next = { ...prev };
+      delete next[groupLabel];
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -97,7 +148,7 @@ const styles = useMemo(() => ({
     queryFn: async (): Promise<ProductRow | null> => {
       if (isCreating || !productId) return null;
       const queryCache = queryClient.getQueriesData<ProductRow[]>({ queryKey: ["products"] });
-      for (const [_, cachedProducts] of queryCache) {
+      for (const [ cachedProducts] of queryCache) {
         if (cachedProducts && Array.isArray(cachedProducts)) {
           const found = cachedProducts.find((p) => p.id === productId);
           if (found) return found;
@@ -113,7 +164,7 @@ const styles = useMemo(() => ({
     initialData: () => {
       if (pageState?.product) return pageState.product;
       const queryCache = queryClient.getQueriesData<ProductRow[]>({ queryKey: ["products"] });
-      for (const [_, cachedProducts] of queryCache) {
+      for (const [ cachedProducts] of queryCache) {
         if (cachedProducts && Array.isArray(cachedProducts)) {
           const found = cachedProducts.find((p) => p.id === productId);
           if (found) return found;
@@ -125,6 +176,8 @@ const styles = useMemo(() => ({
 
   const resolvedProduct = product || null; 
   const resolvedStore = (pageState?.store || publicStore || null) as PublicStoreData | null;
+  const storeWhatsAppNumber = resolvedStore?.whatsapp_number || adminStore?.whatsapp_number || "";
+  const storeDisplayName = resolvedStore?.name || adminStore?.name || storeSlug;
 
   const initialData = useMemo<ProductFormData>(() => {
     if (isCreating || !resolvedProduct) {
@@ -164,6 +217,7 @@ const styles = useMemo(() => ({
   useEffect(() => {
     setQuantity(1);
     setCustomNote("");
+    setSelectedOptions({});
   }, [productId]);
 
   const previews = useMemo(() => {
@@ -195,32 +249,39 @@ const styles = useMemo(() => ({
   const translatedUnit = UNIT_TRANSLATION_KEY_MAP[initialData.unit as keyof typeof UNIT_TRANSLATION_KEY_MAP] ? t(UNIT_TRANSLATION_KEY_MAP[initialData.unit as keyof typeof UNIT_TRANSLATION_KEY_MAP] as any) : initialData.unit;
 
   const handleWhatsAppOrder = useCallback(() => {
+    if (isEditorRoute) return;
+
     const totalOriginal = unitPriceOriginal * quantity;
     const totalSaved = totalOriginal - totalPriceFinal;
 
-    let optimizedNote = "";
-    
+    const noteSegments: string[] = [];
+
+    const chosenEntries = Object.entries(selectedOptions);
+    if (chosenEntries.length > 0) {
+      const preferencesText = chosenEntries.map(([k, v]) => `• ${k}: ${v}`).join("\n");
+      noteSegments.push(`*Opções Escolhidas:*\n${preferencesText}`);
+    }
+
     if (discountPercent > 0) {
-      optimizedNote = `${t("whatsapp_discount_title" as any)} ${discountPercent}${t("whatsapp_discount_suffix" as any)}\n\n${t("whatsapp_price_from" as any)}${formatMoney(totalOriginal)}~\n${t("whatsapp_price_to" as any)}${formatMoney(totalPriceFinal)}*\n${t("whatsapp_savings_prefix" as any)}${formatMoney(totalSaved)}${t("whatsapp_savings_suffix" as any)}`;
-      
-      if (customNote) {
-        optimizedNote += `\n\n${t("whatsapp_customer_note" as any)} ${customNote}`;
-      }
-    } else {
-      optimizedNote = customNote;
+      const discountText = `${t("whatsapp_discount_title" as any)} ${discountPercent}${t("whatsapp_discount_suffix" as any)}\n\n${t("whatsapp_price_from" as any)}${formatMoney(totalOriginal)}~\n${t("whatsapp_price_to" as any)}${formatMoney(totalPriceFinal)}*\n${t("whatsapp_savings_prefix" as any)}${formatMoney(totalSaved)}${t("whatsapp_savings_suffix" as any)}`;
+      noteSegments.push(discountText);
+    }
+
+    if (customNote.trim()) {
+      noteSegments.push(`${t("whatsapp_customer_note" as any)} ${customNote.trim()}`);
     }
 
     sendWhatsAppOrder({
-      storeName: resolvedStore?.name || storeSlug,
-      whatsappNumber: resolvedStore?.whatsapp_number || adminStore?.whatsapp_number,
+      storeName: storeDisplayName,
+      whatsappNumber: storeWhatsAppNumber,
       productName: initialData.name,
       quantity,
       unit: translatedUnit,
       totalPrice: formatMoney(totalPriceFinal),
-      customNote: optimizedNote, 
+      customNote: noteSegments.join("\n\n").trim(), 
       imageUrl: initialData.main_image,
     });
-  }, [sendWhatsAppOrder, resolvedStore, adminStore, storeSlug, initialData.name, quantity, translatedUnit, totalPriceFinal, formatMoney, customNote, initialData.main_image, discountPercent, unitPriceOriginal, t]);
+  }, [isEditorRoute, unitPriceOriginal, quantity, totalPriceFinal, selectedOptions, discountPercent, customNote, sendWhatsAppOrder, storeDisplayName, storeWhatsAppNumber, initialData.name, initialData.main_image, translatedUnit, formatMoney, t]);
 
   const handleShare = useCallback(async () => {
     const shareData: ShareData = { 
@@ -262,12 +323,23 @@ const styles = useMemo(() => ({
   }, [initialData?.name, initialData?.main_image]);
 
   return createPortal(
-    <div ref={scrollRef} className={`fixed inset-0 z-[10000] h-[100dvh] w-full overflow-y-auto overflow-x-hidden ${styles.pageBg}`}>
+    <div 
+      ref={scrollRef} 
+      style={{ colorScheme: forceLightUI ? "light" : undefined }}
+      className={`fixed inset-0 z-[10000] h-[100dvh] w-full overflow-y-auto overflow-x-hidden ${forceLightUI ? "light" : ""} ${styles.pageBg}`}
+    >
       <ProductDetailsNav
-        isCreating={isCreating} onClose={onClose} isEditorRoute={isEditorRoute}
-        isEditing={isEditing} setIsEditing={setIsEditing} handleShare={handleShare}
-        copied={copied} storeSlug={storeSlug} navClass={styles.nav} 
-        hoverSoftClass={styles.hoverSoft} t={t as any}
+        isCreating={isCreating} 
+        onClose={onClose} 
+        isEditorRoute={isEditorRoute}
+        isEditing={isEditing} 
+        setIsEditing={setIsEditing} 
+        handleShare={handleShare}
+        copied={copied} 
+        storeSlug={storeSlug} 
+        navClass={styles.nav} 
+        hoverSoftClass={styles.hoverSoft} 
+        t={t as any}
       />
 
       <main className="mx-auto w-full max-w-6xl px-0 pb-36 md:px-4 md:pt-10 lg:px-8">
@@ -284,97 +356,110 @@ const styles = useMemo(() => ({
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] md:gap-10 lg:gap-14">
-              <ProductGallery images={previews} productName={initialData.name} fallbackImage={FALLBACK_PRODUCT} imageWrapClass={styles.imageWrap} t={t as any} />
+              <ProductGallery 
+                images={previews} 
+                productName={initialData.name} 
+                fallbackImage={FALLBACK_PRODUCT} 
+                imageWrapClass={styles.imageWrap} 
+                t={t as any} 
+              />
 
               <div className="w-full max-w-full px-4 pt-4 md:px-0 md:pt-0 flex flex-col">
-  {/* Categoria */}
-  <span className={`self-start mb-2 rounded-md px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider ${forceLightUI ? "bg-slate-100 text-slate-700" : "bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300"}`}>
-    {initialData.category || t("common_category_general" as any) || "Geral"}
-  </span>
+                <span className={`self-start mb-2 rounded-md px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider ${styles.badgeCategory}`}>
+                  {initialData.category || t("common_category_general" as any) || "Geral"}
+                </span>
 
-  {/* Nome do Produto */}
-  <h1 className={`text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight mb-3 break-words ${styles.strongText}`}>
-    {initialData.name}
-  </h1>
+                <h1 className={`text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight mb-3 break-words ${styles.strongText}`}>
+                  {initialData.name}
+                </h1>
 
-  {/* Preço com Ancoragem e Poupança Traduzida */}
-  <div className="mb-5 p-4 rounded-xl border border-slate-300/80 dark:border-zinc-800 bg-slate-100/70 dark:bg-zinc-900/40 shadow-xs">
-    {discountPercent > 0 && (
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-sm font-semibold text-slate-500 line-through dark:text-zinc-400">
-          {formatMoney(unitPriceOriginal)}
-        </span>
-        <span className="rounded bg-rose-600 text-white px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide">
-          -{discountPercent}%
-        </span>
-      </div>
-    )}
+                <div className={`mb-5 p-4 rounded-xl border shadow-xs ${styles.cardPriceBox}`}>
+                  {discountPercent > 0 && (
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-sm font-semibold line-through ${styles.originalPriceText}`}>
+                        {formatMoney(unitPriceOriginal)}
+                      </span>
+                      <span className="rounded bg-rose-600 text-white px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide">
+                        -{discountPercent}%
+                      </span>
+                    </div>
+                  )}
 
-    <div className="flex items-baseline flex-wrap gap-1.5">
-      <span className="text-3xl sm:text-4xl font-black tracking-tight text-emerald-700 dark:text-emerald-400">
-        {formatMoney(unitPriceFinal)}
-      </span>
-      <span className="text-sm font-semibold text-slate-600 dark:text-zinc-400">
-        / {translatedUnit}
-      </span>
-    </div>
+                  <div className="flex items-baseline flex-wrap gap-1.5">
+                    <span className={`text-3xl sm:text-4xl font-black tracking-tight ${styles.finalPriceText}`}>
+                      {formatMoney(unitPriceFinal)}
+                    </span>
+                    <span className={`text-sm font-semibold ${styles.mutedText}`}>
+                      / {translatedUnit}
+                    </span>
+                  </div>
 
-  {discountPercent > 0 && unitPriceOriginal > unitPriceFinal && (
-  <p className="mt-2 text-xs font-bold text-emerald-800 dark:text-emerald-400">
-    {(t("product_save_amount" as any) || "Poupa {amount}").replace(
-      "{amount}",
-      formatMoney(unitPriceOriginal - unitPriceFinal)
-    )}
-  </p>
-)}
-  </div>
+                  {discountPercent > 0 && unitPriceOriginal > unitPriceFinal && (
+                    <p className={`mt-2 text-xs font-bold ${styles.finalPriceText}`}>
+                      {(t("product_save_amount" as any) || "Poupa {amount}").replace(
+                        "{amount}",
+                        formatMoney(unitPriceOriginal - unitPriceFinal)
+                      )}
+                    </p>
+                  )}
+                </div>
 
-  {/* Descrição antes do Checkout */}
-  <div className="mb-5 text-sm">
-    <ProductDescription
-      fullDescription={initialData.full_description}
-      styles={{ mutedText: styles.mutedText, strongText: styles.strongText }}
-      t={t as any}
-    />
-  </div>
+                <div className="mb-5 text-sm">
+                  <ProductDescription
+                    fullDescription={initialData.full_description}
+                    selectedOptions={selectedOptions}
+                    onSelectOption={handleSelectOption}
+                    forceLightUI={forceLightUI}
+                    styles={{ mutedText: styles.mutedText, strongText: styles.strongText }}
+                    t={t as any}
+                  />
+                </div>
 
-  {/* Checkout / Ação de Compra */}
-  <div className="w-full mb-6">
-    <ProductCheckout 
-      quantity={quantity} 
-      setQuantity={setQuantity} 
-      customNote={customNote} 
-      setCustomNote={setCustomNote} 
-      localizedTotalPrice={formatMoney(totalPriceFinal)} 
-      translatedUnit={translatedUnit} 
-      handleWhatsAppOrder={handleWhatsAppOrder} 
-      forceLightUI={forceLightUI} 
-      panelClass={styles.panel} 
-      softMutedTextClass={styles.softMutedText} 
-      strongTextClass={styles.strongText} 
-      isEditorRoute={isEditorRoute} 
-      t={t as any} 
-    />
-  </div>
+                {/* Checkout integrado com storeWhatsApp e storeName passados diretamente */}
+                <div className="w-full mb-6">
+                  <ProductCheckout 
+                    quantity={quantity} 
+                    setQuantity={setQuantity} 
+                    customNote={customNote} 
+                    setCustomNote={setCustomNote} 
+                    localizedTotalPrice={formatMoney(totalPriceFinal)} 
+                    translatedUnit={translatedUnit} 
+                    handleWhatsAppOrder={handleWhatsAppOrder} 
+                    forceLightUI={forceLightUI} 
+                    unitPriceFinal={unitPriceFinal}
+                    productId={resolvedProduct?.id || productId}
+                    productName={initialData.name}
+                    productImage={initialData.main_image}
+                    storeSlug={storeSlug}
+                    storeName={storeDisplayName}
+                    storeWhatsApp={storeWhatsAppNumber}
+                    selectedOptions={selectedOptions}
+                    onClearOption={handleClearOption}
+                    panelClass={styles.panel} 
+                    softMutedTextClass={styles.softMutedText} 
+                    strongTextClass={styles.strongText} 
+                    isEditorRoute={isEditorRoute} 
+                    t={t as any} 
+                  />
+                </div>
 
-  {!isEditorRoute && showVisitStore && (
-    <div className="w-full">
-      <StoreTrustCard 
-        storeName={resolvedStore?.name || storeSlug} 
-        storeLogo={resolvedStore?.logo_url || ""} 
-        siteUrl={window.location.origin + "/" + storeSlug} 
-        softPanelClass={styles.softPanel} 
-        strongTextClass={styles.strongText} 
-        mutedTextClass={styles.mutedText} 
-        t={t as any} 
-      />
-    </div>
-  )}
-</div>
+                {!isEditorRoute && showVisitStore && (
+                  <div className="w-full">
+                    <StoreTrustCard 
+                      storeName={storeDisplayName} 
+                      storeLogo={resolvedStore?.logo_url || ""} 
+                      siteUrl={window.location.origin + "/" + storeSlug} 
+                      softPanelClass={styles.softPanel} 
+                      strongTextClass={styles.strongText} 
+                      mutedTextClass={styles.mutedText} 
+                      t={t as any} 
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
-           {/* Produtos Relacionados */}
-           {!isEditorRoute && !isEditing && (
+            {!isEditorRoute && !isEditing && (
               <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 320px' }}>
                 <RelatedProductsCache 
                   currentProductId={productId || ""} 
@@ -393,9 +478,18 @@ const styles = useMemo(() => ({
         )}
       </main>
 
-      {!isEditing && <MobileStickyBar localizedTotalPrice={formatMoney(totalPriceFinal)} handleWhatsAppOrder={handleWhatsAppOrder} mutedTextClass={styles.mutedText} strongTextClass={styles.strongText} t={t as any} />}
+      {!isEditing && (
+        <MobileStickyBar 
+          localizedTotalPrice={formatMoney(totalPriceFinal)} 
+          handleWhatsAppOrder={handleWhatsAppOrder} 
+          mutedTextClass={styles.mutedText} 
+          strongTextClass={styles.strongText} 
+          t={t as any} 
+        />
+      )}
 
       <style>{`.pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); } .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
-    </div>, document.body
+    </div>, 
+    document.body
   );
 }

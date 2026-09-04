@@ -1,4 +1,4 @@
-import { useCallback, memo, useRef, useMemo, useState, useDeferredValue, useEffect, ChangeEvent } from 'react';
+import { useCallback, memo, useRef, useMemo, useState, useDeferredValue, useEffect, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Plus, Loader2, Search, X, Boxes, PauseCircle, 

@@ -1,4 +1,4 @@
-import { memo, useState, useEffect, useMemo, useCallback, MouseEvent } from 'react';
+import { memo, useState, useEffect, useMemo, useCallback, type MouseEvent, type SyntheticEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { Edit, Trash2, Tag, Coins, AlertTriangle, Wrench } from 'lucide-react';
 import type { TranslateFn } from '../../../types/TextTypes';
@@ -19,6 +19,7 @@ interface Product {
 
 interface ProductTableProps {
   products: Product[];
+  store: any;
   storeCurrency: string;
   brokenProductIds?: Set<string>;
   onImageError?: (productId: string) => void;
@@ -38,7 +39,7 @@ export const IOSToggle = memo(({
 }: { 
   value: boolean; 
   onChange: () => void; 
-  disabled: boolean 
+  disabled: boolean; 
 }) => {
   const [localValue, setLocalValue] = useState(value);
   const [pending, setPending] = useState(false);
@@ -53,14 +54,14 @@ export const IOSToggle = memo(({
     }
   }, [value, pending, localValue]);
 
-  const handleClick = (e: MouseEvent) => {
+  const handleClick = useCallback((e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (pending || disabled) return;
     setPending(true);
     setLocalValue((prev) => !prev);
     onChange();
-  };
+  }, [disabled, onChange, pending]);
 
   return (
     <button
@@ -74,7 +75,7 @@ export const IOSToggle = memo(({
       } ${disabled || pending ? 'cursor-not-allowed opacity-60' : ''}`}
     >
       <span
-        className={`pointer-events-none flex h-5 w-5 transform items-center justify-center rounded-full bg-white shadow-xs transition-transform duration-150 ${
+        className={`pointer-events-none flex h-5 w-5 transform items-center justify-center rounded-full bg-white shadow-xs transition-transform duration-150 will-change-transform ${
           localValue ? 'translate-x-5' : 'translate-x-0'
         }`}
       >
@@ -90,6 +91,7 @@ IOSToggle.displayName = 'IOSToggle';
 
 interface ProductRowProps {
   product: Product;
+  store: any;
   storeCurrency: string;
   isBroken: boolean;
   onImageError?: (productId: string) => void;
@@ -101,6 +103,7 @@ interface ProductRowProps {
 
 const ProductRow = memo(({
   product,
+  store,
   storeCurrency,
   isBroken,
   onImageError,
@@ -123,7 +126,7 @@ const ProductRow = memo(({
     };
   }, [product.price, product.discount_percent]);
 
-  const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+  const handleImageError = useCallback((e: SyntheticEvent<HTMLImageElement>) => {
     if (onImageError) {
       onImageError(product.id);
     }
@@ -131,6 +134,13 @@ const ProductRow = memo(({
       e.currentTarget.src = FALLBACK_IMAGE;
     }
   }, [onImageError, product.id]);
+
+  // Estado unificado e leve em memória para todas as rotas filhas
+  const navigationState = useMemo(() => ({
+    product,
+    store,
+    source: 'admin_list'
+  }), [product, store]);
 
   return (
     <tr 
@@ -141,11 +151,11 @@ const ProductRow = memo(({
           : 'border-b-slate-100 hover:bg-slate-50/80'
       }`}
     >
-      {/* Coluna 1: Imagem + Nome + Alerta se Quebrada */}
+      {/* Coluna 1: Imagem + Nome + Link Principal */}
       <td className="px-6 py-3 font-medium text-slate-900 max-w-[240px] sm:max-w-[320px]">
         <Link
           to={`/admin/produtos/${product.id}`}
-          state={{ fromStore: true }}
+          state={navigationState}
           className="absolute inset-0 z-0"
           aria-label={product.name}
         />
@@ -249,7 +259,7 @@ const ProductRow = memo(({
           {isBroken && (
             <Link
               to={`/admin/produtos/${product.id}`}
-              state={{ fromStore: true }}
+              state={navigationState}
               className="inline-flex items-center gap-1 rounded-lg bg-amber-500 hover:bg-amber-600 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-xs transition-colors shrink-0"
               title={t('fix_now', { defaultValue: 'Corrigir foto' })}
             >
@@ -266,7 +276,7 @@ const ProductRow = memo(({
 
           <Link
             to={`/admin/produtos/${product.id}`}
-            state={{ fromStore: true }}
+            state={navigationState}
             aria-label={t('edit', { defaultValue: 'Editar' })}
             className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50/50 transition-colors shrink-0"
           >
@@ -275,7 +285,7 @@ const ProductRow = memo(({
 
           <button
             type="button"
-            aria-label={t('delete', { defaultValue: 'Excluir' })}
+            aria-label={t('btn_delete', { defaultValue: 'Excluir' })}
             onClick={() => onDelete(product)}
             className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50/50 transition-colors shrink-0"
           >
@@ -297,6 +307,7 @@ const ProductRow = memo(({
     prev.isBroken === next.isBroken &&
     prev.storeCurrency === next.storeCurrency &&
     prev.togglePending === next.togglePending &&
+    prev.store === next.store &&
     prev.t === next.t
   );
 });
@@ -305,6 +316,7 @@ ProductRow.displayName = 'ProductRow';
 
 export const ProductTable = memo(({
   products,
+  store,
   storeCurrency,
   brokenProductIds,
   onImageError,
@@ -333,6 +345,7 @@ export const ProductTable = memo(({
             <ProductRow
               key={product.id}
               product={product}
+              store={store}
               storeCurrency={storeCurrency}
               isBroken={Boolean(brokenProductIds?.has(product.id))}
               onImageError={onImageError}

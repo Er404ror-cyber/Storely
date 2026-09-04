@@ -221,7 +221,6 @@ showcase_clear_all: "Clear Filters",
 
 
     product_details_visit_store: "Visit Store",
-    product_details_details: "Product Details",
     product_details_final_value: "Final Value",
     product_details_confirm_whatsapp: "Confirm on WhatsApp",
     product_details_no_description: "No detailed description available for this product.",
@@ -2148,12 +2147,6 @@ quick_phrase_onesize: "Size: One Size / Adjustable",
 
 
 
-// Group Headers
-group_header_audience: "Audience",
-group_header_sizes: "Sizes",
-group_header_styles: "Style",
-group_header_materials: "Material",
-group_header_colors: "Colors",
 
 // Search-Engine Optimized Values
 val_kids: "Kids (Baby / Children)",
@@ -2856,8 +2849,107 @@ loading_content: 'Loading content...',
   fix_now: "Fix",
   fix_photo: "Fix Photo",
   click_to_fix: "Click item to resolve",
-  image_error: "Image Error"
+  image_error: "Image Error",
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  group_header_audience: "Target Audience",
+    group_header_sizes: "Sizes / Capacity",
+    group_header_styles: "Style / Condition",
+    group_header_materials: "Material / Flavor",
+    group_header_colors: "Colors",
+    product_details_details: "About the Product",
+    tap_to_customize: "Customize below",
+    audience_target_title: "Ideal for",
+    status_select_one: "Select an option",
+    selected_specs: "Selected Options",
+    remove: "Remove",
+    decrease_quantity: "Decrease quantity",
+    increase_quantity: "Increase quantity",
+    unit_abbr: "pcs",
+    buy_by_amount: "Buy by budget",
+    placeholder_budget_example: "Ex: 300",
+budget_yield_remainder: "Gets {qty} {unit} ({change} left over)",    budget_yield_exact: "Exact for {qty} {unit}",
+    confirmed_quantity_summary: "{qty} {unit} confirmed",
+   
+   
+
+
+
+
+
+    order_request_title: "New Order",
+product_item: "Item",
+preference_note: "Preference / Note",
+
+standard_option: "Standard",
+    cart_diff_prefs_title: "Item already exists with other options",
+  cart_pick_replace_target: "Which variation do you want to replace?",
+  back: "Back",
+  close: "Close",
+  cart_replace_prev: "Update previous",
+  choose: "Choose",
+  cart_replace_action: "Change",
+  cart_keep_both: "Keep both (2 choices)",
+  cart_select_to_overwrite: "Tap the variation you want to replace with the current one:",
+  current_in_cart: "In cart",
+  variations_total_count: "{count} total configurations",
+  view_cart_btn: "View Cart",
+
+
+
+
+
+
+
+  
+
+
+
+  cart_limit_title: "Limit of 3 Variations Reached",
+  already_in_cart_title: "Product already in Cart",
+  cart_full_warning_detailed: "You have reached the maximum limit of 3 options for this product in your cart. Choose how you want to update:",
+  cart_prompt_question: "You already have another option of this product in your cart. Do you want to add another option or just swap?",
+  action_replace_oldest_only: "Replace only the oldest one",
+  action_replace_all_previous: "Replace all previous with this one",
+  action_add_new_variant: "Add as an extra option",
+  action_replace_previous: "Just replace with current choice",
+  store_label_cart: "Store",
+ 
+  cart_added: "Added!",
+  cart_already_exists: "Already in Cart",
+  cart_item_exists_badge: "In Cart ({qty})",
+  btn_add_to_cart: "Add to Cart",
+  mode_by_qty: "By Quantity",
+  mode_by_budget: "Buy by Value",
+  placeholder_budget_simple: "How much would you like to buy? (e.g. 500)",
+  quick_values: "Suggestions:"
   },
 
 
@@ -3150,7 +3242,6 @@ showcase_defaultCategory: "Lançamentos",
 
 
       product_details_visit_store: "Ver Loja",
-  product_details_details: "Detalhes do Produto",
   product_details_final_value: "Valor Final",
   product_details_confirm_whatsapp: "Confirmar no WhatsApp",
   product_details_no_description: "Produto sem descrição detalhada disponível no momento.",
@@ -5049,12 +5140,7 @@ quick_phrase_onesize: "Tamanho: Único / Ajustável",
 
 
 
-// Cabeçalhos dos Grupos Salvos
-group_header_audience: "Público",
-group_header_sizes: "Tamanhos",
-group_header_styles: "Estilo",
-group_header_materials: "Material",
-group_header_colors: "Cores",
+
 
 // Valores Otimizados para o Motor de Busca
 val_kids: "Infantil (Criança / Bebé)",
@@ -5724,7 +5810,109 @@ guide_platforms_footer_hint: "Depois de salvar, qualquer cliente poderá acessar
   fix_now: "Corrigir",
   fix_photo: "Corrigir Foto",
   click_to_fix: "Clique no item para corrigir",
-  image_error: "Erro Imagem"
+  image_error: "Erro Imagem",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  group_header_audience: "Público / Alvo",
+    group_header_sizes: "Tamanhos / Capacidade",
+    group_header_styles: "Estilo / Condição",
+    group_header_materials: "Material / Sabor",
+    group_header_colors: "Cores",
+    product_details_details: "Sobre o Produto",
+    tap_to_customize: "Personalize abaixo",
+    audience_target_title: "Ideal para",
+    status_select_one: "Escolha uma opção",
+    selected_specs: "Opções Escolhidas",
+    remove: "Remover",
+    decrease_quantity: "Diminuir quantidade",
+    increase_quantity: "Aumentar quantidade",
+    unit_abbr: "un.",
+    buy_by_amount: "Comprar no valor de",
+    placeholder_budget_example: "Ex: 300",
+    budget_yield_remainder: "Dá {qty} {unit} (sobram {change})",
+    budget_yield_exact: "Exato para {qty} {unit}",
+    confirmed_quantity_summary: "{qty} {unit} confirmada(s)",
+ 
+    
+   
+
+    order_request_title: "Novo Pedido",
+product_item: "Item",
+preference_note: "Preferência / Nota",
+
+
+standard_option: "Padrão",
+  
+  cart_diff_prefs_title: "Já tem este produto no carrinho",
+  cart_pick_replace_target: "Qual variação deseja substituir?",
+  back: "Voltar",
+  close: "Fechar",
+  cart_replace_prev: "Atualizar o anterior",
+  choose: "Escolher",
+  cart_replace_action: "Mudar",
+  cart_keep_both: "Guardar ambos (2 escolhas)",
+  cart_select_to_overwrite: "Toque na variação que será substituída pela atual:",
+  current_in_cart: "No carrinho",
+  variations_total_count: "{count} configurações totais",
+  view_cart_btn: "Ver no Carrinho",
+
+
+
+
+
+
+  cart_limit_title: "Limite de 3 Variações Atingido",
+  already_in_cart_title: "Produto já no Carrinho",
+  cart_full_warning_detailed: "Já tens o limite máximo de 3 opções deste produto no carrinho. Escolhe como queres atualizar:",
+  cart_prompt_question: "Já tens outra opção deste item no carrinho. Queres adicionar mais uma opção ou apenas trocar a escolha?",
+  action_replace_oldest_only: "Trocar apenas a mais antiga",
+  action_replace_all_previous: "Substituir todas as outras por esta",
+  action_add_new_variant: "Adicionar como mais uma opção",
+  action_replace_previous: "Apenas trocar pela escolha atual",
+  store_label_cart: "Loja",
+
+  cart_added: "Adicionado!",
+  cart_already_exists: "Já no Carrinho",
+  cart_item_exists_badge: "Já no Carrinho ({qty})",
+  btn_add_to_cart: "Ao Carrinho",
+  mode_by_qty: "Por Quantidade",
+  mode_by_budget: "Comprar por Valor",
+  placeholder_budget_simple: "Quer comprar de quanto? (ex: 500)",
+  quick_values: "Sugestões:"
 }
 
 
